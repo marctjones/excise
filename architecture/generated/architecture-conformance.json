@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "3ea41ae35545c154d357f8fc2acf39a5b3f7009e",
+  "sourceRevision": "3b771a626a9953934e0a8eba0a4ad33f6ca8c0ec",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8089,
+    "retainedSymbols": 8116,
     "observedComponentDependencies": 83,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -627,28 +627,28 @@
     {
       "source": "core-redaction",
       "target": "core-content",
-      "references": 323,
+      "references": 325,
       "typeDependencyCount": 54,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.Segmentation.FormXObjectFlattener",
           "target": "Excise.Core.Content.ContentOperator",
-          "references": 32
+          "references": 35
         }
       ]
     },
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1231,
-      "typeDependencyCount": 151,
+      "references": 1255,
+      "typeDependencyCount": 152,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.Segmentation.CarrierTextRecovery",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 122
+          "references": 124
         }
       ]
     },
@@ -683,7 +683,7 @@
     {
       "source": "core-redaction",
       "target": "core-primitives",
-      "references": 1056,
+      "references": 1066,
       "typeDependencyCount": 150,
       "classification": "declared",
       "evidence": [
@@ -697,14 +697,14 @@
     {
       "source": "core-redaction",
       "target": "core-text",
-      "references": 173,
-      "typeDependencyCount": 28,
+      "references": 203,
+      "typeDependencyCount": 33,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.Segmentation.PdfDocumentRedactionExtensions",
           "target": "Excise.Core.Text.Letter",
-          "references": 45
+          "references": 34
         }
       ]
     },

@@ -10768,33 +10768,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithRc4_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptString_WithRc4_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithAes_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithEmptyData_ReturnsEmptyArray",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -11489,6 +11462,29 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs::RedactionProfileTests.Maximum_RemovesASignatureField_AndReportsIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/SignatureCarrierLeakTests.cs::SignatureCarrierLeakTests.Maximum_RemovesTheSignatureDictionaryAndTheDss_AndReportsBoth",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -12198,33 +12194,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithRc4_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptString_WithRc4_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithAes_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithEmptyData_ReturnsEmptyArray",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -12919,6 +12888,29 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs::RedactionProfileTests.Maximum_RemovesASignatureField_AndReportsIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/SignatureCarrierLeakTests.cs::SignatureCarrierLeakTests.Maximum_RemovesTheSignatureDictionaryAndTheDss_AndReportsBoth",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -13621,33 +13613,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithRc4_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptString_WithRc4_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithAes_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithEmptyData_ReturnsEmptyArray",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -14342,6 +14307,29 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs::RedactionProfileTests.Maximum_RemovesASignatureField_AndReportsIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/SignatureCarrierLeakTests.cs::SignatureCarrierLeakTests.Maximum_RemovesTheSignatureDictionaryAndTheDss_AndReportsBoth",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -15045,33 +15033,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithRc4_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptString_WithRc4_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithAes_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithEmptyData_ReturnsEmptyArray",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -15766,6 +15727,29 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs::RedactionProfileTests.Maximum_RemovesASignatureField_AndReportsIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/SignatureCarrierLeakTests.cs::SignatureCarrierLeakTests.Maximum_RemovesTheSignatureDictionaryAndTheDss_AndReportsBoth",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -94397,24 +94381,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Operations/RedactionIntegrationTests.cs::RedactionIntegrationTests.ContentStream_RoundTrip_PreservesNonRedactedContent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Operations/RedactionIntegrationTests.cs::RedactionIntegrationTests.ContentStreamParser_HandlesMultipleTextBlocks",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.ScrubTerms_PacketArray_RemovesXmlValuesAndGarbageCollectsOldPackets",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -94835,6 +94801,20 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithAMatchingReplacement_IsReported",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithNoMatchingReplacement_IsCorrectlySilent",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95743,24 +95723,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Operations/RedactionIntegrationTests.cs::RedactionIntegrationTests.ContentStream_RoundTrip_PreservesNonRedactedContent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Operations/RedactionIntegrationTests.cs::RedactionIntegrationTests.ContentStreamParser_HandlesMultipleTextBlocks",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.ScrubTerms_PacketArray_RemovesXmlValuesAndGarbageCollectsOldPackets",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -96181,6 +96143,20 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithAMatchingReplacement_IsReported",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithNoMatchingReplacement_IsCorrectlySilent",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97103,24 +97079,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Operations/RedactionIntegrationTests.cs::RedactionIntegrationTests.ContentStream_RoundTrip_PreservesNonRedactedContent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Operations/RedactionIntegrationTests.cs::RedactionIntegrationTests.ContentStreamParser_HandlesMultipleTextBlocks",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.ScrubTerms_PacketArray_RemovesXmlValuesAndGarbageCollectsOldPackets",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97541,6 +97499,20 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithAMatchingReplacement_IsReported",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithNoMatchingReplacement_IsCorrectlySilent",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98489,24 +98461,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Operations/RedactionIntegrationTests.cs::RedactionIntegrationTests.ContentStream_RoundTrip_PreservesNonRedactedContent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Operations/RedactionIntegrationTests.cs::RedactionIntegrationTests.ContentStreamParser_HandlesMultipleTextBlocks",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Operations/XfaRedactionCarrierTests.cs::XfaRedactionCarrierTests.ScrubTerms_PacketArray_RemovesXmlValuesAndGarbageCollectsOldPackets",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98927,6 +98881,20 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithAMatchingReplacement_IsReported",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithNoMatchingReplacement_IsCorrectlySilent",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -109191,33 +109159,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithRc4_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptString_WithRc4_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithAes_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithEmptyData_ReturnsEmptyArray",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -109912,6 +109853,29 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs::RedactionProfileTests.Maximum_RemovesASignatureField_AndReportsIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/SignatureCarrierLeakTests.cs::SignatureCarrierLeakTests.Maximum_RemovesTheSignatureDictionaryAndTheDss_AndReportsBoth",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -110618,33 +110582,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithRc4_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptString_WithRc4_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithAes_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithEmptyData_ReturnsEmptyArray",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -111339,6 +111276,29 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs::RedactionProfileTests.Maximum_RemovesASignatureField_AndReportsIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/SignatureCarrierLeakTests.cs::SignatureCarrierLeakTests.Maximum_RemovesTheSignatureDictionaryAndTheDss_AndReportsBoth",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -112033,33 +111993,6 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithRc4_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptString_WithRc4_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithAes_DecryptsData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
           "test": "Excise.Core.Tests/Security/PdfStandardSecurityHandlerTests.cs::PdfStandardSecurityHandlerTests.DecryptStream_WithEmptyData_ReturnsEmptyArray",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -112754,6 +112687,29 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": [
+            "Passed"
+          ]
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs::RedactionProfileTests.Maximum_RemovesASignatureField_AndReportsIt",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Text/Segmentation/SignatureCarrierLeakTests.cs::SignatureCarrierLeakTests.Maximum_RemovesTheSignatureDictionaryAndTheDss_AndReportsBoth",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [],
@@ -112820,8 +112776,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 7952,
-    "testMethodsWithCapabilityCandidate": 5130,
+    "testMethods": 7965,
+    "testMethodsWithCapabilityCandidate": 5146,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
