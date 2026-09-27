@@ -29,14 +29,15 @@ public sealed class RedactionVisualMutationAdequacyTests
         var output = TempPdf();
         try
         {
-            File.WriteAllBytes(input, BuildPdf($"{Keep} {Secret} {Keep}"));
+            File.WriteAllBytes(input, BuildPdf($"({Keep} {Secret}) Tj 0 -40 Td ({Keep}) Tj"));
             using (var document = PdfDocument.Open(File.ReadAllBytes(input)))
             {
                 document.RedactText(Secret, RedactionOptions.Default).VerifiedRemovals.Should().Be(1);
                 // Mutation: the target is properly removed, but unrelated
                 // visible words are removed too. A target-only leak detector
                 // would accept this; the surviving-render axis must not.
-                document.RedactText(Keep, RedactionOptions.Default).VerifiedRemovals.Should().Be(1);
+                document.RedactText(Keep, RedactionOptions.Default).VerifiedRemovals.Should().Be(2,
+                    "both occurrences are on the page");
                 document.Save(output);
             }
 
@@ -50,9 +51,11 @@ public sealed class RedactionVisualMutationAdequacyTests
     private static string TempPdf() => Path.Combine(Path.GetTempPath(), $"excise-visual-mutation-{Guid.NewGuid():N}.pdf");
     private static void TryDelete(string path) { try { File.Delete(path); } catch { } }
 
-    private static byte[] BuildPdf(string text)
+    private static byte[] BuildPdf(string shows)
     {
-        var content = $"BT /F1 28 Tf 72 400 Td ({text}) Tj ET\n";
+        // Helvetica 28 pt from x=36: the longer line ends at 582 pt, inside the
+        // 612 pt page, so every occurrence is on it before any gap closes.
+        var content = $"BT /F1 28 Tf 36 400 Td {shows} ET\n";
         var objects = new[]
         {
             "<< /Type /Catalog /Pages 2 0 R >>",
