@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "9fb79cbd7304166e677024a40daaa82bb32560f4d4f6159af46ce0870288743d",
+  "sourceFingerprint": "6399a5a23beac91c30870988ce35ae90506b3c353d2aabf7ddbc382623745386",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -13726,7 +13726,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperandSplitImprovementTests.cs",
       "class": "OperandSplitImprovementTests",
       "method": "TermInsideOneOperand_IsRemoved_AndTheNeighboursKeepTheirGlyphsAndPositions",
-      "line": 48,
+      "line": 54,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -13768,7 +13768,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperandSplitImprovementTests.cs",
       "class": "OperandSplitImprovementTests",
       "method": "RealDocuments_TheTermGoes_AndNoOtherCharacterDoes",
-      "line": 105,
+      "line": 119,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -19806,7 +19806,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionWidthClosureTests.cs",
       "class": "RedactionWidthClosureTests",
       "method": "RunPlacedByItsOwnTd_MovesLeftByTheRemovedWidth",
-      "line": 33,
+      "line": 34,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -19848,7 +19848,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionWidthClosureTests.cs",
       "class": "RedactionWidthClosureTests",
       "method": "RunInALaterTextObject_MovesLeftByTheRemovedWidth",
-      "line": 41,
+      "line": 42,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -19892,7 +19892,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionWidthClosureTests.cs",
       "class": "RedactionWidthClosureTests",
       "method": "EveryWordItsOwnTextObject_TheWholeRestOfTheLineCloses",
-      "line": 49,
+      "line": 50,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -19936,7 +19936,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionWidthClosureTests.cs",
       "class": "RedactionWidthClosureTests",
       "method": "RunPastAColumnGutter_DoesNotMove",
-      "line": 60,
+      "line": 61,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -19978,7 +19978,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionWidthClosureTests.cs",
       "class": "RedactionWidthClosureTests",
       "method": "ReconstructedOperator_DoesNotReopenTheGapAtTheNextRun",
-      "line": 74,
+      "line": 75,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -20022,7 +20022,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionWidthClosureTests.cs",
       "class": "RedactionWidthClosureTests",
       "method": "ReconstructedOperator_TheFileDoesNotStateTheRemovedAdvance",
-      "line": 87,
+      "line": 88,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -20066,7 +20066,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionWidthClosureTests.cs",
       "class": "RedactionWidthClosureTests",
       "method": "FollowerShownByAQuoteOperator_IsShiftedAfterItsImplicitLineMove",
-      "line": 107,
+      "line": 108,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -20110,7 +20110,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionWidthClosureTests.cs",
       "class": "RedactionWidthClosureTests",
       "method": "FollowerUnderCharSpacingWordSpacingAndScaling_LandsExactly",
-      "line": 117,
+      "line": 118,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -20152,7 +20152,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionWidthClosureTests.cs",
       "class": "RedactionWidthClosureTests",
       "method": "SequentialRedactionsOnOneLine_EachClosesTheLine",
-      "line": 130,
+      "line": 131,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -20190,11 +20190,55 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/Differential/RedactionWidthClosureTests.cs::RedactionWidthClosureTests.TextDrawnTwice_BothCopiesCloseAlike_AndTheLineClosesOnce",
+      "path": "Excise.Rendering.Tests/Differential/RedactionWidthClosureTests.cs",
+      "class": "RedactionWidthClosureTests",
+      "method": "TextDrawnTwice_BothCopiesCloseAlike_AndTheLineClosesOnce",
+      "line": 170,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "content-streams",
+        "fonts",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/Differential/RedactionWidthClosureTests.cs::RedactionWidthClosureTests.TextAFormXObjectDrawsAfterTheTerm_IsReportedNotSilentlyLeftBehind",
       "path": "Excise.Rendering.Tests/Differential/RedactionWidthClosureTests.cs",
       "class": "RedactionWidthClosureTests",
       "method": "TextAFormXObjectDrawsAfterTheTerm_IsReportedNotSilentlyLeftBehind",
-      "line": 165,
+      "line": 206,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -20238,7 +20282,7 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionWidthClosureTests.cs",
       "class": "RedactionWidthClosureTests",
       "method": "RotatedText_IsReportedAsClosedInsideItsOwnRunOnly",
-      "line": 183,
+      "line": 224,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -51291,12 +51335,12 @@
     }
   ],
   "summary": {
-    "testMethods": 1408,
+    "testMethods": 1409,
     "facets": {
-      "content-streams": 402,
+      "content-streams": 403,
       "content-strings-and-text": 9,
-      "differential-rendering": 823,
-      "fonts": 260,
+      "differential-rendering": 824,
+      "fonts": 261,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 318,
       "images": 232,
@@ -51307,19 +51351,19 @@
     },
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 9,
-      "pdf.17.content.streams:parse": 409,
-      "pdf.17.content.streams:render": 974,
+      "pdf.17.content.streams:parse": 410,
+      "pdf.17.content.streams:render": 975,
       "pdf.17.content.text-state:extract": 9,
       "pdf.17.content.text-state:parse": 9,
       "pdf.17.content.text-state:render": 9,
       "pdf.17.graphics.color:parse": 53,
       "pdf.17.graphics.color:render": 53,
-      "pdf.17.graphics.fonts:extract": 260,
-      "pdf.17.graphics.fonts:parse": 260,
-      "pdf.17.graphics.fonts:render": 970,
+      "pdf.17.graphics.fonts:extract": 261,
+      "pdf.17.graphics.fonts:parse": 261,
+      "pdf.17.graphics.fonts:render": 971,
       "pdf.17.graphics.images:extract": 232,
       "pdf.17.graphics.images:parse": 232,
-      "pdf.17.graphics.images:render": 970,
+      "pdf.17.graphics.images:render": 971,
       "pdf.17.graphics.paths-painting:parse": 318,
       "pdf.17.graphics.paths-painting:render": 318,
       "pdf.17.graphics.patterns-shadings:parse": 53,
@@ -51327,7 +51371,7 @@
       "pdf.17.graphics.state:parse": 318,
       "pdf.17.graphics.state:render": 318,
       "pdf.17.transparency.model:parse": 85,
-      "pdf.17.transparency.model:render": 858
+      "pdf.17.transparency.model:render": 859
     },
     "unclassified": 38,
     "allTestsMapped": true
