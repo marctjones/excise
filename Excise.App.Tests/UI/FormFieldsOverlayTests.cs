@@ -575,8 +575,11 @@ public class FormFieldsOverlayTests
             textBox.AcceptsReturn.Should().BeTrue();
             textBox.TextWrapping.Should().Be(global::Avalonia.Media.TextWrapping.Wrap,
                 "a multi-line field must wrap long text at its own width instead of scrolling");
-            textBox.FontSize.Should().Be(14,
-                "the field's own /DA point size must be used, not a fraction of the 200pt-tall box");
+            // /DA is in PDF points; the overlay canvas is in layer units
+            // (dips at the page's logical DPI), so compare font to box in
+            // the same units: 14pt of a 200pt-tall /Rect.
+            (textBox.FontSize / textBox.Height).Should().BeApproximately(14.0 / 200.0, 0.001,
+                "the field's own /DA point size must be used, in the box's own units, not a fraction of the 200pt-tall box");
         }
         finally
         {
