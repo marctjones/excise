@@ -80352,21 +80352,14 @@
           ]
         },
         {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsImageTests.cs::PdfGraphicsImageTests.DrawImage_RgbaPng_IsAnRgbImageWithItsAlphaAsSoftMask",
+          "test": "Excise.Core.Tests/Graphics/PdfGraphicsImageTests.cs::PdfGraphicsImageTests.DrawImage_RgbWithAlpha_IsAnRgbImageWithItsAlphaAsSoftMask",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsImageTests.cs::PdfGraphicsImageTests.DrawImage_OpaquePng_HasNoSoftMask",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Graphics/PdfGraphicsImageTests.cs::PdfGraphicsImageTests.DrawImage_PalettePngWithTransparency_ExpandsThePaletteAndItsAlpha",
+          "test": "Excise.Core.Tests/Graphics/PdfGraphicsImageTests.cs::PdfGraphicsImageTests.DrawImage_OpaqueRgb_HasNoSoftMask",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -80374,6 +80367,13 @@
         },
         {
           "test": "Excise.Core.Tests/Graphics/PdfGraphicsImageTests.cs::PdfGraphicsImageTests.DrawImage_AfterATranslucentFill_PaintsAtFullOpacity",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/PdfGraphicsImageTests.cs::PdfGraphicsImageTests.Identity_DependsOnSizeAndAlpha_NotOnlyOnTheRgbBytes",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112714,8 +112714,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 8116,
-    "testMethodsWithCapabilityCandidate": 5279,
+    "testMethods": 8120,
+    "testMethodsWithCapabilityCandidate": 5283,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

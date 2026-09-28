@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "c1f6eda25270725cf73ea1b03d2833a210ef16823b782f1aeb4ad256e9c409a2",
+  "sourceFingerprint": "e4f61e7ed30fdbbe578eb6ac91f4e943d9aadd4e5ababd82800baeec4e9edd4f",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -34330,7 +34330,7 @@
       "path": "Excise.Rendering.Tests/ImageAuthoringRenderTests.cs",
       "class": "ImageAuthoringRenderTests",
       "method": "Jpeg_FillsItsBox",
-      "line": 95,
+      "line": 109,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -34349,11 +34349,34 @@
       "promotion": "review-required"
     },
     {
-      "id": "Excise.Rendering.Tests/ImageAuthoringRenderTests.cs::ImageAuthoringRenderTests.TransparentPng_PaintsOnlyItsOpaqueHalf",
+      "id": "Excise.Rendering.Tests/ImageAuthoringRenderTests.cs::ImageAuthoringRenderTests.TransparentPixels_PaintOnlyTheirOpaqueHalf",
       "path": "Excise.Rendering.Tests/ImageAuthoringRenderTests.cs",
       "class": "ImageAuthoringRenderTests",
-      "method": "TransparentPng_PaintsOnlyItsOpaqueHalf",
-      "line": 109,
+      "method": "TransparentPixels_PaintOnlyTheirOpaqueHalf",
+      "line": 123,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ImageAuthoringRenderTests.cs::ImageAuthoringRenderTests.SameImageOnThreePages_IsStoredOnce_AndEveryPageStillPaintsIt_AfterAPageIsRemoved",
+      "path": "Excise.Rendering.Tests/ImageAuthoringRenderTests.cs",
+      "class": "ImageAuthoringRenderTests",
+      "method": "SameImageOnThreePages_IsStoredOnce_AndEveryPageStillPaintsIt_AfterAPageIsRemoved",
+      "line": 139,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -51453,7 +51476,7 @@
     }
   ],
   "summary": {
-    "testMethods": 1415,
+    "testMethods": 1416,
     "facets": {
       "content-streams": 405,
       "content-strings-and-text": 9,
@@ -51461,7 +51484,7 @@
       "fonts": 261,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 318,
-      "images": 234,
+      "images": 235,
       "page-group-backdrop": 3,
       "renderer-integration-general": 40,
       "renderer-performance-and-lifetime": 12,
@@ -51479,9 +51502,9 @@
       "pdf.17.graphics.fonts:extract": 261,
       "pdf.17.graphics.fonts:parse": 261,
       "pdf.17.graphics.fonts:render": 971,
-      "pdf.17.graphics.images:extract": 234,
-      "pdf.17.graphics.images:parse": 234,
-      "pdf.17.graphics.images:render": 973,
+      "pdf.17.graphics.images:extract": 235,
+      "pdf.17.graphics.images:parse": 235,
+      "pdf.17.graphics.images:render": 974,
       "pdf.17.graphics.paths-painting:parse": 318,
       "pdf.17.graphics.paths-painting:render": 318,
       "pdf.17.graphics.patterns-shadings:parse": 53,

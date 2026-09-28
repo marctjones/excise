@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "998f8d650eff321621a4d074f1446d1146b7cfe8",
+  "sourceRevision": "056ae4418ef71295aae63126222ecd919a5cbf04",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8233,
+    "retainedSymbols": 8235,
     "observedComponentDependencies": 83,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -276,8 +276,8 @@
     {
       "source": "core",
       "target": "core-document",
-      "references": 218,
-      "typeDependencyCount": 42,
+      "references": 217,
+      "typeDependencyCount": 43,
       "classification": "declared",
       "evidence": [
         {
@@ -304,13 +304,13 @@
     {
       "source": "core",
       "target": "core-parsing",
-      "references": 7,
-      "typeDependencyCount": 4,
+      "references": 2,
+      "typeDependencyCount": 1,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Core.Graphics.PdfImageXObject",
-          "target": "Excise.Core.Filters.FlateFilterDecoder",
+          "source": "Excise.Core.Graphics.PdfTrueTypeFont",
+          "target": "Excise.Core.Filters.BasicStreamFilters",
           "references": 2
         }
       ]
@@ -318,8 +318,8 @@
     {
       "source": "core",
       "target": "core-primitives",
-      "references": 315,
-      "typeDependencyCount": 74,
+      "references": 311,
+      "typeDependencyCount": 76,
       "classification": "declared",
       "evidence": [
         {
@@ -416,8 +416,8 @@
     {
       "source": "core-document",
       "target": "core",
-      "references": 114,
-      "typeDependencyCount": 28,
+      "references": 116,
+      "typeDependencyCount": 29,
       "classification": "declared",
       "evidence": [
         {
@@ -477,7 +477,7 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1492,
+      "references": 1494,
       "typeDependencyCount": 224,
       "classification": "declared",
       "evidence": [

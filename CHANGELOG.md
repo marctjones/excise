@@ -6,6 +6,18 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Added
+
+- **`Excise.Core` authoring: shapes, clipping and images (#1908, #1909, #1910).** `PdfGraphics` gains `DrawEllipse`,
+  `DrawCircle` and `DrawArc` (angles counter-clockwise from +x in PDF's y-up space; arcs are split into pieces of at
+  most 90 degrees with the exact control-point formula), `Clip`, `ClipEvenOdd` and `ClipRectangle` (use inside
+  `SaveState`/`RestoreState`; a clip set outside them stays on for the rest of the page), and
+  `DrawImage(PdfImage, x, y, width, height)`. A `PdfImage` is built from decoded pixels with
+  `PdfImage.FromRgb(width, height, rgb, alpha)` or from a JPEG with `PdfImage.FromJpeg(bytes)`, which embeds the JPEG
+  untouched (baseline, extended or progressive, 8-bit, gray or colour). Decode PNG and other formats with your own
+  decoder and pass pixels; `Excise.Core` deliberately has no image decoder of its own. An equal image drawn on several
+  pages is stored once per document (#1918). Output for callers that use none of these is unchanged.
+
 ## [3.14.0] - 2026-09-27
 
 ### Added

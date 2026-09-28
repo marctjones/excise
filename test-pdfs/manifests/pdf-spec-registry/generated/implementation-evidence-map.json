@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "0970f5f651f68ddf779d24006c5c728197b1f41ef3f4c4189903e4387c5bc73e",
+  "sourceFingerprint": "156ab4bc7179dc1bb601f4bfb7579758eb322eddcfa1a727c5bbc432b5dac0f1",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -3356,6 +3356,65 @@
             "parse",
             "render",
             "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.paths-painting",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.state",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Graphics/PdfImage.cs",
+      "path": "Excise.Core/Graphics/PdfImage.cs",
+      "kind": "source-file",
+      "facets": [
+        "content-and-graphics",
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
           ],
           "mappingSources": [
             "keyword-facet-candidate"
@@ -11070,14 +11129,14 @@
     }
   ],
   "summary": {
-    "records": 555,
+    "records": 556,
     "facets": {
       "annotations": 14,
-      "content-and-graphics": 19,
+      "content-and-graphics": 20,
       "document-structure": 36,
       "fonts": 32,
       "forms": 9,
-      "images": 34,
+      "images": 35,
       "product-integration-general": 316,
       "redaction": 82,
       "safe-save-and-metadata": 18,
@@ -11085,10 +11144,10 @@
       "transparency": 2
     },
     "parentCapabilityModes": {
-      "pdf.17.content.streams:mutate": 19,
-      "pdf.17.content.streams:parse": 19,
-      "pdf.17.content.streams:render": 19,
-      "pdf.17.content.streams:write": 19,
+      "pdf.17.content.streams:mutate": 20,
+      "pdf.17.content.streams:parse": 20,
+      "pdf.17.content.streams:render": 20,
+      "pdf.17.content.streams:write": 20,
       "pdf.17.document.catalog-pages:parse": 36,
       "pdf.17.document.catalog-pages:preserve": 36,
       "pdf.17.document.catalog-pages:write": 36,
@@ -11102,20 +11161,20 @@
       "pdf.17.graphics.fonts:extract": 32,
       "pdf.17.graphics.fonts:parse": 32,
       "pdf.17.graphics.fonts:render": 32,
-      "pdf.17.graphics.images:extract": 34,
-      "pdf.17.graphics.images:parse": 34,
-      "pdf.17.graphics.images:render": 34,
+      "pdf.17.graphics.images:extract": 35,
+      "pdf.17.graphics.images:parse": 35,
+      "pdf.17.graphics.images:render": 35,
       "pdf.17.graphics.paths-painting:author": 2,
-      "pdf.17.graphics.paths-painting:mutate": 19,
-      "pdf.17.graphics.paths-painting:parse": 19,
+      "pdf.17.graphics.paths-painting:mutate": 20,
+      "pdf.17.graphics.paths-painting:parse": 20,
       "pdf.17.graphics.paths-painting:preserve": 2,
-      "pdf.17.graphics.paths-painting:render": 19,
-      "pdf.17.graphics.paths-painting:write": 19,
-      "pdf.17.graphics.state:mutate": 20,
-      "pdf.17.graphics.state:parse": 20,
+      "pdf.17.graphics.paths-painting:render": 20,
+      "pdf.17.graphics.paths-painting:write": 20,
+      "pdf.17.graphics.state:mutate": 21,
+      "pdf.17.graphics.state:parse": 21,
       "pdf.17.graphics.state:preserve": 1,
-      "pdf.17.graphics.state:render": 20,
-      "pdf.17.graphics.state:write": 20,
+      "pdf.17.graphics.state:render": 21,
+      "pdf.17.graphics.state:write": 21,
       "pdf.17.interactive.annotations:mutate": 14,
       "pdf.17.interactive.annotations:parse": 14,
       "pdf.17.interactive.annotations:preserve": 14,

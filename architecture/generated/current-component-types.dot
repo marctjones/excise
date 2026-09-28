@@ -13,7 +13,7 @@ digraph excise_architecture {
     label="engine";
     color="#cbd5e1";
     "core-content" [label="Content-stream walker and sinks\nimplemented\n286 retained symbols", fillcolor="#d8f3dc"];
-    "core-document" [label="Document model and mutation boundary\nimplemented\n589 retained symbols", fillcolor="#d8f3dc"];
+    "core-document" [label="Document model and mutation boundary\nimplemented\n590 retained symbols", fillcolor="#d8f3dc"];
     "core-fonts" [label="Font decoding, metrics, and subsetting\npartial\n183 retained symbols", fillcolor="#fff3bf"];
     "core-redaction" [label="Glyph-, image-, and carrier-level redaction\npartial\n698 retained symbols", fillcolor="#fff3bf"];
     "core-security" [label="Document conformance and structural validation\npartial\n37 retained symbols", fillcolor="#fff3bf"];
@@ -24,7 +24,7 @@ digraph excise_architecture {
   subgraph cluster_foundation {
     label="foundation";
     color="#cbd5e1";
-    "core" [label="Excise.Core project\nimplemented\n831 retained symbols", fillcolor="#d8f3dc"];
+    "core" [label="Excise.Core project\nimplemented\n832 retained symbols", fillcolor="#d8f3dc"];
     "core-encryption" [label="Encryption contracts, permissions, and standard security handler\nimplemented\n46 retained symbols", fillcolor="#d8f3dc"];
     "core-parsing" [label="Parser, xref, filters, and hostile-input boundary\nimplemented\n571 retained symbols", fillcolor="#d8f3dc"];
     "core-primitives" [label="PDF primitives and object graph\nimplemented\n169 retained symbols", fillcolor="#d8f3dc"];
@@ -65,21 +65,21 @@ digraph excise_architecture {
   "cli" -> "core-writing" [label="34 refs / 9 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "ocr" [label="77 refs / 28 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "rendering" [label="27 refs / 7 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core" -> "core-document" [label="218 refs / 42 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core" -> "core-document" [label="217 refs / 43 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core" -> "core-fonts" [label="46 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core" -> "core-parsing" [label="7 refs / 4 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core" -> "core-primitives" [label="315 refs / 74 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core" -> "core-parsing" [label="2 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core" -> "core-primitives" [label="311 refs / 76 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core" -> "core-redaction" [label="4 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core" -> "core-text" [label="2 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-content" -> "core-document" [label="109 refs / 19 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-content" -> "core-fonts" [label="66 refs / 17 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-content" -> "core-parsing" [label="6 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-content" -> "core-primitives" [label="324 refs / 45 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-document" -> "core" [label="114 refs / 28 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-document" -> "core" [label="116 refs / 29 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core-content" [label="7 refs / 2 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
   "core-document" -> "core-encryption" [label="26 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core-parsing" [label="85 refs / 16 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-document" -> "core-primitives" [label="1492 refs / 224 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-document" -> "core-primitives" [label="1494 refs / 224 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core-text" [label="2 refs / 1 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
   "core-document" -> "core-writing" [label="2 refs / 1 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
   "core-encryption" -> "core-parsing" [label="11 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
