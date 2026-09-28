@@ -23,6 +23,13 @@ internal static partial class FormCalcBuiltins
         return DayZero.AddDays(Math.Floor(n));
     }
 
+    /// <summary>Milliseconds since midnight, clamped to one day. NaN is a script error, not a crash.</summary>
+    private static TimeSpan NumToTime(double n)
+    {
+        if (double.IsNaN(n)) throw new FormCalcRuntimeException("A time number is not a number.");
+        return TimeSpan.FromMilliseconds(Math.Clamp(n, 0, 86_399_999));
+    }
+
     private static double DateToNum(DateTime d) => (d.Date - DayZero).Days;
 
     private static void RegisterDatesAndTimes()
@@ -39,8 +46,8 @@ internal static partial class FormCalcBuiltins
         Add("IsoDate2Num", 1, 1, (_, a) =>
             ParseDate(S(a, 0), S(a, 0).Contains('-', StringComparison.Ordinal) ? "YYYY-MM-DD" : "YYYYMMDD") is { } d
                 ? DateToNum(d) : throw new FormCalcRuntimeException("IsoDate2Num: not an ISO date."));
-        Add("Num2Time", 1, 3, (_, a) => FormatTime(TimeSpan.FromMilliseconds(Math.Clamp(N(a, 0), 0, 86_399_999)), a.Count > 1 ? S(a, 1) : TimeStyles[0]));
-        Add("Num2GMTime", 1, 3, (_, a) => FormatTime(TimeSpan.FromMilliseconds(Math.Clamp(N(a, 0), 0, 86_399_999)), a.Count > 1 ? S(a, 1) : TimeStyles[0]));
+        Add("Num2Time", 1, 3, (_, a) => FormatTime(NumToTime(N(a, 0)), a.Count > 1 ? S(a, 1) : TimeStyles[0]));
+        Add("Num2GMTime", 1, 3, (_, a) => FormatTime(NumToTime(N(a, 0)), a.Count > 1 ? S(a, 1) : TimeStyles[0]));
         Add("Time2Num", 1, 3, (_, a) =>
             ParseTime(S(a, 0), a.Count > 1 ? S(a, 1) : TimeStyles[0]) is { } t ? t.TotalMilliseconds : throw new FormCalcRuntimeException("Time2Num: not a time in that picture."));
         Add("IsoTime2Num", 1, 1, (_, a) =>
@@ -350,7 +357,7 @@ internal static partial class FormCalcBuiltins
         switch (category)
         {
             case "date": return FormatDate(NumToDate(FormCalcValue.ToNumber(value)), body);
-            case "time": return FormatTime(TimeSpan.FromMilliseconds(Math.Clamp(FormCalcValue.ToNumber(value), 0, 86_399_999)), body);
+            case "time": return FormatTime(NumToTime(FormCalcValue.ToNumber(value)), body);
             case "text": return FormatText(body, FormCalcValue.ToText(value));
             case "num": return FormatNumber(body, FormCalcValue.ToNumber(value));
             default:

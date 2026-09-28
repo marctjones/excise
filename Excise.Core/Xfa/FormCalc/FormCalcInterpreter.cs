@@ -43,6 +43,12 @@ internal sealed class FormCalcInterpreter
 
     public IFcHost Host => _host;
 
+    /// <summary>Steps spent so far, nested runs included.</summary>
+    internal long StepsUsed => _steps;
+
+    /// <summary>Characters of strings built-ins returned so far, nested runs included.</summary>
+    internal long StringCharsUsed => _stringChars;
+
     /// <summary>Parse and run <paramref name="source"/>; the result is the value of its last expression.</summary>
     public static object? Evaluate(string source, IFcHost host, FcLimits? limits = null, CancellationToken cancellation = default)
     {
@@ -499,14 +505,20 @@ internal sealed class FormCalcInterpreter
         return single ? (list.Count > 0 ? list[0] : null) : list;
     }
 
-    private static bool IsAccessor(FcExpr e) => e switch
+    /// <summary>A plain SOM path. A loop, not recursion: the path comes from a script string and can be any depth.</summary>
+    private static bool IsAccessor(FcExpr e)
     {
-        FcName => true,
-        FcThis => true,
-        FcMember m => IsAccessor(m.Target),
-        FcIndex i => IsAccessor(i.Target) && (i.Index is null or FcNumber),
-        _ => false,
-    };
+        while (true)
+        {
+            switch (e)
+            {
+                case FcName or FcThis: return true;
+                case FcMember m: e = m.Target; break;
+                case FcIndex { Index: null or FcNumber } i: e = i.Target; break;
+                default: return false;
+            }
+        }
+    }
 
     private sealed class ScopedHost(IFcHost inner, IFcObject context) : IFcHost
     {

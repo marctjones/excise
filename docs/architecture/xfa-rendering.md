@@ -277,6 +277,11 @@ single call on strings of `MaxStringLength` characters (`At`, `Replace`) runs to
 `TimeLimit`. Memory is bounded through strings; objects and lists come from the form, which
 `XfaBudget` already caps.
 
+`FormCalcFuzzTests` holds the bounds: seeded random programs, every built-in with hostile
+arguments, mutations of built-in scripts and of every `<script>` in the corpus's XFA forms, and
+hand-made hostile shapes. Each input may only return or throw one of the two script exceptions,
+and must stay inside its steps, characters, allocation and time.
+
 **What a script can read.** Only what `IFcHost` and `IFcObject` expose: the merged form
 (`XfaScripts.Host.ResolveRoot` answers `xfa` and `$form`; every other root, `$record`,
 `$data` and `$host` included, is empty) and its field values and properties. The built-ins
