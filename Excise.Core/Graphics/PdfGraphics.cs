@@ -349,6 +349,36 @@ public class PdfGraphics : IDisposable
 
     #endregion
 
+    #region Image Drawing
+
+    /// <summary>
+    /// Draws a JPEG or PNG image stretched to the box whose lower-left corner is
+    /// (<paramref name="x"/>, <paramref name="y"/>) in PDF user space (y up). The image is
+    /// added to the page's <c>/XObject</c> resources once per distinct file: drawing the same
+    /// bytes again on the page reuses it. A JPEG is embedded as is; a PNG is stored lossless
+    /// and keeps its transparency.
+    /// </summary>
+    /// <param name="imageBytes">The contents of a JPEG (baseline or progressive, 8-bit gray or
+    /// colour) or PNG (non-interlaced, 8-bit, or 16-bit without a palette) file.</param>
+    /// <exception cref="ArgumentException">The bytes are not such a JPEG or PNG; nothing is drawn.</exception>
+    public void DrawImage(byte[] imageBytes, double x, double y, double width, double height)
+    {
+        ThrowIfDisposed();
+        ArgumentNullException.ThrowIfNull(imageBytes);
+
+        // An image paints the unit square (§8.9.5), so cm maps it onto the box; q/Q keeps
+        // that matrix from reaching anything drawn afterwards.
+        var name = _page.AddImage(imageBytes);
+        // An image paints with the fill alpha (§11.6.4.4): an earlier translucent brush must not fade it.
+        ApplyOpacity(null, 1);
+        EmitLine("q");
+        EmitLine($"{Fmt(width)} 0 0 {Fmt(height)} {Fmt(x)} {Fmt(y)} cm");
+        EmitLine($"/{name} Do");
+        EmitLine("Q");
+    }
+
+    #endregion
+
     #region Path Operations
 
     /// <summary>
