@@ -154,6 +154,66 @@ public class AnnotationToolbarAndPaletteTests
         }
     }
 
+    /// <summary>
+    /// #1797: every tool button on both surfaces must light up for its own tool and no other,
+    /// so a mistyped key in one binding (or a tool arming a different kind than its button
+    /// names) shows here rather than as a silent unlit button.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task EveryTool_LightsExactlyItsOwnButtonOnBothSurfaces()
+    {
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
+        var window = new MainWindow(new InMemorySettingsStore()) { DataContext = vm, Width = 1200, Height = 900 };
+        window.Show();
+        try
+        {
+            vm.ToggleAnnotationToolbarCommand.Execute().Subscribe();
+            vm.ToggleAnnotationPaletteCommand.Execute().Subscribe();
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+
+            var tools = new (string Tool, string Key, Action Arm)[]
+            {
+                ("Highlight", "Markup.Highlight", () => vm.ToggleHighlightModeCommand.Execute().Subscribe()),
+                ("Underline", "Markup.Underline", () => vm.ToggleUnderlineModeCommand.Execute().Subscribe()),
+                ("StrikeOut", "Markup.StrikeOut", () => vm.ToggleStrikeOutModeCommand.Execute().Subscribe()),
+                ("Squiggly", "Markup.Squiggly", () => vm.ToggleSquigglyModeCommand.Execute().Subscribe()),
+                ("Square", "Shape.Square", () => vm.ToggleSquareModeCommand.Execute().Subscribe()),
+                ("Circle", "Shape.Circle", () => vm.ToggleCircleModeCommand.Execute().Subscribe()),
+                ("FreeText", "Shape.FreeText", () => vm.ToggleFreeTextModeCommand.Execute().Subscribe()),
+                ("Stamp", "Shape.Stamp", () => vm.ToggleStampModeCommand.Execute("Confidential").Subscribe()),
+                ("ImageStamp", "Shape.ImageStamp", () => vm.ToggleImageStampModeCommand.Execute().Subscribe()),
+                ("Ink", "Path.Ink", () => vm.ToggleFreehandModeCommand.Execute().Subscribe()),
+                ("Line", "Path.Line", () => vm.ToggleLineModeCommand.Execute().Subscribe()),
+                ("Arrow", "Path.Arrow", () => vm.ToggleArrowModeCommand.Execute().Subscribe()),
+                ("Polygon", "Path.Polygon", () => vm.TogglePolygonModeCommand.Execute().Subscribe()),
+                ("PolyLine", "Path.PolyLine", () => vm.TogglePolyLineModeCommand.Execute().Subscribe()),
+                ("StickyNote", "StickyNote", () => vm.ToggleStickyNoteToolCommand.Execute().Subscribe()),
+            };
+            var toolbar = tools.ToDictionary(t => t.Tool, t => window.FindControl<Button>($"AnnotationToolbar{t.Tool}Button")!);
+            var palette = tools.ToDictionary(t => t.Tool, t => window.AnnotationPalette!.FindControl<Button>($"Palette{t.Tool}Button")!);
+
+            foreach (var (tool, key, arm) in tools)
+            {
+                arm();
+                await KeyboardTestHelpers.FlushDispatcherAsync();
+                vm.ArmedAnnotationTool.Should().Be(key);
+                foreach (var other in tools)
+                {
+                    var expected = other.Tool == tool;
+                    toolbar[other.Tool].Classes.Contains("active").Should().Be(expected, $"toolbar {other.Tool} while {tool} is armed");
+                    palette[other.Tool].Classes.Contains("active").Should().Be(expected, $"palette {other.Tool} while {tool} is armed");
+                }
+                arm(); // toggle off so the next tool starts from a clean state
+                await KeyboardTestHelpers.FlushDispatcherAsync();
+                vm.ArmedAnnotationTool.Should().BeNull($"toggling {tool} again disarms it");
+            }
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
     [FixedAvaloniaFact]
     public async Task BothSurfaces_CanBeOnTogetherOrEitherAlone()
     {
