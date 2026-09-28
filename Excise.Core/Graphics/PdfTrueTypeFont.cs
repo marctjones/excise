@@ -25,6 +25,7 @@ internal sealed class PdfTrueTypeFont : PdfFont
     private readonly TrueTypeFontFile _ttf;
     private readonly double _scale;            // font units -> text space at 1 pt
     private readonly HashSet<int> _usedGids;   // accumulated as text is drawn (#393)
+    private readonly ToUnicodeState _toUnicode; // shared with _usedGids by every WithSize instance
 
     internal override bool PreferIndirectFontDictionary => true;
 
@@ -35,17 +36,18 @@ internal sealed class PdfTrueTypeFont : PdfFont
     internal override object? FontProgramIdentity => _usedGids;
 
     public PdfTrueTypeFont(byte[] fontData, double size)
-        : this(TrueTypeFontFile.Parse(fontData), new HashSet<int> { 0 }, size)
+        : this(TrueTypeFontFile.Parse(fontData), new HashSet<int> { 0 }, new ToUnicodeState(), size)
     {
     }
 
     // Shares the parsed font + used-glyph set so the same typeface at different
     // sizes (via WithSize) embeds/subsets as ONE font with one glyph set (#398).
-    private PdfTrueTypeFont(TrueTypeFontFile ttf, HashSet<int> usedGids, double size)
+    private PdfTrueTypeFont(TrueTypeFontFile ttf, HashSet<int> usedGids, ToUnicodeState toUnicode, double size)
         : base("F1", SafeBaseName(ttf.PostScriptName), size)
     {
         _ttf = ttf;
         _usedGids = usedGids;
+        _toUnicode = toUnicode;
         _scale = 1.0 / _ttf.UnitsPerEm;
     }
 
@@ -53,7 +55,7 @@ internal sealed class PdfTrueTypeFont : PdfFont
     /// The same embedded typeface at a different point size — shares the parsed
     /// font and accumulated glyph set so all sizes embed as one subsetted font.
     /// </summary>
-    public override PdfFont WithSize(double size) => new PdfTrueTypeFont(_ttf, _usedGids, size);
+    public override PdfFont WithSize(double size) => new PdfTrueTypeFont(_ttf, _usedGids, _toUnicode, size);
 
     public override double MeasureWidth(string text)
     {
@@ -106,13 +108,16 @@ internal sealed class PdfTrueTypeFont : PdfFont
     {
         var sb = new StringBuilder(text.Length * 4 + 2);
         sb.Append('<');
+        bool added = false;
         foreach (var cp in Codepoints(text))
         {
             int gid = _ttf.GidForCodepoint(cp) & 0xFFFF;
-            _usedGids.Add(gid);
+            added |= _usedGids.Add(gid);
             sb.Append(gid.ToString("X4", CultureInfo.InvariantCulture));
         }
         sb.Append('>');
+        if (added)
+            RefreshToUnicode();
         return sb.ToString();
     }
 
@@ -126,8 +131,40 @@ internal sealed class PdfTrueTypeFont : PdfFont
     internal override void ReserveGlyphs(string text)
     {
         if (string.IsNullOrEmpty(text)) return;
+        bool added = false;
         foreach (var cp in Codepoints(text))
-            _usedGids.Add(_ttf.GidForCodepoint(cp) & 0xFFFF);
+            added |= _usedGids.Add(_ttf.GidForCodepoint(cp) & 0xFFFF);
+        if (added)
+            RefreshToUnicode();
+    }
+
+    /// <summary>
+    /// The ToUnicode streams of the font dictionaries built from this glyph set, and the
+    /// glyph-to-code-point map they are written from (built once: a CJK font's cmap has
+    /// tens of thousands of entries).
+    /// </summary>
+    private sealed class ToUnicodeState
+    {
+        public List<PdfStream> Streams { get; } = new();
+
+        public Dictionary<int, int>? GlyphToCodepoint { get; set; }
+    }
+
+    /// <summary>
+    /// Keep every built ToUnicode CMap readable in memory and current with the glyphs
+    /// drawn so far. Without this the CMap stayed an empty placeholder until save and was
+    /// then stored encoded only, so in-memory extraction, search and text redaction of a
+    /// document excise had drawn into could not read this font's text at all: an XFA form
+    /// laid out at open (#1577) showed a value that redaction reported as not found.
+    /// </summary>
+    private void RefreshToUnicode()
+    {
+        if (_toUnicode.Streams.Count == 0)
+            return;
+        byte[] cmap = Encoding.ASCII.GetBytes(BuildToUnicodeCMap());
+        byte[] comp = Deflate(cmap);
+        foreach (var stream in _toUnicode.Streams)
+            stream.ReplaceEncoding(comp, cmap, "FlateDecode");
     }
 
     internal override PdfDictionary BuildFontDictionary(PdfDocument document)
@@ -225,6 +262,8 @@ internal sealed class PdfTrueTypeFont : PdfFont
         //    compressed, by the pre-save action).
         var tu = new PdfStream(new PdfDictionary(), Array.Empty<byte>());
         var tuRef = document.AddIndirectObject(tu);
+        _toUnicode.Streams.Add(tu);
+        RefreshToUnicode();
 
         // 6. Type0 root (returned; AddFont stores it inline in /Font).
         var type0 = new PdfDictionary();
@@ -265,10 +304,9 @@ internal sealed class PdfTrueTypeFont : PdfFont
         fontFileStream.SetInt("Length", comp.Length);
 
         // ToUnicode for just the used glyphs, FlateDecode-compressed.
-        byte[] cmap = Deflate(Encoding.ASCII.GetBytes(BuildToUnicodeCMap()));
-        toUnicode.SetEncodedData(cmap);
-        toUnicode.SetName("Filter", "FlateDecode");
-        toUnicode.SetInt("Length", cmap.Length);
+        // Encoded for the file, decoded for in-memory readers (extraction, redaction).
+        byte[] plain = Encoding.ASCII.GetBytes(BuildToUnicodeCMap());
+        toUnicode.ReplaceEncoding(Deflate(plain), plain, "FlateDecode");
 
         // Subset tag: 6 uppercase letters derived from the used-gid set.
         string tagged = SubsetTag() + "+" + BaseFont;
@@ -333,10 +371,15 @@ internal sealed class PdfTrueTypeFont : PdfFont
     private string BuildToUnicodeCMap()
     {
         // Reverse the cmap (cp -> gid) once, then map only the glyphs we drew.
-        var reverse = new Dictionary<int, int>();
-        foreach (var (cp, gid) in _ttf.Cmap)
-            if (gid <= 0xFFFF && !reverse.ContainsKey(gid))
-                reverse[gid] = cp;
+        var reverse = _toUnicode.GlyphToCodepoint;
+        if (reverse == null)
+        {
+            reverse = new Dictionary<int, int>();
+            foreach (var (cp, gid) in _ttf.Cmap)
+                if (gid <= 0xFFFF && !reverse.ContainsKey(gid))
+                    reverse[gid] = cp;
+            _toUnicode.GlyphToCodepoint = reverse;
+        }
         var gidToCp = new SortedDictionary<int, int>();
         foreach (int g in _usedGids)
             if (g > 0 && g <= 0xFFFF && reverse.TryGetValue(g, out var cp))
