@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "14c438a1207dceee99ae6261db77b0d1a817c4ad",
+  "sourceRevision": "a3f7637ea8f67d4b28e8217ce088e8b1cd60f6e4",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -22,8 +22,8 @@
     "commitsRequested": 200,
     "commitsObserved": 199,
     "broadCommitsExcluded": 1,
-    "newestProductionCommit": "3b308307cda9be26626e95edcb1ed272f2978e67",
-    "oldestProductionCommit": "d2f5ad66faaf3d197d172520f527d4bb4db2a3c2"
+    "newestProductionCommit": "7713043be15bf796c98836ec5d3d44e22ff339b0",
+    "oldestProductionCommit": "72b9a8cbe2b705be8fd32ba234f059f8b096a49b"
   },
   "files": [
     {
@@ -611,11 +611,11 @@
       "commits": 2
     },
     {
-      "path": "Excise.Ocr/PdfOcrService.cs",
+      "path": "Excise.Core/Xfa/XfaPaginator.cs",
       "commits": 2
     },
     {
-      "path": "Excise.Rendering/AdobeGlyphList.cs",
+      "path": "Excise.Ocr/PdfOcrService.cs",
       "commits": 2
     },
     {
@@ -1191,10 +1191,6 @@
       "commits": 1
     },
     {
-      "path": "Excise.Core/Redaction/Recovery/RecoveryChannelTiers.cs",
-      "commits": 1
-    },
-    {
       "path": "Excise.Core/Redaction/Recovery/RecoveryModel.cs",
       "commits": 1
     },
@@ -1319,6 +1315,10 @@
       "commits": 1
     },
     {
+      "path": "Excise.Core/Xfa/XfaTemplate.cs",
+      "commits": 1
+    },
+    {
       "path": "Excise.Native/Excise.Native.csproj",
       "commits": 1
     },
@@ -1336,6 +1336,10 @@
     },
     {
       "path": "Excise.Ocr/PdfSearchableConverter.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Rendering/AdobeGlyphList.cs",
       "commits": 1
     },
     {
