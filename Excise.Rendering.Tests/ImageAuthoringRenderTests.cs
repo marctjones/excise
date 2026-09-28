@@ -63,11 +63,11 @@ public class ImageAuthoringRenderTests
             doc.GetPage(1), new RenderOptions { Dpi = Dpi, BackgroundColor = SKColors.White });
     }
 
-    private static SKBitmap? RenderWithMutool(byte[] pdf)
+    private static SKBitmap? RenderWithMutool(byte[] pdf, int page = 1)
     {
         var path = Path.Combine(Path.GetTempPath(), $"excise-image-{Guid.NewGuid():N}.pdf");
         File.WriteAllBytes(path, pdf);
-        try { return MutoolReferenceRenderer.RenderPage(path, 1, Dpi); }
+        try { return MutoolReferenceRenderer.RenderPage(path, page, Dpi); }
         finally { File.Delete(path); }
     }
 
@@ -133,5 +133,35 @@ public class ImageAuthoringRenderTests
             ((int)opaque.Blue).Should().BeGreaterThan(200, renderer);
             ((int)opaque.Red).Should().BeLessThan(60, renderer);
         });
+    }
+
+    [Fact]
+    public void SameImageOnThreePages_IsStoredOnce_AndEveryPageStillPaintsIt_AfterAPageIsRemoved()
+    {
+        // #1918: one shared XObject (with its soft mask) referenced from three pages' resources.
+        var image = Pixels((x, _) => x < 20 ? new SKColor(20, 40, 220, 255) : new SKColor(0, 0, 0, 0));
+        using var doc = PdfDocument.CreateNew();
+        for (int i = 0; i < 3; i++)
+            using (var g = doc.Pages.AddBlank(Size, Size).GetGraphics())
+                g.DrawImage(image, X, Y, W, H);
+        var pdf = doc.SaveToBytes();
+
+        System.Text.RegularExpressions.Regex.Matches(System.Text.Encoding.Latin1.GetString(pdf), @"/Subtype\s*/Image\b")
+            .Count.Should().Be(2, "one image and its soft mask, not one pair per page");
+        Assert.SkipWhen(!MutoolReferenceRenderer.IsAvailable, "mutool is not installed.");
+        for (int page = 1; page <= 3; page++)
+        {
+            using var bmp = RenderWithMutool(pdf, page);
+            AssertBox(InkBox(bmp!), 109, $"mutool page {page}");
+        }
+
+        using var reopened = PdfDocument.Open(pdf);
+        reopened.Pages.RemoveAt(1);
+        var trimmed = reopened.SaveToBytes();
+        for (int page = 1; page <= 2; page++)
+        {
+            using var bmp = RenderWithMutool(trimmed, page);
+            AssertBox(InkBox(bmp!), 109, $"mutool page {page} after removing page 2");
+        }
     }
 }

@@ -67,6 +67,17 @@ public partial class PdfDocument : IDisposable
     internal void RememberEmbeddedFontObject(object fontProgramIdentity, PdfReference reference)
         => _embeddedFontObjects[fontProgramIdentity] = reference;
 
+    // #1918: image XObjects PdfGraphics.DrawImage built in this document, keyed by
+    // PdfImage.Identity: a logo drawn on N pages is stored once, not N times.
+    private readonly Dictionary<string, PdfReference> _drawnImages = new();
+
+    internal PdfReference GetOrAddDrawnImage(Graphics.PdfImage image)
+    {
+        if (!_drawnImages.TryGetValue(image.Identity, out var reference))
+            _drawnImages[image.Identity] = reference = image.AddTo(this);
+        return reference;
+    }
+
     // #1444: widgets AcroFormAuthoring wrote an /AP for in this session, with the
     // font that encodes their value, so PdfField.SetValue can redraw the
     // appearance instead of setting NeedAppearances. Keyed by the widget

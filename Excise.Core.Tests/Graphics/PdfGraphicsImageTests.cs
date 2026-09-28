@@ -113,6 +113,60 @@ public class PdfGraphicsImageTests
         page.GetXObject("Im3").Should().BeNull();
     }
 
+    /// <summary>Image XObject streams in a saved file, counted from its bytes (streams are never inside object streams).</summary>
+    private static int ImageStreamsIn(byte[] pdf) =>
+        System.Text.RegularExpressions.Regex.Matches(System.Text.Encoding.Latin1.GetString(pdf), @"/Subtype\s*/Image\b").Count;
+
+    [Fact]
+    public void DrawImage_EqualImagesOnThreePages_ShareOneXObject_AndTwoImagesStayTwo()
+    {
+        byte[] saved;
+        using (var doc = PdfDocument.CreateNew())
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                using var g = doc.Pages.AddBlank(200, 200).GetGraphics();
+                g.DrawImage(Rgba(), 0, 0, 10, 10);
+                if (i == 2)
+                    g.DrawImage(Opaque(), 0, 0, 10, 10);
+            }
+            saved = doc.SaveToBytes();
+        }
+
+        // One RGB image and its soft mask, plus the opaque image: not 3 x 2 + 1.
+        ImageStreamsIn(saved).Should().Be(3);
+        using var reopened = PdfDocument.Open(saved);
+        var shared = Enumerable.Range(1, 3)
+            .Select(n => reopened.GetPage(n).Resources!.ResolveDictionary(reopened, "XObject")!.GetOptional("Im1"))
+            .Should().AllBeOfType<PdfReference>().Subject.Cast<PdfReference>().ToList();
+        shared.Select(r => r.ObjectNum).Distinct().Should().ContainSingle();
+        Image(reopened.GetPage(3), "Im2").DecodedData.Should().Equal(1, 2, 3);
+    }
+
+    [Fact]
+    public void DrawImage_AfterThePagesHoldingTheSharedImageAreRemoved_StillWritesIt()
+    {
+        byte[] saved;
+        using (var doc = PdfDocument.CreateNew())
+        {
+            for (int i = 0; i < 2; i++)
+                using (var g = doc.Pages.AddBlank(200, 200).GetGraphics())
+                    g.DrawImage(Rgba(), 0, 0, 10, 10);
+            doc.Pages.AddBlank(200, 200);
+            doc.Pages.RemoveAt(0);
+            doc.Pages.RemoveAt(0);
+            using (var g = doc.GetPage(1).GetGraphics())
+                g.DrawImage(Rgba(), 0, 0, 10, 10);
+            saved = doc.SaveToBytes();
+        }
+
+        using var reopened = PdfDocument.Open(saved);
+        var image = Image(reopened.GetPage(1), "Im1");
+        image.DecodedData.Should().Equal(255, 0, 0, 0, 255, 0, 0, 0, 255, 9, 9, 9);
+        reopened.Resolve(image.GetOptional("SMask")!).Should().BeOfType<PdfStream>()
+            .Which.DecodedData.Should().Equal(255, 128, 0, 255);
+    }
+
     [Fact]
     public void DrawImage_SkipsXObjectNamesAlreadyOnThePage()
     {

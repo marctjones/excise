@@ -570,31 +570,28 @@ public partial class PdfPage
                 : !state.ContainsKey(key);
     }
 
-    // Image XObjects PdfGraphics.DrawImage added to this page, keyed by PdfImage.Identity,
-    // so drawing an equal image again reuses the entry instead of embedding a copy.
-    private readonly Dictionary<string, string> _drawnImages = new();
-
     /// <summary>
-    /// Name of a page <c>/XObject</c> holding <paramref name="image"/>, added as <c>Im{n}</c>
-    /// (the first name not already in use) unless an equal image was added before and that
-    /// entry is still there.
+    /// Name of a page <c>/XObject</c> holding <paramref name="image"/>: the document's one
+    /// XObject for an equal image, under the name this page already gives it, else added as
+    /// <c>Im{n}</c> (the first name not already in use).
     /// </summary>
-    internal string AddImage(Graphics.PdfImage image)
+    internal string AddImage(PdfImage image)
     {
+        var reference = _document.GetOrAddDrawnImage(image);
         var xobjects = Resources?.ResolveDictionary(_document, "XObject");
-        if (_drawnImages.TryGetValue(image.Identity, out var existing) && xobjects?.ContainsKey(existing) == true)
-            return existing;
-
         if (xobjects == null)
         {
             xobjects = new PdfDictionary();
             EnsureResources()["XObject"] = xobjects;
         }
+        foreach (var (name, value) in xobjects)
+            if (value is PdfReference existing && existing == reference)
+                return name.Value;
         int n = 1;
         while (xobjects.ContainsKey($"Im{n}"))
             n++;
-        xobjects[$"Im{n}"] = image.AddTo(_document);
-        return _drawnImages[image.Identity] = $"Im{n}";
+        xobjects[$"Im{n}"] = reference;
+        return $"Im{n}";
     }
 
     /// <summary>
