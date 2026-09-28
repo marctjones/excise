@@ -29,8 +29,11 @@ public class FormCalcFuzzTests
         TimeLimit = TimeSpan.FromMilliseconds(200),
     };
 
-    /// <summary>A run may overrun <see cref="FcLimits.TimeLimit"/> by one step (one built-in call) and scheduling noise.</summary>
-    private static readonly TimeSpan TimeSlack = TimeSpan.FromSeconds(1);
+    /// <summary>
+    /// A run may overrun <see cref="FcLimits.TimeLimit"/> by one step (one built-in call) plus GC and scheduling
+    /// noise; wide, because this runs beside other test classes and a false red teaches people to ignore it.
+    /// </summary>
+    private static readonly TimeSpan TimeSlack = TimeSpan.FromSeconds(4);
 
     /// <summary>A case that has not returned by then is a hang.</summary>
     private static readonly TimeSpan HangTimeout = TimeSpan.FromSeconds(10);

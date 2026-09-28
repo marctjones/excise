@@ -297,7 +297,9 @@ argument must be a plain SOM accessor.
 `IFcObject.TrySetProperty`, in the in-memory form model only. Each script is a transaction
 (`XfaScripts.RunOne`): a syntax or runtime error undoes its writes and is reported in
 `XfaLayoutResult.ScriptFailures`. Any other exception type is a defect in the interpreter and
-propagates; it is not swallowed.
+propagates out of `ApplyXfaLayout`; the app (`PdfDocumentService.LayOutDynamicXfa`) logs it and
+opens the document with its own pages. A stack overflow cannot be caught, which is why every
+recursion over script-shaped input is either depth-checked or a loop.
 
 **Where scripts run.** Only in `PdfXfaLayout.ApplyXfaLayout`, and only when
 `XfaLayoutOptions.RunFormCalc` is set; `FormCalcContainmentTests` fails on a new caller.
