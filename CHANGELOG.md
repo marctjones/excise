@@ -17,6 +17,10 @@ semantic versioning.
   untouched (baseline, extended or progressive, 8-bit, gray or colour). Decode PNG and other formats with your own
   decoder and pass pixels; `Excise.Core` deliberately has no image decoder of its own. An equal image drawn on several
   pages is stored once per document (#1918). Output for callers that use none of these is unchanged.
+- **XFA forms draw PNG, BMP and GIF images (#1575).** A dynamic XFA form opened in the app now shows its PNG, BMP
+  (1-bit included, such as the Government of Canada wordmark on IRCC forms) and GIF images, not only JPEG. TIFF images
+  are still listed as not drawn. `Excise.Core` still decodes no image format: the app decodes with SkiaSharp and passes
+  pixels; library callers of `ApplyXfaLayout` see no change.
 - **Preferences > Forms: "Run form calculations (FormCalc)" (#1570).** On by default. Off, a dynamic XFA form opens
   with the values stored in the file and none of its scripts run. Saved in window.json; applies to documents opened
   after saving.

@@ -212,8 +212,13 @@ Each page becomes `Pages.AddBlank(medium)` plus one content stream:
   `passwordEdit`: masked. `signature`: an empty box.
 - Draw content: `rectangle`, `line` and `arc` values are drawn as shapes.
 - Images (#1575): a draw's `<value><image>` and an `imageEdit` field's value
-  (bound data first) are drawn when they are JPEG, embedded as is
-  (`/DCTDecode`, at most 50 megapixels), sized by `aspect` and anchored
+  (bound data first) are drawn. JPEG is embedded as is (`/DCTDecode`).
+  Other formats are drawn only when the caller supplies a decoder
+  (`XfaLayoutOptions.ImageDecoder`, internal): Excise.App passes a SkiaSharp
+  one that opens PNG, BMP and GIF, and the pixels are embedded through
+  `PdfImage.FromRgb`. The 50-megapixel cap is checked on the header's size
+  before any pixel is decoded. Natural size comes from the JFIF, BMP or PNG
+  `pHYs` density, else 72 dpi. Images are sized by `aspect` and anchored
   top-left as pdf.js anchors them. An `href` resolves only through the
   document's `/Names /XFAImages` tree; nothing is fetched.
 
@@ -225,9 +230,10 @@ pages are marked.
 The result lists what the rendition leaves out, and the banner summarises it:
 
 - scripts present (event names counted), per #1570/#1571;
-- images, in a draw or an `imageEdit` field, that are not JPEG (BMP, PNG, GIF,
-  TIFF: Excise.Core decodes no image format), and `href` images that are not
-  in the document's `/Names /XFAImages` (#1575);
+- images, in a draw or an `imageEdit` field, that no decoder opens (without a
+  decoder, anything but JPEG; in Excise.App, TIFF, which SkiaSharp cannot
+  decode), and `href` images that are not in the document's
+  `/Names /XFAImages` (#1575);
 - barcodes (#1576);
 - text outside WinAnsi that no installed fallback font covers, drawn as '?'
   (#1577);

@@ -37,7 +37,7 @@ internal class PdfDocumentService
 
     /// <summary>The layout options a dynamic XFA form is opened with.</summary>
     internal XfaLayoutOptions XfaLayoutOptionsForOpen() =>
-        new() { TimeLimit = XfaLayoutTimeLimit, RunFormCalc = RunFormCalc };
+        new() { TimeLimit = XfaLayoutTimeLimit, RunFormCalc = RunFormCalc, ImageDecoder = XfaImageDecoder.Instance };
 
     public int PageCount => _currentDocument?.PageCount ?? 0;
 
