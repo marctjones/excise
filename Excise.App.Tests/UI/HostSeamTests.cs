@@ -162,10 +162,44 @@ public class HostSeamTests
     /// method that needed a real <c>Window</c> to call.
     /// </summary>
     [Fact]
-    public void ShortcutsText_UsesCommandNotationOnMacAndCtrlElsewhere_TabShortcutsStayCtrl()
+    public void ShortcutsText_UsesGlyphsOnMac_TabShortcutsStayControl()
     {
-        Excise.App.ViewModels.MainWindowViewModel.KeyboardShortcutsText(true).Should().Contain("⌘S - Save").And.Contain("Ctrl+Tab");
-        Excise.App.ViewModels.MainWindowViewModel.KeyboardShortcutsText(false).Should().Contain("Ctrl+S - Save").And.NotContain("⌘");
+        var text = Excise.App.ViewModels.MainWindowViewModel.KeyboardShortcutsText(true);
+
+        text.Should().Contain("  ⌘S - Save\n").And.Contain("  ⌘⇧S - Save As\n")
+            .And.Contain("  ⇧F3 - Find Previous\n").And.Contain("  ⌘+ - Zoom In\n")
+            .And.Contain("  ⌃Tab / ⌃⇧Tab - Next/Previous Document Tab\n")
+            .And.NotContain("Ctrl").And.NotContain("Shift+");
+    }
+
+    [Fact]
+    public void ShortcutsText_IsUnchangedOnWindowsAndLinux()
+    {
+        var text = Excise.App.ViewModels.MainWindowViewModel.KeyboardShortcutsText(false);
+
+        text.Should().Contain("  Ctrl+S - Save\n").And.Contain("  Ctrl+Shift+S - Save As\n")
+            .And.Contain("  Shift+F3 - Find Previous\n").And.Contain("  Ctrl++ - Zoom In\n")
+            .And.Contain("  Ctrl+Tab / Ctrl+Shift+Tab - Next/Previous Document Tab\n")
+            .And.NotContainAny("⌘", "⇧", "⌃", "⌥");
+    }
+
+    [Theory]
+    [InlineData("Primary+O", true, "⌘O")]
+    [InlineData("Primary+O", false, "Ctrl+O")]
+    [InlineData("Primary+Shift+S", true, "⌘⇧S")]
+    [InlineData("Primary+Shift+S", false, "Ctrl+Shift+S")]
+    [InlineData("Ctrl+Tab", true, "⌃Tab")]
+    [InlineData("Ctrl+Tab", false, "Ctrl+Tab")]
+    [InlineData("Primary+Alt+I", true, "⌘⌥I")]
+    [InlineData("Primary+Alt+I", false, "Ctrl+Alt+I")]
+    [InlineData("Primary++", true, "⌘+")]
+    [InlineData("Primary++", false, "Ctrl++")]
+    [InlineData("Primary+-", true, "⌘-")]
+    [InlineData("F3", true, "F3")]
+    [InlineData("F3", false, "F3")]
+    public void ShortcutNotation_FormatsPerPlatform(string chord, bool mac, string expected)
+    {
+        Excise.App.Services.ShortcutNotation.Format(chord, mac).Should().Be(expected);
     }
 
     [Fact]
