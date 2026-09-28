@@ -136,10 +136,12 @@ by local name, because the config packet has its own `<template>` element.
 
 Measurements accept `in`, `cm`, `mm`, `pt`, `mp` and `px`, and default to
 inches (XFA 3.3 "Measurements"). `use="#id"` and `usehref="#id"` /
-`usehref=".#som"` prototypes merge with the referencing element. Attributes and
-single-occurrence property children that the element does not set come from
-the prototype. Resolution is depth- and count-bounded and detects cycles.
-Prototypes in other documents (`usehref="file.xdp#..."`) are never fetched.
+`usehref=".#som($template...)"` prototypes merge with the referencing
+element (a SOM path rooted anywhere else, e.g. `$data`, is a data-binding
+concern, not resolved here). Attributes and single-occurrence property
+children that the element does not set come from the prototype. Resolution
+is depth- and count-bounded and detects cycles. Prototypes in other
+documents (`usehref="file.xdp#..."`) are never fetched.
 
 ### Merge
 
@@ -180,10 +182,16 @@ Phase one builds an unbounded box tree:
   margin, and `margin` insets.
 
 Phase two paginates: the root subform's flowed content is poured into the
-contentAreas of the current pageArea, in order. A box that does not fit moves
-to the next contentArea. A flowed (`tb`, `table`) subform that does not fit
-splits between its children, unless `keep intact` forbids it. A box taller
-than a whole contentArea is placed anyway and clipped. `breakBefore` and
+contentAreas of the current pageArea, in order. A pageArea within a
+`pageSet` is chosen by `pagePosition` (`first`/`rest`/`last`/`only`) and
+`oddOrEven`, falling back to the nearest less specific match, as pdf.js
+does — a `simplexPaginated` set's `rest` area is real content-area geometry,
+not a repeat of `first` (#1824). A box that does not fit moves to the next
+contentArea. A flowed (`tb`, `table`) subform that does not fit splits
+between its children, unless `keep intact` forbids it. A box up to 2pt
+taller than a whole contentArea (`FitTolerance` in `XfaPaginator.cs`,
+matching pdf.js's own fit check) is placed without a clipping report; only
+beyond that is it placed and reported clipped. `breakBefore` and
 `breakAfter` (`targetType="pageArea"` or `"contentArea"`, `target`,
 `startNew`), `<break>`, and pageArea `occur max` select the next area.
 Fixed content on a pageArea (its own draws and fields) is drawn on every page
