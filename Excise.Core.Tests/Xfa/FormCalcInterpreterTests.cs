@@ -301,6 +301,37 @@ public class FormCalcInterpreterTests
     }
 
     [Fact]
+    public void StringsHeldAcrossTheRun_AreBoundedInTotal()
+    {
+        // Each string is under the per-string bound; together they are not.
+        const string script = "var s = Space(5000)\n var i = 0\n while (i < 100) do var t = Concat(s, \"x\") i = i + 1 endwhile";
+        FormCalcValue.ToNumber(Run(script, limits: new FcLimits { MaxStringLength = 10_000 })).Should().Be(100);
+        var act = () => Run(script, limits: new FcLimits { MaxStringLength = 10_000, MaxTotalStringChars = 100_000 });
+        act.Should().Throw<FormCalcRuntimeException>().WithMessage("*in total*");
+    }
+
+    [Fact]
+    public void Replace_RefusesAnOversizedResult_BeforeBuildingIt()
+    {
+        // 10^6 matches x 10^6 characters: string.Replace itself would throw OutOfMemoryException.
+        var act = () => Run("Replace(Space(1000000), \" \", Space(1000000))");
+        act.Should().Throw<FormCalcRuntimeException>().WithMessage("*characters*");
+    }
+
+    [Fact]
+    public void ResolveNode_SpendsTheCallersStepBudget()
+    {
+        var wide = new Node("wide", "subform");
+        for (var i = 0; i < 500; i++) wide.Add(new Node("x", value: 1d));
+        var host = new Host { Context = wide, Root = wide };
+        // 20 lookups of ~1,000 ticks each (the name, then the descendants); the loop itself costs a few hundred.
+        const string script = "var i = 0\n while (i < 20) do xfa.resolveNodes(\"wide..nothing\") i = i + 1 endwhile";
+        FormCalcInterpreter.Evaluate(script, host, new FcLimits { MaxSteps = 100_000 });
+        var act = () => FormCalcInterpreter.Evaluate(script, host, new FcLimits { MaxSteps = 5_000 });
+        act.Should().Throw<FormCalcRuntimeException>().WithMessage("*steps*");
+    }
+
+    [Fact]
     public void ManyMatches_AreBounded()
     {
         var wide = new Node("wide", "subform");

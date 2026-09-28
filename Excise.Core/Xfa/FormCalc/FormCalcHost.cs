@@ -50,6 +50,13 @@ internal sealed class FcLimits
     public long MaxSteps { get; init; } = 2_000_000;
     public int MaxCallDepth { get; init; } = 64;
     public int MaxStringLength { get; init; } = 1_000_000;
+
+    /// <summary>
+    /// Characters all built-ins of one run may return, in total (nested <c>Eval</c> and <c>resolveNode</c>
+    /// included). Bounds the memory a script can hold in its variables, which <see cref="MaxStringLength"/>
+    /// alone bounds only per string.
+    /// </summary>
+    public long MaxTotalStringChars { get; init; } = 32_000_000;
     public int MaxListItems { get; init; } = 100_000;
     public int MaxEvalDepth { get; init; } = 4;
     public TimeSpan TimeLimit { get; init; } = TimeSpan.FromSeconds(2);

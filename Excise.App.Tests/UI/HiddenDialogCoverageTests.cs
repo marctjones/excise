@@ -43,6 +43,8 @@ public class HiddenDialogCoverageTests
             arrowKey: new[]
             {
                 "ReadingOrderStrategyComboBox", "WhitespaceModeComboBox",
+                // Preferences → Forms (#1570)
+                "RunFormCalcCheckBox",
                 // Preferences → Performance
                 "PerformancePresetComboBox", "PerformanceAdvancedExpander",
                 "TileCacheBudgetNumericUpDown", "SinglePageCachedPagesNumericUpDown",

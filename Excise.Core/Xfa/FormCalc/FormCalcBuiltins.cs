@@ -33,7 +33,9 @@ internal static partial class FormCalcBuiltins
             if (args.Count < min || args.Count > max)
                 throw new FormCalcRuntimeException($"{name} takes {(min == max ? min.ToString(Inv) : $"{min} to {(max == int.MaxValue ? "many" : max.ToString(Inv))}")} argument(s), not {args.Count}.");
             interp.Tick();
-            return body(interp, args);
+            var result = body(interp, args);
+            if (result is string text) interp.ChargeString(text);
+            return result;
         };
 
     private static double N(IReadOnlyList<object?> a, int i, double dflt = 0) =>
@@ -165,7 +167,18 @@ internal static partial class FormCalcBuiltins
             var s = S(a, 0);
             var old = S(a, 1);
             if (old.Length == 0) return s;
-            return i.CheckString(s.Replace(old, S(a, 2), StringComparison.Ordinal));
+            var replacement = S(a, 2);
+            // Check the result's length before building it: a million one-character matches each
+            // replaced by a million characters would otherwise be allocated first.
+            if (replacement.Length > old.Length)
+            {
+                long matches = 0;
+                for (var at = s.IndexOf(old, StringComparison.Ordinal); at >= 0; at = s.IndexOf(old, at + old.Length, StringComparison.Ordinal))
+                    matches++;
+                if (s.Length + matches * (replacement.Length - old.Length) > i.Limits.MaxStringLength)
+                    throw new FormCalcRuntimeException($"A string grew past {i.Limits.MaxStringLength} characters.");
+            }
+            return s.Replace(old, replacement, StringComparison.Ordinal);
         });
         Add("Space", 1, 1, (i, a) =>
         {

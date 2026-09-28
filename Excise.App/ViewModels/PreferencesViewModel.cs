@@ -63,6 +63,17 @@ internal class PreferencesViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _documentOpenMode, value);
     }
 
+    // ── Forms (#1570) ────────────────────────────────────────────────────────
+
+    private bool _runFormCalc = true;
+
+    /// <summary>Run a dynamic XFA form's FormCalc calculations when it opens.</summary>
+    public bool RunFormCalc
+    {
+        get => _runFormCalc;
+        set => this.RaiseAndSetIfChanged(ref _runFormCalc, value);
+    }
+
     // ── Performance ──────────────────────────────────────────────────────────
 
     /// <summary>AOT-safe preset list; see the note on <see cref="ReadingOrderStrategyOptions"/>.</summary>
@@ -359,6 +370,7 @@ internal class PreferencesViewModel : ViewModelBase
         SelectedPrintScaling = Excise.App.Services.Printing.PrintScalingMode.ShrinkOversized;
         SetPerformanceFields(PerformanceSettings.Balanced);
         SelectedDocumentOpenMode = DocumentOpenMode.Automatic;
+        RunFormCalc = true;
     }
 
     private void CloseWindow()
@@ -375,6 +387,7 @@ internal class PreferencesViewModel : ViewModelBase
         SetPerformanceFields(mainViewModel.PerformanceSettings);
         TileCacheBytesSource = mainViewModel.ViewerTileCacheResidentBytesProvider;
         SelectedDocumentOpenMode = mainViewModel.DocumentOpenMode;
+        RunFormCalc = mainViewModel.RunFormCalc;
     }
 
     public void SaveToMainViewModel(MainWindowViewModel mainViewModel)
@@ -385,5 +398,6 @@ internal class PreferencesViewModel : ViewModelBase
         mainViewModel.PrintScaling = SelectedPrintScaling;
         mainViewModel.ApplyPerformanceSettings(BuildPerformanceSettings());
         mainViewModel.DocumentOpenMode = SelectedDocumentOpenMode;
+        mainViewModel.RunFormCalc = RunFormCalc;
     }
 }

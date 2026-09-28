@@ -61,6 +61,22 @@ internal partial class MainWindowViewModel
     }
 
     /// <summary>
+    /// Run a dynamic XFA form's FormCalc scripts when it opens (#1570). App-wide like every
+    /// preference; applies to the next document this session opens.
+    /// </summary>
+    internal bool RunFormCalc
+    {
+        get => _documentService.RunFormCalc;
+        set
+        {
+            if (_documentService.RunFormCalc == value)
+                return;
+            _documentService.RunFormCalc = value;
+            this.RaisePropertyChanged();
+        }
+    }
+
+    /// <summary>
     /// Every open document (#1553), in opening order, this one marked current.
     /// Empty for a view model with no workspace.
     /// </summary>

@@ -57,6 +57,29 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Forms (#1570) -->
+                <Border Background="{DynamicResource CardBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="20">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Forms"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <CheckBox x:Name="RunFormCalcCheckBox"
+                                  Content="Run form calculations (FormCalc)"
+                                  IsChecked="{Binding RunFormCalc}"
+                                  AutomationProperties.Name="Run Form Calculations"
+                                  AutomationProperties.HelpText="Run a dynamic XFA form's FormCalc calculations when it opens."/>
+                        <TextBlock Text="On (default): when a dynamic XFA form opens, its FormCalc initialize and calculate scripts run, so totals and fields shown or hidden by a script appear as the form's author meant. Scripts can only change the form's own field values and visibility; they cannot reach files, the network or the rest of your computer, and each one is limited in time and memory. Off: the form shows the values stored in the file. JavaScript never runs. Applies to documents opened after you save."
+                                   FontSize="10"
+                                   Foreground="{DynamicResource TextTertiaryBrush}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- Performance Settings Section -->
                 <Border Background="{DynamicResource CardBrush}"
                         BorderBrush="{DynamicResource BorderBrush}"

@@ -26,6 +26,7 @@ internal sealed class FormCalcInterpreter
     private readonly Dictionary<string, FcFunc> _functions = new(StringComparer.Ordinal);
     private readonly int _evalDepth;
     private long _steps;
+    private long _stringChars;
     private int _callDepth;
     private object? _last;
     private object? _returnValue;
@@ -41,6 +42,12 @@ internal sealed class FormCalcInterpreter
     public FcLimits Limits { get; }
 
     public IFcHost Host => _host;
+
+    /// <summary>Steps spent so far, nested runs included.</summary>
+    internal long StepsUsed => _steps;
+
+    /// <summary>Characters of strings built-ins returned so far, nested runs included.</summary>
+    internal long StringCharsUsed => _stringChars;
 
     /// <summary>Parse and run <paramref name="source"/>; the result is the value of its last expression.</summary>
     public static object? Evaluate(string source, IFcHost host, FcLimits? limits = null, CancellationToken cancellation = default)
@@ -90,11 +97,32 @@ internal sealed class FormCalcInterpreter
             throw new FormCalcRuntimeException($"A string grew past {Limits.MaxStringLength} characters.");
     }
 
-    internal string CheckString(string s)
+    /// <summary>Charge a string a built-in returned against the per-string and the whole-run bounds.</summary>
+    internal void ChargeString(string s)
     {
-        if (s.Length > Limits.MaxStringLength)
-            throw new FormCalcRuntimeException($"A string grew past {Limits.MaxStringLength} characters.");
-        return s;
+        CheckLength(s.Length);
+        _stringChars += s.Length;
+        if (_stringChars > Limits.MaxTotalStringChars)
+            throw new FormCalcRuntimeException($"The script built more than {Limits.MaxTotalStringChars} characters of strings in total.");
+    }
+
+    /// <summary>What is left of this run's budget, for a nested run (<c>Eval</c>, <c>resolveNode</c>).</summary>
+    private FcLimits Remaining() => new()
+    {
+        MaxSteps = Math.Max(1, Limits.MaxSteps - _steps),
+        MaxCallDepth = Math.Max(1, Limits.MaxCallDepth - _callDepth),
+        MaxStringLength = Limits.MaxStringLength,
+        MaxTotalStringChars = Math.Max(1, Limits.MaxTotalStringChars - _stringChars),
+        MaxListItems = Limits.MaxListItems,
+        MaxEvalDepth = Limits.MaxEvalDepth,
+        TimeLimit = Limits.TimeLimit - _clock.Elapsed > TimeSpan.Zero ? Limits.TimeLimit - _clock.Elapsed : TimeSpan.FromMilliseconds(1),
+    };
+
+    /// <summary>A nested run's spending counts against this run, so nesting in a loop cannot multiply the budget.</summary>
+    private void Absorb(FormCalcInterpreter nested)
+    {
+        _steps += nested._steps;
+        _stringChars += nested._stringChars;
     }
 
     // Statements -------------------------------------------------------------
@@ -469,20 +497,28 @@ internal sealed class FormCalcInterpreter
         if (script.Statements is not [FcExprStmt { Expr: var expr }] || !IsAccessor(expr))
             return new FcNodeList();
 
-        var sub = new FormCalcInterpreter(new ScopedHost(_host, start), Limits, _cancellation, _evalDepth);
-        var result = sub.Eval(expr, new Frame());
+        var sub = new FormCalcInterpreter(new ScopedHost(_host, start), Remaining(), _cancellation, _evalDepth);
+        object? result;
+        try { result = sub.Eval(expr, new Frame()); }
+        finally { Absorb(sub); }
         var list = new FcNodeList(Objects(result));
         return single ? (list.Count > 0 ? list[0] : null) : list;
     }
 
-    private static bool IsAccessor(FcExpr e) => e switch
+    /// <summary>A plain SOM path. A loop, not recursion: the path comes from a script string and can be any depth.</summary>
+    private static bool IsAccessor(FcExpr e)
     {
-        FcName => true,
-        FcThis => true,
-        FcMember m => IsAccessor(m.Target),
-        FcIndex i => IsAccessor(i.Target) && (i.Index is null or FcNumber),
-        _ => false,
-    };
+        while (true)
+        {
+            switch (e)
+            {
+                case FcName or FcThis: return true;
+                case FcMember m: e = m.Target; break;
+                case FcIndex { Index: null or FcNumber } i: e = i.Target; break;
+                default: return false;
+            }
+        }
+    }
 
     private sealed class ScopedHost(IFcHost inner, IFcObject context) : IFcHost
     {
@@ -499,15 +535,8 @@ internal sealed class FormCalcInterpreter
         try { script = FormCalcParser.Parse(source); }
         catch (FormCalcSyntaxException ex) { throw new FormCalcRuntimeException("Eval: " + ex.Message); }
         // The nested script spends what is left of this one's budget, so nesting cannot multiply it.
-        var remaining = new FcLimits
-        {
-            MaxSteps = Math.Max(1, Limits.MaxSteps - _steps),
-            MaxCallDepth = Math.Max(1, Limits.MaxCallDepth - _callDepth),
-            MaxStringLength = Limits.MaxStringLength,
-            MaxListItems = Limits.MaxListItems,
-            MaxEvalDepth = Limits.MaxEvalDepth,
-            TimeLimit = Limits.TimeLimit - _clock.Elapsed > TimeSpan.Zero ? Limits.TimeLimit - _clock.Elapsed : TimeSpan.FromMilliseconds(1),
-        };
-        return new FormCalcInterpreter(_host, remaining, _cancellation, _evalDepth + 1).Run(script);
+        var nested = new FormCalcInterpreter(_host, Remaining(), _cancellation, _evalDepth + 1);
+        try { return nested.Run(script); }
+        finally { Absorb(nested); }
     }
 }

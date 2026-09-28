@@ -17,6 +17,17 @@ semantic versioning.
   untouched (baseline, extended or progressive, 8-bit, gray or colour). Decode PNG and other formats with your own
   decoder and pass pixels; `Excise.Core` deliberately has no image decoder of its own. An equal image drawn on several
   pages is stored once per document (#1918). Output for callers that use none of these is unchanged.
+- **Preferences > Forms: "Run form calculations (FormCalc)" (#1570).** On by default. Off, a dynamic XFA form opens
+  with the values stored in the file and none of its scripts run. Saved in window.json; applies to documents opened
+  after saving.
+
+### Fixed
+
+- **FormCalc hardening (#1570).** A `resolveNode` call with a very deep path overflowed the stack and ended the
+  process; `Num2Time`/`Num2GMTime` of NaN threw an unexpected error; `Replace` could try to build a string of a
+  trillion characters; `resolveNode` and `Eval` no longer get a fresh step budget per call; and all strings a script
+  builds now count against one total. Found by the new deterministic fuzz tests; the threat model is in
+  docs/architecture/xfa-rendering.md.
 
 ## [3.14.0] - 2026-09-27
 
