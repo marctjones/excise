@@ -43,11 +43,13 @@ internal sealed class FormCalcInterpreter
 
     public IFcHost Host => _host;
 
-    /// <summary>Steps spent so far, nested runs included.</summary>
-    internal long StepsUsed => _steps;
+    /// <summary>Steps spent so far, nested runs included. Test seam: read by the fuzz harness to
+    /// confirm the step budget actually bounds a run rather than merely being checked and ignored.</summary>
+    internal long StepsUsedForTests => _steps;
 
-    /// <summary>Characters of strings built-ins returned so far, nested runs included.</summary>
-    internal long StringCharsUsed => _stringChars;
+    /// <summary>Characters of strings built-ins returned so far, nested runs included. Test seam,
+    /// same rationale as <see cref="StepsUsedForTests"/>.</summary>
+    internal long StringCharsUsedForTests => _stringChars;
 
     /// <summary>Parse and run <paramref name="source"/>; the result is the value of its last expression.</summary>
     public static object? Evaluate(string source, IFcHost host, FcLimits? limits = null, CancellationToken cancellation = default)

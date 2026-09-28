@@ -113,10 +113,10 @@ public class FormCalcFuzzTests
                 {
                     // A step or a string over the line is what trips the check, so each can overshoot by one;
                     // a nested run can add its own one.
-                    if (interpreter.StepsUsed > limits.MaxSteps + limits.MaxEvalDepth + 2)
-                        return $"spent {interpreter.StepsUsed} steps";
-                    if (interpreter.StringCharsUsed > limits.MaxTotalStringChars + (limits.MaxEvalDepth + 2L) * limits.MaxStringLength)
-                        return $"built {interpreter.StringCharsUsed} characters";
+                    if (interpreter.StepsUsedForTests > limits.MaxSteps + limits.MaxEvalDepth + 2)
+                        return $"spent {interpreter.StepsUsedForTests} steps";
+                    if (interpreter.StringCharsUsedForTests > limits.MaxTotalStringChars + (limits.MaxEvalDepth + 2L) * limits.MaxStringLength)
+                        return $"built {interpreter.StringCharsUsedForTests} characters";
                 }
                 var allocated = GC.GetAllocatedBytesForCurrentThread() - allocatedBefore;
                 return allocated > MaxAllocatedBytes ? $"allocated {allocated / (1024 * 1024)} MB" : null;
