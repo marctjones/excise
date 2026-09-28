@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1481,
-  "indexedContentSha256": "081a8475efc2ac36dc9f932dc01ecbcd5b5a4a25d63c910741d1f394f7a2264e",
+  "indexedFileCount": 1483,
+  "indexedContentSha256": "5445f417282019ac7d42a724eec3caf41ce938e10bb5d95f7d2d08fc38ddc96b",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -2290,7 +2290,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 122
+      "candidateReferenceCount": 124
     },
     {
       "id": "pdf.17.syntax.encryption",
@@ -22154,9 +22154,17 @@
             "streams",
             "syntax"
           ]
+        },
+        {
+          "path": "docs/architecture/xfa-rendering.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "streams",
+            "syntax"
+          ]
         }
       ],
-      "candidateReferenceCount": 22
+      "candidateReferenceCount": 23
     },
     {
       "id": "pdf.20.renderer.requirement-003",
@@ -59426,7 +59434,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 229
+      "candidateReferenceCount": 230
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -65132,6 +65140,7 @@
           "matchedTerms": [
             "fields",
             "policy",
+            "xfa",
             "action",
             "annotation",
             "redact"
@@ -65200,7 +65209,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 221
+      "candidateReferenceCount": 222
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -66134,7 +66143,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 193
+      "candidateReferenceCount": 194
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -68723,7 +68732,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 416
+      "candidateReferenceCount": 417
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -71738,7 +71747,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 161
+      "candidateReferenceCount": 162
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -79592,6 +79601,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Xfa/FormCalcFuzzTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "forms",
+            "javascript"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Xfa/XfaLayoutTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -79871,7 +79888,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 55
+      "candidateReferenceCount": 56
     }
   ],
   "summary": {
