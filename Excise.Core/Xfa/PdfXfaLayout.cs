@@ -34,6 +34,12 @@ public sealed class XfaLayoutOptions
     /// computed values and script-driven show or hide are laid out. Default true. JavaScript never runs.
     /// </summary>
     public bool RunFormCalc { get; init; } = true;
+
+    /// <summary>
+    /// Decodes the image formats Core does not (#1575): PNG, BMP and the like. Null (the
+    /// default) draws JPEG only and reports the rest. Excise.App supplies one.
+    /// </summary>
+    internal IXfaImageDecoder? ImageDecoder { get; init; }
 }
 
 /// <summary>What <see cref="PdfXfaLayout.ApplyXfaLayout"/> did, and what the rendition leaves out.</summary>
@@ -143,7 +149,7 @@ public static class PdfXfaLayout
         int original = document.PageCount;
         try
         {
-            var written = new XfaPdfWriter(document, budget, report).Write(pages);
+            var written = new XfaPdfWriter(document, budget, report, options.ImageDecoder).Write(pages);
             var stamp = new PdfString(PdfDate.Format(DateTimeOffset.UtcNow));
             foreach (var page in written)
                 Mark(page, stamp);

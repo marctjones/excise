@@ -16,12 +16,14 @@ internal sealed class XfaPdfWriter
     private readonly PdfDocument _document;
     private readonly XfaBudget _budget;
     private readonly XfaReport _report;
+    private readonly IXfaImageDecoder? _imageDecoder;
 
-    public XfaPdfWriter(PdfDocument document, XfaBudget budget, XfaReport report)
+    public XfaPdfWriter(PdfDocument document, XfaBudget budget, XfaReport report, IXfaImageDecoder? imageDecoder = null)
     {
         _document = document;
         _budget = budget;
         _report = report;
+        _imageDecoder = imageDecoder;
     }
 
     /// <summary>
@@ -172,7 +174,7 @@ internal sealed class XfaPdfWriter
     {
         if (area.W <= 0 || area.H <= 0 || XfaImage.Bytes(leaf, _document, _report) is not { } bytes)
             return;
-        if (XfaImage.Decode(bytes, _report) is not var (image, w, h))
+        if (XfaImage.Decode(bytes, _report, _imageDecoder) is not var (image, w, h))
             return;
         var placed = XfaImage.Place(area, w, h, leaf.Image.AttrOr("aspect", "fit"));
         if (placed.W > 0 && placed.H > 0)
