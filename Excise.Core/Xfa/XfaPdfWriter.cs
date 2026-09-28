@@ -101,6 +101,8 @@ internal sealed class XfaPdfWriter
                     var block = leaf.LayoutValue(inner.W, _budget);
                     DrawTextBlock(content, block, inner, leaf.Para);
                 }
+                if (leaf.Dropdown)
+                    DrawDropdownArrow(content, inner, leaf.Font.Color);
                 break;
         }
 
@@ -129,6 +131,18 @@ internal sealed class XfaPdfWriter
     private const double FieldTintAlpha = 0.13;
 
     private const double RequiredWidth = 1.5;
+
+    /// <summary>A closed drop-down's arrow: a small down-pointing triangle at the right edge.</summary>
+    private static void DrawDropdownArrow(PageContent content, XfaRect area, PdfColor color)
+    {
+        double w = Math.Clamp(area.H * 0.5, 3, 8);
+        if (area.W < w * 2 || area.H <= 0)
+            return;
+        double h = w / 2;
+        double right = area.Right - Math.Min(3, area.W * 0.05);
+        double top = area.Y + (area.H - h) / 2;
+        content.Polygon(new[] { (right - w, top), (right, top), (right - w / 2, top + h) }, color);
+    }
 
     private void DrawTextBlock(PageContent content, XfaTextBlock block, XfaRect area, XfaParaSpec para)
     {

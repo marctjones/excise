@@ -98,6 +98,9 @@ internal sealed class XfaLeaf
     /// </summary>
     public bool RoundCheck { get; private init; }
 
+    /// <summary>A choice list shown as a closed drop-down, which carries an arrow.</summary>
+    public bool Dropdown { get; private init; }
+
     public static XfaLeaf From(XfaFormNode node, XfaReport report)
     {
         var e = node.Element;
@@ -200,6 +203,7 @@ internal sealed class XfaLeaf
             FieldBackground = isField && ShowsFieldBackground(e, kind),
             RoundCheck = kind == "checkButton"
                 && (widget?.Attr("shape") ?? (e.Parent?.Name.LocalName == "exclGroup" ? "round" : "square")) == "round",
+            Dropdown = isField && kind == "choiceList" && widget.AttrOr("open", "userControl") is not ("always" or "multiSelect"),
         };
     }
 

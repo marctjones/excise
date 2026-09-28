@@ -19,6 +19,7 @@ namespace Excise.Rendering.Tests.Differential;
 /// white is (222, 229, 255); an input or textarea in a readOnly field does not;</item>
 /// <item><c>validate nullTest="error"</c> makes the control <c>:required</c>, outlined
 /// 1.5px red outside its box;</item>
+/// <item>a closed choice list is a <c>&lt;select&gt;</c>, which shows an arrow.</item>
 /// </list>
 /// Page coordinates: the content area starts at (18pt, 18pt); rendering at
 /// 144 dpi puts 2 px on every point.
@@ -128,5 +129,21 @@ public class XfaWidgetAppearanceTests : IDisposable
         ((int)outline.Blue).Should().BeLessThan(60);
         var notRequired = At(bitmap, 305.25, 105);
         ((int)notRequired.Green).Should().BeGreaterThan(200, "an optional field has no red outline");
+    }
+
+    [Fact]
+    public void ClosedChoiceList_ShowsADropDownArrow_AndAListBoxDoesNot()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // Country: x 90-234, y 90-110. Pick (open="always"): x 306-450, y 90-150.
+        const string items = "<items><text>Canada</text><text>France</text></items>";
+        using var bitmap = LayOutAndRender(
+            $"<field name=\"Country\" x=\"1in\" y=\"1in\" w=\"2in\" h=\"20pt\"><ui><choiceList/></ui>{items}</field>"
+            + $"<field name=\"Pick\" x=\"4in\" y=\"1in\" w=\"2in\" h=\"60pt\"><ui><choiceList open=\"always\"/></ui>{items}</field>");
+
+        Ink(bitmap, 214, 90, 20, 20).Should().BeGreaterThan(20, "a closed drop-down draws its arrow at the right edge");
+        Ink(bitmap, 90, 90, 120, 20).Should().Be(0, "no value is selected, so nothing else is drawn");
+        Ink(bitmap, 430, 90, 20, 60).Should().Be(0, "a list box has no arrow");
     }
 }

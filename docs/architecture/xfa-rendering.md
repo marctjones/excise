@@ -81,9 +81,10 @@ named below), not to this page.
    `passwordChar` once per character.
 10. **Fields look the way pdf.js shows them on screen (#1825).** The field tint
     (rgba(0, 54, 255, 0.13) on text-like edits and choice lists, not on
-    `readOnly`/`protected`/`nonInteractive` edits) and the 1.5pt red outline of a
-    field with `validate nullTest="error"` are pdf.js viewer chrome, not
-    template content: pdf.js drops the tint when printing. Decision 7 leaves no
+    `readOnly`/`protected`/`nonInteractive` edits), the 1.5pt red outline of a
+    field with `validate nullTest="error"`, and a closed drop-down's arrow are
+    pdf.js viewer chrome, not template content: pdf.js drops the tint and the
+    arrow when printing. Decision 7 leaves no
     widget for a viewer to highlight, so they are drawn into the page, and a
     saved or printed rendition carries them. A `checkButton` inside an `exclGroup` with no `shape` is a circle, as
     pdf.js renders it (a radio button); an explicit `shape` is honoured.
