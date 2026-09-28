@@ -274,6 +274,111 @@ public class PdfGraphics : IDisposable
 
     #endregion
 
+    #region Ellipse and Arc Drawing
+
+    /// <summary>
+    /// Draws the ellipse inscribed in the box <see cref="DrawRectangle(double, double, double, double, PdfBrush?, PdfPen?)"/>
+    /// takes: (<paramref name="x"/>, <paramref name="y"/>) is its lower-left corner in PDF user
+    /// space (y up). The outline is four cubic Bezier quarter arcs. Nothing is drawn when both
+    /// <paramref name="fill"/> and <paramref name="stroke"/> are null.
+    /// </summary>
+    public void DrawEllipse(double x, double y, double width, double height, PdfBrush? fill, PdfPen? stroke)
+    {
+        ThrowIfDisposed();
+        if (fill == null && stroke == null)
+            return;
+
+        AppendArc(x + width / 2, y + height / 2, width / 2, height / 2, 0, 360);
+        ClosePath();
+        if (fill != null && stroke != null)
+            FillAndStroke(fill, stroke);
+        else if (fill != null)
+            Fill(fill);
+        else
+            Stroke(stroke!);
+    }
+
+    /// <summary>
+    /// Draws a circle of <paramref name="radius"/> centred on (<paramref name="cx"/>, <paramref name="cy"/>);
+    /// see <see cref="DrawEllipse"/>.
+    /// </summary>
+    public void DrawCircle(double cx, double cy, double radius, PdfBrush? fill, PdfPen? stroke) =>
+        DrawEllipse(cx - radius, cy - radius, 2 * radius, 2 * radius, fill, stroke);
+
+    /// <summary>
+    /// Strokes an open arc of the ellipse <see cref="DrawEllipse"/> would draw in the same box.
+    /// Angles are in degrees from the ellipse's centre, 0 pointing along +x; a positive
+    /// <paramref name="sweepAngleDegrees"/> runs counter-clockwise in PDF user space (y up),
+    /// so 0 to 90 is the upper-right quarter. A sweep beyond ±360 is clamped to a full turn.
+    /// </summary>
+    public void DrawArc(double x, double y, double width, double height,
+        double startAngleDegrees, double sweepAngleDegrees, PdfPen stroke)
+    {
+        ThrowIfDisposed();
+        ArgumentNullException.ThrowIfNull(stroke);
+        AppendArc(x + width / 2, y + height / 2, width / 2, height / 2,
+            startAngleDegrees, Math.Clamp(sweepAngleDegrees, -360, 360));
+        Stroke(stroke);
+    }
+
+    /// <summary>
+    /// Start a subpath at the arc's first point and approximate the arc with one cubic Bezier
+    /// per piece of at most 90 degrees. Each piece of angle θ puts its control points along the
+    /// end tangents at 4/3·tan(θ/4) of the radius, which for θ = 90 is the familiar 0.5523.
+    /// </summary>
+    private void AppendArc(double cx, double cy, double rx, double ry, double startDegrees, double sweepDegrees)
+    {
+        int pieces = Math.Max(1, (int)Math.Ceiling(Math.Abs(sweepDegrees) / 90 - 1e-9));
+        double step = sweepDegrees / pieces * Math.PI / 180;
+        double k = 4.0 / 3 * Math.Tan(step / 4);
+        double angle = startDegrees * Math.PI / 180;
+        double cos = Math.Cos(angle), sin = Math.Sin(angle);
+
+        MoveTo(cx + rx * cos, cy + ry * sin);
+        for (int i = 0; i < pieces; i++)
+        {
+            angle += step;
+            double cosEnd = Math.Cos(angle), sinEnd = Math.Sin(angle);
+            CurveTo(
+                cx + rx * (cos - k * sin), cy + ry * (sin + k * cos),
+                cx + rx * (cosEnd + k * sinEnd), cy + ry * (sinEnd - k * cosEnd),
+                cx + rx * cosEnd, cy + ry * sinEnd);
+            (cos, sin) = (cosEnd, sinEnd);
+        }
+    }
+
+    #endregion
+
+    #region Image Drawing
+
+    /// <summary>
+    /// Draws a JPEG or PNG image stretched to the box whose lower-left corner is
+    /// (<paramref name="x"/>, <paramref name="y"/>) in PDF user space (y up). The image is
+    /// added to the page's <c>/XObject</c> resources once per distinct file: drawing the same
+    /// bytes again on the page reuses it. A JPEG is embedded as is; a PNG is stored lossless
+    /// and keeps its transparency.
+    /// </summary>
+    /// <param name="imageBytes">The contents of a JPEG (baseline or progressive, 8-bit gray or
+    /// colour) or PNG (non-interlaced, 8-bit, or 16-bit without a palette) file.</param>
+    /// <exception cref="ArgumentException">The bytes are not such a JPEG or PNG; nothing is drawn.</exception>
+    public void DrawImage(byte[] imageBytes, double x, double y, double width, double height)
+    {
+        ThrowIfDisposed();
+        ArgumentNullException.ThrowIfNull(imageBytes);
+
+        // An image paints the unit square (§8.9.5), so cm maps it onto the box; q/Q keeps
+        // that matrix from reaching anything drawn afterwards.
+        var name = _page.AddImage(imageBytes);
+        // An image paints with the fill alpha (§11.6.4.4): an earlier translucent brush must not fade it.
+        ApplyOpacity(null, 1);
+        EmitLine("q");
+        EmitLine($"{Fmt(width)} 0 0 {Fmt(height)} {Fmt(x)} {Fmt(y)} cm");
+        EmitLine($"/{name} Do");
+        EmitLine("Q");
+    }
+
+    #endregion
+
     #region Path Operations
 
     /// <summary>
@@ -359,6 +464,47 @@ public class PdfGraphics : IDisposable
         ApplyPen(pen);
         ApplyOpacity(pen.Opacity, brush.Opacity);
         EmitPath("B");
+    }
+
+    /// <summary>
+    /// Intersects the clipping region with the current path under the nonzero winding rule
+    /// (<c>W n</c>) and ends the path without painting it. Later drawing is confined to the
+    /// region until the enclosing <see cref="RestoreState"/>, the only way to widen it again:
+    /// call this between <see cref="SaveState"/> and <see cref="RestoreState"/>. A clip set
+    /// outside them also confines every later <see cref="PdfGraphics"/> on the same page,
+    /// since each one appends to the same content stream and <see cref="Dispose"/> cannot undo it.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">No path has been built since the last paint or clip.</exception>
+    public void Clip() => ClipPath("W");
+
+    /// <summary>
+    /// <see cref="Clip"/> under the even-odd rule (<c>W* n</c>): a subpath inside another
+    /// cuts a hole in the region.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">No path has been built since the last paint or clip.</exception>
+    public void ClipEvenOdd() => ClipPath("W*");
+
+    /// <summary>
+    /// Adds the rectangle to the current path and <see cref="Clip"/>s to it; the same
+    /// SaveState/RestoreState scoping applies.
+    /// </summary>
+    public void ClipRectangle(double x, double y, double width, double height)
+    {
+        ThrowIfDisposed();
+        AppendPath($"{Fmt(x)} {Fmt(y)} {Fmt(width)} {Fmt(height)} re");
+        Clip();
+    }
+
+    private void ClipPath(string clipOperator)
+    {
+        ThrowIfDisposed();
+        if (_pendingPath.Length == 0)
+            throw new InvalidOperationException("Build a path with MoveTo/LineTo/CurveTo before clipping to it.");
+
+        // §8.5.4: W/W* sits after the last path-construction operator and before the
+        // painting operator that ends the path; n ends it without painting.
+        AppendPath(clipOperator);
+        EmitPath("n");
     }
 
     private void AppendPath(string line)

@@ -1094,9 +1094,16 @@ namespace Excise.Core.Graphics
         public void BeginArtifact() { }
         public void BeginMarkedContent(string tag, int mcid) { }
         public void BeginPath() { }
+        public void Clip() { }
+        public void ClipEvenOdd() { }
+        public void ClipRectangle(double x, double y, double width, double height) { }
         public void ClosePath() { }
         public void CurveTo(double x1, double y1, double x2, double y2, double x3, double y3) { }
         public void Dispose() { }
+        public void DrawArc(double x, double y, double width, double height, double startAngleDegrees, double sweepAngleDegrees, Excise.Core.Graphics.PdfPen stroke) { }
+        public void DrawCircle(double cx, double cy, double radius, Excise.Core.Graphics.PdfBrush? fill, Excise.Core.Graphics.PdfPen? stroke) { }
+        public void DrawEllipse(double x, double y, double width, double height, Excise.Core.Graphics.PdfBrush? fill, Excise.Core.Graphics.PdfPen? stroke) { }
+        public void DrawImage(byte[] imageBytes, double x, double y, double width, double height) { }
         public void DrawInvisibleText(string text, Excise.Core.Graphics.PdfFont font, double x, double y, double targetWidth) { }
         public void DrawLine(double x1, double y1, double x2, double y2, Excise.Core.Graphics.PdfPen pen) { }
         public void DrawRectangle(double x, double y, double width, double height, Excise.Core.Graphics.PdfBrush fill) { }

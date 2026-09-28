@@ -1543,29 +1543,7 @@ public static class PdfAnnotationAuthoring
     {
         double w = rect.Width, h = rect.Height;
 
-        var image = PdfStream.CreateCompressed(rgbPixels); // #1549: lossless
-        image.SetName("Type", "XObject");
-        image.SetName("Subtype", "Image");
-        image.SetInt("Width", pixelWidth);
-        image.SetInt("Height", pixelHeight);
-        image.SetName("ColorSpace", "DeviceRGB");
-        image.SetInt("BitsPerComponent", 8);
-
-        // A soft mask is its own DeviceGray image of the same size: the reader multiplies the
-        // picture's opacity by it. Skipped when every pixel is opaque, which is the common case
-        // for a photograph and saves a whole extra image.
-        if (alphaPixels != null && alphaPixels.Any(a => a != 255))
-        {
-            var mask = PdfStream.CreateCompressed(alphaPixels);
-            mask.SetName("Type", "XObject");
-            mask.SetName("Subtype", "Image");
-            mask.SetInt("Width", pixelWidth);
-            mask.SetInt("Height", pixelHeight);
-            mask.SetName("ColorSpace", "DeviceGray");
-            mask.SetInt("BitsPerComponent", 8);
-            image["SMask"] = document.AddIndirectObject(mask);
-        }
-        var imageRef = document.AddIndirectObject(image);
+        var imageRef = PdfImageXObject.AddRgb(document, rgbPixels, pixelWidth, pixelHeight, alphaPixels);
 
         var sb = new StringBuilder();
         sb.Append("q\n");

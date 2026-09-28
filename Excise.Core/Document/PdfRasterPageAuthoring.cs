@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Text;
+using Excise.Core.Graphics;
 using Excise.Core.Primitives;
 
 namespace Excise.Core.Document;
@@ -24,13 +25,8 @@ public static class PdfRasterPageAuthoring
             throw new ArgumentException("RGB buffer must be tightly-packed RGB24 pixels.", nameof(rgb));
 
         var page = document.Pages.AddBlank(widthPoints, heightPoints);
-        // Flate, lossless (#1549): raw RGB made a one-page flatten ~150 MB.
-        var image = PdfStream.CreateCompressed(rgb);
-        image.SetName("Type", "XObject"); image.SetName("Subtype", "Image");
-        image.SetInt("Width", pixelWidth); image.SetInt("Height", pixelHeight);
-        image.SetName("ColorSpace", "DeviceRGB"); image.SetInt("BitsPerComponent", 8);
         var xobjects = new PdfDictionary();
-        xobjects["Im0"] = document.AddIndirectObject(image);
+        xobjects["Im0"] = PdfImageXObject.AddRgb(document, rgb, pixelWidth, pixelHeight, alpha: null);
         var resources = new PdfDictionary(); resources["XObject"] = xobjects;
         page.Dictionary["Resources"] = resources;
         page.SetContentStreamBytes(Encoding.ASCII.GetBytes(string.Create(CultureInfo.InvariantCulture,
