@@ -45,6 +45,7 @@ Excise.Core	tests-only	FillableTable	triage:public library/domain API; tests exe
 Excise.Core	tests-only	FindText	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	FlyOpaqueRectangle	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	FlyScale	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	FromJpeg	triage:public authoring API added for napkin (external consumer, #1851 and D15); exercised by Core and render-back tests; no in-repo production caller by design
 Excise.Core	tests-only	FromMatrix	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	FromText	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	GetButtonFields	triage:public library/domain API; tests exercise contract; external callers may use it

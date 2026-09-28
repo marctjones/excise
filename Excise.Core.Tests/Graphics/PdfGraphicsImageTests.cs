@@ -1,5 +1,3 @@
-using System.Buffers.Binary;
-using System.IO.Compression;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Graphics;
@@ -9,48 +7,12 @@ using Xunit;
 namespace Excise.Core.Tests.Graphics;
 
 /// <summary>
-/// #1908: DrawImage places a JPEG or PNG as an image XObject in the page resources, one
-/// entry per distinct file, painted by <c>q w 0 0 h x y cm /ImN Do Q</c>. The PNG fixtures
-/// are written here from known pixels so the decoded samples can be checked exactly.
+/// #1908: DrawImage places a <see cref="PdfImage"/> (RGB pixels or a JPEG) as an image
+/// XObject in the page resources, one entry per distinct image, painted by
+/// <c>q w 0 0 h x y cm /ImN Do Q</c>.
 /// </summary>
 public class PdfGraphicsImageTests
 {
-    /// <summary>A PNG of the given raw (unfiltered) rows, each written with filter type 0.</summary>
-    private static byte[] Png(int colorType, int depth, int width, byte[][] rows, byte[]? plte = null, byte[]? trns = null,
-        int interlace = 0)
-    {
-        using var file = new MemoryStream();
-        file.Write([0x89, (byte)'P', (byte)'N', (byte)'G', 0x0D, 0x0A, 0x1A, 0x0A]);
-        void Chunk(string type, byte[] data)
-        {
-            Span<byte> length = stackalloc byte[4];
-            BinaryPrimitives.WriteInt32BigEndian(length, data.Length);
-            file.Write(length);
-            file.Write(System.Text.Encoding.ASCII.GetBytes(type));
-            file.Write(data);
-            file.Write(new byte[4]); // CRC: not checked by readers of this test's output
-        }
-
-        var header = new byte[13];
-        BinaryPrimitives.WriteInt32BigEndian(header, width);
-        BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(4), rows.Length);
-        (header[8], header[9], header[12]) = ((byte)depth, (byte)colorType, (byte)interlace);
-        Chunk("IHDR", header);
-        if (plte != null) Chunk("PLTE", plte);
-        if (trns != null) Chunk("tRNS", trns);
-
-        using var zlibbed = new MemoryStream();
-        using (var z = new ZLibStream(zlibbed, CompressionLevel.Optimal, leaveOpen: true))
-            foreach (var row in rows)
-            {
-                z.WriteByte(0);
-                z.Write(row);
-            }
-        Chunk("IDAT", zlibbed.ToArray());
-        Chunk("IEND", []);
-        return file.ToArray();
-    }
-
     /// <summary>The start of a JPEG: SOI, an APP0 segment, then a frame header. Enough for DrawImage, which reads only the header.</summary>
     private static byte[] JpegHeader(byte sof, int width, int height, int components, int precision = 8)
     {
@@ -63,7 +25,9 @@ public class PdfGraphicsImageTests
         return bytes.ToArray();
     }
 
-    private static readonly byte[] RgbaPng = Png(6, 8, 2, [[255, 0, 0, 255, 0, 255, 0, 128], [0, 0, 255, 0, 9, 9, 9, 255]]);
+    private static PdfImage Rgba() => PdfImage.FromRgb(2, 2, [255, 0, 0, 0, 255, 0, 0, 0, 255, 9, 9, 9], [255, 128, 0, 255]);
+
+    private static PdfImage Opaque() => PdfImage.FromRgb(1, 1, [1, 2, 3]);
 
     private static PdfStream Image(PdfPage page, string name) => page.GetXObject(name).Should().BeOfType<PdfStream>().Subject;
 
@@ -74,18 +38,18 @@ public class PdfGraphicsImageTests
         var page = doc.Pages.AddBlank(200, 200);
         using var g = page.GetGraphics();
 
-        g.DrawImage(RgbaPng, 10, 20, 100, 50);
+        g.DrawImage(Rgba(), 10, 20, 100, 50);
 
         g.GetOperators().Should().Be("q\n100 0 0 50 10 20 cm\n/Im1 Do\nQ\n");
     }
 
     [Fact]
-    public void DrawImage_RgbaPng_IsAnRgbImageWithItsAlphaAsSoftMask()
+    public void DrawImage_RgbWithAlpha_IsAnRgbImageWithItsAlphaAsSoftMask()
     {
         using var doc = PdfDocument.CreateNew();
         var page = doc.Pages.AddBlank(200, 200);
         using (var g = page.GetGraphics())
-            g.DrawImage(RgbaPng, 0, 0, 10, 10);
+            g.DrawImage(Rgba(), 0, 0, 10, 10);
 
         var image = Image(page, "Im1");
         image.GetNameOrNull("Subtype").Should().Be("Image");
@@ -99,43 +63,15 @@ public class PdfGraphicsImageTests
     }
 
     [Fact]
-    public void DrawImage_OpaquePng_HasNoSoftMask()
+    public void DrawImage_OpaqueRgb_HasNoSoftMask()
     {
         using var doc = PdfDocument.CreateNew();
         var page = doc.Pages.AddBlank(200, 200);
         using (var g = page.GetGraphics())
-            g.DrawImage(Png(2, 8, 1, [[1, 2, 3]]), 0, 0, 10, 10);
+            g.DrawImage(Opaque(), 0, 0, 10, 10);
 
         Image(page, "Im1").ContainsKey("SMask").Should().BeFalse();
         Image(page, "Im1").DecodedData.Should().Equal(1, 2, 3);
-    }
-
-    [Fact]
-    public void DrawImage_PalettePngWithTransparency_ExpandsThePaletteAndItsAlpha()
-    {
-        using var doc = PdfDocument.CreateNew();
-        var page = doc.Pages.AddBlank(200, 200);
-        using (var g = page.GetGraphics())
-            g.DrawImage(Png(3, 8, 3, [[0, 1, 2]], plte: [10, 20, 30, 40, 50, 60, 70, 80, 90], trns: [0, 200]), 0, 0, 10, 10);
-
-        var image = Image(page, "Im1");
-        image.DecodedData.Should().Equal(10, 20, 30, 40, 50, 60, 70, 80, 90);
-        doc.Resolve(image.GetOptional("SMask")!).Should().BeOfType<PdfStream>()
-            .Which.DecodedData.Should().Equal(0, 200, 255);
-    }
-
-    [Fact]
-    public void DrawImage_16BitGrayPng_KeepsTheHighByteAndItsColourKey()
-    {
-        using var doc = PdfDocument.CreateNew();
-        var page = doc.Pages.AddBlank(200, 200);
-        using (var g = page.GetGraphics())
-            g.DrawImage(Png(0, 16, 2, [[0x12, 0x34, 0xAB, 0xCD]], trns: [0x12, 0x34]), 0, 0, 10, 10);
-
-        var image = Image(page, "Im1");
-        image.DecodedData.Should().Equal(0x12, 0x12, 0x12, 0xAB, 0xAB, 0xAB);
-        doc.Resolve(image.GetOptional("SMask")!).Should().BeOfType<PdfStream>()
-            .Which.DecodedData.Should().Equal(0, 255);
     }
 
     [Theory]
@@ -147,7 +83,7 @@ public class PdfGraphicsImageTests
         using var doc = PdfDocument.CreateNew();
         var page = doc.Pages.AddBlank(200, 200);
         using (var g = page.GetGraphics())
-            g.DrawImage(jpeg, 0, 0, 10, 10);
+            g.DrawImage(PdfImage.FromJpeg(jpeg), 0, 0, 10, 10);
 
         var image = Image(page, "Im1");
         image.GetNameOrNull("Filter").Should().Be("DCTDecode");
@@ -157,24 +93,78 @@ public class PdfGraphicsImageTests
     }
 
     [Fact]
-    public void DrawImage_SameBytesTwice_AddsOneXObject_EvenAcrossGraphicsContexts()
+    public void DrawImage_EqualImagesTwice_AddOneXObject_EvenAcrossGraphicsContexts()
     {
         using var doc = PdfDocument.CreateNew();
         var page = doc.Pages.AddBlank(200, 200);
         using (var g = page.GetGraphics())
         {
-            g.DrawImage(RgbaPng, 0, 0, 10, 10);
-            g.DrawImage((byte[])RgbaPng.Clone(), 50, 50, 10, 10);
-            g.DrawImage(Png(2, 8, 1, [[1, 2, 3]]), 0, 0, 10, 10);
+            g.DrawImage(Rgba(), 0, 0, 10, 10);
+            g.DrawImage(Rgba(), 50, 50, 10, 10);
+            g.DrawImage(Opaque(), 0, 0, 10, 10);
             g.GetOperators().Should().Contain("/Im1 Do\nQ\nq\n10 0 0 10 50 50 cm\n/Im1 Do").And.Contain("/Im2 Do");
         }
         using (var g = page.GetGraphics())
         {
-            g.DrawImage(RgbaPng, 0, 0, 10, 10);
+            g.DrawImage(Rgba(), 0, 0, 10, 10);
             g.GetOperators().Should().Contain("/Im1 Do");
         }
 
         page.GetXObject("Im3").Should().BeNull();
+    }
+
+    /// <summary>Image XObject streams in a saved file, counted from its bytes (streams are never inside object streams).</summary>
+    private static int ImageStreamsIn(byte[] pdf) =>
+        System.Text.RegularExpressions.Regex.Matches(System.Text.Encoding.Latin1.GetString(pdf), @"/Subtype\s*/Image\b").Count;
+
+    [Fact]
+    public void DrawImage_EqualImagesOnThreePages_ShareOneXObject_AndTwoImagesStayTwo()
+    {
+        byte[] saved;
+        using (var doc = PdfDocument.CreateNew())
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                using var g = doc.Pages.AddBlank(200, 200).GetGraphics();
+                g.DrawImage(Rgba(), 0, 0, 10, 10);
+                if (i == 2)
+                    g.DrawImage(Opaque(), 0, 0, 10, 10);
+            }
+            saved = doc.SaveToBytes();
+        }
+
+        // One RGB image and its soft mask, plus the opaque image: not 3 x 2 + 1.
+        ImageStreamsIn(saved).Should().Be(3);
+        using var reopened = PdfDocument.Open(saved);
+        var shared = Enumerable.Range(1, 3)
+            .Select(n => reopened.GetPage(n).Resources!.ResolveDictionary(reopened, "XObject")!.GetOptional("Im1"))
+            .Should().AllBeOfType<PdfReference>().Subject.Cast<PdfReference>().ToList();
+        shared.Select(r => r.ObjectNum).Distinct().Should().ContainSingle();
+        Image(reopened.GetPage(3), "Im2").DecodedData.Should().Equal(1, 2, 3);
+    }
+
+    [Fact]
+    public void DrawImage_AfterThePagesHoldingTheSharedImageAreRemoved_StillWritesIt()
+    {
+        byte[] saved;
+        using (var doc = PdfDocument.CreateNew())
+        {
+            for (int i = 0; i < 2; i++)
+                using (var g = doc.Pages.AddBlank(200, 200).GetGraphics())
+                    g.DrawImage(Rgba(), 0, 0, 10, 10);
+            doc.Pages.AddBlank(200, 200);
+            doc.Pages.RemoveAt(0);
+            doc.Pages.RemoveAt(0);
+            using (var g = doc.GetPage(1).GetGraphics())
+                g.DrawImage(Rgba(), 0, 0, 10, 10);
+            saved = doc.SaveToBytes();
+        }
+
+        using var reopened = PdfDocument.Open(saved);
+        var image = Image(reopened.GetPage(1), "Im1");
+        image.DecodedData.Should().Equal(255, 0, 0, 0, 255, 0, 0, 0, 255, 9, 9, 9);
+        reopened.Resolve(image.GetOptional("SMask")!).Should().BeOfType<PdfStream>()
+            .Which.DecodedData.Should().Equal(255, 128, 0, 255);
     }
 
     [Fact]
@@ -189,7 +179,7 @@ public class PdfGraphicsImageTests
         page.Dictionary["Resources"] = resources;
 
         using var g = page.GetGraphics();
-        g.DrawImage(RgbaPng, 0, 0, 10, 10);
+        g.DrawImage(Rgba(), 0, 0, 10, 10);
 
         g.GetOperators().Should().Contain("/Im2 Do");
         xobjects.Keys.Select(k => k.Value).Should().Equal("Im1", "Im2");
@@ -202,7 +192,7 @@ public class PdfGraphicsImageTests
         var page = doc.Pages.AddBlank(200, 200);
         using var g = page.GetGraphics();
         g.DrawRectangle(0, 0, 5, 5, new PdfBrush(PdfColor.Red) { Opacity = 0.5 });
-        g.DrawImage(RgbaPng, 0, 0, 10, 10);
+        g.DrawImage(Rgba(), 0, 0, 10, 10);
 
         g.GetOperators().Should().EndWith("f\n/GS2 gs\nq\n10 0 0 10 0 0 cm\n/Im1 Do\nQ\n");
         page.GetExtGState("GS2")!.GetOptional("ca")!.GetInt().Should().Be(1);
@@ -216,7 +206,7 @@ public class PdfGraphicsImageTests
         {
             var page = doc.Pages.AddBlank(200, 200);
             using (var g = page.GetGraphics())
-                g.DrawImage(RgbaPng, 10, 20, 100, 50);
+                g.DrawImage(Rgba(), 10, 20, 100, 50);
             saved = doc.SaveToBytes();
         }
 
@@ -232,34 +222,55 @@ public class PdfGraphicsImageTests
     public static TheoryData<string, byte[]> Unsupported => new()
     {
         { "not an image", [1, 2, 3, 4] },
-        { "interlaced PNG", Png(2, 8, 1, [[1, 2, 3]], interlace: 1) },
-        { "4-bit PNG", Png(0, 4, 2, [[0x12]]) },
-        { "PNG with corrupt image data", CorruptIdat(Png(2, 8, 1, [[1, 2, 3]])) },
+        { "PNG", [0x89, (byte)'P', (byte)'N', (byte)'G', 0x0D, 0x0A, 0x1A, 0x0A] },
         { "CMYK JPEG", JpegHeader(0xC0, 10, 10, 4) },
         { "12-bit JPEG", JpegHeader(0xC1, 10, 10, 3, precision: 12) },
         { "lossless JPEG", JpegHeader(0xC3, 10, 10, 3) },
         { "JPEG with its height in a DNL segment", JpegHeader(0xC0, 10, 0, 3) },
     };
 
-    /// <summary>Overwrite the IDAT payload (it follows the 33-byte signature and IHDR) with bytes that are not zlib.</summary>
-    private static byte[] CorruptIdat(byte[] png)
-    {
-        int idat = 8 + 25 + 8;
-        png.AsSpan(idat, BinaryPrimitives.ReadInt32BigEndian(png.AsSpan(idat - 8))).Fill(0x5A);
-        return png;
-    }
-
     [Theory]
     [MemberData(nameof(Unsupported))]
-    public void DrawImage_UnsupportedImage_ThrowsAndChangesNothing(string what, byte[] bytes)
+    public void FromJpeg_UnsupportedImage_Throws(string what, byte[] bytes) =>
+        FluentActions.Invoking(() => PdfImage.FromJpeg(bytes)).Should().Throw<ArgumentException>(what);
+
+    [Theory]
+    [InlineData(0, 1, 0, null)]
+    [InlineData(2, 2, 11, null)]
+    [InlineData(2, 2, 13, null)]
+    [InlineData(2, 2, 12, 3)]
+    [InlineData(2, 2, 12, 5)]
+    public void FromRgb_SizeAndLengthsMustAgree(int width, int height, int rgbLength, int? alphaLength) =>
+        FluentActions.Invoking(() => PdfImage.FromRgb(width, height, new byte[rgbLength], alphaLength is { } a ? new byte[a] : null))
+            .Should().Throw<ArgumentException>();
+
+    [Fact]
+    public void FromRgb_CopiesItsPixels_SoLaterChangesToTheArrayDoNotReachTheImage()
     {
+        byte[] rgb = [1, 2, 3];
+        var image = PdfImage.FromRgb(1, 1, rgb);
+        rgb[0] = 99;
         using var doc = PdfDocument.CreateNew();
         var page = doc.Pages.AddBlank(200, 200);
-        using var g = page.GetGraphics();
+        using (var g = page.GetGraphics())
+            g.DrawImage(image, 0, 0, 10, 10);
 
-        FluentActions.Invoking(() => g.DrawImage(bytes, 0, 0, 10, 10)).Should().Throw<ArgumentException>(what);
-        g.GetOperators().Should().BeEmpty();
-        page.Resources?.ContainsKey("XObject").Should().NotBe(true, "a refused image adds no resource entry");
+        Image(page, "Im1").DecodedData.Should().Equal(1, 2, 3);
+    }
+
+    [Fact]
+    public void Identity_DependsOnSizeAndAlpha_NotOnlyOnTheRgbBytes()
+    {
+        byte[] six = [1, 2, 3, 4, 5, 6];
+        var identities = new[]
+        {
+            PdfImage.FromRgb(2, 1, six).Identity,
+            PdfImage.FromRgb(1, 2, six).Identity,
+            PdfImage.FromRgb(2, 1, six, [255, 0]).Identity,
+            PdfImage.FromRgb(2, 1, six, [255, 1]).Identity,
+        };
+        identities.Should().OnlyHaveUniqueItems();
+        PdfImage.FromRgb(2, 1, (byte[])six.Clone()).Identity.Should().Be(identities[0]);
     }
 
     [Fact]
@@ -270,10 +281,10 @@ public class PdfGraphicsImageTests
         using var g = page.GetGraphics();
         g.SaveState();
         g.ClipRectangle(0, 0, 100, 100);
-        g.DrawImage(RgbaPng, 0, 0, 50, 50);
+        g.DrawImage(Rgba(), 0, 0, 50, 50);
         g.DrawCircle(50, 50, 20, PdfBrush.Blue, PdfPen.Black);
         g.MoveTo(0, 0);
-        g.DrawImage(RgbaPng, 10, 10, 50, 50);
+        g.DrawImage(Rgba(), 10, 10, 50, 50);
         g.LineTo(10, 10);
         g.Stroke(PdfPen.Black);
         g.RestoreState();

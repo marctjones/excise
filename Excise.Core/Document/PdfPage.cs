@@ -570,34 +570,28 @@ public partial class PdfPage
                 : !state.ContainsKey(key);
     }
 
-    // Image XObjects PdfGraphics.DrawImage added to this page, keyed by the SHA-256 of the
-    // image file, so drawing the same bytes again reuses the entry instead of embedding a copy.
-    private readonly Dictionary<string, string> _drawnImages = new();
-
     /// <summary>
-    /// Name of a page <c>/XObject</c> holding the JPEG or PNG <paramref name="imageBytes"/>,
-    /// added as <c>Im{n}</c> (the first name not already in use) unless the same bytes were
-    /// added before and that entry is still there.
+    /// Name of a page <c>/XObject</c> holding <paramref name="image"/>: the document's one
+    /// XObject for an equal image, under the name this page already gives it, else added as
+    /// <c>Im{n}</c> (the first name not already in use).
     /// </summary>
-    internal string AddImage(byte[] imageBytes)
+    internal string AddImage(PdfImage image)
     {
+        var reference = _document.GetOrAddDrawnImage(image);
         var xobjects = Resources?.ResolveDictionary(_document, "XObject");
-        var key = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(imageBytes));
-        if (_drawnImages.TryGetValue(key, out var existing) && xobjects?.ContainsKey(existing) == true)
-            return existing;
-
-        // Built before the page is touched, so an image AddEncoded refuses leaves no trace.
-        var image = PdfImageXObject.AddEncoded(_document, imageBytes);
         if (xobjects == null)
         {
             xobjects = new PdfDictionary();
             EnsureResources()["XObject"] = xobjects;
         }
+        foreach (var (name, value) in xobjects)
+            if (value is PdfReference existing && existing == reference)
+                return name.Value;
         int n = 1;
         while (xobjects.ContainsKey($"Im{n}"))
             n++;
-        xobjects[$"Im{n}"] = image;
-        return _drawnImages[key] = $"Im{n}";
+        xobjects[$"Im{n}"] = reference;
+        return $"Im{n}";
     }
 
     /// <summary>

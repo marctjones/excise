@@ -10,9 +10,9 @@ using Xunit;
 namespace Excise.Rendering.Tests;
 
 /// <summary>
-/// #1908 render-back: a JPEG and a transparent PNG placed with <see cref="PdfGraphics.DrawImage"/>
-/// and saved land on their box, in <see cref="SkiaRenderer"/> and in MuPDF, and the PNG's
-/// transparent half stays unpainted. The images are encoded by SkiaSharp, not by Excise.
+/// #1908 render-back: a JPEG and RGB pixels with alpha placed with <see cref="PdfGraphics.DrawImage"/>
+/// and saved land on their box, in <see cref="SkiaRenderer"/> and in MuPDF, and the pixels'
+/// transparent half stays unpainted. The JPEG is encoded by SkiaSharp, not by Excise.
 /// </summary>
 public class ImageAuthoringRenderTests
 {
@@ -33,7 +33,21 @@ public class ImageAuthoringRenderTests
         return data.ToArray();
     }
 
-    private static byte[] Authored(byte[] image)
+    private static PdfImage Pixels(Func<int, int, SKColor> pixel)
+    {
+        var rgb = new byte[40 * 20 * 3];
+        var alpha = new byte[40 * 20];
+        for (int y = 0; y < 20; y++)
+            for (int x = 0; x < 40; x++)
+            {
+                var c = pixel(x, y);
+                int i = y * 40 + x;
+                (rgb[3 * i], rgb[3 * i + 1], rgb[3 * i + 2], alpha[i]) = (c.Red, c.Green, c.Blue, c.Alpha);
+            }
+        return PdfImage.FromRgb(40, 20, rgb, alpha);
+    }
+
+    private static byte[] Authored(PdfImage image)
     {
         var doc = PdfDocument.CreateNew();
         var page = doc.Pages.AddBlank(Size, Size);
@@ -49,11 +63,11 @@ public class ImageAuthoringRenderTests
             doc.GetPage(1), new RenderOptions { Dpi = Dpi, BackgroundColor = SKColors.White });
     }
 
-    private static SKBitmap? RenderWithMutool(byte[] pdf)
+    private static SKBitmap? RenderWithMutool(byte[] pdf, int page = 1)
     {
         var path = Path.Combine(Path.GetTempPath(), $"excise-image-{Guid.NewGuid():N}.pdf");
         File.WriteAllBytes(path, pdf);
-        try { return MutoolReferenceRenderer.RenderPage(path, 1, Dpi); }
+        try { return MutoolReferenceRenderer.RenderPage(path, page, Dpi); }
         finally { File.Delete(path); }
     }
 
@@ -94,7 +108,7 @@ public class ImageAuthoringRenderTests
     [Fact]
     public void Jpeg_FillsItsBox()
     {
-        var pdf = Authored(Encoded(SKEncodedImageFormat.Jpeg, (_, _) => new SKColor(200, 30, 30)));
+        var pdf = Authored(PdfImage.FromJpeg(Encoded(SKEncodedImageFormat.Jpeg, (_, _) => new SKColor(200, 30, 30))));
 
         ForBothRenderers(pdf, (bmp, renderer) =>
         {
@@ -106,11 +120,10 @@ public class ImageAuthoringRenderTests
     }
 
     [Fact]
-    public void TransparentPng_PaintsOnlyItsOpaqueHalf()
+    public void TransparentPixels_PaintOnlyTheirOpaqueHalf()
     {
         // Left half opaque blue, right half fully transparent: without the soft mask the whole box would ink.
-        var pdf = Authored(Encoded(SKEncodedImageFormat.Png,
-            (x, _) => x < 20 ? new SKColor(20, 40, 220, 255) : new SKColor(0, 0, 0, 0)));
+        var pdf = Authored(Pixels((x, _) => x < 20 ? new SKColor(20, 40, 220, 255) : new SKColor(0, 0, 0, 0)));
 
         ForBothRenderers(pdf, (bmp, renderer) =>
         {
@@ -120,5 +133,35 @@ public class ImageAuthoringRenderTests
             ((int)opaque.Blue).Should().BeGreaterThan(200, renderer);
             ((int)opaque.Red).Should().BeLessThan(60, renderer);
         });
+    }
+
+    [Fact]
+    public void SameImageOnThreePages_IsStoredOnce_AndEveryPageStillPaintsIt_AfterAPageIsRemoved()
+    {
+        // #1918: one shared XObject (with its soft mask) referenced from three pages' resources.
+        var image = Pixels((x, _) => x < 20 ? new SKColor(20, 40, 220, 255) : new SKColor(0, 0, 0, 0));
+        using var doc = PdfDocument.CreateNew();
+        for (int i = 0; i < 3; i++)
+            using (var g = doc.Pages.AddBlank(Size, Size).GetGraphics())
+                g.DrawImage(image, X, Y, W, H);
+        var pdf = doc.SaveToBytes();
+
+        System.Text.RegularExpressions.Regex.Matches(System.Text.Encoding.Latin1.GetString(pdf), @"/Subtype\s*/Image\b")
+            .Count.Should().Be(2, "one image and its soft mask, not one pair per page");
+        Assert.SkipWhen(!MutoolReferenceRenderer.IsAvailable, "mutool is not installed.");
+        for (int page = 1; page <= 3; page++)
+        {
+            using var bmp = RenderWithMutool(pdf, page);
+            AssertBox(InkBox(bmp!), 109, $"mutool page {page}");
+        }
+
+        using var reopened = PdfDocument.Open(pdf);
+        reopened.Pages.RemoveAt(1);
+        var trimmed = reopened.SaveToBytes();
+        for (int page = 1; page <= 2; page++)
+        {
+            using var bmp = RenderWithMutool(trimmed, page);
+            AssertBox(InkBox(bmp!), 109, $"mutool page {page} after removing page 2");
+        }
     }
 }
