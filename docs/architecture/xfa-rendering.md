@@ -79,6 +79,15 @@ named below), not to this page.
    only a calculation produces. `XfaLayoutResult.FieldsWrittenByScripts` names the fields.
 9. **Password fields never show their value.** A `passwordEdit` draws its
    `passwordChar` once per character.
+10. **Fields look the way pdf.js shows them on screen (#1825).** The field tint
+    (rgba(0, 54, 255, 0.13) on text-like edits and choice lists, not on
+    `readOnly`/`protected`/`nonInteractive` edits), the 1.5pt red outline of a
+    field with `validate nullTest="error"`, and a closed drop-down's arrow are
+    pdf.js viewer chrome, not template content: pdf.js drops the tint and the
+    arrow when printing. Decision 7 leaves no
+    widget for a viewer to highlight, so they are drawn into the page, and a
+    saved or printed rendition carries them. A `checkButton` inside an `exclGroup` with no `shape` is a circle, as
+    pdf.js renders it (a radio button); an explicit `shape` is honoured.
 
 ## Zero cost for non-XFA documents
 
@@ -189,12 +198,23 @@ Each page becomes `Pages.AddBlank(medium)` plus one content stream:
 - Text: `typeface` maps to a base-14 family (serif, mono, symbol and dingbat
   names, else Helvetica), with `weight` and `posture`, `size`, and fill
   colour. `hAlign`/`vAlign` are honoured, with word wrap for multi-line and
-  `draw` text, and `comb` cells.
-- Widgets are drawn as their static appearance. `checkButton`: box or circle,
+  `draw` text, and `comb` cells. Characters base-14 cannot draw (CJK,
+  Cyrillic, Greek...) use an installed wide-coverage Unicode font
+  (`XfaFallbackFont`: a fixed per-platform list, read from the font directory
+  by excise's own sfnt code, first font of a `.ttc`), embedded as a subset;
+  excise bundles no font (#1577). Layout measures those characters in the
+  same font.
+- Widgets are drawn as their static appearance, with pdf.js's field chrome
+  (decision 10). `checkButton`: box or circle (the widget border outlines it),
   with a check/circle/cross mark when on. `choiceList`: the selected display
   text (dropdown) or the item list (list box). `button`: its caption.
   `passwordEdit`: masked. `signature`: an empty box.
 - Draw content: `rectangle`, `line` and `arc` values are drawn as shapes.
+- Images (#1575): a draw's `<value><image>` and an `imageEdit` field's value
+  (bound data first) are drawn when they are JPEG, embedded as is
+  (`/DCTDecode`, at most 50 megapixels), sized by `aspect` and anchored
+  top-left as pdf.js anchors them. An `href` resolves only through the
+  document's `/Names /XFAImages` tree; nothing is fetched.
 
 After the new pages are written, the placeholder pages are removed and the new
 pages are marked.
@@ -204,9 +224,12 @@ pages are marked.
 The result lists what the rendition leaves out, and the banner summarises it:
 
 - scripts present (event names counted), per #1570/#1571;
-- images and `imageEdit` content (#1575);
+- images, in a draw or an `imageEdit` field, that are not JPEG (BMP, PNG, GIF,
+  TIFF: Excise.Core decodes no image format), and `href` images that are not
+  in the document's `/Names /XFAImages` (#1575);
 - barcodes (#1576);
-- text outside WinAnsi, which base-14 fonts cannot draw (#1577);
+- text outside WinAnsi that no installed fallback font covers, drawn as '?'
+  (#1577);
 - gradient and pattern fills, drawn as their base colour (#1578);
 - `keep`/`overflow` leaders and trailers;
 - `usehref` into another file.

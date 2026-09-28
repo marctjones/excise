@@ -1,0 +1,196 @@
+using AwesomeAssertions;
+using Excise.Core.Document;
+using Excise.Core.Xfa;
+using Excise.Rendering.Differential;
+using Excise.TestSupport;
+using SkiaSharp;
+using Xunit;
+
+namespace Excise.Rendering.Tests.Differential;
+
+/// <summary>
+/// #1825: how a laid-out XFA form's widgets LOOK, judged against pdf.js (5.x
+/// pdf.worker.mjs and pdf_viewer.css), rendered by mutool and read back as
+/// pixels. The expectations come from pdf.js, not from excise:
+/// <list type="bullet">
+/// <item>a checkButton inside an exclGroup is an HTML radio button (a circle); excise
+/// honours an explicit <c>shape="square"</c>, which pdf.js ignores;</item>
+/// <item><c>.xfaTextfield, .xfaSelect</c> carry rgba(0, 54, 255, 0.13), which over
+/// white is (222, 229, 255); an input or textarea in a readOnly field does not;</item>
+/// <item><c>validate nullTest="error"</c> makes the control <c>:required</c>, outlined
+/// 1.5px red outside its box;</item>
+/// <item>a closed choice list is a <c>&lt;select&gt;</c>, which shows an arrow.</item>
+/// </list>
+/// Page coordinates: the content area starts at (18pt, 18pt); rendering at
+/// 144 dpi puts 2 px on every point.
+/// </summary>
+public class XfaWidgetAppearanceTests : IDisposable
+{
+    private const int Dpi = 144;
+    private const double Px = Dpi / 72.0;
+    private readonly List<string> _temp = new();
+
+    public void Dispose()
+    {
+        foreach (var path in _temp)
+        {
+            try { File.Delete(path); } catch (IOException) { }
+        }
+    }
+
+    private SKBitmap LayOutAndRender(string body, string? data = null)
+    {
+        var template = XfaTestForms.Template(body, layout: "position");
+        using var document = PdfDocument.Open(XfaTestForms.BuildPdf(template, data));
+        var result = document.ApplyXfaLayout(cancellationToken: TestContext.Current.CancellationToken);
+        result.Status.Should().Be(XfaLayoutStatus.LaidOut, result.FailureReason);
+        var path = Path.Combine(Path.GetTempPath(), $"excise-xfa-{Guid.NewGuid():N}.pdf");
+        document.Save(path);
+        _temp.Add(path);
+        var bitmap = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
+        bitmap.Should().NotBeNull("mutool must render the laid-out page");
+        return bitmap!;
+    }
+
+    private static SKColor At(SKBitmap bitmap, double xPt, double yPt)
+        => bitmap.GetPixel((int)Math.Round(xPt * Px), (int)Math.Round(yPt * Px));
+
+    /// <summary>Pixels darker than mid-grey in the rectangle, in points.</summary>
+    private static int Ink(SKBitmap bitmap, double x, double y, double w, double h)
+    {
+        int count = 0;
+        for (int py = (int)(y * Px); py < (int)((y + h) * Px); py++)
+        {
+            for (int px = (int)(x * Px); px < (int)((x + w) * Px); px++)
+            {
+                var c = bitmap.GetPixel(px, py);
+                if (c.Red + c.Green + c.Blue < 3 * 128)
+                    count++;
+            }
+        }
+        return count;
+    }
+
+    private static string Check(string name, string x, string shape = "") =>
+        $"<field name=\"{name}\" x=\"{x}\" y=\"0\" w=\"30pt\" h=\"30pt\">"
+        + $"<ui><checkButton{shape} size=\"20pt\"><border><fill><color value=\"255,255,255\"/></fill></border></checkButton></ui>"
+        + "<items><text>1</text><text>0</text></items></field>";
+
+    [Fact]
+    public void ExclGroupMember_IsACircle_AndALoneCheckBoxStaysSquare()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // The shape of IRCC's IMM 5257e radio buttons: no shape attribute, a white-filled
+        // border. Each 20pt box is centred in a 30pt-high widget: the radio's box is
+        // x 90-110, y 23-43; the lone check box's is x 234-254, y 23-43. The widgets'
+        // left edges are clip edges, so the right side is where the outline is looked for.
+        using var bitmap = LayOutAndRender(
+            "<exclGroup name=\"Answer\" layout=\"position\" x=\"1in\" y=\"0\" w=\"2in\" h=\"30pt\">"
+            + Check("Yes", "0") + "</exclGroup>"
+            + "<subform name=\"Box\" layout=\"position\" x=\"3in\" y=\"0\" w=\"2in\" h=\"30pt\">"
+            + Check("Agree", "0") + "</subform>");
+
+        // Both outlines cross the middle of their right side.
+        Ink(bitmap, 109, 31, 2, 4).Should().BeGreaterThan(0, "the radio's outline passes its right midpoint");
+        Ink(bitmap, 253, 31, 2, 4).Should().BeGreaterThan(0, "the check box's outline passes its right midpoint");
+
+        // A square's outline runs through its corner; a circle's is 5.9pt away from it.
+        Ink(bitmap, 108, 41, 3, 3).Should().Be(0, "pdf.js draws an exclGroup member as a radio: a circle");
+        Ink(bitmap, 252, 41, 3, 3).Should().BeGreaterThan(0, "a check box outside an exclGroup stays square");
+
+        // The border outlines the box, not the whole 30pt-wide widget.
+        Ink(bitmap, 112, 19, 6, 28).Should().Be(0, "nothing is drawn right of the radio's 20pt box");
+    }
+
+    [Fact]
+    public void TextField_HasThePdfJsTint_AndARedOutlineWhenRequired()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // Name: x 90-234, y 90-120, required. Note: x 306-450, y 90-120, readOnly.
+        using var bitmap = LayOutAndRender(
+            "<field name=\"Name\" x=\"1in\" y=\"1in\" w=\"2in\" h=\"30pt\"><ui><textEdit/></ui>"
+            + "<validate nullTest=\"error\"/></field>"
+            + "<field name=\"Note\" x=\"4in\" y=\"1in\" w=\"2in\" h=\"30pt\" access=\"readOnly\"><ui><textEdit/></ui></field>");
+
+        var tint = At(bitmap, 160, 105);
+        ((int)tint.Red).Should().BeInRange(219, 225, "rgba(0,54,255,0.13) over white");
+        ((int)tint.Green).Should().BeInRange(226, 232);
+        ((int)tint.Blue).Should().BeGreaterThan(250);
+
+        var readOnly = At(bitmap, 380, 105);
+        ((int)readOnly.Red).Should().BeGreaterThan(250, "pdf.js clears the tint on a readOnly input");
+
+        // The 1.5pt outline straddles nothing inside the box: it lies from 88.5 to 90 on the left.
+        var outline = At(bitmap, 89.25, 105);
+        ((int)outline.Red).Should().BeGreaterThan(200, "a required field is outlined in red");
+        ((int)outline.Green).Should().BeLessThan(60);
+        ((int)outline.Blue).Should().BeLessThan(60);
+        var notRequired = At(bitmap, 305.25, 105);
+        ((int)notRequired.Green).Should().BeGreaterThan(200, "an optional field has no red outline");
+    }
+
+    [Fact]
+    public void ClosedChoiceList_ShowsADropDownArrow_AndAListBoxDoesNot()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // Country: x 90-234, y 90-110. Pick (open="always"): x 306-450, y 90-150.
+        const string items = "<items><text>Canada</text><text>France</text></items>";
+        using var bitmap = LayOutAndRender(
+            $"<field name=\"Country\" x=\"1in\" y=\"1in\" w=\"2in\" h=\"20pt\"><ui><choiceList/></ui>{items}</field>"
+            + $"<field name=\"Pick\" x=\"4in\" y=\"1in\" w=\"2in\" h=\"60pt\"><ui><choiceList open=\"always\"/></ui>{items}</field>");
+
+        Ink(bitmap, 214, 90, 20, 20).Should().BeGreaterThan(20, "a closed drop-down draws its arrow at the right edge");
+        Ink(bitmap, 90, 90, 120, 20).Should().Be(0, "no value is selected, so nothing else is drawn");
+        Ink(bitmap, 430, 90, 20, 60).Should().Be(0, "a list box has no arrow");
+    }
+
+    /// <summary>A <paramref name="w"/> x <paramref name="h"/> JPEG of one colour, base64.</summary>
+    private static string Jpeg(int w, int h, SKColor color)
+    {
+        using var bitmap = new SKBitmap(w, h);
+        bitmap.Erase(color);
+        using var data = SKImage.FromBitmap(bitmap).Encode(SKEncodedImageFormat.Jpeg, 95);
+        return Convert.ToBase64String(data.ToArray());
+    }
+
+    private static bool IsRed(SKColor c) => c.Red > 200 && c.Green < 60 && c.Blue < 60;
+
+    private static bool IsWhite(SKColor c) => c.Red > 245 && c.Green > 245 && c.Blue > 245;
+
+    [Fact]
+    public void ImageDraw_IsDrawn_FittedToItsBox_TopLeft()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // #1575. A 40 x 20 px JPEG (no JFIF density: 1 px = 1pt, as in pdf.js) in a 1in
+        // square draw at (90, 90): aspect "fit" (the default) scales it to 72 x 36pt, and
+        // pdf.js anchors it top-left, so it covers x 90-162, y 90-126 and nothing below.
+        using var bitmap = LayOutAndRender(
+            "<draw name=\"Logo\" x=\"1in\" y=\"1in\" w=\"1in\" h=\"1in\"><value>"
+            + $"<image contentType=\"image/jpeg\">{Jpeg(40, 20, SKColors.Red)}</image></value></draw>");
+
+        IsRed(At(bitmap, 92, 92)).Should().BeTrue("the image's top-left corner is at the box's");
+        IsRed(At(bitmap, 160, 124)).Should().BeTrue("fit scales 40 x 20 up to the 72pt width");
+        IsWhite(At(bitmap, 126, 135)).Should().BeTrue("fit keeps the 2:1 aspect, so the box's lower half stays empty");
+    }
+
+    [Fact]
+    public void ImageField_ShowsItsBoundData_StretchedWhenAspectIsNone()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // An imageEdit field bound to base64 JPEG data, aspect "none": stretched over its
+        // whole 1in x 0.5in box at (90, 90).
+        using var bitmap = LayOutAndRender(
+            "<field name=\"Photo\" x=\"1in\" y=\"1in\" w=\"1in\" h=\"0.5in\"><ui><imageEdit/></ui>"
+            + "<value><image aspect=\"none\" contentType=\"image/jpeg\"/></value></field>",
+            XfaTestForms.Data($"<Photo contentType=\"image/jpeg\">{Jpeg(10, 10, SKColors.Red)}</Photo>"));
+
+        IsRed(At(bitmap, 92, 92)).Should().BeTrue();
+        IsRed(At(bitmap, 160, 124)).Should().BeTrue("aspect none fills the whole box");
+        IsWhite(At(bitmap, 170, 105)).Should().BeTrue("nothing is drawn outside the box");
+    }
+}

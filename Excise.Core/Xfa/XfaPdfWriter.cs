@@ -24,6 +24,23 @@ internal sealed class XfaPdfWriter
         _report = report;
     }
 
+    /// <summary>
+    /// The system Unicode font for this document (#1577), made on first use. One instance
+    /// per document, so its subset holds exactly the glyphs this document draws.
+    /// </summary>
+    private PdfFont? FallbackFont()
+    {
+        if (!_fallbackTried)
+        {
+            _fallbackTried = true;
+            _fallbackFont = XfaFallbackFont.ForDocument(10);
+        }
+        return _fallbackFont;
+    }
+
+    private PdfFont? _fallbackFont;
+    private bool _fallbackTried;
+
     /// <summary>Append one PDF page per laid-out page; returns the new pages.</summary>
     public List<PdfPage> Write(IReadOnlyList<XfaPage> pages)
     {
@@ -31,7 +48,7 @@ internal sealed class XfaPdfWriter
         foreach (var page in pages)
         {
             var pdfPage = _document.Pages.AddBlank(page.Area.Width, page.Area.Height);
-            var content = new PageContent(pdfPage, page.Area.Height);
+            var content = new PageContent(pdfPage, page.Area.Height, FallbackFont);
             foreach (var paint in page.Paints)
             {
                 _budget.Tick();
@@ -63,19 +80,26 @@ internal sealed class XfaPdfWriter
         }
 
         var ui = regions.Ui;
-        if (leaf.Widget != null)
+        // A check button's border is the outline of its box or circle, drawn with the mark.
+        if (leaf.Widget != null && leaf.WidgetKind != "checkButton")
             DrawBorder(content, ui, XfaBorderSpec.From(leaf.Widget.Child("border")));
         var inner = ui.Deflate(leaf.WidgetMargin);
+        if (leaf.FieldBackground)
+            content.Fill(inner, 0, FieldTint, FieldTintAlpha);
 
+        XfaRect? checkBox = null;
         switch (leaf.WidgetKind)
         {
             case "checkButton":
-                DrawCheckButton(content, leaf, inner);
+                checkBox = DrawCheckButton(content, leaf, inner);
+                break;
+
+            case "imageEdit":
+                DrawImage(content, leaf, inner);
                 break;
 
             case "button":
             case "signature":
-            case "imageEdit":
             case "barcode":
                 break;
 
@@ -83,6 +107,10 @@ internal sealed class XfaPdfWriter
                 if (leaf.Shape != null)
                 {
                     DrawShape(content, leaf.Shape, inner);
+                }
+                else if (leaf.Image != null)
+                {
+                    DrawImage(content, leaf, inner);
                 }
                 else if (leaf.ListItems.Count > 0)
                 {
@@ -97,10 +125,58 @@ internal sealed class XfaPdfWriter
                     var block = leaf.LayoutValue(inner.W, _budget);
                     DrawTextBlock(content, block, inner, leaf.Para);
                 }
+                if (leaf.Dropdown)
+                    DrawDropdownArrow(content, inner, leaf.Font.Color);
                 break;
         }
 
         content.Restore();
+
+        // pdf.js outlines a required control (CSS :required, 1.5px red) outside its box, so
+        // the outline is drawn after the clip is gone.
+        if (leaf.Required && leaf.WidgetKind is not ("button" or "signature" or "imageEdit" or "barcode" or "passwordEdit"))
+        {
+            var box = checkBox ?? inner;
+            var outline = new XfaRect(box.X - RequiredWidth / 2, box.Y - RequiredWidth / 2, box.W + RequiredWidth, box.H + RequiredWidth);
+            if (checkBox != null && leaf.RoundCheck)
+                content.Ellipse(outline, RequiredWidth, PdfColor.Red, null);
+            else
+                content.StrokeRect(outline, RequiredWidth, PdfColor.Red, null);
+        }
+    }
+
+    /// <summary>
+    /// pdf.js's unfocused-field background, rgba(0, 54, 255, 0.13). It is viewer chrome, not
+    /// template content: pdf.js drops it when printing, and Acrobat shows a similar tint
+    /// only with field highlighting on. See docs/architecture/xfa-rendering.md, decision 10.
+    /// </summary>
+    private static readonly PdfColor FieldTint = PdfColor.FromRgb(0, 54, 255);
+
+    private const double FieldTintAlpha = 0.13;
+
+    private const double RequiredWidth = 1.5;
+
+    /// <summary>A closed drop-down's arrow: a small down-pointing triangle at the right edge.</summary>
+    private static void DrawDropdownArrow(PageContent content, XfaRect area, PdfColor color)
+    {
+        double w = Math.Clamp(area.H * 0.5, 3, 8);
+        if (area.W < w * 2 || area.H <= 0)
+            return;
+        double h = w / 2;
+        double right = area.Right - Math.Min(3, area.W * 0.05);
+        double top = area.Y + (area.H - h) / 2;
+        content.Polygon(new[] { (right - w, top), (right, top), (right - w / 2, top + h) }, color);
+    }
+
+    private void DrawImage(PageContent content, XfaLeaf leaf, XfaRect area)
+    {
+        if (area.W <= 0 || area.H <= 0 || XfaImage.Bytes(leaf, _document, _report) is not { } bytes)
+            return;
+        if (XfaImage.Decode(bytes, _report) is not var (image, w, h))
+            return;
+        var placed = XfaImage.Place(area, w, h, leaf.Image.AttrOr("aspect", "fit"));
+        if (placed.W > 0 && placed.H > 0)
+            content.Image(image, placed);
     }
 
     private void DrawTextBlock(PageContent content, XfaTextBlock block, XfaRect area, XfaParaSpec para)
@@ -172,24 +248,38 @@ internal sealed class XfaPdfWriter
         }
     }
 
-    private void DrawCheckButton(PageContent content, XfaLeaf leaf, XfaRect area)
+    /// <summary>Draw a check button's box (or circle) and mark; returns the box.</summary>
+    private XfaRect DrawCheckButton(PageContent content, XfaLeaf leaf, XfaRect area)
     {
         var widget = leaf.Widget!;
         double size = Math.Min(leaf.CheckSize, Math.Max(1, Math.Min(area.W, area.H)));
         var box = new XfaRect(area.X, area.Y + (area.H - size) / 2, size, size);
-        bool round = widget.AttrOr("shape", "square") == "round";
+        bool round = leaf.RoundCheck;
 
-        if (widget.Child("border") == null)
+        // No border element: a thin black outline. A border element supplies the fill and
+        // the edge (its first edge; a box has one outline); a hidden border draws none.
+        var borderElement = widget.Child("border");
+        var border = XfaBorderSpec.From(borderElement);
+        if (border?.FillApproximated == true)
+            _report.Note("gradient and pattern fills drawn as their base colour");
+        PdfColor? fill = border?.Fill;
+        var edge = borderElement == null ? new XfaEdgeSpec(true, 0.5, PdfColor.Black, "solid") : border?.Edges[0];
+        double width = edge is { Visible: true } ? edge.Thickness : 0;
+        var stroke = edge?.Color ?? PdfColor.Black;
+        if (round)
         {
-            if (round)
-                content.Ellipse(box, 0.5, PdfColor.Black, null);
-            else
-                content.StrokeRect(box, 0.5, PdfColor.Black, null);
+            content.Ellipse(box, width, stroke, fill);
+        }
+        else
+        {
+            if (fill is { } f)
+                content.Fill(box, 0, f);
+            content.StrokeRect(box, width, stroke, edge != null ? DashFor(edge.Stroke, edge.Thickness) : null);
         }
 
         bool on = leaf.Node.Value != null && leaf.Node.Value == XfaValues.OnValue(leaf.Element);
         if (!on)
-            return;
+            return box;
 
         var mark = widget.AttrOr("mark", "default");
         if (mark == "default")
@@ -220,6 +310,7 @@ internal sealed class XfaPdfWriter
                 break;
             }
         }
+        return box;
     }
 
     private void DrawShape(PageContent content, XElement shape, XfaRect area)
@@ -343,11 +434,13 @@ internal sealed class XfaPdfWriter
         private readonly PdfPage _page;
         private readonly double _pageHeight;
         private readonly Dictionary<string, string> _fontNames = new(StringComparer.Ordinal);
+        private readonly Func<PdfFont?> _fallbackFont;
 
-        public PageContent(PdfPage page, double pageHeight)
+        public PageContent(PdfPage page, double pageHeight, Func<PdfFont?> fallbackFont)
         {
             _page = page;
             _pageHeight = pageHeight;
+            _fallbackFont = fallbackFont;
         }
 
         public override string ToString() => _sb.ToString();
@@ -374,9 +467,33 @@ internal sealed class XfaPdfWriter
                 return;
 
             var font = spec.ToPdfFont();
-            if (!font.CanEncodeFully(text))
-                report.Note("text outside the WinAnsi character set shown as '?'");
+            if (font.CanEncodeFully(text))
+            {
+                Run(text, font, spec.Size, spec.WidthScale, spec.Color, x, baseline);
+                return;
+            }
 
+            // #1577: what base-14 cannot draw goes to the system fallback font, segment by
+            // segment, advancing by the widths layout measured (XfaFontSpec.Width).
+            foreach (var (segment, fallback) in XfaFallbackFont.Segments(text, font))
+            {
+                if (fallback && _fallbackFont() is { } unicode)
+                {
+                    Run(segment, unicode, spec.Size, 1, spec.Color, x, baseline);
+                    x += XfaFallbackFont.Width(segment, spec.Size);
+                }
+                else
+                {
+                    if (!font.CanEncodeFully(segment))
+                        report.Note("text outside the WinAnsi character set shown as '?'");
+                    Run(segment, font, spec.Size, spec.WidthScale, spec.Color, x, baseline);
+                    x += font.MeasureWidth(segment) * spec.WidthScale;
+                }
+            }
+        }
+
+        private void Run(string text, PdfFont font, double size, double widthScale, PdfColor color, double x, double baseline)
+        {
             if (!_fontNames.TryGetValue(font.BaseFont, out var name))
             {
                 name = _page.AddFont(font);
@@ -384,13 +501,22 @@ internal sealed class XfaPdfWriter
             }
 
             Emit("BT");
-            Emit($"/{name} {F(spec.Size)} Tf");
+            Emit($"/{name} {F(size)} Tf");
             // Tz is text state and survives ET, so every run sets its own.
-            Emit($"{F(spec.WidthScale * 100)} Tz");
-            Emit($"{Rgb(spec.Color)} rg");
+            Emit($"{F(widthScale * 100)} Tz");
+            Emit($"{Rgb(color)} rg");
             Emit($"{F(x)} {F(Y(baseline))} Td");
             Emit($"{font.EncodeString(text)} Tj");
             Emit("ET");
+        }
+
+        public void Image(PdfImage image, XfaRect r)
+        {
+            var name = _page.AddImage(image);
+            Emit("q");
+            Emit($"{F(r.W)} 0 0 {F(r.H)} {F(r.X)} {F(Y(r.Bottom))} cm");
+            Emit($"/{name} Do");
+            Emit("Q");
         }
 
         public void Line(double x1, double y1, double x2, double y2, double width, PdfColor color, string? dash)
@@ -415,9 +541,11 @@ internal sealed class XfaPdfWriter
             Emit("Q");
         }
 
-        public void Fill(XfaRect r, double radius, PdfColor color)
+        public void Fill(XfaRect r, double radius, PdfColor color, double? alpha = null)
         {
             Emit("q");
+            if (alpha is { } a)
+                Emit($"/{_page.AddOpacityState(null, a)} gs");
             Emit($"{Rgb(color)} rg");
             if (radius > 0)
                 RoundedPath(r, radius);
