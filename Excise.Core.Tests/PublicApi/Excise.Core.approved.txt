@@ -1094,6 +1094,9 @@ namespace Excise.Core.Graphics
         public void BeginArtifact() { }
         public void BeginMarkedContent(string tag, int mcid) { }
         public void BeginPath() { }
+        public void Clip() { }
+        public void ClipEvenOdd() { }
+        public void ClipRectangle(double x, double y, double width, double height) { }
         public void ClosePath() { }
         public void CurveTo(double x1, double y1, double x2, double y2, double x3, double y3) { }
         public void Dispose() { }

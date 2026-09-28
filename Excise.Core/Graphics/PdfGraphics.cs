@@ -436,6 +436,47 @@ public class PdfGraphics : IDisposable
         EmitPath("B");
     }
 
+    /// <summary>
+    /// Intersects the clipping region with the current path under the nonzero winding rule
+    /// (<c>W n</c>) and ends the path without painting it. Later drawing is confined to the
+    /// region until the enclosing <see cref="RestoreState"/>, the only way to widen it again:
+    /// call this between <see cref="SaveState"/> and <see cref="RestoreState"/>. A clip set
+    /// outside them also confines every later <see cref="PdfGraphics"/> on the same page,
+    /// since each one appends to the same content stream and <see cref="Dispose"/> cannot undo it.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">No path has been built since the last paint or clip.</exception>
+    public void Clip() => ClipPath("W");
+
+    /// <summary>
+    /// <see cref="Clip"/> under the even-odd rule (<c>W* n</c>): a subpath inside another
+    /// cuts a hole in the region.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">No path has been built since the last paint or clip.</exception>
+    public void ClipEvenOdd() => ClipPath("W*");
+
+    /// <summary>
+    /// Adds the rectangle to the current path and <see cref="Clip"/>s to it; the same
+    /// SaveState/RestoreState scoping applies.
+    /// </summary>
+    public void ClipRectangle(double x, double y, double width, double height)
+    {
+        ThrowIfDisposed();
+        AppendPath($"{Fmt(x)} {Fmt(y)} {Fmt(width)} {Fmt(height)} re");
+        Clip();
+    }
+
+    private void ClipPath(string clipOperator)
+    {
+        ThrowIfDisposed();
+        if (_pendingPath.Length == 0)
+            throw new InvalidOperationException("Build a path with MoveTo/LineTo/CurveTo before clipping to it.");
+
+        // §8.5.4: W/W* sits after the last path-construction operator and before the
+        // painting operator that ends the path; n ends it without painting.
+        AppendPath(clipOperator);
+        EmitPath("n");
+    }
+
     private void AppendPath(string line)
     {
         _pendingPath.Append(line);
