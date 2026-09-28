@@ -60,6 +60,14 @@ internal sealed class XfaPaginator
 {
     private const double Epsilon = 0.01;
 
+    /// <summary>
+    /// pdf.js fits an object up to 2pt taller than its space (xfa/layout.js <c>checkDimensions</c>,
+    /// <c>Math.round(h - space.height) &lt;= ERROR</c> with <c>ERROR = 2</c>) and draws the excess. HSBC's
+    /// <c>page3</c> subform is 0.55pt taller than its content area and pdf.js shows it whole on one
+    /// page (#1824). Used only for the clipping report, not for fit decisions.
+    /// </summary>
+    private const double FitTolerance = 2;
+
     private readonly XfaBudget _budget;
     private readonly XfaReport _report;
     private readonly IReadOnlyList<XfaPageArea> _pageAreas;
@@ -126,7 +134,7 @@ internal sealed class XfaPaginator
         {
             if (box.H > remaining + Epsilon && _areaHasContent)
                 NextArea();
-            if (box.H > Area.H + Epsilon)
+            if (Math.Round(box.H - Area.H, MidpointRounding.AwayFromZero) > FitTolerance)
                 _report.Note("content taller than its page area is clipped");
 
             EmitWhole(box, originX + box.X, _cursor);
@@ -320,8 +328,48 @@ internal sealed class XfaPaginator
     private int NextPageAreaIndex()
     {
         var current = _pageAreas[_pageAreaIndex];
+        if (current.Element.Parent is { } pageSet
+            && pageSet.AttrOr("relation", "orderedOccurrence") is "simplexPaginated" or "duplexPaginated")
+        {
+            return PaginatedPageAreaIndex(pageSet);
+        }
         if (current.MaxOccur >= 0 && current.Used >= current.MaxOccur && _pageAreaIndex + 1 < _pageAreas.Count)
             return _pageAreaIndex + 1;
+        return _pageAreaIndex;
+    }
+
+    /// <summary>
+    /// The page area for a page after the first in a <c>simplexPaginated</c> or <c>duplexPaginated</c>
+    /// page set (XFA 3.3 "pagePosition", "oddOrEven"): a <c>rest</c> page of the right parity, then a
+    /// <c>rest</c> page of any parity, then one with no position, then the set's first page area. This
+    /// is pdf.js's order (xfa/template.js <c>PageSet[$getNextPage]</c>); like pdf.js, excise does not
+    /// re-lay the final page into a <c>last</c> or <c>only</c> page area. Ohio's expense report gives
+    /// its later pages a 900pt content area against the first page's 841pt (#1824).
+    /// </summary>
+    private int PaginatedPageAreaIndex(XElement pageSet)
+    {
+        var parity = (_pages.Count + 1) % 2 == 0 ? "even" : "odd";
+        int? Find(string oddOrEven, string position)
+        {
+            for (int i = 0; i < _pageAreas.Count; i++)
+            {
+                var e = _pageAreas[i].Element;
+                if (e.Parent == pageSet && e.AttrOr("oddOrEven", "any") == oddOrEven
+                    && e.AttrOr("pagePosition", "any") == position)
+                {
+                    return i;
+                }
+            }
+            return null;
+        }
+
+        if ((Find(parity, "rest") ?? Find("any", "rest") ?? Find("any", "any")) is { } found)
+            return found;
+        for (int i = 0; i < _pageAreas.Count; i++)
+        {
+            if (_pageAreas[i].Element.Parent == pageSet)
+                return i;
+        }
         return _pageAreaIndex;
     }
 

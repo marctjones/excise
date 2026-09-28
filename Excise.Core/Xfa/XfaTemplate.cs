@@ -13,9 +13,11 @@ namespace Excise.Core.Xfa;
 /// Repeatable children (containers, edges, items, ...) come from the prototype
 /// only when the element has none of that name. <c>id</c>, <c>name</c>,
 /// <c>use</c> and <c>usehref</c> are never inherited.</para>
-/// <para>Only same-document references by id are resolved (<c>#id</c>,
-/// <c>.#id</c>). SOM-expression and other-file references are counted in the
-/// report and ignored; excise never opens another file or URL.</para>
+/// <para>Only same-document references are resolved: by id (<c>#id</c>,
+/// <c>.#id</c>) and by a SOM expression rooted at <c>$template</c>
+/// (<c>.#som($template.#subform.designer__stylesheet.Style)</c>, as Designer
+/// writes its style sheets, #1824). Relative SOM and other-file references are
+/// counted in the report and ignored; excise never opens another file or URL.</para>
 /// </remarks>
 internal sealed class XfaTemplate
 {
@@ -36,12 +38,15 @@ internal sealed class XfaTemplate
     private readonly Dictionary<string, XElement> _byId = new(StringComparer.Ordinal);
     private readonly Dictionary<string, XElement> _resolvedProtos = new(StringComparer.Ordinal);
     private readonly HashSet<string> _resolving = new(StringComparer.Ordinal);
+    private readonly XElement _template;
+    private readonly Dictionary<string, XElement?> _somTargets = new(StringComparer.Ordinal);
 
     public XfaTemplate(XElement template, XfaBudget budget, XfaReport report)
     {
         _budget = budget;
         _report = report;
         Namespace = template.Name.Namespace;
+        _template = template;
 
         foreach (var element in template.Descendants())
         {
@@ -103,20 +108,44 @@ internal sealed class XfaTemplate
 
         reference = reference.Trim();
         string? id = null;
-        if (reference.StartsWith(".#", StringComparison.Ordinal))
-            id = reference[2..];
-        else if (reference.StartsWith('#'))
-            id = reference[1..];
-        else if (reference.Contains('#'))
+        if (SomExpression(reference) is { } som)
         {
-            _report.Note("prototype in another file not loaded");
-            return null;
+            id = "\0som:" + som;   // key in _byId: XML cannot carry U+0000, so no id attribute collides
+            if (!_somTargets.TryGetValue(som, out var target))
+            {
+                target = FindBySom(som);
+                _somTargets[som] = target;
+                if (target != null)
+                    _byId[id] = target;
+            }
+            if (target == null)
+            {
+                _report.Note("prototype reference by SOM expression not resolved");
+                return null;
+            }
+            if (target.Name != element.Name)
+            {
+                _report.Note("prototype of a different kind ignored");
+                return null;
+            }
         }
-
-        if (id == null || id.StartsWith("som(", StringComparison.Ordinal) || id.Contains('#'))
+        else
         {
-            _report.Note("prototype reference by SOM expression not resolved");
-            return null;
+            if (reference.StartsWith(".#", StringComparison.Ordinal))
+                id = reference[2..];
+            else if (reference.StartsWith('#'))
+                id = reference[1..];
+            else if (reference.Contains('#'))
+            {
+                _report.Note("prototype in another file not loaded");
+                return null;
+            }
+
+            if (id == null || id.StartsWith("som(", StringComparison.Ordinal) || id.Contains('#'))
+            {
+                _report.Note("prototype reference by SOM expression not resolved");
+                return null;
+            }
         }
 
         if (!_byId.ContainsKey(id))
@@ -145,6 +174,75 @@ internal sealed class XfaTemplate
         finally
         {
             _resolving.Remove(id);
+        }
+    }
+
+    /// <summary>The expression inside <c>#som(...)</c> or <c>.#som(...)</c>; null for other references.</summary>
+    private static string? SomExpression(string reference)
+    {
+        foreach (var prefix in new[] { "#som(", ".#som(" })
+        {
+            if (reference.StartsWith(prefix, StringComparison.Ordinal) && reference.EndsWith(')'))
+                return reference[prefix.Length..^1].Trim();
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Resolve a <c>$template</c>-rooted SOM expression against the unresolved template, as pdf.js
+    /// does (xfa/som.js <c>searchNode</c>): <c>.name</c> matches a child by <c>name</c> or element name,
+    /// looking through unnamed ("transparent") children such as <c>&lt;proto&gt;</c>; <c>.#class</c>
+    /// matches children by element name; <c>[n]</c> picks the n-th match (default the first).
+    /// </summary>
+    private XElement? FindBySom(string expression)
+    {
+        var steps = expression.Split('.');
+        if (steps.Length < 2 || steps[0] != "$template")
+            return null;
+
+        XElement current = _template;
+        for (int i = 1; i < steps.Length; i++)
+        {
+            _budget.Tick();
+            var step = steps[i];
+            int index = 0;
+            var bracket = step.IndexOf('[');
+            if (bracket >= 0)
+            {
+                if (!step.EndsWith(']')
+                    || !int.TryParse(step[(bracket + 1)..^1], System.Globalization.NumberStyles.None,
+                        System.Globalization.CultureInfo.InvariantCulture, out index))
+                {
+                    return null;
+                }
+                step = step[..bracket];
+            }
+
+            IEnumerable<XElement> matches = step.StartsWith('#')
+                ? current.Elements(Namespace + step[1..])
+                : ChildrenByName(current, step);
+            if (matches.Skip(index).FirstOrDefault() is not { } next)
+                return null;
+            current = next;
+        }
+        return current;
+    }
+
+    private IEnumerable<XElement> ChildrenByName(XElement parent, string name, int depth = 0)
+    {
+        XfaBudget.CheckDepth(depth);
+        foreach (var child in parent.Elements())
+        {
+            _budget.Tick();
+            if (child.Name.Namespace != Namespace)
+                continue;
+            if (child.Name.LocalName == name || child.Attribute("name")?.Value == name)
+                yield return child;
+            if (child.Attribute("name") == null || child.Name.LocalName is "area" or "variables")
+            {
+                foreach (var nested in ChildrenByName(child, name, depth + 1))
+                    yield return nested;
+            }
         }
     }
 
