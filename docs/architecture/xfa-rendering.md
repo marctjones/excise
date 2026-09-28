@@ -61,7 +61,8 @@ named below), not to this page.
    and the rest carry on. `calculate` repeats until the values settle, capped at ten passes.
    Scripts run in `ApplyXfaLayout` at open and nowhere else: redaction, save, print-copy
    creation and the command line never execute one (`FormCalcContainmentTests` reads the
-   sources and fails on a new caller). `XfaLayoutOptions.RunFormCalc` turns it off.
+   sources and fails on a new caller). `XfaLayoutOptions.RunFormCalc` turns it off; in the app,
+   Preferences > Forms sets it (`WindowSettings.RunFormCalc`, `PdfDocumentService.XfaLayoutOptionsForOpen`).
    Not run: JavaScript (#1571), `validate`, `click`, `docReady` and every other event.
 7. **Display only.** Values are drawn as page content, not as AcroForm widgets.
    Filling and writing the datasets back is #1547 phase 3. Converting to

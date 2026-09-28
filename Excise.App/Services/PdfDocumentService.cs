@@ -29,6 +29,16 @@ internal class PdfDocumentService
     /// </summary>
     internal static readonly TimeSpan XfaLayoutTimeLimit = TimeSpan.FromSeconds(15);
 
+    /// <summary>
+    /// Run a dynamic XFA form's FormCalc initialize and calculate scripts when it opens (#1570).
+    /// The Preferences setting; on by default, as in the library.
+    /// </summary>
+    internal bool RunFormCalc { get; set; } = true;
+
+    /// <summary>The layout options a dynamic XFA form is opened with.</summary>
+    internal XfaLayoutOptions XfaLayoutOptionsForOpen() =>
+        new() { TimeLimit = XfaLayoutTimeLimit, RunFormCalc = RunFormCalc };
+
     public int PageCount => _currentDocument?.PageCount ?? 0;
 
     /// <summary>
@@ -140,8 +150,7 @@ internal class PdfDocumentService
         try
         {
             using var timeout = new System.Threading.CancellationTokenSource(XfaLayoutTimeLimit);
-            var result = document.ApplyXfaLayout(
-                new XfaLayoutOptions { TimeLimit = XfaLayoutTimeLimit }, timeout.Token);
+            var result = document.ApplyXfaLayout(XfaLayoutOptionsForOpen(), timeout.Token);
             _logger.LogInformation(
                 "Dynamic XFA form: {Status}, {Pages} page(s), omissions [{Omissions}], scripts run [{Ran}], not run [{Scripts}], failed [{Failures}], reason {Reason}",
                 result.Status, result.PageCount, string.Join("; ", result.Omissions),

@@ -603,6 +603,7 @@ internal partial class MainWindow : Window
         viewModel.RedactionPreferences = settings.Redaction;
         viewModel.ApplyPrintScalingPreference(settings.PrintScaling);
         viewModel.ApplyDocumentOpenModePreference(settings.DocumentOpenMode);
+        viewModel.RunFormCalc = settings.RunFormCalc;
         viewModel.ApplyAnnotationToolbarPreference(settings.AnnotationToolbarVisible);
         // Preferences → Performance: subscribe first so the restore below
         // reaches the viewer through the same path a Save does.

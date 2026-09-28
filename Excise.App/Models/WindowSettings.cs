@@ -67,6 +67,12 @@ internal class WindowSettings
     public string DocumentOpenMode { get; set; } = "Automatic";
 
     /// <summary>
+    /// Run a dynamic XFA form's FormCalc initialize and calculate scripts when it opens (#1570).
+    /// On by default; see docs/architecture/xfa-rendering.md, "FormCalc threat model".
+    /// </summary>
+    public bool RunFormCalc { get; set; } = true;
+
+    /// <summary>
     /// Trim the viewer's caches when the OS reports memory pressure (#1478).
     /// Only fires when the OS asks, so it is on by default. No UI: an
     /// internal switch for A/B measurement in a live session.
