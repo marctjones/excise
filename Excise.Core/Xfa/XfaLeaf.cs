@@ -66,6 +66,9 @@ internal sealed class XfaLeaf
     /// <summary>The text the widget shows, as paragraphs.</summary>
     public IReadOnlyList<XfaParagraph> Paragraphs { get; private init; } = Array.Empty<XfaParagraph>();
 
+    /// <summary>The <c>&lt;image&gt;</c> value of a draw or an <c>imageEdit</c> field (#1575).</summary>
+    public XElement? Image { get; private init; }
+
     /// <summary>A draw's shape value (<c>rectangle</c>, <c>line</c>, <c>arc</c>).</summary>
     public XElement? Shape { get; private init; }
 
@@ -113,6 +116,7 @@ internal sealed class XfaLeaf
         var paragraphs = new List<XfaParagraph>();
         var listItems = new List<(string, bool)>();
         XElement? shape = null;
+        XElement? image = null;
 
         switch (kind)
         {
@@ -122,7 +126,7 @@ internal sealed class XfaLeaf
                 break;
 
             case "imageEdit":
-                report.Note("image field content not drawn");
+                image = XfaImage.ValueImage(e);
                 break;
 
             case "barcode":
@@ -164,8 +168,7 @@ internal sealed class XfaLeaf
                 {
                     shape = e.Child("value")?.Elements()
                         .FirstOrDefault(v => v.Name.LocalName is "rectangle" or "line" or "arc");
-                    if (e.Child("value")?.Child("image") != null)
-                        report.Note("images not drawn");
+                    image = XfaImage.ValueImage(e);
                 }
                 break;
         }
@@ -196,6 +199,7 @@ internal sealed class XfaLeaf
             Wrap = wrap,
             Paragraphs = paragraphs,
             Shape = shape,
+            Image = image,
             CheckSize = Math.Clamp(widget.Measure("size", "pt") ?? 10, 1, 200),
             ListItems = listItems,
             CombCells = comb,

@@ -146,4 +146,51 @@ public class XfaWidgetAppearanceTests : IDisposable
         Ink(bitmap, 90, 90, 120, 20).Should().Be(0, "no value is selected, so nothing else is drawn");
         Ink(bitmap, 430, 90, 20, 60).Should().Be(0, "a list box has no arrow");
     }
+
+    /// <summary>A <paramref name="w"/> x <paramref name="h"/> JPEG of one colour, base64.</summary>
+    private static string Jpeg(int w, int h, SKColor color)
+    {
+        using var bitmap = new SKBitmap(w, h);
+        bitmap.Erase(color);
+        using var data = SKImage.FromBitmap(bitmap).Encode(SKEncodedImageFormat.Jpeg, 95);
+        return Convert.ToBase64String(data.ToArray());
+    }
+
+    private static bool IsRed(SKColor c) => c.Red > 200 && c.Green < 60 && c.Blue < 60;
+
+    private static bool IsWhite(SKColor c) => c.Red > 245 && c.Green > 245 && c.Blue > 245;
+
+    [Fact]
+    public void ImageDraw_IsDrawn_FittedToItsBox_TopLeft()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // #1575. A 40 x 20 px JPEG (no JFIF density: 1 px = 1pt, as in pdf.js) in a 1in
+        // square draw at (90, 90): aspect "fit" (the default) scales it to 72 x 36pt, and
+        // pdf.js anchors it top-left, so it covers x 90-162, y 90-126 and nothing below.
+        using var bitmap = LayOutAndRender(
+            "<draw name=\"Logo\" x=\"1in\" y=\"1in\" w=\"1in\" h=\"1in\"><value>"
+            + $"<image contentType=\"image/jpeg\">{Jpeg(40, 20, SKColors.Red)}</image></value></draw>");
+
+        IsRed(At(bitmap, 92, 92)).Should().BeTrue("the image's top-left corner is at the box's");
+        IsRed(At(bitmap, 160, 124)).Should().BeTrue("fit scales 40 x 20 up to the 72pt width");
+        IsWhite(At(bitmap, 126, 135)).Should().BeTrue("fit keeps the 2:1 aspect, so the box's lower half stays empty");
+    }
+
+    [Fact]
+    public void ImageField_ShowsItsBoundData_StretchedWhenAspectIsNone()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // An imageEdit field bound to base64 JPEG data, aspect "none": stretched over its
+        // whole 1in x 0.5in box at (90, 90).
+        using var bitmap = LayOutAndRender(
+            "<field name=\"Photo\" x=\"1in\" y=\"1in\" w=\"1in\" h=\"0.5in\"><ui><imageEdit/></ui>"
+            + "<value><image aspect=\"none\" contentType=\"image/jpeg\"/></value></field>",
+            XfaTestForms.Data($"<Photo contentType=\"image/jpeg\">{Jpeg(10, 10, SKColors.Red)}</Photo>"));
+
+        IsRed(At(bitmap, 92, 92)).Should().BeTrue();
+        IsRed(At(bitmap, 160, 124)).Should().BeTrue("aspect none fills the whole box");
+        IsWhite(At(bitmap, 170, 105)).Should().BeTrue("nothing is drawn outside the box");
+    }
 }

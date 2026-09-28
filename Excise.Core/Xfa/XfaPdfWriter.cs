@@ -77,9 +77,12 @@ internal sealed class XfaPdfWriter
                 checkBox = DrawCheckButton(content, leaf, inner);
                 break;
 
+            case "imageEdit":
+                DrawImage(content, leaf, inner);
+                break;
+
             case "button":
             case "signature":
-            case "imageEdit":
             case "barcode":
                 break;
 
@@ -87,6 +90,10 @@ internal sealed class XfaPdfWriter
                 if (leaf.Shape != null)
                 {
                     DrawShape(content, leaf.Shape, inner);
+                }
+                else if (leaf.Image != null)
+                {
+                    DrawImage(content, leaf, inner);
                 }
                 else if (leaf.ListItems.Count > 0)
                 {
@@ -142,6 +149,17 @@ internal sealed class XfaPdfWriter
         double right = area.Right - Math.Min(3, area.W * 0.05);
         double top = area.Y + (area.H - h) / 2;
         content.Polygon(new[] { (right - w, top), (right, top), (right - w / 2, top + h) }, color);
+    }
+
+    private void DrawImage(PageContent content, XfaLeaf leaf, XfaRect area)
+    {
+        if (area.W <= 0 || area.H <= 0 || XfaImage.Bytes(leaf, _document, _report) is not { } bytes)
+            return;
+        if (XfaImage.Decode(bytes, _report) is not var (image, w, h))
+            return;
+        var placed = XfaImage.Place(area, w, h, leaf.Image.AttrOr("aspect", "fit"));
+        if (placed.W > 0 && placed.H > 0)
+            content.Image(image, placed);
     }
 
     private void DrawTextBlock(PageContent content, XfaTextBlock block, XfaRect area, XfaParaSpec para)
@@ -447,6 +465,15 @@ internal sealed class XfaPdfWriter
             Emit($"{F(x)} {F(Y(baseline))} Td");
             Emit($"{font.EncodeString(text)} Tj");
             Emit("ET");
+        }
+
+        public void Image(PdfImage image, XfaRect r)
+        {
+            var name = _page.AddImage(image);
+            Emit("q");
+            Emit($"{F(r.W)} 0 0 {F(r.H)} {F(r.X)} {F(Y(r.Bottom))} cm");
+            Emit($"/{name} Do");
+            Emit("Q");
         }
 
         public void Line(double x1, double y1, double x2, double y2, double width, PdfColor color, string? dash)

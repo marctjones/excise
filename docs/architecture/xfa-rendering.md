@@ -201,6 +201,11 @@ Each page becomes `Pages.AddBlank(medium)` plus one content stream:
   text (dropdown) or the item list (list box). `button`: its caption.
   `passwordEdit`: masked. `signature`: an empty box.
 - Draw content: `rectangle`, `line` and `arc` values are drawn as shapes.
+- Images (#1575): a draw's `<value><image>` and an `imageEdit` field's value
+  (bound data first) are drawn when they are JPEG, embedded as is
+  (`/DCTDecode`, at most 50 megapixels), sized by `aspect` and anchored
+  top-left as pdf.js anchors them. An `href` resolves only through the
+  document's `/Names /XFAImages` tree; nothing is fetched.
 
 After the new pages are written, the placeholder pages are removed and the new
 pages are marked.
@@ -210,7 +215,9 @@ pages are marked.
 The result lists what the rendition leaves out, and the banner summarises it:
 
 - scripts present (event names counted), per #1570/#1571;
-- images and `imageEdit` content (#1575);
+- images, in a draw or an `imageEdit` field, that are not JPEG (BMP, PNG, GIF,
+  TIFF: Excise.Core decodes no image format), and `href` images that are not
+  in the document's `/Names /XFAImages` (#1575);
 - barcodes (#1576);
 - text outside WinAnsi, which base-14 fonts cannot draw (#1577);
 - gradient and pattern fills, drawn as their base colour (#1578);
