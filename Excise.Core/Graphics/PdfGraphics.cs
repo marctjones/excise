@@ -274,6 +274,81 @@ public class PdfGraphics : IDisposable
 
     #endregion
 
+    #region Ellipse and Arc Drawing
+
+    /// <summary>
+    /// Draws the ellipse inscribed in the box <see cref="DrawRectangle(double, double, double, double, PdfBrush?, PdfPen?)"/>
+    /// takes: (<paramref name="x"/>, <paramref name="y"/>) is its lower-left corner in PDF user
+    /// space (y up). The outline is four cubic Bezier quarter arcs. Nothing is drawn when both
+    /// <paramref name="fill"/> and <paramref name="stroke"/> are null.
+    /// </summary>
+    public void DrawEllipse(double x, double y, double width, double height, PdfBrush? fill, PdfPen? stroke)
+    {
+        ThrowIfDisposed();
+        if (fill == null && stroke == null)
+            return;
+
+        AppendArc(x + width / 2, y + height / 2, width / 2, height / 2, 0, 360);
+        ClosePath();
+        if (fill != null && stroke != null)
+            FillAndStroke(fill, stroke);
+        else if (fill != null)
+            Fill(fill);
+        else
+            Stroke(stroke!);
+    }
+
+    /// <summary>
+    /// Draws a circle of <paramref name="radius"/> centred on (<paramref name="cx"/>, <paramref name="cy"/>);
+    /// see <see cref="DrawEllipse"/>.
+    /// </summary>
+    public void DrawCircle(double cx, double cy, double radius, PdfBrush? fill, PdfPen? stroke) =>
+        DrawEllipse(cx - radius, cy - radius, 2 * radius, 2 * radius, fill, stroke);
+
+    /// <summary>
+    /// Strokes an open arc of the ellipse <see cref="DrawEllipse"/> would draw in the same box.
+    /// Angles are in degrees from the ellipse's centre, 0 pointing along +x; a positive
+    /// <paramref name="sweepAngleDegrees"/> runs counter-clockwise in PDF user space (y up),
+    /// so 0 to 90 is the upper-right quarter. A sweep beyond ±360 is clamped to a full turn.
+    /// </summary>
+    public void DrawArc(double x, double y, double width, double height,
+        double startAngleDegrees, double sweepAngleDegrees, PdfPen stroke)
+    {
+        ThrowIfDisposed();
+        ArgumentNullException.ThrowIfNull(stroke);
+        AppendArc(x + width / 2, y + height / 2, width / 2, height / 2,
+            startAngleDegrees, Math.Clamp(sweepAngleDegrees, -360, 360));
+        Stroke(stroke);
+    }
+
+    /// <summary>
+    /// Start a subpath at the arc's first point and approximate the arc with one cubic Bezier
+    /// per piece of at most 90 degrees. Each piece of angle θ puts its control points along the
+    /// end tangents at 4/3·tan(θ/4) of the radius, which for θ = 90 is the familiar 0.5523.
+    /// </summary>
+    private void AppendArc(double cx, double cy, double rx, double ry, double startDegrees, double sweepDegrees)
+    {
+        int pieces = Math.Max(1, (int)Math.Ceiling(Math.Abs(sweepDegrees) / 90 - 1e-9));
+        double step = sweepDegrees / pieces * Math.PI / 180;
+        double k = 4.0 / 3 * Math.Tan(step / 4);
+        double angle = startDegrees * Math.PI / 180;
+        double cos = Math.Cos(angle), sin = Math.Sin(angle);
+
+        MoveTo(cx + rx * cos, cy + ry * sin);
+        for (int i = 0; i < pieces; i++)
+        {
+            angle += step;
+            double cosEnd = Math.Cos(angle), sinEnd = Math.Sin(angle);
+            CurveTo(
+                cx + rx * (cos - k * sin), cy + ry * (sin + k * cos),
+                cx + rx * (cosEnd + k * sinEnd), cy + ry * (sinEnd - k * cosEnd),
+                cx + rx * cosEnd, cy + ry * sinEnd);
+            (cos, sin) = (cosEnd, sinEnd);
+        }
+    }
+
+    #endregion
+
     #region Path Operations
 
     /// <summary>
