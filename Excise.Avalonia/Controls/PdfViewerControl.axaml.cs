@@ -1029,7 +1029,14 @@ public partial class PdfViewerControl : UserControl
     // field uses its own /DA point size (falling back to a plain 10pt, the
     // same floor single-line fields already use) and wraps; box-height
     // scaling stays for single-line fields, unaffected by this fix.
+    // The point size is converted to the overlay's own units (w/h are layer
+    // dips, zoom- and DPI-scaled), read off the field's /Rect: a raw point
+    // value rendered at 60% of its size in single-page view and did not
+    // follow zoom in continuous view.
     private const double DefaultMultilineFontSizePt = 10;
+
+    private static double LayerUnitsPerPoint(Excise.Core.Document.PdfField field, double layerHeight) =>
+        field.Rect is { Height: > 0 } rect ? layerHeight / rect.Height : 1.0;
 
     private TextBox CreateTextFieldInput(Excise.Core.Document.PdfField field, double w, double h)
     {
@@ -1047,7 +1054,7 @@ public partial class PdfViewerControl : UserControl
             BorderThickness = new Thickness(1),
             Padding = new Thickness(2),
             FontSize = field.IsMultiline
-                ? field.DefaultAppearanceFontSize ?? DefaultMultilineFontSizePt
+                ? (field.DefaultAppearanceFontSize ?? DefaultMultilineFontSizePt) * LayerUnitsPerPoint(field, h)
                 : Math.Max(10, h * 0.6),
             TextWrapping = field.IsMultiline ? TextWrapping.Wrap : TextWrapping.NoWrap,
             VerticalContentAlignment = field.IsMultiline
