@@ -79,6 +79,25 @@ internal sealed class XfaLeaf
 
     public bool IsField => Node.Kind == XfaNodeKind.Field;
 
+    /// <summary>
+    /// <c>validate nullTest="error"</c>. pdf.js marks the widget HTML-required and its
+    /// stylesheet outlines every required control in red (#1825).
+    /// </summary>
+    public bool Required { get; private init; }
+
+    /// <summary>
+    /// The field shows pdf.js's unfocused-field tint: text-like edits and choice lists that
+    /// the form lets the user type into (#1825).
+    /// </summary>
+    public bool FieldBackground { get; private init; }
+
+    /// <summary>
+    /// A check button drawn as a circle: <c>shape="round"</c>, or, with no <c>shape</c>, a
+    /// member of an <c>exclGroup</c>, which pdf.js renders as a radio button (IRCC's forms
+    /// rely on this). An explicit <c>shape="square"</c> keeps the spec's square.
+    /// </summary>
+    public bool RoundCheck { get; private init; }
+
     public static XfaLeaf From(XfaFormNode node, XfaReport report)
     {
         var e = node.Element;
@@ -177,7 +196,31 @@ internal sealed class XfaLeaf
             CheckSize = Math.Clamp(widget.Measure("size", "pt") ?? 10, 1, 200),
             ListItems = listItems,
             CombCells = comb,
+            Required = isField && e.Child("validate")?.Attr("nullTest") == "error",
+            FieldBackground = isField && ShowsFieldBackground(e, kind),
+            RoundCheck = kind == "checkButton"
+                && (widget?.Attr("shape") ?? (e.Parent?.Name.LocalName == "exclGroup" ? "round" : "square")) == "round",
         };
+    }
+
+    /// <summary>
+    /// pdf.js tints text inputs and selects with rgba(0,54,255,0.13) on screen. The tint is
+    /// dropped for an input or textarea (not a select) when the field or any ancestor has
+    /// <c>access</c> nonInteractive, readOnly or protected. Password fields have no pdf.js
+    /// rendition, so they get no tint either.
+    /// </summary>
+    private static bool ShowsFieldBackground(XElement field, string kind)
+    {
+        if (kind == "choiceList")
+            return true;
+        if (kind is not ("textEdit" or "numericEdit" or "dateTimeEdit"))
+            return false;
+        for (var e = field; e != null; e = e.Parent)
+        {
+            if (e.Attr("access") is "nonInteractive" or "readOnly" or "protected")
+                return false;
+        }
+        return true;
     }
 
     private static XfaCaptionSpec? CaptionFrom(XElement? caption, XfaFontSpec fieldFont, XfaParaSpec fieldPara, bool isButton)

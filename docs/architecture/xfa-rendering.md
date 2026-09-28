@@ -79,6 +79,14 @@ named below), not to this page.
    only a calculation produces. `XfaLayoutResult.FieldsWrittenByScripts` names the fields.
 9. **Password fields never show their value.** A `passwordEdit` draws its
    `passwordChar` once per character.
+10. **Fields look the way pdf.js shows them on screen (#1825).** The field tint
+    (rgba(0, 54, 255, 0.13) on text-like edits and choice lists, not on
+    `readOnly`/`protected`/`nonInteractive` edits) and the 1.5pt red outline of a
+    field with `validate nullTest="error"` are pdf.js viewer chrome, not
+    template content: pdf.js drops the tint when printing. Decision 7 leaves no
+    widget for a viewer to highlight, so they are drawn into the page, and a
+    saved or printed rendition carries them. A `checkButton` inside an `exclGroup` with no `shape` is a circle, as
+    pdf.js renders it (a radio button); an explicit `shape` is honoured.
 
 ## Zero cost for non-XFA documents
 
@@ -186,7 +194,8 @@ Each page becomes `Pages.AddBlank(medium)` plus one content stream:
   names, else Helvetica), with `weight` and `posture`, `size`, and fill
   colour. `hAlign`/`vAlign` are honoured, with word wrap for multi-line and
   `draw` text, and `comb` cells.
-- Widgets are drawn as their static appearance. `checkButton`: box or circle,
+- Widgets are drawn as their static appearance, with pdf.js's field chrome
+  (decision 10). `checkButton`: box or circle (the widget border outlines it),
   with a check/circle/cross mark when on. `choiceList`: the selected display
   text (dropdown) or the item list (list box). `button`: its caption.
   `passwordEdit`: masked. `signature`: an empty box.

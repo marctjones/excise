@@ -63,14 +63,18 @@ internal sealed class XfaPdfWriter
         }
 
         var ui = regions.Ui;
-        if (leaf.Widget != null)
+        // A check button's border is the outline of its box or circle, drawn with the mark.
+        if (leaf.Widget != null && leaf.WidgetKind != "checkButton")
             DrawBorder(content, ui, XfaBorderSpec.From(leaf.Widget.Child("border")));
         var inner = ui.Deflate(leaf.WidgetMargin);
+        if (leaf.FieldBackground)
+            content.Fill(inner, 0, FieldTint, FieldTintAlpha);
 
+        XfaRect? checkBox = null;
         switch (leaf.WidgetKind)
         {
             case "checkButton":
-                DrawCheckButton(content, leaf, inner);
+                checkBox = DrawCheckButton(content, leaf, inner);
                 break;
 
             case "button":
@@ -101,7 +105,30 @@ internal sealed class XfaPdfWriter
         }
 
         content.Restore();
+
+        // pdf.js outlines a required control (CSS :required, 1.5px red) outside its box, so
+        // the outline is drawn after the clip is gone.
+        if (leaf.Required && leaf.WidgetKind is not ("button" or "signature" or "imageEdit" or "barcode" or "passwordEdit"))
+        {
+            var box = checkBox ?? inner;
+            var outline = new XfaRect(box.X - RequiredWidth / 2, box.Y - RequiredWidth / 2, box.W + RequiredWidth, box.H + RequiredWidth);
+            if (checkBox != null && leaf.RoundCheck)
+                content.Ellipse(outline, RequiredWidth, PdfColor.Red, null);
+            else
+                content.StrokeRect(outline, RequiredWidth, PdfColor.Red, null);
+        }
     }
+
+    /// <summary>
+    /// pdf.js's unfocused-field background, rgba(0, 54, 255, 0.13). It is viewer chrome, not
+    /// template content: pdf.js drops it when printing, and Acrobat shows a similar tint
+    /// only with field highlighting on. See docs/architecture/xfa-rendering.md, decision 10.
+    /// </summary>
+    private static readonly PdfColor FieldTint = PdfColor.FromRgb(0, 54, 255);
+
+    private const double FieldTintAlpha = 0.13;
+
+    private const double RequiredWidth = 1.5;
 
     private void DrawTextBlock(PageContent content, XfaTextBlock block, XfaRect area, XfaParaSpec para)
     {
@@ -172,24 +199,38 @@ internal sealed class XfaPdfWriter
         }
     }
 
-    private void DrawCheckButton(PageContent content, XfaLeaf leaf, XfaRect area)
+    /// <summary>Draw a check button's box (or circle) and mark; returns the box.</summary>
+    private XfaRect DrawCheckButton(PageContent content, XfaLeaf leaf, XfaRect area)
     {
         var widget = leaf.Widget!;
         double size = Math.Min(leaf.CheckSize, Math.Max(1, Math.Min(area.W, area.H)));
         var box = new XfaRect(area.X, area.Y + (area.H - size) / 2, size, size);
-        bool round = widget.AttrOr("shape", "square") == "round";
+        bool round = leaf.RoundCheck;
 
-        if (widget.Child("border") == null)
+        // No border element: a thin black outline. A border element supplies the fill and
+        // the edge (its first edge; a box has one outline); a hidden border draws none.
+        var borderElement = widget.Child("border");
+        var border = XfaBorderSpec.From(borderElement);
+        if (border?.FillApproximated == true)
+            _report.Note("gradient and pattern fills drawn as their base colour");
+        PdfColor? fill = border?.Fill;
+        var edge = borderElement == null ? new XfaEdgeSpec(true, 0.5, PdfColor.Black, "solid") : border?.Edges[0];
+        double width = edge is { Visible: true } ? edge.Thickness : 0;
+        var stroke = edge?.Color ?? PdfColor.Black;
+        if (round)
         {
-            if (round)
-                content.Ellipse(box, 0.5, PdfColor.Black, null);
-            else
-                content.StrokeRect(box, 0.5, PdfColor.Black, null);
+            content.Ellipse(box, width, stroke, fill);
+        }
+        else
+        {
+            if (fill is { } f)
+                content.Fill(box, 0, f);
+            content.StrokeRect(box, width, stroke, edge != null ? DashFor(edge.Stroke, edge.Thickness) : null);
         }
 
         bool on = leaf.Node.Value != null && leaf.Node.Value == XfaValues.OnValue(leaf.Element);
         if (!on)
-            return;
+            return box;
 
         var mark = widget.AttrOr("mark", "default");
         if (mark == "default")
@@ -220,6 +261,7 @@ internal sealed class XfaPdfWriter
                 break;
             }
         }
+        return box;
     }
 
     private void DrawShape(PageContent content, XElement shape, XfaRect area)
@@ -415,9 +457,11 @@ internal sealed class XfaPdfWriter
             Emit("Q");
         }
 
-        public void Fill(XfaRect r, double radius, PdfColor color)
+        public void Fill(XfaRect r, double radius, PdfColor color, double? alpha = null)
         {
             Emit("q");
+            if (alpha is { } a)
+                Emit($"/{_page.AddOpacityState(null, a)} gs");
             Emit($"{Rgb(color)} rg");
             if (radius > 0)
                 RoundedPath(r, radius);
