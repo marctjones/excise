@@ -44,6 +44,7 @@
         "Excise.App/Services/DocumentImageExportWorkflowService.cs",
         "Excise.App/Services/ImageStampDecoder.cs",
         "Excise.App/Services/PageImageRenderer.cs",
+        "Excise.App/Services/XfaImageDecoder.cs",
         "Excise.Avalonia/Controls/DecodedImageSampleRetention.cs"
       ],
       "directTestCandidates": [
@@ -445,6 +446,7 @@
         "Excise.App/Services/DocumentImageExportWorkflowService.cs",
         "Excise.App/Services/ImageStampDecoder.cs",
         "Excise.App/Services/PageImageRenderer.cs",
+        "Excise.App/Services/XfaImageDecoder.cs",
         "Excise.Avalonia/Controls/DecodedImageSampleRetention.cs"
       ],
       "directTestCandidates": [
@@ -2323,6 +2325,7 @@
         "Excise.App/Services/DocumentImageExportWorkflowService.cs",
         "Excise.App/Services/ImageStampDecoder.cs",
         "Excise.App/Services/PageImageRenderer.cs",
+        "Excise.App/Services/XfaImageDecoder.cs",
         "Excise.Avalonia/Controls/DecodedImageSampleRetention.cs"
       ],
       "directTestCandidates": [
