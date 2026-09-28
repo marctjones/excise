@@ -60,6 +60,14 @@ internal sealed class XfaPaginator
 {
     private const double Epsilon = 0.01;
 
+    /// <summary>
+    /// pdf.js fits an object up to 2pt taller than its space (xfa/layout.js <c>checkDimensions</c>,
+    /// <c>Math.round(h - space.height) &lt;= ERROR</c> with <c>ERROR = 2</c>) and draws the excess. HSBC's
+    /// <c>page3</c> subform is 0.55pt taller than its content area and pdf.js shows it whole on one
+    /// page (#1824). Used only for the clipping report, not for fit decisions.
+    /// </summary>
+    private const double FitTolerance = 2;
+
     private readonly XfaBudget _budget;
     private readonly XfaReport _report;
     private readonly IReadOnlyList<XfaPageArea> _pageAreas;
@@ -126,7 +134,7 @@ internal sealed class XfaPaginator
         {
             if (box.H > remaining + Epsilon && _areaHasContent)
                 NextArea();
-            if (box.H > Area.H + Epsilon)
+            if (Math.Round(box.H - Area.H, MidpointRounding.AwayFromZero) > FitTolerance)
                 _report.Note("content taller than its page area is clipped");
 
             EmitWhole(box, originX + box.X, _cursor);

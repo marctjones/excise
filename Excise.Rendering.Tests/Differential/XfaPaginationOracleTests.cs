@@ -105,6 +105,35 @@ public class XfaPaginationOracleTests : IDisposable
         pages[1].Should().Contain("DeltaTwo").And.Contain("DeltaThree");
     }
 
+    /// <summary>
+    /// pdf.js fits a fixed-height object up to 2pt taller than its space (layout.js
+    /// <c>checkDimensions</c>, <c>ERROR = 2</c>): it draws this 0.5pt-too-tall subform whole on page 1
+    /// and EchoAfter on page 2, so the layout report must not call it clipped. HSBC's <c>page3</c> is
+    /// 0.55pt taller than its content area.
+    /// </summary>
+    [Theory]
+    [InlineData("756.5pt", false)]
+    [InlineData("760pt", true)]
+    public void FixedHeightSubform_TallerThanTheContentArea_IsReportedClippedOnlyBeyondPdfJsTolerance(string h, bool clipped)
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+        var template = XfaTestForms.Template(
+            $"<subform name=\"Tall\" w=\"8in\" h=\"{h}\">"
+            + "<draw name=\"T\" x=\"0in\" y=\"0in\" w=\"8in\" h=\"1in\"><ui><textEdit/></ui>"
+            + "<value><text>TangoTall</text></value><font typeface=\"Arial\" size=\"10pt\"/></draw></subform>"
+            + Draw("E", "EchoAfter", "1in"));
+
+        var (path, result) = LayOutAndSave(XfaTestForms.BuildPdf(template));
+
+        // The content area is 10.5in = 756pt. 760pt is past pdf.js's tolerance: the note must still
+        // fire. pdf.js draws both rows on the same 2 pages.
+        result.Omissions.Any(o => o.Contains("clipped", StringComparison.Ordinal)).Should().Be(clipped);
+        PageCount(path).Should().Be(2);
+        var pages = Pages(path, 2);
+        pages[0].Should().Contain("TangoTall");
+        pages[1].Should().Contain("EchoAfter");
+    }
+
     // pdf.js 6.3.289 visible words per page (dropdown option lists excluded), measured on the
     // SHA-pinned file from scripts/download-xfa-real-corpus.sh. Before #1824's second fix excise drew
     // 462/263/333/223/203/259/247/247/52 (no style-sheet margins, first-page area on every page).
@@ -135,5 +164,28 @@ public class XfaPaginationOracleTests : IDisposable
         // pdf.js page 9 opens with the last two rows of section I1.
         pages[7].Should().NotContain("Board office telephone");
         pages[8].Should().Contain("Board office telephone").And.Contain("Almost Done!");
+    }
+
+    [Fact]
+    public void HsbcClosureForm_Page3FitsItsPage_AsInPdfJs()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+        const string file = "hsbc-cloture-compte.pdf";
+        var source = TestRepoLayout.FindFile("test-pdfs", "xfa-real", file);
+        Assert.SkipWhen(source == null, TestRepoLayout.AbsenceReason(
+            "xfa-real corpus (scripts/download-xfa-real-corpus.sh)", $"test-pdfs/xfa-real/{file}"));
+
+        var (path, result) = LayOutAndSave(File.ReadAllBytes(source!));
+
+        result.Omissions.Should().NotContain(o => o.Contains("clipped", StringComparison.Ordinal),
+            "pdf.js fits page3 (0.55pt taller than its content area) on one page");
+        int[] pdfJsWords = { 214, 293, 290, 248 };
+        PageCount(path).Should().Be(pdfJsWords.Length);
+        var pages = Pages(path, pdfJsWords.Length);
+        for (int i = 0; i < pdfJsWords.Length; i++)
+        {
+            pages[i].Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length
+                .Should().BeCloseTo(pdfJsWords[i], (uint)(pdfJsWords[i] / 50), $"page {i + 1} against pdf.js");
+        }
     }
 }
