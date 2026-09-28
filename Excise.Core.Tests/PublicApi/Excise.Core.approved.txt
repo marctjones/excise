@@ -1103,7 +1103,7 @@ namespace Excise.Core.Graphics
         public void DrawArc(double x, double y, double width, double height, double startAngleDegrees, double sweepAngleDegrees, Excise.Core.Graphics.PdfPen stroke) { }
         public void DrawCircle(double cx, double cy, double radius, Excise.Core.Graphics.PdfBrush? fill, Excise.Core.Graphics.PdfPen? stroke) { }
         public void DrawEllipse(double x, double y, double width, double height, Excise.Core.Graphics.PdfBrush? fill, Excise.Core.Graphics.PdfPen? stroke) { }
-        public void DrawImage(byte[] imageBytes, double x, double y, double width, double height) { }
+        public void DrawImage(Excise.Core.Graphics.PdfImage image, double x, double y, double width, double height) { }
         public void DrawInvisibleText(string text, Excise.Core.Graphics.PdfFont font, double x, double y, double targetWidth) { }
         public void DrawLine(double x1, double y1, double x2, double y2, Excise.Core.Graphics.PdfPen pen) { }
         public void DrawRectangle(double x, double y, double width, double height, Excise.Core.Graphics.PdfBrush fill) { }
@@ -1127,6 +1127,13 @@ namespace Excise.Core.Graphics
         public void Translate(double tx, double ty) { }
         public static Excise.Core.Graphics.PdfSize MeasureString(string text, Excise.Core.Graphics.PdfFont font) { }
         public static Excise.Core.Graphics.PdfSize MeasureText(string text, Excise.Core.Graphics.PdfFont font, double maxWidth, double lineSpacing = 1.2) { }
+    }
+    public sealed class PdfImage
+    {
+        public int Height { get; }
+        public int Width { get; }
+        public static Excise.Core.Graphics.PdfImage FromJpeg(byte[] jpeg) { }
+        public static Excise.Core.Graphics.PdfImage FromRgb(int width, int height, byte[] rgb, byte[]? alpha = null) { }
     }
     public enum PdfLineCap
     {
