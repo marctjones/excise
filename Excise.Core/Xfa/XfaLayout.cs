@@ -77,7 +77,13 @@ internal sealed class XfaLayout
         _report = report;
     }
 
-    public XfaBox? Build(XfaFormNode node, double available, int depth = 0, double? forcedWidth = null)
+    /// <param name="flowed">
+    /// The parent flows its children (every layout but <c>position</c>). A container's <c>minH</c>
+    /// then does not reserve space: pdf.js sizes a subform from its content (and <c>h</c>) alone and
+    /// applies its <c>minH</c> only under a positioned parent, and real forms carry design-time
+    /// <c>minH</c> values taller than their page (#1824: IMM 5257e section 10, Ohio section B2).
+    /// </param>
+    public XfaBox? Build(XfaFormNode node, double available, int depth = 0, double? forcedWidth = null, bool flowed = false)
     {
         XfaBudget.CheckDepth(depth);
         var e = node.Element;
@@ -112,7 +118,7 @@ internal sealed class XfaLayout
         var fixedH = e.Measure("h");
         var minW = Math.Max(0, e.Measure("minW") ?? 0);
         var maxW = e.Measure("maxW") is { } mw && mw > 0 ? mw : (double?)null;
-        var minH = Math.Max(0, e.Measure("minH") ?? 0);
+        var minH = flowed ? 0 : Math.Max(0, e.Measure("minH") ?? 0);
         var maxH = e.Measure("maxH") is { } mh && mh > 0 ? mh : (double?)null;
 
         double outer = fixedW ?? Math.Min(maxW ?? Unbounded, available > 0 ? available : Unbounded);
@@ -212,7 +218,7 @@ internal sealed class XfaLayout
         double y = 0, widest = 0;
         foreach (var child in children)
         {
-            var kid = Build(child, inner, depth + 1);
+            var kid = Build(child, inner, depth + 1, flowed: true);
             if (kid == null)
                 continue;
             kid.X = 0;
@@ -249,7 +255,7 @@ internal sealed class XfaLayout
 
         foreach (var child in children)
         {
-            var kid = Build(child, Math.Max(0, inner - x), depth + 1);
+            var kid = Build(child, Math.Max(0, inner - x), depth + 1, flowed: true);
             if (kid == null)
                 continue;
             if (wrap && line.Items.Count > 0 && x + kid.W > inner + 0.01)
@@ -292,7 +298,7 @@ internal sealed class XfaLayout
                     int span = cell.Element.IntAttr("colSpan", 1);
                     if (c == col && span == 1)
                     {
-                        var measured = Build(cell, inner, depth + 2);
+                        var measured = Build(cell, inner, depth + 2, flowed: true);
                         natural = Math.Max(natural, measured?.W ?? 0);
                     }
                     c += Math.Max(1, span);
@@ -305,7 +311,7 @@ internal sealed class XfaLayout
         {
             _budget.Tick();
             bool isRow = child.Kind == XfaNodeKind.Subform && child.Element.AttrOr("layout", "position") == "row";
-            XfaBox? kid = isRow ? BuildRow(child, widths, depth + 1) : Build(child, inner, depth + 1);
+            XfaBox? kid = isRow ? BuildRow(child, widths, depth + 1) : Build(child, inner, depth + 1, flowed: true);
             if (kid == null)
                 continue;
             kid.X = 0;
@@ -350,7 +356,7 @@ internal sealed class XfaLayout
             if (end <= col)
                 _report.Note("table cell beyond the declared columns");
 
-            var kid = Build(cell, width, depth + 1, forcedWidth: end > col ? width : null);
+            var kid = Build(cell, width, depth + 1, forcedWidth: end > col ? width : null, flowed: true);
             col = Math.Max(end, col + 1);
             if (kid == null)
                 continue;

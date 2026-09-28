@@ -159,7 +159,11 @@ Phase one builds an unbounded box tree:
 - `table` / `row`: `columnWidths` (with `-1` auto columns), cell `colSpan`, and
   cells stretched to the row height.
 - Sizes: `w`/`h` fixed; otherwise grown to content within `minW`/`maxW` and
-  `minH`/`maxH`.
+  `minH`/`maxH`. A container's `minH` counts only under a `position` parent:
+  under a flowing parent (`tb`, `lr-tb`, `rl-tb`, `table`, `row`) it is
+  sized from its content, as pdf.js does. This departs from the attribute's
+  definition; real forms carry design-time `minH` taller than their page
+  (#1824). A table row's own `minH` still applies.
 - `presence`: `hidden` and `inactive` take no space. `invisible` takes space
   and draws nothing. `relevant` (print/screen) is ignored for display.
 - Fields: `caption` (placement, reserve, own font/para), `ui` border and
