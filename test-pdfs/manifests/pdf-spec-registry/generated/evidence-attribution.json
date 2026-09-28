@@ -94135,6 +94135,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Graphics/EmbeddedFontInMemoryRedactionTests.cs::EmbeddedFontInMemoryRedactionTests.TermDrawnWithAnEmbeddedFont_IsRedactedBeforeAnySave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/EmbeddedFontInMemoryRedactionTests.cs::EmbeddedFontInMemoryRedactionTests.TermDrawnWithAnEmbeddedFont_IsRedactedAfterASave_InTheSameDocument",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -94747,20 +94761,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.ImageDrawnAtZeroAlpha_IsNotYetDetected",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithAMatchingReplacement_IsReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95477,6 +95477,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Graphics/EmbeddedFontInMemoryRedactionTests.cs::EmbeddedFontInMemoryRedactionTests.TermDrawnWithAnEmbeddedFont_IsRedactedBeforeAnySave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/EmbeddedFontInMemoryRedactionTests.cs::EmbeddedFontInMemoryRedactionTests.TermDrawnWithAnEmbeddedFont_IsRedactedAfterASave_InTheSameDocument",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -96089,20 +96103,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.ImageDrawnAtZeroAlpha_IsNotYetDetected",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithAMatchingReplacement_IsReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96833,6 +96833,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Graphics/EmbeddedFontInMemoryRedactionTests.cs::EmbeddedFontInMemoryRedactionTests.TermDrawnWithAnEmbeddedFont_IsRedactedBeforeAnySave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/EmbeddedFontInMemoryRedactionTests.cs::EmbeddedFontInMemoryRedactionTests.TermDrawnWithAnEmbeddedFont_IsRedactedAfterASave_InTheSameDocument",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97445,20 +97459,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.ImageDrawnAtZeroAlpha_IsNotYetDetected",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithAMatchingReplacement_IsReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98215,6 +98215,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Graphics/EmbeddedFontInMemoryRedactionTests.cs::EmbeddedFontInMemoryRedactionTests.TermDrawnWithAnEmbeddedFont_IsRedactedBeforeAnySave",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/EmbeddedFontInMemoryRedactionTests.cs::EmbeddedFontInMemoryRedactionTests.TermDrawnWithAnEmbeddedFont_IsRedactedAfterASave_InTheSameDocument",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenFlaggedTextAnnotation_WithNoAppearanceStream_ContentsScrubbed",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98827,20 +98841,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.ImageDrawnAtZeroAlpha_IsNotYetDetected",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.Orphan_WithAMatchingReplacement_IsReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.TwoOrphans_WithAMatchingReplacement_AreBothReported",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112714,8 +112714,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 8120,
-    "testMethodsWithCapabilityCandidate": 5283,
+    "testMethods": 8140,
+    "testMethodsWithCapabilityCandidate": 5300,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

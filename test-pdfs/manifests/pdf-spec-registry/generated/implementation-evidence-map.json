@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "156ab4bc7179dc1bb601f4bfb7579758eb322eddcfa1a727c5bbc432b5dac0f1",
+  "sourceFingerprint": "e7fd6256926f9c56c81aec27c50aef19e49aee3040b657cca06c1809c84a6d6d",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -6554,6 +6554,50 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Xfa/XfaFallbackFont.cs",
+      "path": "Excise.Core/Xfa/XfaFallbackFont.cs",
+      "kind": "source-file",
+      "facets": [
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/XfaImage.cs",
+      "path": "Excise.Core/Xfa/XfaImage.cs",
+      "kind": "source-file",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Xfa/XfaLayout.cs",
       "path": "Excise.Core/Xfa/XfaLayout.cs",
       "kind": "source-file",
@@ -8837,6 +8881,16 @@
     {
       "id": "Excise.App/Services/ResponsivenessReport.cs",
       "path": "Excise.App/Services/ResponsivenessReport.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/ShortcutNotation.cs",
+      "path": "Excise.App/Services/ShortcutNotation.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -11129,15 +11183,15 @@
     }
   ],
   "summary": {
-    "records": 556,
+    "records": 559,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 20,
       "document-structure": 36,
-      "fonts": 32,
+      "fonts": 33,
       "forms": 9,
-      "images": 35,
-      "product-integration-general": 316,
+      "images": 36,
+      "product-integration-general": 317,
       "redaction": 82,
       "safe-save-and-metadata": 18,
       "security-and-encryption": 23,
@@ -11158,12 +11212,12 @@
       "pdf.17.graphics.color:preserve": 1,
       "pdf.17.graphics.color:render": 1,
       "pdf.17.graphics.color:write": 1,
-      "pdf.17.graphics.fonts:extract": 32,
-      "pdf.17.graphics.fonts:parse": 32,
-      "pdf.17.graphics.fonts:render": 32,
-      "pdf.17.graphics.images:extract": 35,
-      "pdf.17.graphics.images:parse": 35,
-      "pdf.17.graphics.images:render": 35,
+      "pdf.17.graphics.fonts:extract": 33,
+      "pdf.17.graphics.fonts:parse": 33,
+      "pdf.17.graphics.fonts:render": 33,
+      "pdf.17.graphics.images:extract": 36,
+      "pdf.17.graphics.images:parse": 36,
+      "pdf.17.graphics.images:render": 36,
       "pdf.17.graphics.paths-painting:author": 2,
       "pdf.17.graphics.paths-painting:mutate": 20,
       "pdf.17.graphics.paths-painting:parse": 20,
@@ -11216,7 +11270,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 23,
       "pdfe.product.security.signature-and-permission-warning:write": 23
     },
-    "fallbackRecords": 316,
+    "fallbackRecords": 317,
     "allRecordsMapped": true
   }
 }
