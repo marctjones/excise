@@ -121,6 +121,6 @@ public class XfaFlowedMinHeightOracleTests : IDisposable
         // excise drew 127 before the fix. Every pdf.js word is present; mutool also counts the
         // footer, the computed totals and the first line of the next section, hence 10%.
         Words(page3).Should().BeCloseTo(315, 32);
-        // Page breaks after page 3 still differ from pdf.js (#1824 gap 3): not pinned here.
+        // Every other page is pinned by XfaPaginationOracleTests.
     }
 }
