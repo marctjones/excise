@@ -252,6 +252,56 @@ XFA is untrusted input:
   with a reason and leaves the document untouched. The GUI then keeps the
   phase-1 warning banner.
 
+### FormCalc threat model
+
+A FormCalc script is attacker-controlled code that runs when a document opens (decision 6).
+The attacker's goals are denial of service (hang, exhaust memory, crash the process), reaching
+beyond the form, and making a displayed value escape redaction. Values below are the fields
+named; the code is the authority.
+
+| Threat | Bound | Enforced by |
+|---|---|---|
+| Huge or deeply nested source | script length, token count, parse depth | `FormCalcLexer.MaxScriptLength`, `FormCalcParser.MaxTokens`, `FormCalcParser.MaxDepth` |
+| Deep AST at run time (a long `a.b.c...` chain) | stack probe, reported as a script error | `RuntimeHelpers.EnsureSufficientExecutionStack` in `FormCalcInterpreter.Exec`/`Eval` |
+| Endless loop | steps per run; wall clock and cancellation every 256 steps | `FcLimits.MaxSteps`, `FcLimits.TimeLimit`, `FormCalcInterpreter.Tick` |
+| Recursion | user-function call depth | `FcLimits.MaxCallDepth` |
+| String growth | one string's length; characters all built-ins return in one run | `FcLimits.MaxStringLength`, `FcLimits.MaxTotalStringChars`, charged in `FormCalcBuiltins.Add`; `Replace` and `Space` check before allocating |
+| Wide SOM matches | objects in one match list or `foreach` | `FcLimits.MaxListItems` |
+| Nesting to reset the budget | `Eval` depth; a nested `Eval` or `resolveNode` gets what is left of the caller's steps, characters and time, and its spending is charged back | `FcLimits.MaxEvalDepth`, `FormCalcInterpreter.Remaining`/`Absorb` |
+| Many scripts in one form | script runs per form; wall clock between scripts; calculate passes | `XfaScripts.MaxScriptRuns`, `XfaScripts.TotalTimeLimit`, `XfaScripts.MaxCalculatePasses` |
+| The whole layout | wall clock plus the caller's token | `XfaLayoutOptions.TimeLimit`; the app passes `PdfDocumentService.XfaLayoutTimeLimit` |
+
+Limits of the bounds: the clock is read between steps, never inside one built-in call, so a
+single call on strings of `MaxStringLength` characters (`At`, `Replace`) runs to completion.
+`TotalTimeLimit` is checked before each script, so a form can overrun it by one script's
+`TimeLimit`. Memory is bounded through strings; objects and lists come from the form, which
+`XfaBudget` already caps.
+
+**What a script can read.** Only what `IFcHost` and `IFcObject` expose: the merged form
+(`XfaScripts.Host.ResolveRoot` answers `xfa` and `$form`; every other root, `$record`,
+`$data` and `$host` included, is empty) and its field values and properties. The built-ins
+are pure functions of their arguments except `Date`, `Time` and `Uuid`. There is no
+reflection, no dynamic code, no file, network, clipboard, environment or host-application
+access: `Get`, `Post`, `Put`, `xfa.host.*` and every other host method are absent, not stubbed
+(`FormCalcInterpreterTests.HostFunctions_DoNotExist`, `NoBuiltinReachesTheOutsideWorld`).
+The only method a script may call on an object is `resolveNode`/`resolveNodes`, and its
+argument must be a plain SOM accessor.
+
+**What a script can write.** A field's `rawValue` and any object's `presence`, through
+`IFcObject.TrySetProperty`, in the in-memory form model only. Each script is a transaction
+(`XfaScripts.RunOne`): a syntax or runtime error undoes its writes and is reported in
+`XfaLayoutResult.ScriptFailures`. Any other exception type is a defect in the interpreter and
+propagates; it is not swallowed.
+
+**Where scripts run.** Only in `PdfXfaLayout.ApplyXfaLayout`, and only when
+`XfaLayoutOptions.RunFormCalc` is set; `FormCalcContainmentTests` fails on a new caller.
+Redaction, save, printing and the command line never run a script.
+
+**How output reaches redaction.** A value a script writes is laid out as ordinary page text,
+so it is found, removed and verified like any other text; redaction of a laid-out form also
+removes the whole `/XFA` packet, script source included (decisions 5 and 8,
+`XfaFormCalcRedactionTests`, `XfaLayoutResult.FieldsWrittenByScripts`).
+
 ## Verification
 
 - **Oracle: pdf.js** (`pdfjs-dist`, `enableXfa`). Its XFA HTML is rendered in a
