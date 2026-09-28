@@ -69,8 +69,11 @@ public class XfaImageDecoderTests : IDisposable
     private static byte[] RedGif() =>
         Convert.FromBase64String("R0lGODdhBAADAJEAAAAAAP8AAP///wAAACH5BAQAAAAALAAAAAAEAAMAAAIDjI9WADs=");
 
-    /// <summary>An 8 x 8 1-bit BMP (palette black, white), all black: the shape of imm5257e's wordmark.</summary>
-    private static byte[] BlackOneBitBmp()
+    /// <summary>
+    /// An 8 x 8 1-bit BMP (palette black, white), all black: the shape of imm5257e's wordmark.
+    /// <paramref name="pixelsPerMetre"/> 0 leaves the density unset.
+    /// </summary>
+    private static byte[] BlackOneBitBmp(int pixelsPerMetre = 0)
     {
         const int w = 8, h = 8, rowBytes = 4;
         var bmp = new byte[14 + 40 + 8 + rowBytes * h];
@@ -79,6 +82,7 @@ public class XfaImageDecoderTests : IDisposable
         bmp[0] = (byte)'B'; bmp[1] = (byte)'M';
         U32(2, bmp.Length); U32(10, 14 + 40 + 8);
         U32(14, 40); U32(18, w); U32(22, h); U16(26, 1); U16(28, 1); U32(34, rowBytes * h); U32(46, 2);
+        U32(38, pixelsPerMetre); U32(42, pixelsPerMetre);
         // Palette: entry 0 black, entry 1 white (BGRA); pixel bits all 0 = black.
         bmp[58] = bmp[59] = bmp[60] = 0xFF;
         return bmp;
@@ -121,6 +125,21 @@ public class XfaImageDecoderTests : IDisposable
         drawn(At(bitmap, 160, 160)).Should().BeTrue($"aspect none stretches the {format} image over the whole box");
         drawn(At(bitmap, 170, 170)).Should().BeFalse("nothing is drawn outside the box");
         result.Omissions.Should().NotContain(n => n.StartsWith(format, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void BmpDensity_SetsTheNaturalSize_ForAspectActual()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // 5669 pixels per metre is 144 dpi: the 8 px image is 4 x 4pt at the box's top-left
+        // (90, 90). Read as 72 dpi it would be 8 x 8pt and reach (96, 96).
+        var body = ImageDraw("image/bmp", BlackOneBitBmp(5669)).Replace("aspect=\"none\"", "aspect=\"actual\"");
+        var path = LayOutAndSave(XfaTestForms.BuildPdf(XfaTestForms.Template(body, layout: "position")), AppOptions(), out _);
+        using var bitmap = Render(path, 1);
+
+        IsBlack(At(bitmap, 91, 91)).Should().BeTrue("the image starts at the box's top-left");
+        IsBlack(At(bitmap, 96, 96)).Should().BeFalse("at 144 dpi the 8 px image is only 4pt across");
     }
 
     [Fact]
