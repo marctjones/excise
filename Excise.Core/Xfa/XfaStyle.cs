@@ -106,8 +106,21 @@ internal sealed record XfaFontSpec(string Typeface, double Size, bool Bold, bool
     public double WidthScale
         => Typeface.Contains("myriad", StringComparison.OrdinalIgnoreCase) ? 0.9 : 1.0;
 
-    /// <summary>The drawn width of <paramref name="text"/>, including <see cref="WidthScale"/>.</summary>
-    public double Width(string text) => ToPdfFont().MeasureWidth(text) * WidthScale;
+    /// <summary>
+    /// The drawn width of <paramref name="text"/>, including <see cref="WidthScale"/>.
+    /// Characters base-14 cannot draw are measured in the system fallback font they are
+    /// drawn with (#1577), so layout and drawing agree.
+    /// </summary>
+    public double Width(string text)
+    {
+        var font = ToPdfFont();
+        if (font.CanEncodeFully(text))
+            return font.MeasureWidth(text) * WidthScale;
+        double width = 0;
+        foreach (var (segment, fallback) in XfaFallbackFont.Segments(text, font))
+            width += fallback ? XfaFallbackFont.Width(segment, Size) : font.MeasureWidth(segment) * WidthScale;
+        return width;
+    }
 
     /// <summary>
     /// Map an XFA typeface to a base-14 family. Real forms name fonts excise

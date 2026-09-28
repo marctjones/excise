@@ -194,7 +194,12 @@ Each page becomes `Pages.AddBlank(medium)` plus one content stream:
 - Text: `typeface` maps to a base-14 family (serif, mono, symbol and dingbat
   names, else Helvetica), with `weight` and `posture`, `size`, and fill
   colour. `hAlign`/`vAlign` are honoured, with word wrap for multi-line and
-  `draw` text, and `comb` cells.
+  `draw` text, and `comb` cells. Characters base-14 cannot draw (CJK,
+  Cyrillic, Greek...) use an installed wide-coverage Unicode font
+  (`XfaFallbackFont`: a fixed per-platform list, read from the font directory
+  by excise's own sfnt code, first font of a `.ttc`), embedded as a subset;
+  excise bundles no font (#1577). Layout measures those characters in the
+  same font.
 - Widgets are drawn as their static appearance, with pdf.js's field chrome
   (decision 10). `checkButton`: box or circle (the widget border outlines it),
   with a check/circle/cross mark when on. `choiceList`: the selected display
@@ -219,7 +224,8 @@ The result lists what the rendition leaves out, and the banner summarises it:
   TIFF: Excise.Core decodes no image format), and `href` images that are not
   in the document's `/Names /XFAImages` (#1575);
 - barcodes (#1576);
-- text outside WinAnsi, which base-14 fonts cannot draw (#1577);
+- text outside WinAnsi that no installed fallback font covers, drawn as '?'
+  (#1577);
 - gradient and pattern fills, drawn as their base colour (#1578);
 - `keep`/`overflow` leaders and trailers;
 - `usehref` into another file.

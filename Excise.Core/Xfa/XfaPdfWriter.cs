@@ -24,6 +24,23 @@ internal sealed class XfaPdfWriter
         _report = report;
     }
 
+    /// <summary>
+    /// The system Unicode font for this document (#1577), made on first use. One instance
+    /// per document, so its subset holds exactly the glyphs this document draws.
+    /// </summary>
+    private PdfFont? FallbackFont()
+    {
+        if (!_fallbackTried)
+        {
+            _fallbackTried = true;
+            _fallbackFont = XfaFallbackFont.ForDocument(10);
+        }
+        return _fallbackFont;
+    }
+
+    private PdfFont? _fallbackFont;
+    private bool _fallbackTried;
+
     /// <summary>Append one PDF page per laid-out page; returns the new pages.</summary>
     public List<PdfPage> Write(IReadOnlyList<XfaPage> pages)
     {
@@ -31,7 +48,7 @@ internal sealed class XfaPdfWriter
         foreach (var page in pages)
         {
             var pdfPage = _document.Pages.AddBlank(page.Area.Width, page.Area.Height);
-            var content = new PageContent(pdfPage, page.Area.Height);
+            var content = new PageContent(pdfPage, page.Area.Height, FallbackFont);
             foreach (var paint in page.Paints)
             {
                 _budget.Tick();
@@ -417,11 +434,13 @@ internal sealed class XfaPdfWriter
         private readonly PdfPage _page;
         private readonly double _pageHeight;
         private readonly Dictionary<string, string> _fontNames = new(StringComparer.Ordinal);
+        private readonly Func<PdfFont?> _fallbackFont;
 
-        public PageContent(PdfPage page, double pageHeight)
+        public PageContent(PdfPage page, double pageHeight, Func<PdfFont?> fallbackFont)
         {
             _page = page;
             _pageHeight = pageHeight;
+            _fallbackFont = fallbackFont;
         }
 
         public override string ToString() => _sb.ToString();
@@ -448,9 +467,33 @@ internal sealed class XfaPdfWriter
                 return;
 
             var font = spec.ToPdfFont();
-            if (!font.CanEncodeFully(text))
-                report.Note("text outside the WinAnsi character set shown as '?'");
+            if (font.CanEncodeFully(text))
+            {
+                Run(text, font, spec.Size, spec.WidthScale, spec.Color, x, baseline);
+                return;
+            }
 
+            // #1577: what base-14 cannot draw goes to the system fallback font, segment by
+            // segment, advancing by the widths layout measured (XfaFontSpec.Width).
+            foreach (var (segment, fallback) in XfaFallbackFont.Segments(text, font))
+            {
+                if (fallback && _fallbackFont() is { } unicode)
+                {
+                    Run(segment, unicode, spec.Size, 1, spec.Color, x, baseline);
+                    x += XfaFallbackFont.Width(segment, spec.Size);
+                }
+                else
+                {
+                    if (!font.CanEncodeFully(segment))
+                        report.Note("text outside the WinAnsi character set shown as '?'");
+                    Run(segment, font, spec.Size, spec.WidthScale, spec.Color, x, baseline);
+                    x += font.MeasureWidth(segment) * spec.WidthScale;
+                }
+            }
+        }
+
+        private void Run(string text, PdfFont font, double size, double widthScale, PdfColor color, double x, double baseline)
+        {
             if (!_fontNames.TryGetValue(font.BaseFont, out var name))
             {
                 name = _page.AddFont(font);
@@ -458,10 +501,10 @@ internal sealed class XfaPdfWriter
             }
 
             Emit("BT");
-            Emit($"/{name} {F(spec.Size)} Tf");
+            Emit($"/{name} {F(size)} Tf");
             // Tz is text state and survives ET, so every run sets its own.
-            Emit($"{F(spec.WidthScale * 100)} Tz");
-            Emit($"{Rgb(spec.Color)} rg");
+            Emit($"{F(widthScale * 100)} Tz");
+            Emit($"{Rgb(color)} rg");
             Emit($"{F(x)} {F(Y(baseline))} Td");
             Emit($"{font.EncodeString(text)} Tj");
             Emit("ET");
