@@ -32,12 +32,12 @@ Excise.Core	tests-only	AsItalic	triage:public library/domain API; tests exercise
 Excise.Core	tests-only	BeginPath	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	BulletList	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	CalculateNextNumber	triage:moved from Excise.App with ApplyBatesNumbersToSet; test-covered library surface for the batch Bates path
+Excise.Core	tests-only	ClipEvenOdd	triage:public authoring API added for napkin (external consumer, #1851 and D15); exercised by Core and render-back tests; no in-repo production caller by design
+Excise.Core	tests-only	ClipRectangle	triage:public authoring API added for napkin (external consumer, #1851 and D15); exercised by Core and render-back tests; no in-repo production caller by design
 Excise.Core	tests-only	CloseAndStroke	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	ContainsFoldable	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	ContainsLigatures	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	ContainsPresentationForms	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	DateField	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	DocumentJavaScriptActions	triage:public library/domain API; tests exercise contract; external callers may use it
+Excise.Core	tests-only	DrawCircle	triage:public authoring API added for napkin (external consumer, #1851 and D15); exercised by Core and render-back tests; no in-repo production caller by design
 Excise.Core	tests-only	Dropdown	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	ExtractWords	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	FillEvenOdd	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -45,7 +45,6 @@ Excise.Core	tests-only	FillableTable	triage:public library/domain API; tests exe
 Excise.Core	tests-only	FindText	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	FlyOpaqueRectangle	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	FlyScale	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	ForCliCommand	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	FromMatrix	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	FromText	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	GetButtonFields	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -61,15 +60,11 @@ Excise.Core	tests-only	HorizontalRule	triage:public library/domain API; tests ex
 Excise.Core	tests-only	InvokeXObject	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsIndirect	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsJavaScript	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	IsNumber	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	IsPartialOverlap	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsRadioButton	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsTaggedPdf	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	IsTextMarkup	triage:public library/domain API; lost its only production caller (FdfSerializer/XfdfSerializer export filtering) when #921 retired FDF/XFDF; PdfAnnotation.IsTextMarkup is a basic subtype predicate, tests exercise contract; external callers may use it
-Excise.Core	tests-only	JavaScriptSource	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	KeyValue	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	MoveTextAnnotation	triage:public library/domain API; lost its only production caller when the sticky-note card drag moved to MoveTextAnnotationPopup (#1797) and the dead AnnotationWorkflowService.MoveTextNote was removed; still tested authoring API for moving a note's icon
-Excise.Core	tests-only	NamedActionName	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	NextActions	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	NumberedList	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	PageBreak	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -86,7 +81,6 @@ Excise.Core	tests-only	SetFillBlack	triage:public library/domain API; tests exer
 Excise.Core	tests-only	SetFillWhite	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	SetReplyTo	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	SetTabOrder	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	SourceOperation	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	Symmetric	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	TextField	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	TextPosition	triage:public library/domain API; tests exercise contract; external callers may use it
@@ -94,9 +88,7 @@ Excise.Core	tests-only	ToDoubleArray	triage:public library/domain API; tests exe
 Excise.Core	tests-only	ToIntArray	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	Transition	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	TryGetString	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	TryParseIndirectObject	triage:public library/domain API; lost its only production caller (FdfSerializer's %FDF body-object parse) when #921 retired FDF/XFDF; PdfParser.TryParseIndirectObject is a basic parser primitive, tests exercise contract; external callers may use it
 Excise.Core	tests-only	UsedHeight	triage:public library/domain API; tests exercise contract; external callers may use it
-Excise.Core	tests-only	WasHexString	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	WithAlignment	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	WithColor	triage:public library/domain API; tests exercise contract; external callers may use it
 Excise.Core	tests-only	WithName	triage:public library/domain API; tests exercise contract; external callers may use it

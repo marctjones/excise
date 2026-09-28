@@ -80352,6 +80352,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Graphics/PdfGraphicsImageTests.cs::PdfGraphicsImageTests.DrawImage_RgbaPng_IsAnRgbImageWithItsAlphaAsSoftMask",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/PdfGraphicsImageTests.cs::PdfGraphicsImageTests.DrawImage_OpaquePng_HasNoSoftMask",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/PdfGraphicsImageTests.cs::PdfGraphicsImageTests.DrawImage_PalettePngWithTransparency_ExpandsThePaletteAndItsAlpha",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Graphics/PdfGraphicsImageTests.cs::PdfGraphicsImageTests.DrawImage_AfterATranslucentFill_PaintsAtFullOpacity",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Graphics/PdfPenStateTests.cs::PdfPenStateTests.Opacity_IsOneExtGStatePerValuePerPage_AndSurvivesSave",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -81559,42 +81587,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::DifferentialRenderingTests.RendersSimilarlyToMutool",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.PageCount_MatchesQpdf",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.OutlineItemCount_MatchesQpdf",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.OutlineItemCount_SurvivesAnOpenSaveRoundTrip",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/DocumentStructureParityTests.cs::DocumentStructureParityTests.OcgCount_MatchesQpdf",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112722,8 +112714,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 8082,
-    "testMethodsWithCapabilityCandidate": 5247,
+    "testMethods": 8116,
+    "testMethodsWithCapabilityCandidate": 5279,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

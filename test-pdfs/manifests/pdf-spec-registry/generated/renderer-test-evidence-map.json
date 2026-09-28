@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "6399a5a23beac91c30870988ce35ae90506b3c353d2aabf7ddbc382623745386",
+  "sourceFingerprint": "c1f6eda25270725cf73ea1b03d2833a210ef16823b782f1aeb4ad256e9c409a2",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -283,6 +283,50 @@
         "renderer-integration-general"
       ],
       "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ClipAuthoringRenderTests.cs::ClipAuthoringRenderTests.FillInsideClip_IsConfinedToIt_AndRestoreStateReleasesIt",
+      "path": "Excise.Rendering.Tests/ClipAuthoringRenderTests.cs",
+      "class": "ClipAuthoringRenderTests",
+      "method": "FillInsideClip_IsConfinedToIt_AndRestoreStateReleasesIt",
+      "line": 77,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "content-streams"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ClipAuthoringRenderTests.cs::ClipAuthoringRenderTests.ClipEvenOdd_NestedSubpathCutsAHole",
+      "path": "Excise.Rendering.Tests/ClipAuthoringRenderTests.cs",
+      "class": "ClipAuthoringRenderTests",
+      "method": "ClipEvenOdd_NestedSubpathCutsAHole",
+      "line": 100,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "content-streams"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
       "promotion": "review-required"
     },
     {
@@ -30707,6 +30751,34 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/EllipseAuthoringRenderTests.cs::EllipseAuthoringRenderTests.FilledCircle_InkMatchesTheAnalyticCircle",
+      "path": "Excise.Rendering.Tests/EllipseAuthoringRenderTests.cs",
+      "class": "EllipseAuthoringRenderTests",
+      "method": "FilledCircle_InkMatchesTheAnalyticCircle",
+      "line": 69,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "renderer-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/EllipseAuthoringRenderTests.cs::EllipseAuthoringRenderTests.Arc_ZeroToNinety_PaintsTheUpperRightQuarter",
+      "path": "Excise.Rendering.Tests/EllipseAuthoringRenderTests.cs",
+      "class": "EllipseAuthoringRenderTests",
+      "method": "Arc_ZeroToNinety_PaintsTheUpperRightQuarter",
+      "line": 100,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "renderer-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/EncodedBytesEvictionTests.cs::EncodedBytesEvictionTests.AReleasingRender_ForgetsTheImageObject_AndARerenderIsIdentical",
       "path": "Excise.Rendering.Tests/EncodedBytesEvictionTests.cs",
       "class": "EncodedBytesEvictionTests",
@@ -34246,6 +34318,52 @@
         {
           "capability": "pdf.17.graphics.patterns-shadings",
           "modes": [
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ImageAuthoringRenderTests.cs::ImageAuthoringRenderTests.Jpeg_FillsItsBox",
+      "path": "Excise.Rendering.Tests/ImageAuthoringRenderTests.cs",
+      "class": "ImageAuthoringRenderTests",
+      "method": "Jpeg_FillsItsBox",
+      "line": 95,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/ImageAuthoringRenderTests.cs::ImageAuthoringRenderTests.TransparentPng_PaintsOnlyItsOpaqueHalf",
+      "path": "Excise.Rendering.Tests/ImageAuthoringRenderTests.cs",
+      "class": "ImageAuthoringRenderTests",
+      "method": "TransparentPng_PaintsOnlyItsOpaqueHalf",
+      "line": 109,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
             "parse",
             "render"
           ]
@@ -51335,24 +51453,24 @@
     }
   ],
   "summary": {
-    "testMethods": 1409,
+    "testMethods": 1415,
     "facets": {
-      "content-streams": 403,
+      "content-streams": 405,
       "content-strings-and-text": 9,
       "differential-rendering": 824,
       "fonts": 261,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 318,
-      "images": 232,
+      "images": 234,
       "page-group-backdrop": 3,
-      "renderer-integration-general": 38,
+      "renderer-integration-general": 40,
       "renderer-performance-and-lifetime": 12,
       "transparency": 85
     },
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 9,
-      "pdf.17.content.streams:parse": 410,
-      "pdf.17.content.streams:render": 975,
+      "pdf.17.content.streams:parse": 412,
+      "pdf.17.content.streams:render": 977,
       "pdf.17.content.text-state:extract": 9,
       "pdf.17.content.text-state:parse": 9,
       "pdf.17.content.text-state:render": 9,
@@ -51361,9 +51479,9 @@
       "pdf.17.graphics.fonts:extract": 261,
       "pdf.17.graphics.fonts:parse": 261,
       "pdf.17.graphics.fonts:render": 971,
-      "pdf.17.graphics.images:extract": 232,
-      "pdf.17.graphics.images:parse": 232,
-      "pdf.17.graphics.images:render": 971,
+      "pdf.17.graphics.images:extract": 234,
+      "pdf.17.graphics.images:parse": 234,
+      "pdf.17.graphics.images:render": 973,
       "pdf.17.graphics.paths-painting:parse": 318,
       "pdf.17.graphics.paths-painting:render": 318,
       "pdf.17.graphics.patterns-shadings:parse": 53,
@@ -51373,7 +51491,7 @@
       "pdf.17.transparency.model:parse": 85,
       "pdf.17.transparency.model:render": 859
     },
-    "unclassified": 38,
+    "unclassified": 40,
     "allTestsMapped": true
   }
 }
