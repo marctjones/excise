@@ -104,6 +104,50 @@ public class UnsavedChangesOnCloseTests : IDisposable
         }
     }
 
+    // ------------------------------------------------------- prompt wording (#1806)
+
+    /// <summary>
+    /// The dialog text for a given set of counters, read from what the prompt
+    /// actually received (never from a re-implementation of the wording).
+    /// </summary>
+    private async Task<string> PromptMessageForAsync(Action<DocumentStateManager> dirty)
+    {
+        var (vm, dialog) = CreateViewModel();
+        await vm.LoadDocumentAsync(NewPdf($"wording-{Guid.NewGuid():N}.pdf"));
+        dirty(vm.FileState);
+        await vm.ConfirmDiscardUnsavedChangesAsync("close this document");
+        return dialog.LastMessage ?? throw new InvalidOperationException("the prompt was never shown");
+    }
+
+    [FixedAvaloniaFact(Timeout = 30000)]
+    public async Task PromptWording_OneEdit_IsSingular_AndHasNoSubjectVerbMismatch()
+    {
+        var message = await PromptMessageForAsync(f => f.PageEditsCount = 1);
+
+        message.Should().Contain("has 1 page edit not yet saved.");
+        message.Should().NotContain("1 page edits");
+        message.Should().NotMatchRegex(@"1 page edit\b[^.]*\bhave\b",
+            "'1 page edit ... have' is the #1806 mismatch");
+    }
+
+    [FixedAvaloniaFact(Timeout = 30000)]
+    public async Task PromptWording_ManyEdits_ArePlural_AndSeveralKindsAreListed()
+    {
+        (await PromptMessageForAsync(f => f.PageEditsCount = 3))
+            .Should().Contain("has 3 page edits not yet saved.");
+
+        (await PromptMessageForAsync(f => { f.PageEditsCount = 1; f.RemovedPagesCount = 2; }))
+            .Should().Contain("has 2 removed pages, 1 page edit not yet saved.");
+    }
+
+    [FixedAvaloniaFact(Timeout = 30000)]
+    public async Task PromptWording_UnsavedWithNoCounter_FallsBackToChanges()
+    {
+        (await PromptMessageForAsync(f => f.AppliedRedactionsCount = 1))
+            .Should().Contain("has changes not yet saved.")
+            .And.NotContain("unsaved changes");
+    }
+
     // ---------------------------------------------------------------- window close
 
     [FixedAvaloniaFact(Timeout = 30000)]

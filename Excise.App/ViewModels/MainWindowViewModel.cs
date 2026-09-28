@@ -2703,28 +2703,32 @@ internal partial class MainWindowViewModel : ViewModelBase
         dialog => _ = dialog.ShowAsync();
 
     // Menu accelerators are Cmd on macOS; the tab shortcuts stay Ctrl there.
-    internal static string KeyboardShortcutsText(bool mac) => string.Format(
-        "File:\n" +
-                      "  {0}O - Open PDF\n" +
-                      "  {0}S - Save\n" +
-                      "  {0}Shift+S - Save As\n" +
-                      "  {0}W - Close Document\n\n" +
-                      "Edit:\n" +
-                      "  {0}F - Find\n" +
-                      "  F3 - Find Next\n" +
-                      "  Shift+F3 - Find Previous\n" +
-                      "  T - Toggle Text Selection Mode\n" +
-                      "  R - Toggle Redaction Mode\n\n" +
-                      "View:\n" +
-                      "  {0}+ - Zoom In\n" +
-                      "  {0}- - Zoom Out\n" +
-                      "  {0}0 - Actual Size\n\n" +
-                      "Navigation:\n" +
-                      "  PgUp/PgDn - Previous/Next Page\n\n" +
-                      "Tabs:\n" +
-                      "  Ctrl+Tab / Ctrl+Shift+Tab - Next/Previous Document Tab\n" +
-                      "  Ctrl+PgDn / Ctrl+PgUp - Next/Previous Document Tab",
-        mac ? "⌘" : "Ctrl+");
+    // Notation (glyphs vs "Ctrl+") lives in ShortcutNotation (#1806).
+    internal static string KeyboardShortcutsText(bool mac)
+    {
+        string K(string chord) => Services.ShortcutNotation.Format(chord, mac);
+        return
+            "File:\n" +
+            $"  {K("Primary+O")} - Open PDF\n" +
+            $"  {K("Primary+S")} - Save\n" +
+            $"  {K("Primary+Shift+S")} - Save As\n" +
+            $"  {K("Primary+W")} - Close Document\n\n" +
+            "Edit:\n" +
+            $"  {K("Primary+F")} - Find\n" +
+            $"  {K("F3")} - Find Next\n" +
+            $"  {K("Shift+F3")} - Find Previous\n" +
+            "  T - Toggle Text Selection Mode\n" +
+            "  R - Toggle Redaction Mode\n\n" +
+            "View:\n" +
+            $"  {K("Primary++")} - Zoom In\n" +
+            $"  {K("Primary+-")} - Zoom Out\n" +
+            $"  {K("Primary+0")} - Actual Size\n\n" +
+            "Navigation:\n" +
+            "  PgUp/PgDn - Previous/Next Page\n\n" +
+            "Tabs:\n" +
+            $"  {K("Ctrl+Tab")} / {K("Ctrl+Shift+Tab")} - Next/Previous Document Tab\n" +
+            $"  {K("Ctrl+PgDn")} / {K("Ctrl+PgUp")} - Next/Previous Document Tab";
+    }
 
     private void ShowKeyboardShortcuts()
     {
