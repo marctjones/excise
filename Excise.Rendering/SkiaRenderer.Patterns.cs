@@ -902,7 +902,7 @@ internal partial class RenderContext
 
     private void DrawMeshBitmap(SKBitmap bitmap, double minX, double minY, double maxX, double maxY)
     {
-        using var image = SKImage.FromBitmap(bitmap);
+        using var image = ShareAsImage(bitmap);
         using var shader = SKShader.CreateImage(
             image,
             SKShaderTileMode.Clamp,
@@ -1437,7 +1437,7 @@ internal partial class RenderContext
             }
         }
 
-        using var image = SKImage.FromBitmap(bitmap);
+        using var image = ShareAsImage(bitmap);
         using var paint = new SKPaint
         {
             BlendMode = _state.BlendMode,
