@@ -243,7 +243,7 @@ Callers column: **X** = `MainWindow.axaml` binding or event attribute, **V** =
 | Member (line) | What it does | Pipeline | Callers |
 |---|---|---|---|
 | `OnDocumentChanged` (1784-1836, `async void`) | drop single-page cache, letters, links, selection; `TakeKeepPagesOnScreenRequest`; `InvalidateContinuousCache(keep)`; then by mode: continuous → `RenderVisibleContinuousTiles()` or `RebuildContinuous()` + `ClearDisplay()` (#1473), single → `RenderCurrentPageAsync()`; null → clear both | **both** | class handler |
-| `OnCurrentPageChanged` (1838-1880, `async void`) | continuous: `ScrollToPageContinuous` unless scroll-driven, raise `PageChanged`, return; single-page: drop letters/links/selection, `RefreshPageAnnotations`, `RedrawTypewriterLayer`, `await RenderCurrentPageAsync()`, raise `PageChanged`. **Lines 1874-1878 are unreachable** (the continuous branch returned at 1851) | both | class handler |
+| `OnCurrentPageChanged` (1838-1880, `async void`) | continuous: `ScrollToPageContinuous` unless scroll-driven, raise `PageChanged`, return; single-page: drop letters/links/selection, `RefreshPageAnnotations`, `RedrawTypewriterLayer`, `await RenderCurrentPageAsync()`, raise `PageChanged`. **Correction (#1842 step 0): lines 1874-1878 ARE reachable** — if `ViewMode` switches to `Continuous` while the single-page branch's `await RenderCurrentPageAsync()` is in flight, execution resumes past the initial check and this trailing block runs, discarding the reading fraction a concurrent mode switch was carrying (proven by a planted-failure test; see #1931) | both | class handler |
 | `OnReadingOrderStrategyChanged` (1888-1895) | drop single-page ordering **and** `InvalidateContinuousCache()` | both | class handler |
 | `OnRenderVersionChanged` (1897-1932) | `InvalidatePageCache` + `InvalidateContinuousCache` + letters/links/selection; by mode `RebuildContinuous`+`RenderVisibleContinuousTiles`+`ClearDisplay` or `RenderCurrentPageAsync`; automation notify | both | class handler |
 | `RefreshPageAnnotations` (1934-1950) | `Annotations = page.GetAnnotations()` for the single-page layer | single-page | document/page/version handlers |
@@ -597,9 +597,13 @@ The split is behaviour-preserving. Each item is **kept as-is by the step that
 touches it, pinned by a test of the current behaviour**, and changed only
 under its own issue. None is filed by this pass; the orchestrator decides.
 
-- `OnCurrentPageChanged` `cs:1874-1878` is unreachable: the `Continuous`
-  branch returns at `cs:1851`, so the trailing `if (ViewMode == Continuous
-  && !_syncingPageFromScroll) ScrollToPageContinuous(...)` never runs.
+- **Correction (#1842 step 0):** `OnCurrentPageChanged` `cs:1874-1878` was
+  described here as unreachable; it is not. If `ViewMode` switches to
+  `Continuous` while the single-page branch's `await RenderCurrentPageAsync()`
+  is in flight, the trailing `if (ViewMode == Continuous &&
+  !_syncingPageFromScroll) ScrollToPageContinuous(...)` runs and discards the
+  reading fraction a concurrent mode switch was carrying. Filed as #1931, not
+  as dead code (moved out of #1930, which originally listed it as such).
 - Detach disposes the four scroll subscriptions and unhooks the three
   `ItemsControl` events (`cs:698-712`), but `AttachedToVisualTree` only
   resets `_continuousDetached` (`cs:593`) and nothing re-subscribes: after a
