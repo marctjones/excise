@@ -561,6 +561,67 @@ public class RenderAheadTests
         }
     }
 
+    // ---- Turning render-ahead off (#1842 step 8) ------------------------------
+    //
+    // The switch forwards to both views, and each cancels its own look-ahead when
+    // it is turned off. Without the cancel, a render-ahead already under way keeps
+    // running (and caching) after the viewer was told to stop.
+
+    [FixedAvaloniaFact]
+    public async Task SinglePage_TurningRenderAheadOff_CancelsTheLookAheadInFlight()
+    {
+        var (window, viewer, _) = ShowSinglePageViewer(MultiPagePdf(3));
+        using var holds = new RenderHolds();
+        var hold2 = holds.Hold(2);
+        viewer.SinglePageLookAheadStartingForTests = holds.Wait;
+        try
+        {
+            await WaitUntilAsync(window, () => viewer.SinglePageLookAheadInFlight, "page 2 to be rendered ahead");
+
+            viewer.RenderAheadEnabled = false;
+            hold2.Set();
+            await WaitUntilAsync(window, () => !viewer.SinglePageLookAheadInFlight, "the render-ahead to finish");
+
+            viewer.SinglePageLookAheadCancellationCount.Should().Be(1, "turning render-ahead off cancels it");
+            viewer.SinglePageCacheContainsForTests(2).Should().BeFalse("the cancelled render cached nothing");
+        }
+        finally
+        {
+            holds.ReleaseAll();
+            viewer.SinglePageLookAheadStartingForTests = null;
+            Close(window, viewer);
+        }
+    }
+
+    [FixedAvaloniaFact]
+    public async Task Continuous_TurningRenderAheadOff_CancelsTheLookAheadInFlight()
+    {
+        var (window, viewer, _) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(pageCount: 3);
+        using var holds = new RenderHolds();
+        var holdPage2 = holds.Hold(2);
+        viewer.ContinuousBandRenderStartingForTests = holds.Wait;
+        try
+        {
+            await WaitUntilAsync(window, () => viewer.ContinuousLookAheadInFlight, "page 2 to be rendered ahead");
+            viewer.ContinuousLookAheadCancellationRequested.Should().BeFalse();
+
+            viewer.RenderAheadEnabled = false;
+            viewer.ContinuousLookAheadCancellationRequested.Should().BeTrue("turning render-ahead off cancels it");
+            holdPage2.Set();
+            await WaitLookAheadIdleAsync(window, viewer);
+
+            viewer.ContinuousLookAheadCancellationCount.Should().Be(1);
+            viewer.ContinuousCacheEntriesForTests().Should().NotContain(e => e.Key.Page == 2,
+                "the cancelled render cached nothing");
+        }
+        finally
+        {
+            holds.ReleaseAll();
+            viewer.ContinuousBandRenderStartingForTests = null;
+            Close(window, viewer);
+        }
+    }
+
     // ---- Detach (#1842 step 0 (e)) ------------------------------------------
     //
     // The look-ahead halves of "detach cancels" are pinned above (closing the

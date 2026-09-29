@@ -97,6 +97,22 @@ public class SelectAllTextTests : IDisposable
         window.Close();
     }
 
+    /// <summary>
+    /// A page number past the end selects nothing and reports false, in the continuous view
+    /// where the view itself now range-checks the page (#1842 step 8).
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 90000)]
+    public async Task SelectAllText_PageOutOfRange_InContinuousView_ReturnsFalse()
+    {
+        var (vm, window, viewer, _) = await OpenAsync(PdfViewMode.Continuous);
+
+        viewer.SelectAllText(4).Should().BeFalse("the document has three pages");
+        viewer.SelectAllText(-1).Should().BeTrue("a non-positive page means the page filling the viewport");
+        vm.HasTextSelection.Should().BeTrue();
+
+        window.Close();
+    }
+
     [FixedAvaloniaFact(Timeout = 90000)]
     public async Task CtrlA_InSinglePageView_SelectsTheDisplayedPage()
     {
