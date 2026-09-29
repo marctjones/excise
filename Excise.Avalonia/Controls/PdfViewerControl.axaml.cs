@@ -550,6 +550,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, IViewer
     {
         _pageCaches = new ViewerPageCaches(() => Document);
         InitializeComponent();
+        ApplyViewTemplates();
         WireTemplateParts();
         MetricsViewerId = ViewerMetrics.Register(this);
         Focusable = true;
@@ -809,8 +810,30 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, IViewer
 
 
     /// <summary>
+    /// Give the two views their templates now (#1842 Phase B). A <c>TemplatedControl</c> is
+    /// otherwise templated when it is first styled and measured, which for a viewer outside a
+    /// window never happens; the wiring below, the viewer's API and its tests use the views'
+    /// parts from construction on, as they did when the views were <c>UserControl</c>s.
+    /// <c>ApplyStyling</c> finds each view's ControlTheme in this control's own resources
+    /// (PdfViewerControl.axaml) through the view's logical parent, before the viewer has a
+    /// window; attaching to one later keeps the same template.
+    /// </summary>
+    private void ApplyViewTemplates()
+    {
+        foreach (var view in new global::Avalonia.Controls.Primitives.TemplatedControl[] { ContinuousPart, SinglePagePart })
+        {
+            view.ApplyStyling();
+            if (view.Template is null)
+                throw new InvalidOperationException(
+                    $"{view.GetType().Name} has no ControlTheme in reach; PdfViewerControl.axaml merges it (#1842).");
+            view.ApplyTemplate();
+        }
+    }
+
+    /// <summary>
     /// Wire the template parts after the generated <c>InitializeComponent</c> has
-    /// loaded the XAML (once) and set the part fields (#1842). The nine root
+    /// loaded the XAML (once) and <see cref="ApplyViewTemplates"/> has given the two
+    /// views their parts (#1842). The nine root
     /// <c>AddHandler</c> registrations below must stay in this file: the GUI
     /// interaction registry keys its viewer rows on it.
     /// </summary>

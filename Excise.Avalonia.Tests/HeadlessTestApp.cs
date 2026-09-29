@@ -24,9 +24,10 @@ namespace Excise.Avalonia.Tests;
 /// <see cref="PdfViewerViewportDiagnosticsTests"/> here (#1773): it passed
 /// under <c>Excise.App.Tests</c>' Skia-backed app and failed here until this
 /// theme was added, so removing it would silently zero out that test again.
-/// <c>PdfViewerControl</c> itself needs no theme, since its own template is
-/// declared inline in its own .axaml file rather than built from a
-/// <c>ControlTheme</c>.
+/// <c>PdfViewerControl</c> itself needs no theme from this host: its own
+/// template is declared inline in its own .axaml file, and the ControlThemes of
+/// its two templated views (#1842) live in that file's resources, so they reach
+/// every host with the viewer (<see cref="ViewerTemplatePartsTests"/>).
 /// </remarks>
 public sealed class HeadlessTestApp : Application
 {

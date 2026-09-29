@@ -717,15 +717,4 @@ public class RedactionMouseDragBroadeningTests
         for (var i = 0; i < 12; i++) { await Task.Delay(100); window.UpdateLayout(); }
         await KeyboardTestHelpers.FlushDispatcherAsync();
     }
-
-    private static T? FindNamedDescendant<T>(Control root, string name) where T : Control
-    {
-        if (root.Name == name && root is T t) return t;
-        if (root is Panel p)
-            foreach (var child in p.Children)
-                if (child is Control c && FindNamedDescendant<T>(c, name) is { } hit) return hit;
-        if (root is Decorator d && d.Child is Control dc && FindNamedDescendant<T>(dc, name) is { } dh) return dh;
-        if (root is ContentControl cc && cc.Content is Control ccc && FindNamedDescendant<T>(ccc, name) is { } ch) return ch;
-        return root.FindControl<T>(name);
-    }
 }

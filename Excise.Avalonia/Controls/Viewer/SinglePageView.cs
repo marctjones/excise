@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Metadata;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -30,8 +32,31 @@ namespace Excise.Avalonia.Controls;
 /// <para>The pure render-plan math, the DPI constants and the key types stay declared on
 /// <see cref="PdfViewerControl"/> (tests address them as <c>PdfViewerControl.X</c>) and are
 /// imported here with <c>using static</c>.</para>
+/// <para>A <see cref="TemplatedControl"/> (#1842 Phase B): its template is the ControlTheme in
+/// <c>SinglePageView.axaml</c>, which the viewer merges into its own resources, and its named
+/// elements are the template parts below. The viewer applies the template when it constructs
+/// the view (<see cref="PdfViewerControl"/>'s constructor), so the parts exist from then on,
+/// as they did when the view was a <c>UserControl</c>.</para>
 /// </remarks>
-internal sealed partial class SinglePageView : UserControl, IPageHitSurface, IReadingPositionSource, ITypewriterEditSink
+[TemplatePart(nameof(PdfScrollViewer), typeof(ScrollViewer), IsRequired = true)]
+[TemplatePart(nameof(ZoomHost), typeof(LayoutTransformControl), IsRequired = true)]
+[TemplatePart(nameof(ContentGrid), typeof(Grid), IsRequired = true)]
+[TemplatePart(nameof(PdfImage), typeof(Image), IsRequired = true)]
+[TemplatePart(nameof(OverlayCanvas), typeof(Canvas), IsRequired = true)]
+[TemplatePart(nameof(AnnotationsLayer), typeof(Canvas), IsRequired = true)]
+[TemplatePart(nameof(SearchHighlightsLayer), typeof(Canvas), IsRequired = true)]
+[TemplatePart(nameof(AppliedRedactionsLayer), typeof(Canvas), IsRequired = true)]
+[TemplatePart(nameof(PendingRedactionsLayer), typeof(Canvas), IsRequired = true)]
+[TemplatePart(nameof(TextSelectionLayer), typeof(Canvas), IsRequired = true)]
+[TemplatePart(nameof(HiddenTextRevealLayer), typeof(Canvas), IsRequired = true)]
+[TemplatePart(nameof(FormFieldsLayer), typeof(Canvas), IsRequired = true)]
+[TemplatePart(nameof(InteractionLayer), typeof(Canvas), IsRequired = true)]
+[TemplatePart(nameof(TypewriterLayer), typeof(Canvas), IsRequired = true)]
+[TemplatePart(nameof(LoadingProgressBar), typeof(ProgressBar), IsRequired = true)]
+[TemplatePart(nameof(LoadingOverlay), typeof(Grid), IsRequired = true)]
+[TemplatePart(nameof(ErrorOverlay), typeof(Grid), IsRequired = true)]
+[TemplatePart(nameof(ErrorMessageText), typeof(TextBlock), IsRequired = true)]
+internal sealed partial class SinglePageView : TemplatedControl, IPageHitSurface, IReadingPositionSource, ITypewriterEditSink
 {
     private PdfViewerControl _viewer = null!;
     private IViewerState _state = null!;
@@ -41,7 +66,60 @@ internal sealed partial class SinglePageView : UserControl, IPageHitSurface, IRe
     private bool _renderAheadEnabled = true;
     private long _singlePagePublishCount;
 
-    public SinglePageView() => InitializeComponent();
+    // ── template parts (SinglePageView.axaml) ─────────────────────────────────
+    internal ScrollViewer PdfScrollViewer { get; private set; } = null!;
+    internal LayoutTransformControl ZoomHost { get; private set; } = null!;
+    internal Grid ContentGrid { get; private set; } = null!;
+    internal Image PdfImage { get; private set; } = null!;
+    internal Canvas OverlayCanvas { get; private set; } = null!;
+    internal Canvas AnnotationsLayer { get; private set; } = null!;
+    internal Canvas SearchHighlightsLayer { get; private set; } = null!;
+    internal Canvas AppliedRedactionsLayer { get; private set; } = null!;
+    internal Canvas PendingRedactionsLayer { get; private set; } = null!;
+    internal Canvas TextSelectionLayer { get; private set; } = null!;
+    internal Canvas HiddenTextRevealLayer { get; private set; } = null!;
+    internal Canvas FormFieldsLayer { get; private set; } = null!;
+    internal Canvas InteractionLayer { get; private set; } = null!;
+    internal Canvas TypewriterLayer { get; private set; } = null!;
+    internal ProgressBar LoadingProgressBar { get; private set; } = null!;
+    internal Grid LoadingOverlay { get; private set; } = null!;
+    internal Grid ErrorOverlay { get; private set; } = null!;
+    internal TextBlock ErrorMessageText { get; private set; } = null!;
+    private bool _templateApplied;
+
+    /// <summary>
+    /// Take the template parts. Once only: the viewer wires them (scroll subscriptions,
+    /// the zoom transform, the overlay layers) when it constructs the view, so a second
+    /// template would leave that wiring on parts no longer shown. The view is internal and
+    /// its one theme is the viewer's, so nothing re-templates it; fail loudly if something does.
+    /// </summary>
+    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+    {
+        base.OnApplyTemplate(e);
+        if (_templateApplied)
+            throw new InvalidOperationException(
+                "SinglePageView was re-templated; its parts are wired once, when the viewer constructs it (#1842).");
+        _templateApplied = true;
+
+        PdfScrollViewer = e.NameScope.Get<ScrollViewer>(nameof(PdfScrollViewer));
+        ZoomHost = e.NameScope.Get<LayoutTransformControl>(nameof(ZoomHost));
+        ContentGrid = e.NameScope.Get<Grid>(nameof(ContentGrid));
+        PdfImage = e.NameScope.Get<Image>(nameof(PdfImage));
+        OverlayCanvas = e.NameScope.Get<Canvas>(nameof(OverlayCanvas));
+        AnnotationsLayer = e.NameScope.Get<Canvas>(nameof(AnnotationsLayer));
+        SearchHighlightsLayer = e.NameScope.Get<Canvas>(nameof(SearchHighlightsLayer));
+        AppliedRedactionsLayer = e.NameScope.Get<Canvas>(nameof(AppliedRedactionsLayer));
+        PendingRedactionsLayer = e.NameScope.Get<Canvas>(nameof(PendingRedactionsLayer));
+        TextSelectionLayer = e.NameScope.Get<Canvas>(nameof(TextSelectionLayer));
+        HiddenTextRevealLayer = e.NameScope.Get<Canvas>(nameof(HiddenTextRevealLayer));
+        FormFieldsLayer = e.NameScope.Get<Canvas>(nameof(FormFieldsLayer));
+        InteractionLayer = e.NameScope.Get<Canvas>(nameof(InteractionLayer));
+        TypewriterLayer = e.NameScope.Get<Canvas>(nameof(TypewriterLayer));
+        LoadingProgressBar = e.NameScope.Get<ProgressBar>(nameof(LoadingProgressBar));
+        LoadingOverlay = e.NameScope.Get<Grid>(nameof(LoadingOverlay));
+        ErrorOverlay = e.NameScope.Get<Grid>(nameof(ErrorOverlay));
+        ErrorMessageText = e.NameScope.Get<TextBlock>(nameof(ErrorMessageText));
+    }
 
     /// <summary>Wire the view to its viewer. Called once, from the viewer's template wiring.</summary>
     internal void Attach(PdfViewerControl viewer, IPagePreviewSource preview)

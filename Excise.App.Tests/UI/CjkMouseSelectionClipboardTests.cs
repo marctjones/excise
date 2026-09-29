@@ -241,29 +241,4 @@ public class CjkMouseSelectionClipboardTests : IDisposable
             RenderDpi);
         return overlay.TranslatePoint(new Point(center.X, center.Y), window) ?? default;
     }
-
-    private static T? FindNamedDescendant<T>(Control root, string name) where T : Control
-    {
-        if (root.Name == name && root is T t) return t;
-        if (root is Panel p)
-        {
-            foreach (var child in p.Children)
-                if (child is Control c)
-                {
-                    var hit = FindNamedDescendant<T>(c, name);
-                    if (hit != null) return hit;
-                }
-        }
-        if (root is Decorator d && d.Child is Control dc)
-        {
-            var hit = FindNamedDescendant<T>(dc, name);
-            if (hit != null) return hit;
-        }
-        if (root is ContentControl cc && cc.Content is Control ccc)
-        {
-            var hit = FindNamedDescendant<T>(ccc, name);
-            if (hit != null) return hit;
-        }
-        return root.FindControl<T>(name);
-    }
 }
