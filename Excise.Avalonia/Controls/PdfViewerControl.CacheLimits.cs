@@ -92,13 +92,12 @@ public partial class PdfViewerControl
     /// <exception cref="ArgumentOutOfRangeException">The value is not positive.</exception>
     public int SinglePageCacheCapacity
     {
-        get => _singlePageRenderLifetime.GetCacheDiagnostics().Capacity;
+        get => SinglePagePart.CacheCapacity;
         set
         {
             Dispatcher.UIThread.VerifyAccess();
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value);
-            var shown = PdfImage?.Source as WriteableBitmap;
-            _singlePageRenderLifetime.SetCapacity(value, bitmap => ReferenceEquals(bitmap, shown));
+            SinglePagePart.CacheCapacity = value;
         }
     }
 

@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "d7532535928f5559a29dbddafa0bb59522a73173",
+  "sourceRevision": "4c0c9484b89a7269b4c20b616f7d7ee332b901ab",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8372,
+    "retainedSymbols": 8469,
     "observedComponentDependencies": 83,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -66,14 +66,14 @@
     {
       "source": "avalonia",
       "target": "core-document",
-      "references": 491,
-      "typeDependencyCount": 51,
+      "references": 505,
+      "typeDependencyCount": 60,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Avalonia.Controls.PdfViewerControl",
-          "target": "Excise.Core.Document.PdfDocument",
-          "references": 53
+          "target": "Excise.Core.Document.PdfRectangle",
+          "references": 38
         }
       ]
     },
@@ -94,21 +94,21 @@
     {
       "source": "avalonia",
       "target": "core-text",
-      "references": 56,
-      "typeDependencyCount": 15,
+      "references": 59,
+      "typeDependencyCount": 18,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Avalonia.Controls.PdfViewerControl",
+          "source": "Excise.Avalonia.Controls.SinglePageView",
           "target": "Excise.Core.Text.TextSelectionEngine",
-          "references": 15
+          "references": 13
         }
       ]
     },
     {
       "source": "avalonia",
       "target": "rendering",
-      "references": 26,
+      "references": 25,
       "typeDependencyCount": 4,
       "classification": "declared",
       "evidence": [

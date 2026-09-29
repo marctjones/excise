@@ -86,7 +86,7 @@ public partial class PdfViewerControl
         // moves: a trim must not cause a render (#1478), and re-rendering what
         // was just released would undo the trim.
         ContinuousPart.SuppressContinuousLookAheadAfterTrim();
-        SuppressSinglePageLookAheadAfterTrim();
+        SinglePagePart.SuppressSinglePageLookAheadAfterTrim();
 
         // Background and Warn keep the current bands' tiles; Critical keeps
         // none. _continuousRequiredKeys is the set the last render pass
@@ -100,15 +100,8 @@ public partial class PdfViewerControl
         if (level == PdfViewerCacheTrimLevel.Critical)
             (composites, compositeBytes) = ContinuousPart.ClearCompositesOutsideViewport();
 
-        // Reference identity with the Image's source IS the never-drop rule.
-        // When the page has settled, that bitmap is the current page at the
-        // current device DPI; while a render is in flight it is whatever the
-        // user still sees. In continuous view the hidden Image has no source
-        // (#1473), so every entry goes.
-        var shown = PdfImage?.Source as WriteableBitmap;
-        var (singlePage, singlePageBytes) = _singlePageRenderLifetime.Trim(
-            bitmap => ReferenceEquals(bitmap, shown),
-            static bitmap => ContinuousTileByteSize(bitmap.PixelSize.Width, bitmap.PixelSize.Height));
+        // Every single-page bitmap except the one on screen (the view's TrimCache).
+        var (singlePage, singlePageBytes) = SinglePagePart.TrimCache();
 
         // #1492: decoded image samples of pages outside the current bands, at
         // every level. Stricter than the render pass, which keeps every

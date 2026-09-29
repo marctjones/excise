@@ -1,6 +1,3 @@
-using System.Linq;
-using Excise.Core.Text;
-
 namespace Excise.Avalonia.Controls;
 
 /// <summary>Select All Text (#1814).</summary>
@@ -29,14 +26,6 @@ public partial class PdfViewerControl
             return ContinuousPart.SelectAll(page);
         }
 
-        EnsurePageLettersLoaded();
-        if (_readingOrderedLetters == null || _readingOrderedLetters.Count == 0) return false;
-
-        _selectionAnchor = _readingOrderedLetters[0];
-        _selectionFocus = _readingOrderedLetters[^1];
-        DrawSelectionRange(TextSelectionEngine.ColumnAwareRange(
-            _readingOrderedLetters, _selectionAnchor, _selectionFocus, _columnGapThreshold));
-        RaiseSinglePageTextSelected();
-        return true;
+        return SinglePagePart.SelectAll();
     }
 }

@@ -128,18 +128,15 @@ public partial class PdfViewerControl
                 true);
     }
 
-    private long _singlePagePublishCount;
-
     /// <summary>
     /// Times a finished single-page render (fresh or cached) was bound to the
     /// page Image. A placeholder does not count. Report-only, for the
     /// edit-mode switch measurements.
     /// </summary>
-    internal long SinglePagePublishCount => _singlePagePublishCount;
+    internal long SinglePagePublishCount => SinglePagePart.SinglePagePublishCount;
 
     /// <summary>Bytes held by the single-page LRU (BGRA, 4 bytes per pixel).</summary>
-    internal long SinglePageCacheResidentBytes() =>
-        _singlePageRenderLifetime.ResidentBytes(b => (long)b.PixelSize.Width * b.PixelSize.Height * 4);
+    internal long SinglePageCacheResidentBytes() => SinglePagePart.SinglePageCacheResidentBytes();
 
     /// <summary>
     /// True while single-page work that the viewer started on its own is still
@@ -154,7 +151,7 @@ public partial class PdfViewerControl
     /// </summary>
     public PdfViewerRenderDiagnostics GetRenderDiagnostics()
     {
-        var single = _singlePageRenderLifetime.GetCacheDiagnostics();
+        var single = SinglePagePart.CacheDiagnostics();
         return new PdfViewerRenderDiagnostics(
             ViewMode,
             single.EntryCount,
@@ -218,7 +215,7 @@ public partial class PdfViewerControl
 
 
     internal SinglePageRenderLifetime<global::Avalonia.Media.Imaging.WriteableBitmap>.CacheDiagnostics
-        MetricsSinglePageCache() => _singlePageRenderLifetime.GetCacheDiagnostics();
+        MetricsSinglePageCache() => SinglePagePart.CacheDiagnostics();
 
     // #1491 gauge sources, owned by the continuous view (its mirrors are refreshed
     // on the UI thread; ViewerMetrics reads them from the listener's thread).
