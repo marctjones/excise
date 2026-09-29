@@ -142,9 +142,13 @@ public sealed class OverprintRenderingTests
     private const string ExplicitMergedFill = Background + "1 0 1 0 k 60 60 80 80 re f\n";
     private const string OpOnlyFill = Background + "/GSOPonly gs 0 0 1 0 k 60 60 80 80 re f\n";
     private const string PersistedOpmFill = Background + "/GSopm gs /GSflags gs 0 0 1 0 k 60 60 80 80 re f\n";
-    private const string OverprintStroke = Background + "/GSop gs 0 0 1 0 K 20 w 60 100 m 140 100 l S\n";
 
-    private const string Resources =
+    // Internal (not private): reused by DeviceCmykOverprintMaskSizeTests
+    // (#1924) to render the same overprint STROKE fixture while asserting
+    // on the DeviceCMYK coverage mask's size rather than its pixels.
+    internal const string OverprintStroke = Background + "/GSop gs 0 0 1 0 K 20 w 60 100 m 140 100 l S\n";
+
+    internal const string Resources =
         "/ExtGState << " +
         "/GSop << /Type /ExtGState /OP true /op true /OPM 1 >> " +
         "/GSop0 << /Type /ExtGState /OP true /op true /OPM 0 >> " +

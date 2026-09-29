@@ -673,11 +673,19 @@ internal partial class RenderContext
         float miterLimit,
         SKPathEffect? pathEffect)
     {
-        var boundMaskToWindow = style == SKPaintStyle.Fill && pathEffect == null;
-        var maskOriginX = boundMaskToWindow ? left : 0;
-        var maskOriginY = boundMaskToWindow ? top : 0;
-        var maskWidth = boundMaskToWindow ? right - left : _rootBitmap!.Width;
-        var maskHeight = boundMaskToWindow ? bottom - top : _rootBitmap!.Height;
+        // #1924: bound the mask to the caller's own read window for every
+        // style, not just an undashed fill. TryPaintDeviceCmykBlendPath and
+        // TryPaintDeviceCmykOverprintPath only ever read mask pixels in
+        // [left,right)x[top,bottom) (see their pixel loops) regardless of
+        // paint style or path effect, so a mask any larger than that window
+        // wastes memory without changing what gets blended — a stroke (or a
+        // dashed fill) used to fall back to a full `_rootBitmap`-sized mask
+        // (10+ MB on a US-Letter page) to cover even a hairline rule.
+        var maskOriginX = left;
+        var maskOriginY = top;
+        var maskWidth = right - left;
+        var maskHeight = bottom - top;
+        RasterizedMaskPeakPixels = Math.Max(RasterizedMaskPeakPixels, (long)maskWidth * maskHeight);
         var mask = _deviceCmyk.GetBlendMask(maskWidth, maskHeight);
         var maskMatrix = matrix;
         maskMatrix.TransX -= maskOriginX;
@@ -708,8 +716,13 @@ internal partial class RenderContext
                 maskPaint.PathEffect = pathEffect;
 
             // Clear only the pixels the paint loops read. The draw itself
-            // stays unclipped so the surface-wide cull rect (and therefore
-            // dash segmentation) is untouched; stale pixels the path may
+            // stays unclipped: the mask canvas's own extent now equals the
+            // read window, and the geometry passed in is already bounded to
+            // path.Bounds (+-1px) by the caller, so it is always strictly
+            // inside that window/cull rect -- a dash path effect's cull-line
+            // optimisation only rewrites endpoints that fall OUTSIDE the
+            // cull rect, which never happens here, so dash segmentation is
+            // unaffected by the mask's size. Stale pixels the path may
             // repaint outside the window are never read.
             maskCanvas.Save();
             maskCanvas.ClipRect(
