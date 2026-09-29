@@ -509,17 +509,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
     #region Fields
 
     private readonly SkiaRenderer _renderer;
-    private Image? _pdfImage;
-    private Canvas? _overlayCanvas;
-    private Canvas? _interactionLayer;
-    private Canvas? _typewriterLayer;
-    private LayoutTransformControl? _zoomHost;
     private ScaleTransform? _zoomScaleTransform;
-    private ScrollViewer? _scrollViewer;
-    private Grid? _loadingOverlay;
-    private ProgressBar? _loadingProgressBar;
-    private Grid? _errorOverlay;
-    private TextBlock? _errorMessageText;
     private Point _dragStart;
     private bool _isDragging;
 
@@ -585,6 +575,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
     public PdfViewerControl()
     {
         InitializeComponent();
+        WireTemplateParts();
         _renderer = new SkiaRenderer();
         MetricsViewerId = ViewerMetrics.Register(this);
         Focusable = true;
@@ -704,11 +695,11 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
         _continuousExtentSubscription?.Dispose();
         _continuousExtentSubscription = null;
 
-        if (_continuousItems != null)
+        if (ContinuousItems != null)
         {
-            _continuousItems.ContainerPrepared -= OnContinuousContainerPrepared;
-            _continuousItems.ContainerClearing -= OnContinuousContainerClearing;
-            _continuousItems.LayoutUpdated -= OnContinuousItemsLayoutUpdated;
+            ContinuousItems.ContainerPrepared -= OnContinuousContainerPrepared;
+            ContinuousItems.ContainerClearing -= OnContinuousContainerClearing;
+            ContinuousItems.LayoutUpdated -= OnContinuousItemsLayoutUpdated;
         }
 
         // Cancel in-flight grid-cell renders for the now-detached control and
@@ -794,7 +785,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
 
     private void RedrawHiddenTextOverlays()
     {
-        var layer = this.FindControl<Canvas>("HiddenTextRevealLayer");
+        var layer = HiddenTextRevealLayer;
         if (layer == null) return;
         layer.Children.Clear();
 
@@ -915,7 +906,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
 
     private void RedrawAnnotationsLayer()
     {
-        var layer = this.FindControl<Canvas>("AnnotationsLayer");
+        var layer = AnnotationsLayer;
         if (layer == null) return;
         layer.Children.Clear();
 
@@ -961,7 +952,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
 
     private void RedrawFormFieldsLayer()
     {
-        var layer = this.FindControl<Canvas>("FormFieldsLayer");
+        var layer = FormFieldsLayer;
         if (layer == null) return;
         layer.Children.Clear();
 
@@ -1016,28 +1007,20 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
         };
     }
 
-    private void InitializeComponent()
+    /// <summary>
+    /// Wire the template parts after the generated <c>InitializeComponent</c> has
+    /// loaded the XAML (once) and set the part fields (#1842). The nine root
+    /// <c>AddHandler</c> registrations below must stay in this file: the GUI
+    /// interaction registry keys its viewer rows on it.
+    /// </summary>
+    private void WireTemplateParts()
     {
-        AvaloniaXamlLoader.Load(this);
-
-        // Get references to named controls
-        _pdfImage = this.FindControl<Image>("PdfImage");
-        _overlayCanvas = this.FindControl<Canvas>("OverlayCanvas");
-        _interactionLayer = this.FindControl<Canvas>("InteractionLayer");
-        _typewriterLayer = this.FindControl<Canvas>("TypewriterLayer");
-        _zoomHost = this.FindControl<LayoutTransformControl>("ZoomHost");
-        _scrollViewer = this.FindControl<ScrollViewer>("PdfScrollViewer");
-        _loadingOverlay = this.FindControl<Grid>("LoadingOverlay");
-        _loadingProgressBar = this.FindControl<ProgressBar>("LoadingProgressBar");
-        _errorOverlay = this.FindControl<Grid>("ErrorOverlay");
-        _errorMessageText = this.FindControl<TextBlock>("ErrorMessageText");
-
         // Single scale transform on the LayoutTransformControl wrapper. Both
         // the Image and the OverlayCanvas live inside it, so they scale and
         // align together — no need for two parallel RenderTransforms.
-        if (_zoomHost != null)
+        if (ZoomHost != null)
         {
-            _zoomScaleTransform = _zoomHost.LayoutTransform as ScaleTransform;
+            _zoomScaleTransform = ZoomHost.LayoutTransform as ScaleTransform;
             // The XAML default is ScaleX/Y=1; apply the display-scale
             // correction (see SinglePageDisplayScale) from the start so the
             // first single-page view is already at pt × 96/72 × zoom.
@@ -1049,7 +1032,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
         // intermediate control (e.g. an invisible-but-hit-testable
         // overlay Grid) intercepts the bubble path. Pre-fix attachment
         // was on _interactionLayer (zero-sized — never received events)
-        // and then on _zoomHost (skipped when ErrorOverlay sat as a
+        // and then on ZoomHost (skipped when ErrorOverlay sat as a
         // sibling above it). Listening at the UserControl root catches
         // everything; the handlers compute pointer coords relative to
         // the ZoomHost wrapper themselves.
@@ -1116,13 +1099,13 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
         // (sometimes oscillating sub-pixel) to the VM, ReapplyFitModeIfNeeded
         // re-set ZoomLevel, triggering yet more layout. Result: button
         // tooltips flickered and the button was unclickable.
-        if (_scrollViewer != null)
+        if (PdfScrollViewer != null)
         {
             // AnonymousObserver (Avalonia.Reactive) rather than a Subscribe(Action<T>)
             // overload — the latter comes from System.Reactive (Rx), which this
             // library deliberately does NOT depend on (the app got it transitively
             // via ReactiveUI). Avalonia ships AnonymousObserver for exactly this. (#365)
-            _viewportSubscription = _scrollViewer
+            _viewportSubscription = PdfScrollViewer
                 .GetObservable(ScrollViewer.ViewportProperty)
                 .Subscribe(new AnonymousObserver<Size>(OnScrollViewerViewportChanged));
         }
@@ -1144,15 +1127,15 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
     /// </summary>
     public Size GetVisibleViewportSize()
     {
-        if (ViewMode == PdfViewMode.Continuous && _continuousScrollViewer != null)
+        if (ViewMode == PdfViewMode.Continuous && ContinuousScrollViewer != null)
         {
-            var cv = _continuousScrollViewer.Viewport;
+            var cv = ContinuousScrollViewer.Viewport;
             if (cv.Width > 0 && cv.Height > 0) return cv;
         }
 
-        if (_scrollViewer != null)
+        if (PdfScrollViewer != null)
         {
-            var v = _scrollViewer.Viewport;
+            var v = PdfScrollViewer.Viewport;
             if (v.Width > 0 && v.Height > 0) return v;
         }
         return Bounds.Size;
@@ -1458,13 +1441,13 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
         // bar kept animating forever: one composition commit per frame, the
         // render loop never slept, and the app idled at 5-12% CPU after the
         // first page load. Clearing :indeterminate removes the style animation.
-        if (_loadingProgressBar != null)
+        if (LoadingProgressBar != null)
         {
-            _loadingProgressBar.IsVisible = IsLoading;
-            _loadingProgressBar.IsIndeterminate = IsLoading;
+            LoadingProgressBar.IsVisible = IsLoading;
+            LoadingProgressBar.IsIndeterminate = IsLoading;
         }
-        if (_loadingOverlay != null)
-            _loadingOverlay.IsVisible = false;
+        if (LoadingOverlay != null)
+            LoadingOverlay.IsVisible = false;
     }
 
     private static readonly SolidColorBrush ErrorOverlayBrush =
@@ -1472,23 +1455,23 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
 
     private void OnErrorStateChanged()
     {
-        if (_errorOverlay != null)
+        if (ErrorOverlay != null)
         {
-            _errorOverlay.IsVisible = HasError;
-            _errorOverlay.IsHitTestVisible = HasError;
+            ErrorOverlay.IsVisible = HasError;
+            ErrorOverlay.IsHitTestVisible = HasError;
             // Set Background only while an error is actively shown — the
             // dim wash captures clicks intentionally then. With no error
             // the overlay has no Background and is fully transparent to
             // hit-testing, so in-page link clicks reach the page area.
-            _errorOverlay.Background = HasError ? ErrorOverlayBrush : null;
+            ErrorOverlay.Background = HasError ? ErrorOverlayBrush : null;
         }
     }
 
     private void OnErrorMessageChanged()
     {
-        if (_errorMessageText != null)
+        if (ErrorMessageText != null)
         {
-            _errorMessageText.Text = ErrorMessage;
+            ErrorMessageText.Text = ErrorMessage;
         }
     }
 
@@ -1712,15 +1695,15 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
             _singlePageRenderLifetime.CancelRender();
             IsLoading = false;
             Trace($"SinglePageRender page={pageNumber} CACHE-HIT dpi={renderDpi}");
-            if (_pdfImage != null)
+            if (PdfImage != null)
             {
                 var cachedBitmap = cached!;
-                _pdfImage.Width = cachedDip.Width;
-                _pdfImage.Height = cachedDip.Height;
-                _pdfImage.Source = cachedBitmap;
+                PdfImage.Width = cachedDip.Width;
+                PdfImage.Height = cachedDip.Height;
+                PdfImage.Source = cachedBitmap;
                 _singlePagePublishCount++;
                 ReleaseSinglePagePlaceholder();
-                Trace($"ImageSet(cache) page={pageNumber} imgWidth={_pdfImage.Width:F0} srcDip={cachedDip.Width:F0} srcPx={cachedBitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
+                Trace($"ImageSet(cache) page={pageNumber} imgWidth={PdfImage.Width:F0} srcDip={cachedDip.Width:F0} srcPx={cachedBitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
                 if (_pendingSingleFraction >= 0)
                 {
                     // Mode switch waiting to restore the reading position (#693).
@@ -1782,17 +1765,17 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
                     // Keep the bitmap still on screen: at a small
                     // SinglePageCacheCapacity it is the LRU tail this insert
                     // would otherwise dispose before the Image moves off it.
-                    var stillShown = _pdfImage?.Source as WriteableBitmap;
+                    var stillShown = PdfImage?.Source as WriteableBitmap;
                     _singlePageRenderLifetime.Add(pageNumber, renderDpi, bitmap, dip,
                         keep: b => ReferenceEquals(b, stillShown));
                     ViewerMetrics.RecordSinglePageRender(renderStart, renderDpi);
-                    Trace($"ContVis={_continuousScrollViewer?.IsVisible} SingleVis={_scrollViewer?.IsVisible}");
-                    Trace($"ImageSet page={pageNumber} imgWidth={_pdfImage?.Width:F0} srcDip={dip.Width:F0}x{dip.Height:F0} srcPx={bitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
-                    if (_pdfImage != null)
+                    Trace($"ContVis={ContinuousScrollViewer?.IsVisible} SingleVis={PdfScrollViewer?.IsVisible}");
+                    Trace($"ImageSet page={pageNumber} imgWidth={PdfImage?.Width:F0} srcDip={dip.Width:F0}x{dip.Height:F0} srcPx={bitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
+                    if (PdfImage != null)
                     {
-                        _pdfImage.Width = dip.Width;
-                        _pdfImage.Height = dip.Height;
-                        _pdfImage.Source = bitmap;
+                        PdfImage.Width = dip.Width;
+                        PdfImage.Height = dip.Height;
+                        PdfImage.Source = bitmap;
                         _singlePagePublishCount++;
                         ReleaseSinglePagePlaceholder();
                     }
@@ -1954,11 +1937,11 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
         // Resetting the field without the transform would leave a clamped page's
         // scale in place for the next 120-DPI page (#1473).
         UpdateZoomTransform();
-        if (_pdfImage != null)
+        if (PdfImage != null)
         {
-            _pdfImage.Source = null;
-            _pdfImage.Width = double.NaN;
-            _pdfImage.Height = double.NaN;
+            PdfImage.Source = null;
+            PdfImage.Width = double.NaN;
+            PdfImage.Height = double.NaN;
         }
         ReleaseSinglePagePlaceholder();
     }
@@ -2021,7 +2004,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
     /// </summary>
     public void AddSearchHighlight(PdfPageRect area)
     {
-        var searchLayer = this.FindControl<Canvas>("SearchHighlightsLayer");
+        var searchLayer = SearchHighlightsLayer;
         if (searchLayer == null) return;
 
         var viewerArea = ToAvaloniaRect(ToViewerDips(area));
@@ -2044,7 +2027,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
     /// </summary>
     public void ClearSearchHighlights()
     {
-        var searchLayer = this.FindControl<Canvas>("SearchHighlightsLayer");
+        var searchLayer = SearchHighlightsLayer;
         searchLayer?.Children.Clear();
     }
 
@@ -2053,7 +2036,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
     /// </summary>
     public void AddPendingRedaction(PdfPageRect area)
     {
-        var redactionLayer = this.FindControl<Canvas>("PendingRedactionsLayer");
+        var redactionLayer = PendingRedactionsLayer;
         if (redactionLayer == null) return;
 
         var viewerArea = ToAvaloniaRect(ToViewerDips(area));
@@ -2077,7 +2060,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
     /// </summary>
     public void ClearPendingRedactions()
     {
-        var redactionLayer = this.FindControl<Canvas>("PendingRedactionsLayer");
+        var redactionLayer = PendingRedactionsLayer;
         redactionLayer?.Children.Clear();
     }
 
@@ -2086,7 +2069,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
     /// </summary>
     public void AddAppliedRedaction(PdfPageRect area)
     {
-        var appliedLayer = this.FindControl<Canvas>("AppliedRedactionsLayer");
+        var appliedLayer = AppliedRedactionsLayer;
         if (appliedLayer == null) return;
 
         var viewerArea = ToAvaloniaRect(ToViewerDips(area));
@@ -2109,7 +2092,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
     /// </summary>
     public void ClearAppliedRedactions()
     {
-        var appliedLayer = this.FindControl<Canvas>("AppliedRedactionsLayer");
+        var appliedLayer = AppliedRedactionsLayer;
         appliedLayer?.Children.Clear();
     }
 

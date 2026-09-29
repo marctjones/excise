@@ -105,7 +105,7 @@ public partial class PdfViewerControl
         // current device DPI; while a render is in flight it is whatever the
         // user still sees. In continuous view the hidden Image has no source
         // (#1473), so every entry goes.
-        var shown = _pdfImage?.Source as WriteableBitmap;
+        var shown = PdfImage?.Source as WriteableBitmap;
         var (singlePage, singlePageBytes) = _singlePageRenderLifetime.Trim(
             bitmap => ReferenceEquals(bitmap, shown),
             static bitmap => ContinuousTileByteSize(bitmap.PixelSize.Width, bitmap.PixelSize.Height));
@@ -175,8 +175,8 @@ public partial class PdfViewerControl
         if (_continuousSlots == null)
             return default;
 
-        var viewport = _continuousScrollViewer?.Viewport ?? default;
-        var offset = _continuousScrollViewer?.Offset ?? default;
+        var viewport = ContinuousScrollViewer?.Viewport ?? default;
+        var offset = ContinuousScrollViewer?.Offset ?? default;
         int count = 0;
         long bytes = 0;
         foreach (var slot in _continuousSlots)

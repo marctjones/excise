@@ -169,7 +169,7 @@ public partial class PdfViewerControl
         {
             Dispatcher.UIThread.VerifyAccess();
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(value);
-            var shown = _pdfImage?.Source as WriteableBitmap;
+            var shown = PdfImage?.Source as WriteableBitmap;
             _singlePageRenderLifetime.SetCapacity(value, bitmap => ReferenceEquals(bitmap, shown));
         }
     }

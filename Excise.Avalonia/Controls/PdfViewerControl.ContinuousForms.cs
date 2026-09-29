@@ -98,11 +98,11 @@ public partial class PdfViewerControl
     /// </summary>
     private void RefreshContinuousFormFieldsIfChanged()
     {
-        if (ViewMode != PdfViewMode.Continuous || _continuousItems == null || _continuousSlots == null)
+        if (ViewMode != PdfViewMode.Continuous || ContinuousItems == null || _continuousSlots == null)
             return;
 
         var provider = PageFormFieldsProvider;
-        foreach (var container in _continuousItems.GetRealizedContainers())
+        foreach (var container in ContinuousItems.GetRealizedContainers())
         {
             if (container.DataContext is not PdfPageSlot slot) continue;
             if (provider == null) { ClearContinuousFormFields(slot); continue; }

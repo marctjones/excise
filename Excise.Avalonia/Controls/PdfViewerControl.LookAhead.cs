@@ -168,7 +168,7 @@ public partial class PdfViewerControl
     private void RunContinuousLookAheadStep()
     {
         if (!_renderAheadEnabled || _continuousDetached || ViewMode != PdfViewMode.Continuous
-            || _continuousItems == null || _continuousScrollViewer == null || _continuousSlots == null)
+            || ContinuousItems == null || ContinuousScrollViewer == null || _continuousSlots == null)
             return;
         var doc = Document;
         if (doc == null || _continuousDocCts.IsCancellationRequested)
@@ -180,8 +180,8 @@ public partial class PdfViewerControl
         if (_continuousLookAheadBatch != null || !ContinuousVisibleBandSettled())
             return;
 
-        var viewport = _continuousScrollViewer.Viewport;
-        var offset = _continuousScrollViewer.Offset;
+        var viewport = ContinuousScrollViewer.Viewport;
+        var offset = ContinuousScrollViewer.Offset;
         if (viewport.Width <= 0 || viewport.Height <= 0 || ZoomLevel <= 0)
             return;
         int dpi = ContinuousRenderDpi;
@@ -211,7 +211,7 @@ public partial class PdfViewerControl
             if (target < 1 || target > _continuousSlots.Count || target > doc.PageCount)
                 continue;
             var plan = PlanContinuousLookAhead(_continuousSlots, target, offset, viewport,
-                _continuousScrollViewer.Extent.Height, dpi, doc.PageCount);
+                ContinuousScrollViewer.Extent.Height, dpi, doc.PageCount);
             if (plan is not { } batch)
                 continue;
 
@@ -371,10 +371,10 @@ public partial class PdfViewerControl
     /// </summary>
     private void SuppressContinuousLookAheadAfterTrim()
     {
-        if (_continuousScrollViewer != null && _continuousSlots != null)
+        if (ContinuousScrollViewer != null && _continuousSlots != null)
         {
-            var viewport = _continuousScrollViewer.Viewport;
-            var offset = _continuousScrollViewer.Offset;
+            var viewport = ContinuousScrollViewer.Viewport;
+            var offset = ContinuousScrollViewer.Offset;
             if (_continuousLookAheadBatch is { } batch && !batch.Keys.Overlaps(_continuousRequiredKeys)
                 && !PositionNeedsAny(batch.Keys, offset, viewport, ContinuousRenderDpi))
                 batch.Cancel();
@@ -593,7 +593,7 @@ public partial class PdfViewerControl
                     var bitmap = Imaging.SkiaInterop.ToAvaloniaBitmap(skBitmap);
                     if (bitmap == null)
                         return;
-                    var shown = _pdfImage?.Source as WriteableBitmap;
+                    var shown = PdfImage?.Source as WriteableBitmap;
                     _singlePageRenderLifetime.Add(pageNumber, spec.DeviceDpi, bitmap, spec.LayoutSize,
                         keep: b => ReferenceEquals(b, shown));
                     ViewerMetrics.RecordLookAheadRender(watch.Elapsed, spec.DeviceDpi, ViewerMetrics.LookAheadSinglePage);

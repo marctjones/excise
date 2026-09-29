@@ -103,13 +103,13 @@ public partial class PdfViewerControl
         letters = ContinuousPageLetters.Empty;
 
         var doc = Document;
-        if (doc == null || _continuousItems == null || _continuousSlots == null) return false;
+        if (doc == null || ContinuousItems == null || _continuousSlots == null) return false;
         var zoom = ZoomLevel;
         if (zoom <= 0) return false;
 
-        var itemsPoint = e.GetPosition(_continuousItems);
+        var itemsPoint = e.GetPosition(ContinuousItems);
         if (!TryMapContinuousPointToPage(
-                _continuousSlots, _continuousItems.Bounds.Width, itemsPoint,
+                _continuousSlots, ContinuousItems.Bounds.Width, itemsPoint,
                 out pageNumber, out var pagePointDip))
             return false;
         if (pageNumber < 1 || pageNumber > doc.PageCount) return false;

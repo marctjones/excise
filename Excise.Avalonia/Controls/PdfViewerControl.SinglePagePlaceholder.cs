@@ -38,16 +38,16 @@ public partial class PdfViewerControl
     /// </summary>
     private void ShowSinglePagePlaceholder(int pageNumber, double widthPt, double heightPt, int logicalDpi)
     {
-        if (_pdfImage == null)
+        if (PdfImage == null)
             return;
-        if (_pdfImage.Source != null && !ReferenceEquals(_pdfImage.Source, _singlePagePlaceholder))
+        if (PdfImage.Source != null && !ReferenceEquals(PdfImage.Source, _singlePagePlaceholder))
             return;
 
         // (a) Geometry first: the logical-DIP size the final render will have,
         // so the ZoomHost and overlay are laid out before any bitmap exists.
         var layout = SinglePageLayoutSize(widthPt, heightPt, logicalDpi);
-        _pdfImage.Width = layout.Width;
-        _pdfImage.Height = layout.Height;
+        PdfImage.Width = layout.Width;
+        PdfImage.Height = layout.Height;
 
         // (b) A copy of the continuous composite, if one matches this zoom.
         var copy = TryCopyContinuousCompositeForPage(pageNumber, widthPt, heightPt);
@@ -57,7 +57,7 @@ public partial class PdfViewerControl
             SinglePagePlaceholderSizedOnlyCount++;
             if (previous != null)
             {
-                _pdfImage.Source = null;
+                PdfImage.Source = null;
                 _singlePagePlaceholder = null;
                 ReleasePlaceholderLater(previous);
             }
@@ -66,7 +66,7 @@ public partial class PdfViewerControl
         }
 
         _singlePagePlaceholder = copy;
-        _pdfImage.Source = copy;
+        PdfImage.Source = copy;
         SinglePagePlaceholderShownCount++;
         if (previous != null)
             ReleasePlaceholderLater(previous);
