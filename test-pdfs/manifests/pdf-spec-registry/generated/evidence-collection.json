@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1488,
-  "indexedContentSha256": "38371748cd3791992953590c8bc32731dfef4d7ec04f245afb136d1047fa37ab",
+  "indexedFileCount": 1489,
+  "indexedContentSha256": "2508d65b0b1233a5118da696ef85ba8b12f7023a930a8412ad3f6c97fdbdfade",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -1536,7 +1536,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 204
+      "candidateReferenceCount": 205
     },
     {
       "id": "pdf.17.syntax.filters",
@@ -2297,7 +2297,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 125
+      "candidateReferenceCount": 126
     },
     {
       "id": "pdf.17.syntax.encryption",
@@ -4098,7 +4098,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 196
+      "candidateReferenceCount": 197
     },
     {
       "id": "pdf.17.document.navigation",
@@ -5021,7 +5021,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 170
+      "candidateReferenceCount": 171
     },
     {
       "id": "pdf.17.document.metadata",
@@ -8115,7 +8115,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 690
+      "candidateReferenceCount": 691
     },
     {
       "id": "pdf.17.graphics.color",
@@ -9918,7 +9918,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 262
+      "candidateReferenceCount": 263
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -10764,7 +10764,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 198
+      "candidateReferenceCount": 199
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -11500,7 +11500,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 189
+      "candidateReferenceCount": 190
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -11826,9 +11826,20 @@
             "limits",
             "version"
           ]
+        },
+        {
+          "path": "docs/architecture/pdf-viewer-control-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "declarations",
+            "limits",
+            "version",
+            "renderpage",
+            "skiarenderer"
+          ]
         }
       ],
-      "candidateReferenceCount": 32
+      "candidateReferenceCount": 33
     },
     {
       "id": "pdf.20.compatibility.deprecated",
@@ -12764,7 +12775,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 187
+      "candidateReferenceCount": 188
     },
     {
       "id": "pdf.20.content.operators",
@@ -14897,6 +14908,15 @@
           ]
         },
         {
+          "path": "docs/architecture/pdf-viewer-control-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "artifacts",
+            "marked",
+            "property"
+          ]
+        },
+        {
           "path": "docs/architecture/system-design.md",
           "kind": "architecture",
           "matchedTerms": [
@@ -14913,7 +14933,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 79
+      "candidateReferenceCount": 80
     },
     {
       "id": "pdf.20.content.operator-001",
@@ -39132,7 +39152,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 201
+      "candidateReferenceCount": 202
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -43231,7 +43251,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 140
+      "candidateReferenceCount": 141
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -44203,9 +44223,19 @@
             "image",
             "image"
           ]
+        },
+        {
+          "path": "docs/architecture/pdf-viewer-control-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "ctm",
+            "image",
+            "image",
+            "pdfimage"
+          ]
         }
       ],
-      "candidateReferenceCount": 61
+      "candidateReferenceCount": 62
     },
     {
       "id": "pdf.20.image.requirement-035",
@@ -46096,7 +46126,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 115
+      "candidateReferenceCount": 116
     },
     {
       "id": "pdf.20.annotation.subtype-003",
@@ -47905,7 +47935,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 85
+      "candidateReferenceCount": 86
     },
     {
       "id": "pdf.20.annotation.subtype-006",
@@ -51973,7 +52003,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 228
+      "candidateReferenceCount": 229
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -53978,7 +54008,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 173
+      "candidateReferenceCount": 174
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -54415,9 +54445,19 @@
             "pdfannotation",
             "redact"
           ]
+        },
+        {
+          "path": "docs/architecture/pdf-viewer-control-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "annotation",
+            "popup",
+            "annotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 37
+      "candidateReferenceCount": 38
     },
     {
       "id": "pdf.20.annotation.subtype-016",
@@ -55700,9 +55740,19 @@
             "pdfannotation",
             "redact"
           ]
+        },
+        {
+          "path": "docs/architecture/pdf-viewer-control-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 72
+      "candidateReferenceCount": 73
     },
     {
       "id": "pdf.20.annotation.subtype-018",
@@ -56869,7 +56919,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 202
+      "candidateReferenceCount": 203
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -57969,6 +58019,16 @@
           ]
         },
         {
+          "path": "docs/architecture/pdf-viewer-control-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "annotation",
+            "screen",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "docs/architecture/xfa-rendering.md",
           "kind": "architecture",
           "matchedTerms": [
@@ -57979,7 +58039,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 59
+      "candidateReferenceCount": 60
     },
     {
       "id": "pdf.20.annotation.subtype-023",
@@ -59447,7 +59507,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 232
+      "candidateReferenceCount": 233
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -61295,7 +61355,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 224
+      "candidateReferenceCount": 225
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -62285,7 +62345,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 109
+      "candidateReferenceCount": 110
     },
     {
       "id": "pdf.17.interactive.redaction-review-drafts",
@@ -63210,7 +63270,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 120
+      "candidateReferenceCount": 121
     },
     {
       "id": "pdf.17.security.redaction-content-removal",
@@ -64206,7 +64266,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 101
+      "candidateReferenceCount": 102
     },
     {
       "id": "pdf.17.interactive.forms",
@@ -65222,7 +65282,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 225
+      "candidateReferenceCount": 226
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -66156,7 +66216,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 194
+      "candidateReferenceCount": 195
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -67158,7 +67218,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 143
+      "candidateReferenceCount": 144
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -68745,7 +68805,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 418
+      "candidateReferenceCount": 419
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -69494,7 +69554,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 225
+      "candidateReferenceCount": 226
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -70268,7 +70328,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 219
+      "candidateReferenceCount": 220
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -71057,7 +71117,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 758
+      "candidateReferenceCount": 759
     },
     {
       "id": "pdf.20.extension.developer",
@@ -71760,7 +71820,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 163
+      "candidateReferenceCount": 164
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -73073,6 +73133,15 @@
           ]
         },
         {
+          "path": "docs/architecture/pdf-viewer-control-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "accessibility",
+            "conformance",
+            "conformance"
+          ]
+        },
+        {
           "path": "docs/architecture/system-design.md",
           "kind": "architecture",
           "matchedTerms": [
@@ -73082,7 +73151,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 47
+      "candidateReferenceCount": 48
     },
     {
       "id": "pdf.20.profile.pdfx",
@@ -74121,7 +74190,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 154
+      "candidateReferenceCount": 155
     },
     {
       "id": "pdfe.product.redaction.review-panel",
@@ -74920,7 +74989,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 162
+      "candidateReferenceCount": 163
     },
     {
       "id": "pdfe.product.security.privacy-clean-copy",
@@ -77376,6 +77445,16 @@
           ]
         },
         {
+          "path": "docs/architecture/pdf-viewer-control-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "invalidation",
+            "override",
+            "signature",
+            "redaction"
+          ]
+        },
+        {
           "path": "docs/architecture/system-design.md",
           "kind": "architecture",
           "matchedTerms": [
@@ -77398,7 +77477,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 50
+      "candidateReferenceCount": 51
     },
     {
       "id": "pdfe.product.ocr.scanned-documents",
@@ -78959,7 +79038,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 167
+      "candidateReferenceCount": 168
     },
     {
       "id": "pdfe.product.platform.printing",
@@ -79889,6 +79968,16 @@
           ]
         },
         {
+          "path": "docs/architecture/pdf-viewer-control-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "forms",
+            "restricted",
+            "subset",
+            "redaction"
+          ]
+        },
+        {
           "path": "docs/architecture/xfa-rendering.md",
           "kind": "architecture",
           "matchedTerms": [
@@ -79901,7 +79990,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 56
+      "candidateReferenceCount": 57
     }
   ],
   "summary": {
