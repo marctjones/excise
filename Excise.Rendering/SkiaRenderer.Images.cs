@@ -116,7 +116,7 @@ internal partial class RenderContext
                     }
                 }
 
-                _canvas.DrawBitmap(bitmapToDraw, new SKRect(0, 0, width, height), paint);
+                DrawBitmapShared(bitmapToDraw, new SKRect(0, 0, width, height), paint);
                 CompositeImageIntoDeviceCmykBackdrop(bitmapToDraw, width, height, paint);
             }
             _canvas.Restore();
@@ -125,6 +125,37 @@ internal partial class RenderContext
         {
             mutableBitmap?.Dispose();
         }
+    }
+
+    /// <summary>
+    /// A zero-copy <see cref="SKImage"/> view of <paramref name="bitmap"/>.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="SKImage.FromBitmap"/> copies every pixel of a MUTABLE bitmap,
+    /// and <see cref="SKCanvas.DrawBitmap(SKBitmap, SKRect, SKPaint)"/> is exactly
+    /// <c>FromBitmap</c> + <c>DrawImage</c>, so every image draw duplicated its
+    /// decoded bitmap: 17-24 MB per page-1 cover image on the #1804 fixtures,
+    /// allocated and freed on every render. For an IMMUTABLE bitmap Skia shares
+    /// the refcounted pixel ref instead, so the pixels are identical and stay
+    /// alive as long as the image does, including inside a recorded
+    /// pattern-cell picture. Only for bitmaps nothing writes to after this call.
+    /// </remarks>
+    private static SKImage ShareAsImage(SKBitmap bitmap)
+    {
+        if (!bitmap.IsImmutable)
+            bitmap.SetImmutable();
+        return SKImage.FromBitmap(bitmap);
+    }
+
+    /// <summary>
+    /// <see cref="SKCanvas.DrawBitmap(SKBitmap, SKRect, SKPaint)"/> without its
+    /// pixel copy: the same <c>DrawImage(image, dest, paint)</c> call on a shared
+    /// image (<see cref="ShareAsImage"/>).
+    /// </summary>
+    private void DrawBitmapShared(SKBitmap bitmap, SKRect dest, SKPaint? paint = null)
+    {
+        using var image = ShareAsImage(bitmap);
+        _canvas.DrawImage(image, dest, paint);
     }
 
     private bool TryDrawImageMaskWithPattern(
@@ -199,7 +230,7 @@ internal partial class RenderContext
                 try
                 {
                     _canvas.SetMatrix(SKMatrix.Identity);
-                    _canvas.DrawBitmap(coverage, deviceDest, maskPaint);
+                    DrawBitmapShared(coverage, deviceDest, maskPaint);
                 }
                 finally
                 {
@@ -210,7 +241,7 @@ internal partial class RenderContext
             return;
         }
 
-        using var stencilImage = SKImage.FromBitmap(stencil);
+        using var stencilImage = ShareAsImage(stencil);
         var sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear);
         _canvas.Save();
         try
@@ -695,7 +726,7 @@ internal partial class RenderContext
         if (IsFullyOpaqueSoftMask(maskStream, maskWidth, maskHeight))
         {
             var directDest = new SKRect(0, 0, width, height);
-            _canvas.DrawBitmap(bitmap, directDest, imagePaint);
+            DrawBitmapShared(bitmap, directDest, imagePaint);
             CompositeImageIntoDeviceCmykBackdrop(bitmap, width, height, imagePaint);
             return true;
         }
@@ -723,7 +754,7 @@ internal partial class RenderContext
             return true;
         }
 
-        _canvas.DrawBitmap(maskedBitmap, dest, imagePaint);
+        DrawBitmapShared(maskedBitmap, dest, imagePaint);
         CompositeImageIntoDeviceCmykBackdrop(maskedBitmap, width, height, imagePaint);
         return true;
     }
@@ -767,7 +798,7 @@ internal partial class RenderContext
         try
         {
             _canvas.SetMatrix(SKMatrix.Identity);
-            _canvas.DrawBitmap(bitmap, deviceDest, imagePaint);
+            DrawBitmapShared(bitmap, deviceDest, imagePaint);
         }
         finally
         {
@@ -855,14 +886,14 @@ internal partial class RenderContext
         };
 
         _canvas.SaveLayer(dest, layerPaint);
-        _canvas.DrawBitmap(bitmap, dest);
+        DrawBitmapShared(bitmap, dest);
 
         using var maskPaint = new SKPaint
         {
             BlendMode = SKBlendMode.DstIn,
             IsAntialias = _options.AntiAlias
         };
-        _canvas.DrawBitmap(maskBitmap, dest, maskPaint);
+        DrawBitmapShared(maskBitmap, dest, maskPaint);
         _canvas.Restore();
 
         using var maskedForBackdrop = CreateImageBitmapWithAlphaMask(bitmap, maskBitmap);
