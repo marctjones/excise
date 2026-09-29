@@ -50,7 +50,7 @@ public class SinglePageLayoutGeometryTests
         var (window, viewer) = await OpenSinglePageAsync(widthPt, heightPt, zoom, dpr);
         try
         {
-            var image = viewer.PdfImage!;
+            var image = viewer.SinglePagePart.PdfImage!;
             var bitmap = (Bitmap)image.Source!;
             var logicalWidth = widthPt * 120.0 / 72.0;
             var logicalHeight = heightPt * 120.0 / 72.0;
@@ -70,7 +70,7 @@ public class SinglePageLayoutGeometryTests
 
             // The far corner of the page as sized is the far corner of the page in
             // the space a redaction or typewriter rect is built from.
-            var corner = viewer.ViewerDipsToPdfRect(new Rect(image.Width, image.Height, 0, 0), 1);
+            var corner = viewer.SinglePagePart.ViewerDipsToPdfRect(new Rect(image.Width, image.Height, 0, 0), 1);
             corner.Left.Should().BeApproximately(widthPt, 1e-6);
             corner.Bottom.Should().BeApproximately(0, 1e-6);
         }
@@ -98,7 +98,7 @@ public class SinglePageLayoutGeometryTests
         var (window, viewer) = await OpenSinglePageAsync(widthPt, heightPt, zoom, dpr);
         try
         {
-            var image = viewer.PdfImage!;
+            var image = viewer.SinglePagePart.PdfImage!;
             var bitmap = (Bitmap)image.Source!;
             var deviceDpi = (int)Math.Round(96 * Math.Max(1.0, zoom * dpr));
 
@@ -157,7 +157,7 @@ public class SinglePageLayoutGeometryTests
     {
         await SinglePageViewerWaits.WaitForSinglePageLaidOutAsync(window, viewer);
         var sw = Stopwatch.StartNew();
-        while (viewer.SinglePagePublishCount == 0 || viewer.IsLoading || viewer.SinglePagePlaceholderForTests != null)
+        while (viewer.SinglePagePart.SinglePagePublishCount == 0 || viewer.IsLoading || viewer.SinglePagePart.SinglePagePlaceholderForTests != null)
         {
             if (sw.Elapsed > TimeSpan.FromSeconds(30))
                 throw new TimeoutException("the single-page render never published");

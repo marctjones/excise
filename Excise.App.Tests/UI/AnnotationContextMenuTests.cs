@@ -84,7 +84,7 @@ public class AnnotationContextMenuTests : IDisposable
     /// </summary>
     private static async Task<Point> WindowPointOfAsync(MainWindow window, PdfViewerControl viewer, MainWindowViewModel vm, PdfRectangle rect)
     {
-        var items = viewer.ContinuousItems!;
+        var items = viewer.ContinuousPart.ContinuousItems!;
         Border? border = null;
         for (var i = 0; i < 60 && border == null; i++)
         {

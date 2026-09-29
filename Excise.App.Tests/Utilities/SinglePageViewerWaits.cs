@@ -30,9 +30,9 @@ internal static class SinglePageViewerWaits
     internal static async Task WaitForSinglePageLaidOutAsync(
         Window window, PdfViewerControl viewer, TimeSpan? timeout = null)
     {
-        var image = viewer.PdfImage
+        var image = viewer.SinglePagePart.PdfImage
             ?? throw new InvalidOperationException("PdfViewerControl has no PdfImage");
-        var zoomHost = viewer.ZoomHost
+        var zoomHost = viewer.SinglePagePart.ZoomHost
             ?? throw new InvalidOperationException("PdfViewerControl has no ZoomHost");
         var deadline = DateTime.UtcNow + (timeout ?? TimeSpan.FromSeconds(30));
 

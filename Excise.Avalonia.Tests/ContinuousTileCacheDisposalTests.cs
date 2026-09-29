@@ -78,7 +78,7 @@ public class ContinuousTileCacheDisposalTests
             var tiles = Enumerable.Range(0, 5).Select(_ => NewTile()).ToArray();
 
             for (int i = 0; i < tiles.Length; i++)
-                viewer.AddToContinuousCache(Key(i), tiles[i]);
+                viewer.ContinuousPart.AddToContinuousCache(Key(i), tiles[i]);
 
             var diagnostics = viewer.GetRenderDiagnostics();
             diagnostics.ContinuousResidentBytes.Should().BeLessThanOrEqualTo(diagnostics.ContinuousByteBudget,
@@ -108,15 +108,15 @@ public class ContinuousTileCacheDisposalTests
             var first = NewTile();
             var second = NewTile();
 
-            viewer.AddToContinuousCache(Key(0), first);
-            viewer.AddToContinuousCache(Key(0), second);
+            viewer.ContinuousPart.AddToContinuousCache(Key(0), first);
+            viewer.ContinuousPart.AddToContinuousCache(Key(0), second);
 
             IsDisposed(first).Should().BeTrue("a tile replaced under the same key has left the cache");
             IsDisposed(second).Should().BeFalse();
             viewer.GetRenderDiagnostics().ContinuousEntryCount.Should().Be(1);
 
             // Same key, same instance: nothing left the cache, so nothing is disposed.
-            viewer.AddToContinuousCache(Key(0), second);
+            viewer.ContinuousPart.AddToContinuousCache(Key(0), second);
 
             IsDisposed(second).Should().BeFalse(
                 "re-adding the very instance already cached must not dispose the bitmap being inserted");

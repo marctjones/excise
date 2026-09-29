@@ -129,8 +129,8 @@ public class ContinuousNavigationRegressionTests
             vm.IsContinuousView.Should().BeTrue("continuous scroll is the default view mode");
 
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
-            var cont = viewer.ContinuousScrollViewer!;
-            var items = viewer.ContinuousItems!;
+            var cont = viewer.ContinuousPart.ContinuousScrollViewer!;
+            var items = viewer.ContinuousPart.ContinuousItems!;
             var deadline = DateTime.UtcNow.AddSeconds(15);
             while (DateTime.UtcNow < deadline && !(items.ItemsSource != null && cont.Extent.Height > cont.Viewport.Height * 3))
             {
@@ -182,7 +182,7 @@ public class ContinuousNavigationRegressionTests
 
         using var hold = new System.Threading.ManualResetEventSlim(false);
         var viewer = new PdfViewerControl();
-        viewer.SinglePageLookAheadStartingForTests = page =>
+        viewer.SinglePagePart.SinglePageLookAheadStartingForTests = page =>
         {
             if (page == 2) hold.Wait(TimeSpan.FromSeconds(30));
         };
@@ -191,10 +191,10 @@ public class ContinuousNavigationRegressionTests
         viewer.Document = Excise.Core.Document.PdfDocument.Open(bytes);
         try
         {
-            var single = viewer.PdfScrollViewer!;
-            var cont = viewer.ContinuousScrollViewer!;
-            var items = viewer.ContinuousItems!;
-            await PumpUntilAsync(window, () => viewer.SinglePageLookAheadInFlight && !viewer.IsLoading
+            var single = viewer.SinglePagePart.PdfScrollViewer!;
+            var cont = viewer.ContinuousPart.ContinuousScrollViewer!;
+            var items = viewer.ContinuousPart.ContinuousItems!;
+            await PumpUntilAsync(window, () => viewer.SinglePagePart.SinglePageLookAheadInFlight && !viewer.IsLoading
                 && single.Extent.Height > single.Viewport.Height + 100, "page 1 shown and page 2 rendering ahead");
 
             const double fraction = 0.2;
@@ -225,7 +225,7 @@ public class ContinuousNavigationRegressionTests
         finally
         {
             hold.Set();
-            viewer.SinglePageLookAheadStartingForTests = null;
+            viewer.SinglePagePart.SinglePageLookAheadStartingForTests = null;
             window.Close();
             Dispatcher.UIThread.RunJobs();
             viewer.Document?.Dispose();

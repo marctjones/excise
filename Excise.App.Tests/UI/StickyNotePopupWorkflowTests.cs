@@ -600,7 +600,7 @@ public class StickyNotePopupWorkflowTests
         viewer.ViewMode = PdfViewMode.Continuous;
         try
         {
-            var items = viewer.ContinuousItems!;
+            var items = viewer.ContinuousPart.ContinuousItems!;
             await Controls.ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
 
             var border = (items.ContainerFromIndex(0) as global::Avalonia.Controls.Presenters.ContentPresenter)?.Child as Border;
@@ -692,7 +692,7 @@ public class StickyNotePopupWorkflowTests
         viewer.ViewMode = PdfViewMode.Continuous;
         try
         {
-            var items = viewer.ContinuousItems!;
+            var items = viewer.ContinuousPart.ContinuousItems!;
             string? hovered = null;
             viewer.AnnotationHovered += (_, e) => hovered = e.DisplayText;
 
@@ -806,7 +806,7 @@ public class StickyNotePopupWorkflowTests
     private static Point? PageCenterInWindow(
         Window window, PdfViewerControl viewer, MainWindowViewModel vm)
     {
-        var overlay = viewer.OverlayCanvas;
+        var overlay = viewer.SinglePagePart.OverlayCanvas;
         if (overlay == null) return null;
         var page = vm.PdfCoreDocument!.GetPage(1);
         var localCenter = new Point(
@@ -832,7 +832,7 @@ public class StickyNotePopupWorkflowTests
     private static Point? PdfPointToWindow(
         Window window, PdfViewerControl viewer, MainWindowViewModel vm, (double X, double Y) pdfPoint)
     {
-        var overlay = viewer.OverlayCanvas;
+        var overlay = viewer.SinglePagePart.OverlayCanvas;
         if (overlay == null) return null;
         var page = vm.PdfCoreDocument!.GetPage(1);
         const double dpi = 120.0;

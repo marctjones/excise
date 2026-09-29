@@ -58,7 +58,7 @@ public class PdfViewerControlTypewriterTests
             control.TypewriterTextCreated += (_, e) => created = e;
 
             // A plain click: start == end (no drag).
-            control.CreateTypewriterTextFromPointer(new Point(80, 90), new Point(80, 90));
+            control.SinglePagePart.CreateTypewriterTextFromPointer(new Point(80, 90), new Point(80, 90));
 
             created.Should().NotBeNull("a click must place a box, not nothing (#780)");
             created!.PageNumber.Should().Be(1);
@@ -78,8 +78,8 @@ public class PdfViewerControlTypewriterTests
             PdfRectangle click = default, drag = default;
             control.TypewriterTextCreated += (_, e) => { if (click == default) click = e.Rect; else drag = e.Rect; };
 
-            control.CreateTypewriterTextFromPointer(new Point(20, 20), new Point(20, 20));      // click
-            control.CreateTypewriterTextFromPointer(new Point(20, 20), new Point(260, 200));    // wide drag
+            control.SinglePagePart.CreateTypewriterTextFromPointer(new Point(20, 20), new Point(20, 20));      // click
+            control.SinglePagePart.CreateTypewriterTextFromPointer(new Point(20, 20), new Point(260, 200));    // wide drag
 
             drag.Width.Should().BeGreaterThan(click.Width, "a drag sizes the box to the gesture");
             drag.Height.Should().BeGreaterThan(click.Height);
@@ -97,8 +97,8 @@ public class PdfViewerControlTypewriterTests
             // PDF origin is bottom-left; a box near the TOP of the screen (small
             // DIP Y) must map to a LARGE PDF Top. Compare a top-placed box with
             // a bottom-placed box.
-            var top = control.ViewerDipsToPdfRect(new Rect(10, 5, 100, 40), 1);
-            var bottom = control.ViewerDipsToPdfRect(new Rect(10, 300, 100, 40), 1);
+            var top = control.SinglePagePart.ViewerDipsToPdfRect(new Rect(10, 5, 100, 40), 1);
+            var bottom = control.SinglePagePart.ViewerDipsToPdfRect(new Rect(10, 300, 100, 40), 1);
 
             top.Top.Should().BeGreaterThan(bottom.Top,
                 "screen-top must map to page-top under the PDF Y-flip");
@@ -121,8 +121,8 @@ public class PdfViewerControlTypewriterTests
             // neither clamp nor min-size substitution perturbs the round-trip.
             var original = new PdfRectangle(60, 120, 180, 170);
 
-            var dip = control.PdfRectToViewerDips(original, 1);
-            var roundTripped = control.ViewerDipsToPdfRect(dip, 1);
+            var dip = control.SinglePagePart.PdfRectToViewerDips(original, 1);
+            var roundTripped = control.SinglePagePart.ViewerDipsToPdfRect(dip, 1);
 
             roundTripped.Left.Should().BeApproximately(original.Left, 1.5,
                 $"content→viewer→content must be identity at /Rotate {rotation}");
@@ -142,13 +142,13 @@ public class PdfViewerControlTypewriterTests
 
             // The page's DIP extent, derived from the control itself (a request
             // larger than the page clamps to the page's width/height at 0,0).
-            var full = control.NormalizeTypewriterDipRect(new Rect(0, 0, 100000, 100000));
+            var full = control.SinglePagePart.NormalizeTypewriterDipRect(new Rect(0, 0, 100000, 100000));
             var pageWidthDips = full.Width;
             var pageHeightDips = full.Height;
 
             // A box dragged far off the right/bottom edge must be pulled back so
             // it stays fully on the page — otherwise the typed text lands off-page.
-            var clamped = control.NormalizeTypewriterDipRect(new Rect(100000, 100000, 120, 40));
+            var clamped = control.SinglePagePart.NormalizeTypewriterDipRect(new Rect(100000, 100000, 120, 40));
 
             (clamped.X + clamped.Width).Should().BeLessThanOrEqualTo(pageWidthDips + 0.5);
             (clamped.Y + clamped.Height).Should().BeLessThanOrEqualTo(pageHeightDips + 0.5);
@@ -258,7 +258,7 @@ public class PdfViewerControlTypewriterTests
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 window.UpdateLayout();
-                layer = control.TypewriterLayer;
+                layer = control.SinglePagePart.TypewriterLayer;
             });
             if (layer is not null && layer.IsAttachedToVisualTree())
                 break;
@@ -273,7 +273,7 @@ public class PdfViewerControlTypewriterTests
             };
             window.UpdateLayout();
 
-            var currentLayer = control.TypewriterLayer!;
+            var currentLayer = control.SinglePagePart.TypewriterLayer!;
             currentLayer.IsAttachedToVisualTree().Should().BeTrue("the overlay must be attached for the gesture");
 
             var shell = currentLayer.GetVisualDescendants().OfType<Grid>().First();
@@ -285,8 +285,8 @@ public class PdfViewerControlTypewriterTests
             // can be checked without hard-coding the preview DPI/zoom scale.
             var finalRect = new Rect(
                 Canvas.GetLeft(shell), Canvas.GetTop(shell), shell.Width, shell.Height);
-            expected = control.ViewerDipsToPdfRect(
-                control.NormalizeTypewriterDipRect(finalRect), 1);
+            expected = control.SinglePagePart.ViewerDipsToPdfRect(
+                control.SinglePagePart.NormalizeTypewriterDipRect(finalRect), 1);
         });
 
         await Dispatcher.UIThread.InvokeAsync(() =>
@@ -354,13 +354,13 @@ public class PdfViewerControlTypewriterTests
             {
                 PdfTypewriterTextOperation.Create(1, new PdfRectangle(40, 600, 300, 660), "already typed"),
             };
-            var image = control.PdfImage!;
+            var image = control.SinglePagePart.PdfImage!;
             for (int i = 0; i < 200 && (control.IsLoading || image.Source == null); i++)
             {
                 await Task.Delay(25);
                 window.UpdateLayout();
             }
-            var layer = control.TypewriterLayer!;
+            var layer = control.SinglePagePart.TypewriterLayer!;
             var editor = layer.GetVisualDescendants().OfType<TextBox>().Single();
             window.UpdateLayout();
             var centre = editor.TranslatePoint(new Point(editor.Bounds.Width / 2, editor.Bounds.Height / 2), window);
@@ -405,7 +405,7 @@ public class PdfViewerControlTypewriterTests
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            var layer = control.TypewriterLayer;
+            var layer = control.SinglePagePart.TypewriterLayer;
             layer.Should().NotBeNull();
             var textBox = layer!.GetVisualDescendants().OfType<TextBox>().Single();
 

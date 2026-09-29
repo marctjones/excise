@@ -48,7 +48,7 @@ public sealed class StructuralMutationCacheTests
             await vm.LoadDocumentAsync(path);
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
             vm.ViewMode = PdfViewMode.Continuous;
-            var scroller = viewer.ContinuousScrollViewer!;
+            var scroller = viewer.ContinuousPart.ContinuousScrollViewer!;
             await PumpUntilAsync(window, () => scroller.Extent.Height > scroller.Viewport.Height);
 
             // Render some tiles by scrolling through the document.

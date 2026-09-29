@@ -437,7 +437,7 @@ public class ContinuousFormFillTests
         viewer.InteractionMode = InteractionMode.TextSelection;
         try
         {
-            var items = viewer.ContinuousItems!;
+            var items = viewer.ContinuousPart.ContinuousItems!;
             await Controls.ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
             TextBox? box = null;
             for (int i = 0; i < 150 && box == null; i++)

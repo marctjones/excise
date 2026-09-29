@@ -69,7 +69,7 @@ public class GuiFullResponsivenessCoverageTests
                 phase: "gui.input.continuous-view-toggle");
             await WaitForIdleLayout(window);
 
-            var scroll = viewer!.ContinuousScrollViewer;
+            var scroll = viewer!.ContinuousPart.ContinuousScrollViewer;
             scroll.Should().NotBeNull("continuous mode should expose a scroll viewer for long-document testing");
 
             var scrollElapsedMs = Measure(() =>
@@ -151,9 +151,9 @@ public class GuiFullResponsivenessCoverageTests
             AddResult(results, "generated-continuous-view-toggle", toggleElapsedMs, 150, 500, "gui.input.generated-continuous-view-toggle");
             await WaitForIdleLayout(window);
 
-            var scroll = viewer!.ContinuousScrollViewer;
+            var scroll = viewer!.ContinuousPart.ContinuousScrollViewer;
             scroll.Should().NotBeNull("continuous mode should expose a scroll viewer for generated-document timing");
-            var items = viewer.ContinuousItems;
+            var items = viewer.ContinuousPart.ContinuousItems;
             items.Should().NotBeNull("continuous mode should expose page slots for generated-document timing");
             var slots = items!.ItemsSource!.Cast<PdfPageSlot>().ToArray();
             slots.Should().HaveCount(24);
@@ -181,12 +181,12 @@ public class GuiFullResponsivenessCoverageTests
                     ["gui.render.generated-continuous-first-paint"] = firstPaintMs,
                     // Where that time went, so a regression is attributable from
                     // the report alone rather than needing a repro (#855).
-                    ["gui.render.continuous.render-passes"] = viewer.ContinuousRenderStartCount,
-                    ["gui.render.continuous.render-wall"] = viewer.ContinuousRenderWallMs,
-                    ["gui.render.continuous.cells-required"] = viewer.ContinuousRequiredCellCount,
+                    ["gui.render.continuous.render-passes"] = viewer.ContinuousPart.ContinuousRenderStartCount,
+                    ["gui.render.continuous.render-wall"] = viewer.ContinuousPart.ContinuousRenderWallMs,
+                    ["gui.render.continuous.cells-required"] = viewer.ContinuousPart.ContinuousRequiredCellCount,
                 });
-            var initialStarts = viewer.ContinuousRenderStartCount;
-            var initialCancellations = viewer.ContinuousRenderCancellationCount;
+            var initialStarts = viewer.ContinuousPart.ContinuousRenderStartCount;
+            var initialCancellations = viewer.ContinuousPart.ContinuousRenderCancellationCount;
             // One render pass, not one per grid cell: a page's missing cells are
             // rendered as a single band and sliced (#855). Without that batching
             // this is 20 on a 1280x900 window.
@@ -219,8 +219,8 @@ public class GuiFullResponsivenessCoverageTests
                 warnMs: 15_000,
                 phase: "gui.render.generated-continuous-scroll-settle");
 
-            var renderStarts = viewer.ContinuousRenderStartCount - initialStarts;
-            var renderCancellations = viewer.ContinuousRenderCancellationCount - initialCancellations;
+            var renderStarts = viewer.ContinuousPart.ContinuousRenderStartCount - initialStarts;
+            var renderCancellations = viewer.ContinuousPart.ContinuousRenderCancellationCount - initialCancellations;
             // #848: renders are now per grid CELL, not per page, so the count
             // scales with cells-per-viewport rather than pages. The coalescing
             // guarantee still holds and is what this bounds: a rapid 7-page scroll
@@ -453,7 +453,7 @@ public class GuiFullResponsivenessCoverageTests
             if (deadline.Elapsed > timeout)
                 throw new TimeoutException(
                     $"Continuous page {pageNumber} did not render within {timeout.TotalSeconds:0.0}s. " +
-                    (viewer == null ? "" : viewer.ContinuousDiagnostics()));
+                    (viewer == null ? "" : viewer.ContinuousPart.ContinuousDiagnostics()));
 
             await Task.Delay(25);
         }

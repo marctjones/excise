@@ -88,7 +88,7 @@ public class AnnotationPlacementAccuracyTests
             await WaitForFinalSinglePageRender(window, viewer);
             viewer.CurrentPage.Should().Be(pageNumber, "arming a tool must keep the page the reader was on");
 
-            var image = viewer.PdfImage!;
+            var image = viewer.SinglePagePart.PdfImage!;
             var bitmap = (Bitmap)image.Source!;
             var ink = InkBoundsPx(bitmap);
             ink.Width.Should().BeGreaterThan(0,
@@ -252,7 +252,7 @@ public class AnnotationPlacementAccuracyTests
     internal static async Task WaitForFinalSinglePageRender(Window window, PdfViewerControl viewer)
     {
         var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
-        while (viewer.SinglePagePublishCount == 0 || viewer.IsLoading || viewer.SinglePagePlaceholderForTests != null)
+        while (viewer.SinglePagePart.SinglePagePublishCount == 0 || viewer.IsLoading || viewer.SinglePagePart.SinglePagePlaceholderForTests != null)
         {
             if (DateTime.UtcNow > deadline)
                 throw new TimeoutException("the single-page render never published");
@@ -273,13 +273,13 @@ public class AnnotationPlacementAccuracyTests
     /// </summary>
     internal static async Task WaitForContinuousPageRendered(Window window, PdfViewerControl viewer, int pageNumber)
     {
-        var items = viewer.ContinuousItems!;
+        var items = viewer.ContinuousPart.ContinuousItems!;
         var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
         while (items.ItemsSource?.Cast<PdfPageSlot>().FirstOrDefault(s => s.PageNumber == pageNumber)?.Bitmap == null
-               || viewer.ContinuousInFlightCount > 0)
+               || viewer.ContinuousPart.ContinuousInFlightCount > 0)
         {
             if (DateTime.UtcNow > deadline)
-                throw new TimeoutException($"continuous page {pageNumber} never finished rendering: {viewer.ContinuousDiagnostics()}");
+                throw new TimeoutException($"continuous page {pageNumber} never finished rendering: {viewer.ContinuousPart.ContinuousDiagnostics()}");
             window.UpdateLayout();
             Dispatcher.UIThread.RunJobs();
             await Task.Delay(25);

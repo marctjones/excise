@@ -120,8 +120,8 @@ public class ContinuousLinkInteractionTests
         // Poll: continuous ScrollViewer visible + the target page's container
         // realized with a real layout slot (the #653 lesson — poll the thing
         // that actually gates the point translation, with a deadline).
-        var continuousScroll = viewer!.ContinuousScrollViewer;
-        var items = viewer.ContinuousItems;
+        var continuousScroll = viewer!.ContinuousPart.ContinuousScrollViewer;
+        var items = viewer.ContinuousPart.ContinuousItems;
         continuousScroll.Should().NotBeNull();
         items.Should().NotBeNull();
 
@@ -270,7 +270,7 @@ public class ContinuousLinkInteractionTests
                 page,
                 PdfPageRect.FromContentPoints(linkPage, new PdfRectangle(xPt, yy, xPt, yy)),
                 PdfViewerControl.PointsToDip * viewer.ZoomLevel);
-            var items = viewer.ContinuousItems;
+            var items = viewer.ContinuousPart.ContinuousItems;
             var container = items!.ContainerFromIndex(linkPage - 1)!;
             var probeWindow = PageBorderOf(container)!
                 .TranslatePoint(new Point(probeDips.X, probeDips.Y), window);
@@ -337,7 +337,7 @@ public class ContinuousLinkInteractionTests
         viewer.InteractionMode = InteractionMode.StickyNote;
         try
         {
-            var items = viewer.ContinuousItems!;
+            var items = viewer.ContinuousPart.ContinuousItems!;
             await Controls.ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
             viewer.ViewMode.Should().Be(PdfViewMode.Continuous, "sticky-note placement must not force single-page");
 
@@ -376,7 +376,7 @@ public class ContinuousLinkInteractionTests
             await SinglePageViewerWaits.WaitForSinglePageLaidOutAsync(window, viewer);
             viewer.ZoomLevel.Should().Be(zoom, "fixture: the switch keeps the zoom");
             double singleScale = PdfViewerControl.EffectiveSinglePageRenderDpi(page) / 72.0;
-            var overlay = viewer.OverlayCanvas!;
+            var overlay = viewer.SinglePagePart.OverlayCanvas!;
             var singleWindow = overlay.TranslatePoint(
                 new Point((pdfX - box.Left) * singleScale, (box.Top - pdfY) * singleScale), window);
             singleWindow.Should().NotBeNull();

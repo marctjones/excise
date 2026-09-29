@@ -46,24 +46,24 @@ public class RenderAheadTests
         {
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
             await WaitLookAheadIdleAsync(window, viewer);
-            viewer.ContinuousLookAheadCompletedCount.Should().Be(1, "page 2 is rendered ahead; page 0 does not exist");
-            viewer.ContinuousLookAheadTilesForTests.Should().NotBeEmpty()
+            viewer.ContinuousPart.ContinuousLookAheadCompletedCount.Should().Be(1, "page 2 is rendered ahead; page 0 does not exist");
+            viewer.ContinuousPart.ContinuousLookAheadTilesForTests.Should().NotBeEmpty()
                 .And.OnlyContain(k => k.Page == 2, "the only page a turn from page 1 would show is page 2");
 
-            int visibleStarts = viewer.ContinuousRenderStartCount;
+            int visibleStarts = viewer.ContinuousPart.ContinuousRenderStartCount;
             viewer.CurrentPage = 2;
             var warm = await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 2);
-            viewer.ContinuousRenderStartCount.Should().Be(visibleStarts,
+            viewer.ContinuousPart.ContinuousRenderStartCount.Should().Be(visibleStarts,
                 "every cell of the turned-to page was rendered ahead, so the turn renders nothing");
-            viewer.ContinuousLookAheadTilesForTests.Should().NotContain(k => k.Page == 2,
+            viewer.ContinuousPart.ContinuousLookAheadTilesForTests.Should().NotContain(k => k.Page == 2,
                 "a look-ahead tile the visible pass used is an ordinary tile from then on");
 
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(coldWindow, coldViewer, coldItems, pageNumber: 1);
-            int coldStarts = coldViewer.ContinuousRenderStartCount;
+            int coldStarts = coldViewer.ContinuousPart.ContinuousRenderStartCount;
             coldViewer.CurrentPage = 2;
             var cold = await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(coldWindow, coldViewer, coldItems, pageNumber: 2);
-            coldViewer.ContinuousRenderStartCount.Should().BeGreaterThan(coldStarts, "fixture: the cold turn renders");
-            coldViewer.ContinuousLookAheadStartCount.Should().Be(0, "fixture: render-ahead is off on the cold viewer");
+            coldViewer.ContinuousPart.ContinuousRenderStartCount.Should().BeGreaterThan(coldStarts, "fixture: the cold turn renders");
+            coldViewer.ContinuousPart.ContinuousLookAheadStartCount.Should().Be(0, "fixture: render-ahead is off on the cold viewer");
 
             var a = PixelCopy.Of(warm);
             var b = PixelCopy.Of(cold);
@@ -95,10 +95,10 @@ public class RenderAheadTests
             // The frame that shows the new offset: set the page, lay out, and
             // nothing else. The posted render pass has NOT run.
             viewer.CurrentPage = 2;
-            viewer.RecomposeFromCacheOnLayoutPending.Should().BeTrue("the turn scrolled");
+            viewer.ContinuousPart.RecomposeFromCacheOnLayoutPending.Should().BeTrue("the turn scrolled");
             window.UpdateLayout();
 
-            viewer.RecomposeFromCacheOnLayoutPending.Should().BeFalse("the layout pass consumed it");
+            viewer.ContinuousPart.RecomposeFromCacheOnLayoutPending.Should().BeFalse("the layout pass consumed it");
             var sameFrame = page2.Bitmap;
             sameFrame.Should().NotBeNull(
                 "every tile of page 2 was rendered ahead, so its composite is published in the frame that scrolls to it");
@@ -118,7 +118,7 @@ public class RenderAheadTests
         var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(pageCount: 3);
         using var hold = new ManualResetEventSlim(false);
         var started = new ConcurrentQueue<int>();
-        viewer.ContinuousBandRenderStartingForTests = page =>
+        viewer.ContinuousPart.ContinuousBandRenderStartingForTests = page =>
         {
             started.Enqueue(page);
             if (page == 1) hold.Wait(TimeSpan.FromSeconds(30));
@@ -127,19 +127,19 @@ public class RenderAheadTests
         {
             await WaitUntilAsync(window, () => started.Contains(1), "page 1's band render to start");
             await PumpAsync(window, TimeSpan.FromMilliseconds(500));
-            viewer.ContinuousLookAheadStartCount.Should().Be(0, "page 1 has not drawn yet");
+            viewer.ContinuousPart.ContinuousLookAheadStartCount.Should().Be(0, "page 1 has not drawn yet");
             started.Should().NotContain(2, "nothing renders ahead while the visible band is in flight");
 
             hold.Set();
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
             await WaitLookAheadIdleAsync(window, viewer);
-            viewer.ContinuousLookAheadCompletedCount.Should().Be(1);
+            viewer.ContinuousPart.ContinuousLookAheadCompletedCount.Should().Be(1);
             started.Should().Equal(new[] { 1, 2 }, "the visible band first, then the next page");
         }
         finally
         {
             hold.Set();
-            viewer.ContinuousBandRenderStartingForTests = null;
+            viewer.ContinuousPart.ContinuousBandRenderStartingForTests = null;
             Close(window, viewer);
         }
     }
@@ -150,38 +150,38 @@ public class RenderAheadTests
         var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(pageCount: 5);
         using var holds = new RenderHolds();
         var holdPage2 = holds.Hold(2);
-        viewer.ContinuousBandRenderStartingForTests = holds.Wait;
+        viewer.ContinuousPart.ContinuousBandRenderStartingForTests = holds.Wait;
         try
         {
-            await WaitUntilAsync(window, () => viewer.ContinuousLookAheadInFlight, "page 2 to be rendered ahead");
-            viewer.ContinuousLookAheadCancellationRequested.Should().BeFalse();
+            await WaitUntilAsync(window, () => viewer.ContinuousPart.ContinuousLookAheadInFlight, "page 2 to be rendered ahead");
+            viewer.ContinuousPart.ContinuousLookAheadCancellationRequested.Should().BeFalse();
 
             viewer.CurrentPage = 4;
-            await WaitUntilAsync(window, () => viewer.ContinuousLookAheadCancellationRequested,
+            await WaitUntilAsync(window, () => viewer.ContinuousPart.ContinuousLookAheadCancellationRequested,
                 "the jump to page 4 to cancel page 2's render-ahead");
             holdPage2.Set();
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 4);
             await WaitLookAheadIdleAsync(window, viewer);
-            viewer.ContinuousLookAheadCancellationCount.Should().Be(1);
-            viewer.ContinuousCacheEntriesForTests().Should().NotContain(e => e.Key.Page == 2,
+            viewer.ContinuousPart.ContinuousLookAheadCancellationCount.Should().Be(1);
+            viewer.ContinuousPart.ContinuousCacheEntriesForTests().Should().NotContain(e => e.Key.Page == 2,
                 "the cancelled render cached nothing");
-            viewer.ContinuousLookAheadTilesForTests.Should().NotBeEmpty()
+            viewer.ContinuousPart.ContinuousLookAheadTilesForTests.Should().NotBeEmpty()
                 .And.OnlyContain(k => k.Page == 3 || k.Page == 5, "from page 4 the neighbours are rendered ahead instead");
 
             // Zoom: the plan's DPI and page sizes change, so its cells are dead.
             var holdPage5 = holds.Hold(5);
             viewer.ZoomLevel = 1.25;
-            await WaitUntilAsync(window, () => viewer.ContinuousLookAheadInFlight, "page 5 to be rendered ahead at zoom 1.25");
-            int dpiAtStart = viewer.ContinuousEffectiveRenderDpi;
+            await WaitUntilAsync(window, () => viewer.ContinuousPart.ContinuousLookAheadInFlight, "page 5 to be rendered ahead at zoom 1.25");
+            int dpiAtStart = viewer.ContinuousPart.ContinuousEffectiveRenderDpi;
             viewer.ZoomLevel = 1.5;
-            await WaitUntilAsync(window, () => viewer.ContinuousLookAheadCancellationRequested,
+            await WaitUntilAsync(window, () => viewer.ContinuousPart.ContinuousLookAheadCancellationRequested,
                 "the zoom change to cancel the render-ahead");
             holds.Release(5);
             holdPage5.Set();
             await WaitLookAheadIdleAsync(window, viewer);
-            viewer.ContinuousLookAheadCancellationCount.Should().Be(2);
-            viewer.ContinuousEffectiveRenderDpi.Should().NotBe(dpiAtStart, "fixture");
-            viewer.ContinuousCacheEntriesForTests().Should().NotContain(e => e.Key.Dpi == dpiAtStart && e.Key.Page == 5,
+            viewer.ContinuousPart.ContinuousLookAheadCancellationCount.Should().Be(2);
+            viewer.ContinuousPart.ContinuousEffectiveRenderDpi.Should().NotBe(dpiAtStart, "fixture");
+            viewer.ContinuousPart.ContinuousCacheEntriesForTests().Should().NotContain(e => e.Key.Dpi == dpiAtStart && e.Key.Page == 5,
                 "a render-ahead cancelled by zoom caches nothing at the old zoom");
 
             // Close: the detach cancels whatever is in flight. (Page 3 is cached
@@ -190,17 +190,17 @@ public class RenderAheadTests
             var holdPage2Again = holds.Hold(2);
             holdPage2Again.Reset();
             viewer.CurrentPage = 1;
-            await WaitUntilAsync(window, () => viewer.ContinuousLookAheadInFlight, "page 2 to be rendered ahead at zoom 1.5");
+            await WaitUntilAsync(window, () => viewer.ContinuousPart.ContinuousLookAheadInFlight, "page 2 to be rendered ahead at zoom 1.5");
             window.Close();
-            viewer.ContinuousLookAheadCancellationRequested.Should().BeTrue("closing the window cancels render-ahead");
+            viewer.ContinuousPart.ContinuousLookAheadCancellationRequested.Should().BeTrue("closing the window cancels render-ahead");
             holdPage2Again.Set();
-            await WaitUntilAsync(window, () => viewer.ContinuousLookAheadCancellationCount == 3,
+            await WaitUntilAsync(window, () => viewer.ContinuousPart.ContinuousLookAheadCancellationCount == 3,
                 "the cancelled render to report in");
         }
         finally
         {
             holds.ReleaseAll();
-            viewer.ContinuousBandRenderStartingForTests = null;
+            viewer.ContinuousPart.ContinuousBandRenderStartingForTests = null;
             Close(window, viewer);
         }
     }
@@ -211,27 +211,27 @@ public class RenderAheadTests
         var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(pageCount: 3);
         using var holds = new RenderHolds();
         var hold = holds.Hold(2);
-        viewer.ContinuousBandRenderStartingForTests = holds.Wait;
+        viewer.ContinuousPart.ContinuousBandRenderStartingForTests = holds.Wait;
         try
         {
-            await WaitUntilAsync(window, () => viewer.ContinuousLookAheadInFlight, "page 2 to be rendered ahead");
-            int visibleStarts = viewer.ContinuousRenderStartCount;
+            await WaitUntilAsync(window, () => viewer.ContinuousPart.ContinuousLookAheadInFlight, "page 2 to be rendered ahead");
+            int visibleStarts = viewer.ContinuousPart.ContinuousRenderStartCount;
 
             viewer.CurrentPage = 2;
             await PumpAsync(window, TimeSpan.FromMilliseconds(300));
-            viewer.ContinuousLookAheadCancellationRequested.Should().BeFalse(
+            viewer.ContinuousPart.ContinuousLookAheadCancellationRequested.Should().BeFalse(
                 "the page turned to is the page being rendered: throwing that render away would make the turn slower");
-            viewer.ContinuousRenderCoalescedRequestCount.Should().BeGreaterThan(0,
+            viewer.ContinuousPart.ContinuousRenderCoalescedRequestCount.Should().BeGreaterThan(0,
                 "the visible pass waits on the render-ahead cells instead of rendering them again");
 
             hold.Set();
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 2);
-            viewer.ContinuousRenderStartCount.Should().Be(visibleStarts, "page 2 came from the render-ahead");
+            viewer.ContinuousPart.ContinuousRenderStartCount.Should().Be(visibleStarts, "page 2 came from the render-ahead");
         }
         finally
         {
             holds.ReleaseAll();
-            viewer.ContinuousBandRenderStartingForTests = null;
+            viewer.ContinuousPart.ContinuousBandRenderStartingForTests = null;
             Close(window, viewer);
         }
     }
@@ -244,12 +244,12 @@ public class RenderAheadTests
         {
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
             await WaitLookAheadIdleAsync(window, viewer);
-            viewer.ContinuousLookAheadStartCount.Should().Be(1, "page 2 only");
+            viewer.ContinuousPart.ContinuousLookAheadStartCount.Should().Be(1, "page 2 only");
 
             viewer.CurrentPage = 2;
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 2);
             await WaitLookAheadIdleAsync(window, viewer);
-            viewer.ContinuousLookAheadStartCount.Should().Be(2,
+            viewer.ContinuousPart.ContinuousLookAheadStartCount.Should().Be(2,
                 "from page 2 only page 3 is rendered ahead: page 1 is still cached from when it was read");
 
             // An IDLE viewer starts nothing: no scroll, no zoom, no mutation.
@@ -258,13 +258,13 @@ public class RenderAheadTests
             // much is rendered ahead, while a hard 2 has to be rewritten every
             // time that budget moves — and a rewritten expectation is exactly
             // what makes a perf change able to redefine "correct".
-            int lookAheadStarts = viewer.ContinuousLookAheadStartCount;
-            int visibleStarts = viewer.ContinuousRenderStartCount;
+            int lookAheadStarts = viewer.ContinuousPart.ContinuousLookAheadStartCount;
+            int visibleStarts = viewer.ContinuousPart.ContinuousRenderStartCount;
             await PumpAsync(window, TimeSpan.FromMilliseconds(500));
-            viewer.ContinuousLookAheadStartCount.Should().Be(2, "no render-ahead for cells already cached");
-            viewer.ContinuousLookAheadStartCount.Should().Be(lookAheadStarts,
+            viewer.ContinuousPart.ContinuousLookAheadStartCount.Should().Be(2, "no render-ahead for cells already cached");
+            viewer.ContinuousPart.ContinuousLookAheadStartCount.Should().Be(lookAheadStarts,
                 "an idle viewer renders nothing ahead — everything in reach is cached");
-            viewer.ContinuousRenderStartCount.Should().Be(visibleStarts, "an idle viewer stays idle");
+            viewer.ContinuousPart.ContinuousRenderStartCount.Should().Be(visibleStarts, "an idle viewer stays idle");
 
             // #1651: a structural refresh DROPS the page-number-keyed tiles, so
             // it re-renders. That cost is the fix, not a regression: keeping
@@ -276,7 +276,7 @@ public class RenderAheadTests
             viewer.RefreshContinuousLayout();
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 2);
             await WaitLookAheadIdleAsync(window, viewer);
-            viewer.ContinuousRenderStartCount.Should().BeGreaterThan(visibleStarts,
+            viewer.ContinuousPart.ContinuousRenderStartCount.Should().BeGreaterThan(visibleStarts,
                 "a structural refresh drops the page-number-keyed tiles and renders the new order");
         }
         finally
@@ -297,19 +297,19 @@ public class RenderAheadTests
                 viewer.CurrentPage = page;
                 await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, page);
                 await WaitLookAheadIdleAsync(window, viewer);
-                int lookAheadTiles = viewer.ContinuousLookAheadTilesForTests.Count;
+                int lookAheadTiles = viewer.ContinuousPart.ContinuousLookAheadTilesForTests.Count;
                 lookAheadTiles.Should().BeGreaterThan(0, "fixture: a neighbour was rendered ahead");
-                var required = viewer.ContinuousRequiredKeysForTests;
-                int starts = viewer.ContinuousLookAheadStartCount;
+                var required = viewer.ContinuousPart.ContinuousRequiredKeysForTests;
+                int starts = viewer.ContinuousPart.ContinuousLookAheadStartCount;
 
                 viewer.TrimCaches(level);
 
                 viewer.LastCacheTrim.LookAheadTiles.Should().Be(lookAheadTiles, $"{level} drops every render-ahead tile");
-                viewer.ContinuousLookAheadTilesForTests.Should().BeEmpty();
-                viewer.ContinuousCacheEntriesForTests().Select(e => e.Key).Should().OnlyContain(k => required.Contains(k),
+                viewer.ContinuousPart.ContinuousLookAheadTilesForTests.Should().BeEmpty();
+                viewer.ContinuousPart.ContinuousCacheEntriesForTests().Select(e => e.Key).Should().OnlyContain(k => required.Contains(k),
                     $"{level} keeps the current bands");
                 await PumpAsync(window, TimeSpan.FromMilliseconds(500));
-                viewer.ContinuousLookAheadStartCount.Should().Be(starts,
+                viewer.ContinuousPart.ContinuousLookAheadStartCount.Should().Be(starts,
                     $"a {level} trim must not re-render what it just released (#1478)");
             }
 
@@ -318,11 +318,11 @@ public class RenderAheadTests
             viewer.CurrentPage = 1;
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
             await WaitLookAheadIdleAsync(window, viewer);
-            var lookAheadKeys = viewer.ContinuousLookAheadTilesForTests.ToHashSet();
+            var lookAheadKeys = viewer.ContinuousPart.ContinuousLookAheadTilesForTests.ToHashSet();
             lookAheadKeys.Should().NotBeEmpty("fixture");
-            var entries = viewer.ContinuousCacheEntriesForTests();
+            var entries = viewer.ContinuousPart.ContinuousCacheEntriesForTests();
             var scrollBack = entries.Where(e => !lookAheadKeys.Contains(e.Key)
-                && !viewer.ContinuousRequiredKeysForTests.Contains(e.Key)).Select(e => e.Key).ToList();
+                && !viewer.ContinuousPart.ContinuousRequiredKeysForTests.Contains(e.Key)).Select(e => e.Key).ToList();
             scrollBack.Should().NotBeEmpty("fixture: page 4's tiles are scroll-back now");
             var oneLookAhead = entries.First(e => lookAheadKeys.Contains(e.Key)).Bitmap;
             long resident = viewer.ContinuousTileCacheResidentBytes;
@@ -330,7 +330,7 @@ public class RenderAheadTests
             viewer.ContinuousTileCacheByteBudget = resident -
                 PdfViewerControl.ContinuousTileByteSize(oneLookAhead.PixelSize.Width, oneLookAhead.PixelSize.Height) + 1;
 
-            var after = viewer.ContinuousCacheEntriesForTests().Select(e => e.Key).ToHashSet();
+            var after = viewer.ContinuousPart.ContinuousCacheEntriesForTests().Select(e => e.Key).ToHashSet();
             after.Should().Contain(scrollBack, "the least-recently-used scroll-back tiles outlive render-ahead tiles");
             lookAheadKeys.Count(k => !after.Contains(k)).Should().BeGreaterThan(0, "a render-ahead tile went first");
         }
@@ -353,18 +353,18 @@ public class RenderAheadTests
             var doc = viewer.Document!;
             var own2 = ContinuousImageSampleReleaseTests.XObject(doc, 2, "Own");
             ContinuousImageSampleReleaseTests.RealizedPages(items).Should().NotContain(2, "fixture: page 2 is below the viewport");
-            viewer.ContinuousLookAheadSamplePagesForTests.Should().Equal(new[] { 2 });
+            viewer.ContinuousPart.ContinuousLookAheadSamplePagesForTests.Should().Equal(new[] { 2 });
             own2.IsDecoded.Should().BeTrue(
                 "the page a turn lands on keeps its samples, or the first scroll past its pre-rendered band decodes again (#1492)");
 
             // The turn is served from the tiles; the page is realized from then on.
-            int visibleStarts = viewer.ContinuousRenderStartCount;
+            int visibleStarts = viewer.ContinuousPart.ContinuousRenderStartCount;
             viewer.CurrentPage = 2;
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 2);
             await WaitLookAheadIdleAsync(window, viewer);
-            viewer.ContinuousRenderStartCount.Should().Be(visibleStarts);
+            viewer.ContinuousPart.ContinuousRenderStartCount.Should().Be(visibleStarts);
             own2.IsDecoded.Should().BeTrue("page 2 is realized and never re-rendered");
-            viewer.ContinuousLookAheadSamplePagesForTests.Should().Equal(new[] { 3 }, "the plan moved on to page 3");
+            viewer.ContinuousPart.ContinuousLookAheadSamplePagesForTests.Should().Equal(new[] { 3 }, "the plan moved on to page 3");
             var own3 = ContinuousImageSampleReleaseTests.XObject(doc, 3, "Own");
             own3.IsDecoded.Should().BeTrue();
 
@@ -372,14 +372,14 @@ public class RenderAheadTests
             viewer.CurrentPage = 5;
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 5);
             await WaitLookAheadIdleAsync(window, viewer);
-            viewer.ContinuousLookAheadSamplePagesForTests.Should().BeEquivalentTo(new[] { 6, 4 });
+            viewer.ContinuousPart.ContinuousLookAheadSamplePagesForTests.Should().BeEquivalentTo(new[] { 6, 4 });
             own3.IsDecoded.Should().BeFalse("page 3 is neither realized nor a neighbour of page 5");
 
             // A trim drops the neighbours' samples too.
             var own6 = ContinuousImageSampleReleaseTests.XObject(doc, 6, "Own");
             own6.IsDecoded.Should().BeTrue("fixture");
             viewer.TrimCaches(PdfViewerCacheTrimLevel.Background);
-            viewer.ContinuousLookAheadSamplePagesForTests.Should().BeEmpty();
+            viewer.ContinuousPart.ContinuousLookAheadSamplePagesForTests.Should().BeEmpty();
             own6.IsDecoded.Should().BeFalse("a trim releases what render-ahead kept");
         }
         finally
@@ -414,7 +414,7 @@ public class RenderAheadTests
             viewer.CurrentPage = 2;
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 2);
             await WaitLookAheadIdleAsync(window, viewer);
-            viewer.ContinuousLookAheadStartCount.Should().BeGreaterThan(0, "fixture");
+            viewer.ContinuousPart.ContinuousLookAheadStartCount.Should().BeGreaterThan(0, "fixture");
         }
         else
         {
@@ -469,9 +469,9 @@ public class RenderAheadTests
             viewer.CurrentPage = 2;
             await WaitUntilAsync(window, () => !viewer.IsLoading && image.Source is WriteableBitmap, "page 2 rendered");
             await WaitSinglePageLookAheadIdleAsync(window, viewer, expectedStarts: 2);
-            viewer.SinglePageCacheContainsForTests(3).Should().BeTrue("the next page is rendered ahead");
-            viewer.SinglePageCacheContainsForTests(1).Should().BeTrue("then the previous one");
-            viewer.SinglePageCacheContainsForTests(4).Should().BeFalse("only N±1");
+            viewer.SinglePagePart.SinglePageCacheContainsForTests(3).Should().BeTrue("the next page is rendered ahead");
+            viewer.SinglePagePart.SinglePageCacheContainsForTests(1).Should().BeTrue("then the previous one");
+            viewer.SinglePagePart.SinglePageCacheContainsForTests(4).Should().BeFalse("only N±1");
 
             var diag = viewer.GetRenderDiagnostics();
             viewer.CurrentPage = 3;
@@ -482,7 +482,7 @@ public class RenderAheadTests
 
             coldViewer.CurrentPage = 3;
             await WaitUntilAsync(coldWindow, () => !coldViewer.IsLoading && coldImage.Source is WriteableBitmap, "cold page 3 rendered");
-            coldViewer.SinglePageLookAheadStartCount.Should().Be(0, "fixture: render-ahead is off on the cold viewer");
+            coldViewer.SinglePagePart.SinglePageLookAheadStartCount.Should().Be(0, "fixture: render-ahead is off on the cold viewer");
             var a = PixelCopy.Of(warm);
             var b = PixelCopy.Of((WriteableBitmap)coldImage.Source!);
             b.InkFraction().Should().BeGreaterThan(0.0005, "fixture: page 3 must show content");
@@ -494,15 +494,15 @@ public class RenderAheadTests
 
             // From page 3, page 4 is rendered ahead; page 2 is still cached.
             await WaitSinglePageLookAheadIdleAsync(window, viewer, expectedStarts: 3);
-            viewer.SinglePageCacheContainsForTests(4).Should().BeTrue();
+            viewer.SinglePagePart.SinglePageCacheContainsForTests(4).Should().BeTrue();
 
             // A trim drops the neighbours and does not render them again.
             viewer.TrimCaches(PdfViewerCacheTrimLevel.Background);
-            viewer.SinglePageCacheContainsForTests(2).Should().BeFalse();
-            viewer.SinglePageCacheContainsForTests(4).Should().BeFalse();
-            viewer.SinglePageCacheContainsForTests(3).Should().BeTrue("the page on screen stays");
+            viewer.SinglePagePart.SinglePageCacheContainsForTests(2).Should().BeFalse();
+            viewer.SinglePagePart.SinglePageCacheContainsForTests(4).Should().BeFalse();
+            viewer.SinglePagePart.SinglePageCacheContainsForTests(3).Should().BeTrue("the page on screen stays");
             await PumpAsync(window, TimeSpan.FromMilliseconds(500));
-            viewer.SinglePageLookAheadStartCount.Should().Be(3, "a trim must not re-render what it released (#1478)");
+            viewer.SinglePagePart.SinglePageLookAheadStartCount.Should().Be(3, "a trim must not re-render what it released (#1478)");
         }
         finally
         {
@@ -519,44 +519,44 @@ public class RenderAheadTests
         var hold2 = holds.Hold(2);
         var hold5 = holds.Hold(5);
         var hold3 = holds.Hold(3);
-        viewer.SinglePageLookAheadStartingForTests = holds.Wait;
+        viewer.SinglePagePart.SinglePageLookAheadStartingForTests = holds.Wait;
         try
         {
             // Page 1 renders, then page 2 is rendered ahead and held.
-            await WaitUntilAsync(window, () => viewer.SinglePageLookAheadInFlight, "page 2 to be rendered ahead");
+            await WaitUntilAsync(window, () => viewer.SinglePagePart.SinglePageLookAheadInFlight, "page 2 to be rendered ahead");
             viewer.CurrentPage = 4;
             hold2.Set();
-            await WaitUntilAsync(window, () => viewer.SinglePageLookAheadCancellationCount == 1,
+            await WaitUntilAsync(window, () => viewer.SinglePagePart.SinglePageLookAheadCancellationCount == 1,
                 "the jump to page 4 to cancel page 2's render-ahead");
-            viewer.SinglePageCacheContainsForTests(2).Should().BeFalse("the cancelled render cached nothing");
+            viewer.SinglePagePart.SinglePageCacheContainsForTests(2).Should().BeFalse("the cancelled render cached nothing");
 
             // From page 4, page 5 is rendered ahead (held); turn onto it.
-            await WaitUntilAsync(window, () => !viewer.IsLoading && viewer.SinglePageLookAheadInFlight,
+            await WaitUntilAsync(window, () => !viewer.IsLoading && viewer.SinglePagePart.SinglePageLookAheadInFlight,
                 "page 4 shown and page 5 rendering ahead");
             var misses = viewer.GetRenderDiagnostics().SinglePageMisses;
             viewer.CurrentPage = 5;
             viewer.IsLoading.Should().BeTrue("the turn waits for the render already under way");
             hold5.Set();
-            await WaitUntilAsync(window, () => !viewer.IsLoading && viewer.SinglePageCacheContainsForTests(5)
+            await WaitUntilAsync(window, () => !viewer.IsLoading && viewer.SinglePagePart.SinglePageCacheContainsForTests(5)
                 && image.Source is WriteableBitmap, "page 5 shown");
-            viewer.SinglePageLookAheadJoinCount.Should().Be(1);
-            viewer.SinglePageLookAheadCancellationCount.Should().Be(1, "joining is not cancelling");
+            viewer.SinglePagePart.SinglePageLookAheadJoinCount.Should().Be(1);
+            viewer.SinglePagePart.SinglePageLookAheadCancellationCount.Should().Be(1, "joining is not cancelling");
             viewer.GetRenderDiagnostics().SinglePageMisses.Should().Be(misses, "page 5 was served from the cache");
 
             // Page 2 (not cached) renders, page 3 is rendered ahead (held); close.
             viewer.CurrentPage = 2;
-            await WaitUntilAsync(window, () => !viewer.IsLoading && viewer.SinglePageLookAheadInFlight,
+            await WaitUntilAsync(window, () => !viewer.IsLoading && viewer.SinglePagePart.SinglePageLookAheadInFlight,
                 "page 2 shown and page 3 rendering ahead");
             window.Close();
             hold3.Set();
-            await WaitUntilAsync(window, () => !viewer.SinglePageLookAheadInFlight, "the render-ahead to finish");
-            viewer.SinglePageLookAheadCancellationCount.Should().Be(2, "closing the window cancels render-ahead");
-            viewer.SinglePageCacheContainsForTests(3).Should().BeFalse();
+            await WaitUntilAsync(window, () => !viewer.SinglePagePart.SinglePageLookAheadInFlight, "the render-ahead to finish");
+            viewer.SinglePagePart.SinglePageLookAheadCancellationCount.Should().Be(2, "closing the window cancels render-ahead");
+            viewer.SinglePagePart.SinglePageCacheContainsForTests(3).Should().BeFalse();
         }
         finally
         {
             holds.ReleaseAll();
-            viewer.SinglePageLookAheadStartingForTests = null;
+            viewer.SinglePagePart.SinglePageLookAheadStartingForTests = null;
             Close(window, viewer);
         }
     }
@@ -573,22 +573,22 @@ public class RenderAheadTests
         var (window, viewer, _) = ShowSinglePageViewer(MultiPagePdf(3));
         using var holds = new RenderHolds();
         var hold2 = holds.Hold(2);
-        viewer.SinglePageLookAheadStartingForTests = holds.Wait;
+        viewer.SinglePagePart.SinglePageLookAheadStartingForTests = holds.Wait;
         try
         {
-            await WaitUntilAsync(window, () => viewer.SinglePageLookAheadInFlight, "page 2 to be rendered ahead");
+            await WaitUntilAsync(window, () => viewer.SinglePagePart.SinglePageLookAheadInFlight, "page 2 to be rendered ahead");
 
             viewer.RenderAheadEnabled = false;
             hold2.Set();
-            await WaitUntilAsync(window, () => !viewer.SinglePageLookAheadInFlight, "the render-ahead to finish");
+            await WaitUntilAsync(window, () => !viewer.SinglePagePart.SinglePageLookAheadInFlight, "the render-ahead to finish");
 
-            viewer.SinglePageLookAheadCancellationCount.Should().Be(1, "turning render-ahead off cancels it");
-            viewer.SinglePageCacheContainsForTests(2).Should().BeFalse("the cancelled render cached nothing");
+            viewer.SinglePagePart.SinglePageLookAheadCancellationCount.Should().Be(1, "turning render-ahead off cancels it");
+            viewer.SinglePagePart.SinglePageCacheContainsForTests(2).Should().BeFalse("the cancelled render cached nothing");
         }
         finally
         {
             holds.ReleaseAll();
-            viewer.SinglePageLookAheadStartingForTests = null;
+            viewer.SinglePagePart.SinglePageLookAheadStartingForTests = null;
             Close(window, viewer);
         }
     }
@@ -599,25 +599,25 @@ public class RenderAheadTests
         var (window, viewer, _) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(pageCount: 3);
         using var holds = new RenderHolds();
         var holdPage2 = holds.Hold(2);
-        viewer.ContinuousBandRenderStartingForTests = holds.Wait;
+        viewer.ContinuousPart.ContinuousBandRenderStartingForTests = holds.Wait;
         try
         {
-            await WaitUntilAsync(window, () => viewer.ContinuousLookAheadInFlight, "page 2 to be rendered ahead");
-            viewer.ContinuousLookAheadCancellationRequested.Should().BeFalse();
+            await WaitUntilAsync(window, () => viewer.ContinuousPart.ContinuousLookAheadInFlight, "page 2 to be rendered ahead");
+            viewer.ContinuousPart.ContinuousLookAheadCancellationRequested.Should().BeFalse();
 
             viewer.RenderAheadEnabled = false;
-            viewer.ContinuousLookAheadCancellationRequested.Should().BeTrue("turning render-ahead off cancels it");
+            viewer.ContinuousPart.ContinuousLookAheadCancellationRequested.Should().BeTrue("turning render-ahead off cancels it");
             holdPage2.Set();
             await WaitLookAheadIdleAsync(window, viewer);
 
-            viewer.ContinuousLookAheadCancellationCount.Should().Be(1);
-            viewer.ContinuousCacheEntriesForTests().Should().NotContain(e => e.Key.Page == 2,
+            viewer.ContinuousPart.ContinuousLookAheadCancellationCount.Should().Be(1);
+            viewer.ContinuousPart.ContinuousCacheEntriesForTests().Should().NotContain(e => e.Key.Page == 2,
                 "the cancelled render cached nothing");
         }
         finally
         {
             holds.ReleaseAll();
-            viewer.ContinuousBandRenderStartingForTests = null;
+            viewer.ContinuousPart.ContinuousBandRenderStartingForTests = null;
             Close(window, viewer);
         }
     }
@@ -637,7 +637,7 @@ public class RenderAheadTests
         try
         {
             await WaitUntilAsync(window, () => !viewer.IsLoading && image.Source is WriteableBitmap, "page 1 rendered");
-            var published = viewer.SinglePagePublishCount;
+            var published = viewer.SinglePagePart.SinglePagePublishCount;
             var shown = image.Source;
             int turnsFinished = 0;
             viewer.PageChanged += (_, _) => turnsFinished++;
@@ -652,7 +652,7 @@ public class RenderAheadTests
 
             await WaitUntilAsync(window, () => turnsFinished > 0, "the page-3 turn to finish");
             await PumpAsync(window, TimeSpan.FromMilliseconds(200));
-            viewer.SinglePagePublishCount.Should().Be(published, "a render cancelled by detach publishes nothing");
+            viewer.SinglePagePart.SinglePagePublishCount.Should().Be(published, "a render cancelled by detach publishes nothing");
             image.Source.Should().BeSameAs(shown, "the detached Image keeps what it showed");
             viewer.IsLoading.Should().BeFalse();
         }
@@ -670,7 +670,7 @@ public class RenderAheadTests
         using var holds = new RenderHolds();
         var hold1 = holds.Hold(1);
         var started = new ConcurrentQueue<int>();
-        viewer.ContinuousBandRenderStartingForTests = page =>
+        viewer.ContinuousPart.ContinuousBandRenderStartingForTests = page =>
         {
             started.Enqueue(page);
             holds.Wait(page);
@@ -678,14 +678,14 @@ public class RenderAheadTests
         try
         {
             await WaitUntilAsync(window, () => started.Contains(1), "page 1's band render to start");
-            int completed = viewer.ContinuousRenderCompletedCount;
+            int completed = viewer.ContinuousPart.ContinuousRenderCompletedCount;
             window.Close();
             hold1.Set();
-            await WaitUntilAsync(window, () => viewer.ContinuousRenderCompletedCount > completed,
+            await WaitUntilAsync(window, () => viewer.ContinuousPart.ContinuousRenderCompletedCount > completed,
                 "the held band render to return");
             await PumpAsync(window, TimeSpan.FromMilliseconds(200));
 
-            viewer.ContinuousCacheEntriesForTests().Should().NotContain(e => e.Key.Page == 1,
+            viewer.ContinuousPart.ContinuousCacheEntriesForTests().Should().NotContain(e => e.Key.Page == 1,
                 "a band render cancelled by detach caches nothing");
             items.ItemsSource!.Cast<PdfPageSlot>().Single(s => s.PageNumber == 1).Bitmap.Should().BeNull(
                 "nor composites into a detached slot");
@@ -693,7 +693,7 @@ public class RenderAheadTests
         finally
         {
             holds.ReleaseAll();
-            viewer.ContinuousBandRenderStartingForTests = null;
+            viewer.ContinuousPart.ContinuousBandRenderStartingForTests = null;
             Close(window, viewer);
         }
     }
@@ -717,16 +717,16 @@ public class RenderAheadTests
             await PumpAsync(window, TimeSpan.FromMilliseconds(100));
             window.Content = viewer;
             await PumpAsync(window, TimeSpan.FromMilliseconds(100));
-            int starts = viewer.ContinuousRenderStartCount;
+            int starts = viewer.ContinuousPart.ContinuousRenderStartCount;
 
             viewer.RefreshContinuousLayout();
             var page1 = () => items.ItemsSource?.Cast<PdfPageSlot>().FirstOrDefault(s => s.PageNumber == 1);
             var sw = Stopwatch.StartNew();
             while (sw.Elapsed < TimeSpan.FromSeconds(10)
-                   && !(viewer.ContinuousRenderStartCount > starts && page1()?.Bitmap != null))
+                   && !(viewer.ContinuousPart.ContinuousRenderStartCount > starts && page1()?.Bitmap != null))
                 await PumpAsync(window, TimeSpan.FromMilliseconds(50));
 
-            viewer.ContinuousRenderStartCount.Should().BeGreaterThan(starts,
+            viewer.ContinuousPart.ContinuousRenderStartCount.Should().BeGreaterThan(starts,
                 "a structural refresh drops the tiles, so the re-attached view must render again");
             page1()?.Bitmap.Should().NotBeNull("and page 1 shows its new composite");
         }
@@ -753,7 +753,7 @@ public class RenderAheadTests
         var window = new Window { Content = viewer, Width = 900, Height = 700 };
         window.Show();
         viewer.Document = PdfCoreDocument.Open(bytes);
-        return (window, viewer, viewer.PdfImage!);
+        return (window, viewer, viewer.SinglePagePart.PdfImage!);
     }
 
     /// <summary>Per-page gates a render-thread hook waits on, so a test can hold one render in flight.</summary>
@@ -801,21 +801,21 @@ public class RenderAheadTests
         {
             await Dispatcher.UIThread.InvokeAsync(() => { if (window.IsVisible) window.UpdateLayout(); }, DispatcherPriority.Background);
             Dispatcher.UIThread.RunJobs();
-            quiet = !viewer.ContinuousLookAheadInFlight && viewer.ContinuousInFlightCount == 0 ? quiet + 1 : 0;
+            quiet = !viewer.ContinuousPart.ContinuousLookAheadInFlight && viewer.ContinuousPart.ContinuousInFlightCount == 0 ? quiet + 1 : 0;
             if (sw.Elapsed > TimeSpan.FromSeconds(60))
-                throw new TimeoutException("render-ahead did not go idle. " + viewer.ContinuousDiagnostics());
+                throw new TimeoutException("render-ahead did not go idle. " + viewer.ContinuousPart.ContinuousDiagnostics());
             await Task.Delay(25);
         }
     }
 
     private static async Task WaitSinglePageLookAheadIdleAsync(Window window, PdfViewerControl viewer, int expectedStarts)
     {
-        await WaitUntilAsync(window, () => viewer.SinglePageLookAheadStartCount >= expectedStarts
-            && !viewer.SinglePageLookAheadInFlight && !viewer.IsLoading,
-            $"{expectedStarts} single-page render-aheads (started {viewer.SinglePageLookAheadStartCount})");
+        await WaitUntilAsync(window, () => viewer.SinglePagePart.SinglePageLookAheadStartCount >= expectedStarts
+            && !viewer.SinglePagePart.SinglePageLookAheadInFlight && !viewer.IsLoading,
+            $"{expectedStarts} single-page render-aheads (started {viewer.SinglePagePart.SinglePageLookAheadStartCount})");
         await PumpAsync(window, TimeSpan.FromMilliseconds(200));
-        viewer.SinglePageLookAheadStartCount.Should().Be(expectedStarts);
-        viewer.SinglePageLookAheadInFlight.Should().BeFalse();
+        viewer.SinglePagePart.SinglePageLookAheadStartCount.Should().Be(expectedStarts);
+        viewer.SinglePagePart.SinglePageLookAheadInFlight.Should().BeFalse();
     }
 
     private static async Task PumpAsync(Window window, TimeSpan duration)

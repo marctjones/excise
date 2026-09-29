@@ -150,7 +150,7 @@ public class PointerInteractionTests : IDisposable
             viewer.InteractionMode.Should().Be(InteractionMode.FormAuthoring);
             await Settle(window);
 
-            var overlay = viewer.OverlayCanvas!;
+            var overlay = viewer.SinglePagePart.OverlayCanvas!;
             var page = vm.PdfCoreDocument!.GetPage(1);
             // Drag a field box over PDF content rect [120,500]-[360,560].
             var contentRect = new PdfRectangle(120, 500, 360, 560);
@@ -215,7 +215,7 @@ public class PointerInteractionTests : IDisposable
             viewer.InteractionMode.Should().Be(InteractionMode.PathAnnotation);
             await Settle(window);
 
-            var overlay = viewer.OverlayCanvas!;
+            var overlay = viewer.SinglePagePart.OverlayCanvas!;
             var page = vm.PdfCoreDocument!.GetPage(1);
 
             var drawn = new (double X, double Y)[] { (150, 600), (150, 500), (250, 500) };
@@ -285,7 +285,7 @@ public class PointerInteractionTests : IDisposable
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
             await Settle(window);
 
-            var overlay = viewer.OverlayCanvas!;
+            var overlay = viewer.SinglePagePart.OverlayCanvas!;
             var page = vm.PdfCoreDocument!.GetPage(1);
             var click = ToWindowPoint(200, 550, page, overlay, window);
 
@@ -335,7 +335,7 @@ public class PointerInteractionTests : IDisposable
                 "a line is a two-point gesture, not a freehand stroke");
             await Settle(window);
 
-            var overlay = viewer.OverlayCanvas!;
+            var overlay = viewer.SinglePagePart.OverlayCanvas!;
             var page = vm.PdfCoreDocument!.GetPage(1);
 
             var startContent = (X: 120.0, Y: 600.0);
@@ -476,7 +476,7 @@ public class PointerInteractionTests : IDisposable
                 "a polygon is planted click by click, not dragged");
             await Settle(window);
 
-            var overlay = viewer.OverlayCanvas!;
+            var overlay = viewer.SinglePagePart.OverlayCanvas!;
             var page = vm.PdfCoreDocument!.GetPage(1);
             var drawn = new (double X, double Y)[] { (120, 600), (220, 660), (260, 600), (190, 570) };
 
@@ -534,7 +534,7 @@ public class PointerInteractionTests : IDisposable
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
             await Settle(window);
 
-            var overlay = viewer.OverlayCanvas!;
+            var overlay = viewer.SinglePagePart.OverlayCanvas!;
             var page = vm.PdfCoreDocument!.GetPage(1);
 
             AnnotationPathDrawnEventArgs? got = null;
@@ -594,7 +594,7 @@ public class PointerInteractionTests : IDisposable
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
             await Settle(window);
 
-            var overlay = viewer.OverlayCanvas!;
+            var overlay = viewer.SinglePagePart.OverlayCanvas!;
             var page = vm.PdfCoreDocument!.GetPage(1);
 
             AnnotationPathDrawnEventArgs? got = null;
@@ -666,7 +666,7 @@ public class PointerInteractionTests : IDisposable
             await vm.LoadDocumentAsync(path);
 
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
-            var formLayer = viewer.FormFieldsLayer!;
+            var formLayer = viewer.SinglePagePart.FormFieldsLayer!;
             for (int i = 0; i < 40 && formLayer.Children.OfType<CheckBox>().FirstOrDefault() == null; i++)
             {
                 await Task.Delay(50);
@@ -902,7 +902,7 @@ public class PointerInteractionTests : IDisposable
     private async Task<PdfViewerControl> SettleSinglePage(Window window, MainWindowViewModel vm)
     {
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
-        var scroll = viewer.PdfScrollViewer!;
+        var scroll = viewer.SinglePagePart.PdfScrollViewer!;
         var deadline = DateTime.UtcNow.AddSeconds(10);
         while (DateTime.UtcNow < deadline && (!scroll.IsVisible || scroll.Bounds == default(Rect)))
         {
@@ -917,7 +917,7 @@ public class PointerInteractionTests : IDisposable
     private async Task ClickContentRect(Window window, PdfViewerControl viewer,
         MainWindowViewModel vm, PdfRectangle contentRect)
     {
-        var overlay = viewer.OverlayCanvas!;
+        var overlay = viewer.SinglePagePart.OverlayCanvas!;
         var page = vm.PdfCoreDocument!.GetPage(1);
         var cx = (contentRect.Left + contentRect.Right) * 0.5;
         var cy = (contentRect.Bottom + contentRect.Top) * 0.5;

@@ -58,18 +58,18 @@ public class PerformancePreferencesLiveApplyTests
         try
         {
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
-            var band = viewer.ContinuousRequiredKeysForTests.ToHashSet();
+            var band = viewer.ContinuousPart.ContinuousRequiredKeysForTests.ToHashSet();
             band.Should().NotBeEmpty("fixture: page 1's band is on screen");
-            viewer.ContinuousCacheEntriesForTests().Select(e => e.Key).Should().Contain(band,
+            viewer.ContinuousPart.ContinuousCacheEntriesForTests().Select(e => e.Key).Should().Contain(band,
                 "fixture: a settled band is fully cached");
 
             // Newer junk puts the band at the LRU TAIL, which a plain tail-first
             // eviction would take first.
             const int junkSide = 256;
             for (int i = 0; i < 64; i++)
-                viewer.AddToContinuousCache(JunkKey(i), JunkTile(junkSide));
+                viewer.ContinuousPart.AddToContinuousCache(JunkKey(i), JunkTile(junkSide));
 
-            var before = viewer.ContinuousCacheEntriesForTests();
+            var before = viewer.ContinuousPart.ContinuousCacheEntriesForTests();
             long bandBytes = before.Where(e => band.Contains(e.Key)).Sum(e => Bytes(e.Bitmap));
             long budget = bandBytes + 4 * PdfViewerControl.ContinuousTileByteSize(junkSide, junkSide);
             viewer.ContinuousTileCacheResidentBytes.Should().BeGreaterThan(budget, "fixture: the cache is over the new budget");
@@ -81,7 +81,7 @@ public class PerformancePreferencesLiveApplyTests
                 "lowering the budget evicts down to it immediately");
             viewer.GetRenderDiagnostics().ContinuousByteBudget.Should().Be(budget);
 
-            var after = viewer.ContinuousCacheEntriesForTests();
+            var after = viewer.ContinuousPart.ContinuousCacheEntriesForTests();
             after.Select(e => e.Key).Should().Contain(band, "the visible band is never evicted");
             var kept = after.Select(e => (object)e.Bitmap).ToHashSet(ReferenceEqualityComparer.Instance);
             var dropped = before.Where(e => !kept.Contains(e.Bitmap)).ToList();
@@ -104,13 +104,13 @@ public class PerformancePreferencesLiveApplyTests
         var window = new Window { Content = viewer, Width = 900, Height = 700 };
         window.Show();
         viewer.Document = PdfCoreDocument.Open(MultiPagePdfBytes(8));
-        var image = viewer.PdfImage!;
+        var image = viewer.SinglePagePart.PdfImage!;
         try
         {
             var published = new List<WriteableBitmap>();
             for (int page = 1; page <= 7; page++)
             {
-                long publishes = viewer.SinglePagePublishCount;
+                long publishes = viewer.SinglePagePart.SinglePagePublishCount;
                 if (page > 1)
                     viewer.CurrentPage = page;
                 published.Add(await WaitForSinglePagePublishAsync(window, viewer, image, publishes));
@@ -130,7 +130,7 @@ public class PerformancePreferencesLiveApplyTests
                 IsDisposed(published[i]).Should().BeTrue($"page {i + 1} is no longer cached, so its pixels are released");
 
             // Still navigates and publishes under the new capacity.
-            long before = viewer.SinglePagePublishCount;
+            long before = viewer.SinglePagePart.SinglePagePublishCount;
             viewer.CurrentPage = 8;
             var page8 = await WaitForSinglePagePublishAsync(window, viewer, image, before);
             IsDisposed(page8).Should().BeFalse();
@@ -149,7 +149,7 @@ public class PerformancePreferencesLiveApplyTests
         var window = new Window { Content = viewer, Width = 900, Height = 1400 };
         window.Show();
         int running = 0, peak = 0;
-        viewer.ContinuousBandRenderStartingForTests = _ =>
+        viewer.ContinuousPart.ContinuousBandRenderStartingForTests = _ =>
         {
             int now = Interlocked.Increment(ref running);
             int seen;
@@ -165,7 +165,7 @@ public class PerformancePreferencesLiveApplyTests
             await WaitForRendersToSettleAsync(window, viewer, minStarts: 3);
             peak.Should().Be(1, "with one render thread no two band renders overlap");
 
-            int starts = viewer.ContinuousRenderStartCount;
+            int starts = viewer.ContinuousPart.ContinuousRenderStartCount;
             Volatile.Write(ref peak, 0);
             viewer.ContinuousRenderConcurrency = 4;
             viewer.ZoomLevel = 0.25;   // new keys, and more pages on screen: every visible band renders again
@@ -175,7 +175,7 @@ public class PerformancePreferencesLiveApplyTests
         }
         finally
         {
-            viewer.ContinuousBandRenderStartingForTests = null;
+            viewer.ContinuousPart.ContinuousBandRenderStartingForTests = null;
             window.Close();
             viewer.Document?.Dispose();
         }
@@ -541,7 +541,7 @@ public class PerformancePreferencesLiveApplyTests
         {
             await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
             Dispatcher.UIThread.RunJobs();
-            if (viewer.SinglePagePublishCount > publishesBefore && !viewer.IsLoading && image.Source is WriteableBitmap shown)
+            if (viewer.SinglePagePart.SinglePagePublishCount > publishesBefore && !viewer.IsLoading && image.Source is WriteableBitmap shown)
                 return shown;
             if (sw.Elapsed > TimeSpan.FromSeconds(60))
                 throw new TimeoutException($"page {viewer.CurrentPage} did not publish");
@@ -557,9 +557,9 @@ public class PerformancePreferencesLiveApplyTests
         {
             await Dispatcher.UIThread.InvokeAsync(window.UpdateLayout, DispatcherPriority.Background);
             Dispatcher.UIThread.RunJobs();
-            quiet = viewer.ContinuousRenderStartCount >= minStarts && viewer.ContinuousInFlightCount == 0 ? quiet + 1 : 0;
+            quiet = viewer.ContinuousPart.ContinuousRenderStartCount >= minStarts && viewer.ContinuousPart.ContinuousInFlightCount == 0 ? quiet + 1 : 0;
             if (sw.Elapsed > TimeSpan.FromSeconds(60))
-                throw new TimeoutException($"renders did not settle (starts={viewer.ContinuousRenderStartCount}, in flight={viewer.ContinuousInFlightCount})");
+                throw new TimeoutException($"renders did not settle (starts={viewer.ContinuousPart.ContinuousRenderStartCount}, in flight={viewer.ContinuousPart.ContinuousInFlightCount})");
             await Task.Delay(30);
         }
     }

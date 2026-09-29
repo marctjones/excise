@@ -65,7 +65,7 @@ public class PdfViewerSelectionTests
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 window.UpdateLayout();
-                pdfImage = control.PdfImage;
+                pdfImage = control.SinglePagePart.PdfImage;
                 ready = pdfImage is { } img
                         && img.IsAttachedToVisualTree()
                         && img.Bounds.Width > 1
@@ -83,7 +83,7 @@ public class PdfViewerSelectionTests
             window.UpdateLayout();
             control.InteractionMode = InteractionMode.TextSelection;
 
-            var overlay = control.OverlayCanvas!;
+            var overlay = control.SinglePagePart.OverlayCanvas!;
             overlay.IsAttachedToVisualTree().Should().BeTrue();
 
             // Press at the visually leftmost glyph, drag to the rightmost. Pointer
@@ -93,16 +93,16 @@ public class PdfViewerSelectionTests
             // hit-test sees.
             var leftmost = letters.OrderBy(l => l.GlyphRectangle.Left).First();
             var rightmost = letters.OrderByDescending(l => l.GlyphRectangle.Right).First();
-            var anchorDip = control.GlyphRectToViewerDipsForTest(leftmost.GlyphRectangle);
-            var focusDip = control.GlyphRectToViewerDipsForTest(rightmost.GlyphRectangle);
+            var anchorDip = control.SinglePagePart.GlyphRectToViewerDipsForTest(leftmost.GlyphRectangle);
+            var focusDip = control.SinglePagePart.GlyphRectToViewerDipsForTest(rightmost.GlyphRectangle);
             RaiseSelectionDrag(overlay, anchorDip.Center, focusDip.Center);
         });
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            var layer = control.TextSelectionLayer!;
-            var overlay = control.OverlayCanvas!;
-            var img = control.PdfImage!;
+            var layer = control.SinglePagePart.TextSelectionLayer!;
+            var overlay = control.SinglePagePart.OverlayCanvas!;
+            var img = control.SinglePagePart.PdfImage!;
 
             var rects = layer.Children.OfType<Rectangle>().ToList();
 
@@ -205,7 +205,7 @@ public class PdfViewerSelectionTests
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 window.UpdateLayout();
-                var img = control.PdfImage;
+                var img = control.SinglePagePart.PdfImage;
                 ready = img is { } i && i.Bounds.Width > 1 && doc.GetPage(1).Letters.Count > 0;
             });
             if (ready) break;
@@ -216,18 +216,18 @@ public class PdfViewerSelectionTests
         {
             window.UpdateLayout();
             control.InteractionMode = InteractionMode.TextSelection;
-            var overlay = control.OverlayCanvas!;
+            var overlay = control.SinglePagePart.OverlayCanvas!;
             var letters = doc.GetPage(1).Letters;
-            var a = control.GlyphRectToViewerDipsForTest(letters[0].GlyphRectangle);
-            var f = control.GlyphRectToViewerDipsForTest(letters[^1].GlyphRectangle);
+            var a = control.SinglePagePart.GlyphRectToViewerDipsForTest(letters[0].GlyphRectangle);
+            var f = control.SinglePagePart.GlyphRectToViewerDipsForTest(letters[^1].GlyphRectangle);
             RaiseSelectionDrag(overlay, a.Center, f.Center);
 
-            control.TextSelectionLayer!.Children.OfType<Rectangle>()
+            control.SinglePagePart.TextSelectionLayer!.Children.OfType<Rectangle>()
                 .Should().NotBeEmpty("a drag drew a highlight");
 
             control.ClearSelectionHighlight();
 
-            control.TextSelectionLayer!.Children
+            control.SinglePagePart.TextSelectionLayer!.Children
                 .Should().BeEmpty("ClearSelectionHighlight removes every highlight rect");
         });
 
@@ -268,7 +268,7 @@ public class PdfViewerSelectionTests
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 window.UpdateLayout();
-                items = control.ContinuousItems!;
+                items = control.ContinuousPart.ContinuousItems!;
                 slot = items.ItemsSource?.Cast<PdfPageSlot>().FirstOrDefault()!;
                 ready = slot != null && items.Bounds.Width > 1 && slot.DisplayWidth > 1
                         && doc.GetPage(1).Letters.Count > 0;
@@ -441,7 +441,7 @@ public class PdfViewerSelectionTests
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 window.UpdateLayout();
-                items = control.ContinuousItems!;
+                items = control.ContinuousPart.ContinuousItems!;
                 ready = items.ItemsSource?.Cast<PdfPageSlot>().Count() == 2 && items.Bounds.Width > 1
                         && doc.GetPage(2).Letters.Count > 0;
             });
@@ -550,7 +550,7 @@ public class PdfViewerSelectionTests
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 window.UpdateLayout();
-                items = control.ContinuousItems!;
+                items = control.ContinuousPart.ContinuousItems!;
                 slot = items.ItemsSource?.Cast<PdfPageSlot>().FirstOrDefault()!;
                 ready = slot != null && items.Bounds.Width > 1 && slot.DisplayWidth > 1
                         && doc.GetPage(1).Letters.Count > 0;

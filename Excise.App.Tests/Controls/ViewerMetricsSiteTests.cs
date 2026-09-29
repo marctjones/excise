@@ -47,7 +47,7 @@ public class ViewerMetricsSiteTests
             capture.Listener.RecordObservableInstruments();
             capture.ForViewer("excise.viewer.continuous.cache.resident_bytes", viewer).Should().BeGreaterThan(0);
             capture.ForViewer("excise.viewer.continuous.composite.resident_bytes", viewer)
-                .Should().Be(viewer.ContinuousCompositeResidentBytes());
+                .Should().Be(viewer.ContinuousPart.ContinuousCompositeResidentBytes());
             capture.ForViewer("excise.viewer.continuous.cache.entries", viewer)
                 .Should().Be(viewer.GetRenderDiagnostics().ContinuousEntryCount);
         }
@@ -101,12 +101,12 @@ public class ViewerMetricsSiteTests
         {
             viewer.Document = PdfCoreDocument.Open(TestPdfGenerator.CreateSimplePdf("metrics page"));
             var deadline = Stopwatch.StartNew();
-            while (viewer.SinglePagePublishCount == 0 && deadline.Elapsed < TimeSpan.FromSeconds(30))
+            while (viewer.SinglePagePart.SinglePagePublishCount == 0 && deadline.Elapsed < TimeSpan.FromSeconds(30))
             {
                 Dispatcher.UIThread.RunJobs();
                 await Task.Delay(25);
             }
-            viewer.SinglePagePublishCount.Should().BeGreaterThan(0, "fixture: the page must render");
+            viewer.SinglePagePart.SinglePagePublishCount.Should().BeGreaterThan(0, "fixture: the page must render");
 
             capture.Of("excise.viewer.single_page.render.duration").Should().ContainSingle()
                 .Which.Dpi.Should().NotBeNull();

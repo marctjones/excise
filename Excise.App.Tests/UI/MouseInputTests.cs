@@ -223,7 +223,7 @@ public class MouseInputTests : IDisposable
 
         // Poll on the ScrollViewer that actually gates the click-point
         // translation (IsVisible + laid out), not a fixed number of retries.
-        var scrollViewer = viewer!.PdfScrollViewer;
+        var scrollViewer = viewer!.SinglePagePart.PdfScrollViewer;
         scrollViewer.Should().NotBeNull();
         var layoutDeadline = DateTime.UtcNow.AddSeconds(10);
         while (DateTime.UtcNow < layoutDeadline &&
@@ -237,7 +237,7 @@ public class MouseInputTests : IDisposable
         scrollViewer.Bounds.Should().NotBe(default(Rect),
             "PdfScrollViewer must be laid out before a click point can be translated through it");
 
-        var interaction = viewer!.InteractionLayer;
+        var interaction = viewer!.SinglePagePart.InteractionLayer;
         interaction.Should().NotBeNull("InteractionLayer must exist");
         var page = vm.PdfCoreDocument!.GetPage(linkPage);
         await ScrollContentRectIntoView(window, scrollViewer!, viewer!, targetLink.Rect, page);
@@ -505,7 +505,7 @@ public class MouseInputTests : IDisposable
         vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; these exercise the single-page path
         vm.IsTextSelectionMode = true;
         var viewer = await GetViewerReadyForModeAsync(window, InteractionMode.TextSelection);
-        var overlay = viewer!.OverlayCanvas!;
+        var overlay = viewer!.SinglePagePart.OverlayCanvas!;
         var anchorWindow = ToWindowPoint(anchor, page, overlay, window);
         var focusWindow = ToWindowPoint(focus, page, overlay, window);
 
@@ -557,7 +557,7 @@ public class MouseInputTests : IDisposable
         viewer.RedactionDrawn += (_, e) => { redaction = e; };
 
         var page = vm.PdfCoreDocument!.GetPage(targetPageNumber);
-        var overlay = viewer.OverlayCanvas!;
+        var overlay = viewer.SinglePagePart.OverlayCanvas!;
         var (startPoint, endPoint) = ToWindowDragPoints(
             new PdfRectangle(90, 375, 280, 430),
             page,
@@ -618,7 +618,7 @@ public class MouseInputTests : IDisposable
         vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; these exercise the single-page path
         vm.IsTextSelectionMode = true;
         var viewer = await GetViewerReadyForModeAsync(window, InteractionMode.TextSelection);
-        var overlay = viewer!.OverlayCanvas!;
+        var overlay = viewer!.SinglePagePart.OverlayCanvas!;
         var anchorWindow = ToWindowPoint(anchor, page, overlay, window);
         var midWindow = ToWindowPoint(mid, page, overlay, window);
         var focusWindow = ToWindowPoint(focus, page, overlay, window);
@@ -687,7 +687,7 @@ public class MouseInputTests : IDisposable
         vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; these exercise the single-page path
         vm.IsTextSelectionMode = true;
         var viewer = await GetViewerReadyForModeAsync(window, InteractionMode.TextSelection);
-        var overlay = viewer!.OverlayCanvas!;
+        var overlay = viewer!.SinglePagePart.OverlayCanvas!;
         var letterWindow = ToWindowPoint(singleLetter, page, overlay, window);
 
         string? selectedText = null;
@@ -737,7 +737,7 @@ public class MouseInputTests : IDisposable
         vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; these exercise the single-page path
         vm.IsTextSelectionMode = true;
         var viewer = await GetViewerReadyForModeAsync(window, InteractionMode.TextSelection);
-        var overlay = viewer!.OverlayCanvas!;
+        var overlay = viewer!.SinglePagePart.OverlayCanvas!;
         var letterWindow = ToWindowPoint(clickLetter, page, overlay, window);
 
         string? selectedText = null;
@@ -816,7 +816,7 @@ public class MouseInputTests : IDisposable
 
         // Poll on the ScrollViewer that actually gates the click/hover-point
         // translation (IsVisible + laid out), not a fixed number of retries.
-        var scrollViewer = viewer!.PdfScrollViewer;
+        var scrollViewer = viewer!.SinglePagePart.PdfScrollViewer;
         scrollViewer.Should().NotBeNull();
         var layoutDeadline = DateTime.UtcNow.AddSeconds(10);
         while (DateTime.UtcNow < layoutDeadline &&
@@ -830,7 +830,7 @@ public class MouseInputTests : IDisposable
         scrollViewer.Bounds.Should().NotBe(default(Rect),
             "PdfScrollViewer must be laid out before a hover point can be translated through it");
 
-        var interaction = viewer!.InteractionLayer;
+        var interaction = viewer!.SinglePagePart.InteractionLayer;
         interaction.Should().NotBeNull("InteractionLayer must exist");
         var page = vm.PdfCoreDocument!.GetPage(linkPage);
         await ScrollContentRectIntoView(window, scrollViewer!, viewer!, targetLink.Rect, page);
@@ -909,7 +909,7 @@ public class MouseInputTests : IDisposable
         var focus = ordered[4];
         var expectedText = string.Concat(ordered.Take(5).Select(l => l.Value));
 
-        var overlay = viewer!.OverlayCanvas!;
+        var overlay = viewer!.SinglePagePart.OverlayCanvas!;
         var anchorWindow = ToWindowPoint(anchor, page, overlay, window);
         var focusWindow = ToWindowPoint(focus, page, overlay, window);
 
@@ -968,7 +968,7 @@ public class MouseInputTests : IDisposable
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
         for (int i = 0; i < maxIterations; i++)
         {
-            var overlay = viewer.OverlayCanvas;
+            var overlay = viewer.SinglePagePart.OverlayCanvas;
             if (viewer.InteractionMode == mode && overlay is { Bounds.Width: > 0 })
                 break;
             await Task.Delay(delayMs);

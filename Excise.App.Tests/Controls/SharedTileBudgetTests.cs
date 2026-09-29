@@ -43,7 +43,7 @@ public class SharedTileBudgetTests
             // Keep only the bands, so every tile the budget could take is a band tile.
             fore.TrimCaches(PdfViewerCacheTrimLevel.Background);
             back.TrimCaches(PdfViewerCacheTrimLevel.Background);
-            var backBand = back.ContinuousRequiredKeysForTests.ToHashSet();
+            var backBand = back.ContinuousPart.ContinuousRequiredKeysForTests.ToHashSet();
             Keys(back).Should().BeEquivalentTo(backBand, "fixture: the background viewer holds only its band");
             Keys(back).Count.Should().BeGreaterThan(2, "fixture: more band tiles than the LRU minimum");
 
@@ -53,12 +53,12 @@ public class SharedTileBudgetTests
             back.SharedTileBudget = budget;
 
             // No window focused: a band is never taken, so the budget is exceeded.
-            fore.AddToContinuousCache(Key(0), NewTile());
+            fore.ContinuousPart.AddToContinuousCache(Key(0), NewTile());
             Keys(back).Should().BeEquivalentTo(backBand, "a background band is only ever taken for the foreground");
             budget.ResidentBytes.Should().BeGreaterThan(budget.ByteBudget);
 
             budget.Foreground = fore;
-            fore.AddToContinuousCache(Key(1), NewTile());
+            fore.ContinuousPart.AddToContinuousCache(Key(1), NewTile());
             Keys(back).Count.Should().BeLessThan(backBand.Count, "the focused window's needs come first");
             Dispatcher.UIThread.RunJobs();
             backItems.ItemsSource!.Cast<PdfPageSlot>().Single().Bitmap.Should().BeSameAs(backComposite,
@@ -110,5 +110,5 @@ public class SharedTileBudgetTests
         new(new PixelSize(Side, Side), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Premul);
 
     private static List<PdfViewerControl.ContinuousTileKey> Keys(PdfViewerControl viewer) =>
-        viewer.ContinuousCacheEntriesForTests().Select(e => e.Key).ToList();
+        viewer.ContinuousPart.ContinuousCacheEntriesForTests().Select(e => e.Key).ToList();
 }

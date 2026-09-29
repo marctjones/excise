@@ -54,8 +54,8 @@ public class ViewerCacheTrimTests
             var slots = items.ItemsSource!.Cast<PdfPageSlot>().ToList();
             foreach (var level in new[] { PdfViewerCacheTrimLevel.Background, PdfViewerCacheTrimLevel.Warn })
             {
-                var before = viewer.ContinuousCacheEntriesForTests();
-                var required = viewer.ContinuousRequiredKeysForTests;
+                var before = viewer.ContinuousPart.ContinuousCacheEntriesForTests();
+                var required = viewer.ContinuousPart.ContinuousRequiredKeysForTests;
                 required.Should().NotBeEmpty("fixture: the settled page has a band");
                 if (level == PdfViewerCacheTrimLevel.Background)
                 {
@@ -67,7 +67,7 @@ public class ViewerCacheTrimTests
 
                 viewer.TrimCaches(level);
 
-                var after = viewer.ContinuousCacheEntriesForTests();
+                var after = viewer.ContinuousPart.ContinuousCacheEntriesForTests();
                 after.Select(e => e.Key).Should().OnlyContain(k => required.Contains(k),
                     $"{level} keeps only the tiles of the current bands");
                 long residentBytes = after.Sum(e => PdfViewerControl.ContinuousTileByteSize(e.Bitmap.PixelSize.Width, e.Bitmap.PixelSize.Height));
@@ -94,10 +94,10 @@ public class ViewerCacheTrimTests
 
             // Page 1's tiles were scroll-back tiles, so returning to it must
             // render again, and the rebuilt composite must show the same page.
-            int startsBefore = viewer.ContinuousRenderStartCount;
+            int startsBefore = viewer.ContinuousPart.ContinuousRenderStartCount;
             viewer.CurrentPage = 1;
             var rebuilt = await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
-            viewer.ContinuousRenderStartCount.Should().BeGreaterThan(startsBefore,
+            viewer.ContinuousPart.ContinuousRenderStartCount.Should().BeGreaterThan(startsBefore,
                 "the trim dropped page 1's tiles, so scrolling back cannot be a cache hit");
 
             var actual = PixelCopy.Of(rebuilt);
@@ -142,7 +142,7 @@ public class ViewerCacheTrimTests
             var logo = ContinuousImageSampleReleaseTests.XObject(doc, 1, "Logo");
             const int outOfBand = 4;
             var ownOutOfBand = ContinuousImageSampleReleaseTests.XObject(doc, outOfBand, "Own");
-            viewer.ContinuousRequiredKeysForTests.Select(k => k.Page).Should().Contain(1)
+            viewer.ContinuousPart.ContinuousRequiredKeysForTests.Select(k => k.Page).Should().Contain(1)
                 .And.NotContain(outOfBand, "fixture: only the first page's band is required");
             own1.IsDecoded.Should().BeTrue("precondition: page 1 rendered");
             logo.IsDecoded.Should().BeTrue("precondition: page 1 rendered the shared logo");
@@ -151,7 +151,7 @@ public class ViewerCacheTrimTests
             {
                 _ = ownOutOfBand.DecodedData;
                 ownOutOfBand.IsDecoded.Should().BeTrue("fixture");
-                viewer.ContinuousImageSamplesForTests.Record(outOfBand, [ownOutOfBand, logo]);
+                viewer.ContinuousPart.ContinuousImageSamplesForTests.Record(outOfBand, [ownOutOfBand, logo]);
 
                 viewer.TrimCaches(level);
 
@@ -160,7 +160,7 @@ public class ViewerCacheTrimTests
                 own1.IsDecoded.Should().BeTrue($"{level}: the band page keeps its own samples");
                 viewer.LastCacheTrim.DecodedSampleStreams.Should().Be(1);
                 viewer.LastCacheTrim.DecodedSampleBytes.Should().Be(16 * 16 * 3, "one 16x16 RGB image's decoded samples");
-                viewer.ContinuousImageSamplesForTests.StreamsOf(outOfBand).Should().BeEmpty();
+                viewer.ContinuousPart.ContinuousImageSamplesForTests.StreamsOf(outOfBand).Should().BeEmpty();
                 _out.WriteLine($"{level}: {viewer.LastCacheTrim}");
 
                 // Critical dropped the band's tiles; let page 1 settle again before the next level.
@@ -184,7 +184,7 @@ public class ViewerCacheTrimTests
         try
         {
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
-            var scroll = viewer.ContinuousScrollViewer!;
+            var scroll = viewer.ContinuousPart.ContinuousScrollViewer!;
             var slots = items.ItemsSource!.Cast<PdfPageSlot>().ToList();
             var (page1, page2) = (slots[0], slots[1]);
 
@@ -192,7 +192,7 @@ public class ViewerCacheTrimTests
             double straddle = page2.TopDip - scroll.Viewport.Height / 2;
             scroll.Offset = new Vector(0, straddle);
             var page2Straddling = await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 2);
-            await WaitUntilAsync(window, () => page1.Bitmap != null && viewer.ContinuousInFlightCount == 0, "page 1 composite while straddling");
+            await WaitUntilAsync(window, () => page1.Bitmap != null && viewer.ContinuousPart.ContinuousInFlightCount == 0, "page 1 composite while straddling");
             var reference = PixelCopy.Of(page2Straddling);
 
             // Scroll page 1 out of the viewport and trim before the next render
@@ -202,11 +202,11 @@ public class ViewerCacheTrimTests
             scroll.Offset = new Vector(0, page2.TopDip + 64);
             PdfViewerControl.SlotIntersectsViewport(page1, scroll.Offset, scroll.Viewport).Should().BeFalse("fixture");
             PdfViewerControl.SlotIntersectsViewport(page2, scroll.Offset, scroll.Viewport).Should().BeTrue("fixture");
-            viewer.ContinuousCacheEntriesForTests().Should().NotBeEmpty("fixture: the band's tiles are cached");
+            viewer.ContinuousPart.ContinuousCacheEntriesForTests().Should().NotBeEmpty("fixture: the band's tiles are cached");
 
             viewer.TrimCaches(PdfViewerCacheTrimLevel.Critical);
 
-            viewer.ContinuousCacheEntriesForTests().Should().BeEmpty("Critical releases every tile, baked ones included");
+            viewer.ContinuousPart.ContinuousCacheEntriesForTests().Should().BeEmpty("Critical releases every tile, baked ones included");
             page1.Bitmap.Should().BeNull("Critical clears a composite whose band left the viewport");
             page2.Bitmap.Should().BeSameAs(page2Straddling, "a visible page keeps its composite");
             viewer.LastCacheTrim.Composites.Should().Be(1);
@@ -227,11 +227,11 @@ public class ViewerCacheTrimTests
 
             // Back to the straddling band: its tiles are gone, so it re-renders
             // and must match what it showed before the trim.
-            int startsBefore = viewer.ContinuousRenderStartCount;
+            int startsBefore = viewer.ContinuousPart.ContinuousRenderStartCount;
             scroll.Offset = new Vector(0, straddle);
             var rebuilt = await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(
                 window, viewer, items, pageNumber: 2, notThis: page2Straddling);
-            viewer.ContinuousRenderStartCount.Should().BeGreaterThan(startsBefore, "Critical dropped the band's tiles");
+            viewer.ContinuousPart.ContinuousRenderStartCount.Should().BeGreaterThan(startsBefore, "Critical dropped the band's tiles");
             var actual = PixelCopy.Of(rebuilt);
             actual.Width.Should().Be(reference.Width, "same band, same DPI");
             actual.Height.Should().Be(reference.Height, "same band, same DPI");
@@ -266,7 +266,7 @@ public class ViewerCacheTrimTests
         window.Show();
         try
         {
-            var image = viewer.PdfImage!;
+            var image = viewer.SinglePagePart.PdfImage!;
             viewer.Document = PdfCoreDocument.Open(bytes);
             var shown = new WriteableBitmap[3];
             for (int page = 1; page <= 3; page++)
@@ -315,7 +315,7 @@ public class ViewerCacheTrimTests
     // band's pixel density, ceiled, plus the one-pixel ceil overhang.
     private static long RequiredBandUpperBoundBytes(PdfViewerControl viewer, IReadOnlySet<PdfViewerControl.ContinuousTileKey> required)
     {
-        double pxPerDip = viewer.ContinuousEffectiveRenderDpi / (96.0 * viewer.ZoomLevel);
+        double pxPerDip = viewer.ContinuousPart.ContinuousEffectiveRenderDpi / (96.0 * viewer.ZoomLevel);
         int cellPx = (int)Math.Ceiling(PdfViewerControl.ContinuousTileQuantumDip * pxPerDip) + 1;
         return required.Count * PdfViewerControl.ContinuousTileByteSize(cellPx, cellPx);
     }
