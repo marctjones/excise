@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "ae723110d64668e38bfd0dd10f02d06159a9d891",
+  "sourceRevision": "34f452f8901fe419939a954f69fc7f1690e20517",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -22,8 +22,8 @@
     "commitsRequested": 200,
     "commitsObserved": 199,
     "broadCommitsExcluded": 1,
-    "newestProductionCommit": "7713043be15bf796c98836ec5d3d44e22ff339b0",
-    "oldestProductionCommit": "72b9a8cbe2b705be8fd32ba234f059f8b096a49b"
+    "newestProductionCommit": "9bad36440a0ced72db01d2994876f2bb02dc9b4b",
+    "oldestProductionCommit": "34217482a4b21f3cd19a6eb3ac92cff9c29a23e6"
   },
   "files": [
     {
@@ -679,7 +679,7 @@
       "commits": 2
     },
     {
-      "path": "Excise.Rendering/EncodedImageDecoder.cs",
+      "path": "Excise.Rendering/SkiaRenderer.Images.cs",
       "commits": 2
     },
     {
@@ -1071,10 +1071,6 @@
       "commits": 1
     },
     {
-      "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
-      "commits": 1
-    },
-    {
       "path": "Excise.Core/Filters/PdfPredictor.cs",
       "commits": 1
     },
@@ -1347,10 +1343,6 @@
       "commits": 1
     },
     {
-      "path": "Excise.Rendering/DctImageDecoder.cs",
-      "commits": 1
-    },
-    {
       "path": "Excise.Rendering/Differential/DifferentialMetrics.cs",
       "commits": 1
     },
@@ -1371,11 +1363,11 @@
       "commits": 1
     },
     {
-      "path": "Excise.Rendering/Excise.Rendering.csproj",
+      "path": "Excise.Rendering/EncodedImageDecoder.cs",
       "commits": 1
     },
     {
-      "path": "Excise.Rendering/JpxImageDecoder.cs",
+      "path": "Excise.Rendering/Excise.Rendering.csproj",
       "commits": 1
     },
     {
@@ -1383,7 +1375,7 @@
       "commits": 1
     },
     {
-      "path": "Excise.Rendering/SkiaRenderer.Images.cs",
+      "path": "Excise.Rendering/SkiaRenderer.Patterns.cs",
       "commits": 1
     }
   ],
