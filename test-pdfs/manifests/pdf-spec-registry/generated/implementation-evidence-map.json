@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "c580b2e5b08ddcb3338bcc29142b234e319acf325752447af4f558203b96dd74",
+  "sourceFingerprint": "03f5ed0d1f496e572caed3fd27bc3e247ae10763d3f60288ba4d1b77826f6b09",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -11150,8 +11150,8 @@
       "promotion": "review-required"
     },
     {
-      "id": "Excise.Avalonia/Controls/Viewer/ContinuousPageView.axaml.cs",
-      "path": "Excise.Avalonia/Controls/Viewer/ContinuousPageView.axaml.cs",
+      "id": "Excise.Avalonia/Controls/Viewer/ContinuousPageView.cs",
+      "path": "Excise.Avalonia/Controls/Viewer/ContinuousPageView.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -11394,8 +11394,8 @@
       "promotion": "review-required"
     },
     {
-      "id": "Excise.Avalonia/Controls/Viewer/SinglePageView.axaml.cs",
-      "path": "Excise.Avalonia/Controls/Viewer/SinglePageView.axaml.cs",
+      "id": "Excise.Avalonia/Controls/Viewer/SinglePageView.cs",
+      "path": "Excise.Avalonia/Controls/Viewer/SinglePageView.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"

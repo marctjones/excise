@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1489,
-  "indexedContentSha256": "1b252c85fc83206020595c743e7f882cab6015358bbbf576447395ca890306f7",
+  "indexedContentSha256": "e6b0b01ce5f1b99f3c7730f9c7596e9c80ee6290cd702f20886b44f8fcf00d63",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -5021,7 +5021,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 172
+      "candidateReferenceCount": 165
     },
     {
       "id": "pdf.17.document.metadata",
@@ -7284,9 +7284,19 @@
             "dictionaries",
             "resource"
           ]
+        },
+        {
+          "path": "docs/architecture/pdf-viewer-control-architecture.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "dictionaries",
+            "resource",
+            "pdfimage",
+            "skiarenderer"
+          ]
         }
       ],
-      "candidateReferenceCount": 44
+      "candidateReferenceCount": 45
     },
     {
       "id": "pdf.17.graphics.paths-painting",
@@ -42416,8 +42426,7 @@
           "matchedTerms": [
             "image",
             "indexed",
-            "image",
-            "pdfimage"
+            "image"
           ]
         },
         {
@@ -47927,17 +47936,16 @@
           ]
         },
         {
-          "path": "tests/reachability-baseline.tsv",
+          "path": "tests/redaction-collateral/baseline.json",
           "kind": "test",
           "matchedTerms": [
             "annotation",
             "highlight",
-            "annotation",
-            "redact"
+            "annotation"
           ]
         }
       ],
-      "candidateReferenceCount": 87
+      "candidateReferenceCount": 86
     },
     {
       "id": "pdf.20.annotation.subtype-006",
@@ -61367,7 +61375,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 227
+      "candidateReferenceCount": 226
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -62357,7 +62365,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 111
+      "candidateReferenceCount": 110
     },
     {
       "id": "pdf.17.interactive.redaction-review-drafts",
@@ -65294,7 +65302,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 227
+      "candidateReferenceCount": 226
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -66228,7 +66236,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 195
+      "candidateReferenceCount": 196
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -67230,7 +67238,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 146
+      "candidateReferenceCount": 145
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -68000,7 +68008,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 97
+      "candidateReferenceCount": 96
     },
     {
       "id": "pdf.17.interchange.tagged-pdf",
@@ -69566,7 +69574,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 227
+      "candidateReferenceCount": 226
     },
     {
       "id": "pdf.17.interchange.signatures",
