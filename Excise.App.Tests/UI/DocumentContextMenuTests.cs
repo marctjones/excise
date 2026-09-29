@@ -170,7 +170,7 @@ public class DocumentContextMenuTests : IDisposable
         await Task.Delay(600);
         window.UpdateLayout();
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
-        var items = viewer.ContinuousItems!;
+        var items = viewer.ContinuousPart.ContinuousItems!;
 
         // Right-click the centre of the THIRD page, not the one the viewport considers current.
         var container = items.ContainerFromIndex(2) as Control;

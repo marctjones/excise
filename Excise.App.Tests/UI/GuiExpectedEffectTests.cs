@@ -508,7 +508,7 @@ public class GuiExpectedEffectTests
             // stale state and return before the render even starts (#1771).
             Dispatcher.UIThread.RunJobs();
             window.UpdateLayout();
-            if (!viewer.IsLoading && viewer.ContinuousInFlightCount == 0) return;
+            if (!viewer.IsLoading && viewer.ContinuousPart.ContinuousInFlightCount == 0) return;
             await Task.Delay(40);
         }
     }

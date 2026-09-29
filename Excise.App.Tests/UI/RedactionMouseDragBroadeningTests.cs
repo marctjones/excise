@@ -229,7 +229,7 @@ public class RedactionMouseDragBroadeningTests
             vm.SetManualZoom(2.5);
             await WaitForIdleLayout(window);
 
-            var scrollViewer = viewer.PdfScrollViewer!;
+            var scrollViewer = viewer.SinglePagePart.PdfScrollViewer!;
             scrollViewer.Offset = new Vector(scrollViewer.Offset.X, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
             await WaitForIdleLayout(window);
             scrollViewer.Offset.Y.Should().BeGreaterThan(0,
@@ -289,7 +289,7 @@ public class RedactionMouseDragBroadeningTests
                 "the single page redaction lands on must be the page the user was reading, not page 1");
 
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
-            var overlay = viewer.OverlayCanvas!;
+            var overlay = viewer.SinglePagePart.OverlayCanvas!;
             var page = vm.PdfCoreDocument!.GetPage(2);
 
             await DoDrag(window, ContentRectOf(page, "CONTINUOUSSECRET"), page, overlay);
@@ -463,7 +463,7 @@ public class RedactionMouseDragBroadeningTests
             viewer.ZoomLevel.Should().BeApproximately(0.5, 1e-9, "the drift depends on zoom × dpr being 1.429");
 
             var page = vm.PdfCoreDocument!.GetPage(1);
-            var image = viewer.PdfImage!;
+            var image = viewer.SinglePagePart.PdfImage!;
             var bitmap = (WriteableBitmap)image.Source!;
 
             // Fixture guard: the survivor must sit between pad and pad + drift, or
@@ -527,7 +527,7 @@ public class RedactionMouseDragBroadeningTests
     private static async Task WaitForFinalSinglePageRender(Window window, PdfViewerControl viewer)
     {
         var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
-        while (viewer.SinglePagePublishCount == 0 || viewer.IsLoading || viewer.SinglePagePlaceholderForTests != null)
+        while (viewer.SinglePagePart.SinglePagePublishCount == 0 || viewer.IsLoading || viewer.SinglePagePart.SinglePagePlaceholderForTests != null)
         {
             if (DateTime.UtcNow > deadline)
                 throw new TimeoutException("the single-page render never published");
@@ -592,7 +592,7 @@ public class RedactionMouseDragBroadeningTests
         vm.IsRedactionMode = true;
         await WaitForIdleLayout(window);
 
-        var overlay = viewer.OverlayCanvas!;
+        var overlay = viewer.SinglePagePart.OverlayCanvas!;
         var page = vm.PdfCoreDocument!.GetPage(1);
         return (window, vm, viewer, overlay, page);
     }

@@ -242,7 +242,7 @@ public class TypewriterWorkflowTests
         // which renders the page then (#1473); a user cannot aim at it earlier.
         await SinglePageViewerWaits.WaitForSinglePageLaidOutAsync(window, viewer!);
 
-        var overlay = viewer!.OverlayCanvas;
+        var overlay = viewer!.SinglePagePart.OverlayCanvas;
         overlay.Should().NotBeNull();
 
         // Centre of the page in viewer-DIP space (render DPI 120), translated to
@@ -295,10 +295,10 @@ public class TypewriterWorkflowTests
         var localCenter = new Point(
             page.VisualWidth * 120.0 / 72.0 / 2.0,
             page.VisualHeight * 120.0 / 72.0 / 2.0);
-        var start = viewer.OverlayCanvas.TranslatePoint(localCenter, window)!.Value;
+        var start = viewer.SinglePagePart.OverlayCanvas.TranslatePoint(localCenter, window)!.Value;
         var end = start + new Point(80, 40);
 
-        bool PreviewVisible() => viewer.InteractionLayer.Children
+        bool PreviewVisible() => viewer.SinglePagePart.InteractionLayer.Children
             .OfType<global::Avalonia.Controls.Shapes.Rectangle>().Any(r => r.IsVisible);
 
         await Dispatcher.UIThread.InvokeAsync(() =>

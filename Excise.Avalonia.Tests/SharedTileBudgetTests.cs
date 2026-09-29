@@ -45,11 +45,11 @@ public class SharedTileBudgetTests
             {
                 var key = Key(i % 9);
                 bool lookAhead = i % 4 == 3;
-                bool keptShared = shared.AddToContinuousCache(key, NewTile(), lookAhead);
-                bool keptAlone = alone.AddToContinuousCache(key, NewTile(), lookAhead);
+                bool keptShared = shared.ContinuousPart.AddToContinuousCache(key, NewTile(), lookAhead);
+                bool keptAlone = alone.ContinuousPart.AddToContinuousCache(key, NewTile(), lookAhead);
                 keptShared.Should().Be(keptAlone, $"insert {i}");
                 Keys(shared).Should().Equal(Keys(alone), $"after insert {i}");
-                shared.ContinuousLookAheadTilesForTests.Should().BeEquivalentTo(alone.ContinuousLookAheadTilesForTests);
+                shared.ContinuousPart.ContinuousLookAheadTilesForTests.Should().BeEquivalentTo(alone.ContinuousPart.ContinuousLookAheadTilesForTests);
             }
 
             // The Preferences path sets both values together.
@@ -74,23 +74,23 @@ public class SharedTileBudgetTests
             back.SharedTileBudget = budget;
             budget.Foreground = fore;
 
-            back.AddToContinuousCache(Key(0), NewTile());
-            back.AddToContinuousCache(Key(1), NewTile());
-            back.AddToContinuousCache(Key(2), NewTile());
-            back.AddToContinuousCache(Key(3), NewTile(), lookAhead: true).Should().BeTrue();
-            fore.AddToContinuousCache(Key(10), NewTile());
-            fore.AddToContinuousCache(Key(11), NewTile());
+            back.ContinuousPart.AddToContinuousCache(Key(0), NewTile());
+            back.ContinuousPart.AddToContinuousCache(Key(1), NewTile());
+            back.ContinuousPart.AddToContinuousCache(Key(2), NewTile());
+            back.ContinuousPart.AddToContinuousCache(Key(3), NewTile(), lookAhead: true).Should().BeTrue();
+            fore.ContinuousPart.AddToContinuousCache(Key(10), NewTile());
+            fore.ContinuousPart.AddToContinuousCache(Key(11), NewTile());
             budget.ResidentBytes.Should().Be(6 * Tile, "fixture: exactly at the budget");
             budget.CrossViewerEvictionCount.Should().Be(0);
 
-            fore.AddToContinuousCache(Key(12), NewTile());
+            fore.ContinuousPart.AddToContinuousCache(Key(12), NewTile());
             Keys(back).Should().Equal(new[] { Key(2), Key(1), Key(0) }, "the background render-ahead tile goes first");
 
-            fore.AddToContinuousCache(Key(13), NewTile());
+            fore.ContinuousPart.AddToContinuousCache(Key(13), NewTile());
             Keys(back).Should().Equal(new[] { Key(2), Key(1) }, "then the background's least recently used tile");
 
             // The background is down to the LRU minimum: the foreground pays for itself.
-            fore.AddToContinuousCache(Key(14), NewTile());
+            fore.ContinuousPart.AddToContinuousCache(Key(14), NewTile());
             Keys(back).Should().Equal(new[] { Key(2), Key(1) });
             Keys(fore).Should().Equal(new[] { Key(14), Key(13), Key(12), Key(11) });
             budget.ResidentBytes.Should().Be(6 * Tile, "N viewers hold ONE budget");
@@ -110,10 +110,10 @@ public class SharedTileBudgetTests
             back.SharedTileBudget = budget;
             budget.Foreground = fore;
             for (int i = 0; i < 5; i++)
-                fore.AddToContinuousCache(Key(10 + i), NewTile());
+                fore.ContinuousPart.AddToContinuousCache(Key(10 + i), NewTile());
 
             for (int i = 0; i < 4; i++)
-                back.AddToContinuousCache(Key(i), NewTile());
+                back.ContinuousPart.AddToContinuousCache(Key(i), NewTile());
             Keys(fore).Should().HaveCount(5, "the focused window's tiles never go to a background window");
             Keys(back).Should().Equal(new[] { Key(3), Key(2) }, "the background viewer lives on what is left, down to its LRU minimum");
             budget.CrossViewerEvictionCount.Should().Be(0);
@@ -126,8 +126,8 @@ public class SharedTileBudgetTests
             other.SharedTileBudget = budget;
             budget.ViewerCount.Should().Be(3);
             budget.CrossViewerEvictionCount.Should().Be(1);
-            other.AddToContinuousCache(Key(20), NewTile());
-            other.AddToContinuousCache(Key(21), NewTile());
+            other.ContinuousPart.AddToContinuousCache(Key(20), NewTile());
+            other.ContinuousPart.AddToContinuousCache(Key(21), NewTile());
             budget.CrossViewerEvictionCount.Should().Be(3);
             Keys(fore).Should().Equal(new[] { Key(14), Key(13) }, "the viewer that was focused gives way like any other now");
             Keys(back).Should().Equal(new[] { Key(3), Key(2) }, "back is at its LRU minimum");
@@ -149,8 +149,8 @@ public class SharedTileBudgetTests
             budget.Foreground = fore;
             for (int i = 0; i < 4; i++)
             {
-                back.AddToContinuousCache(Key(i), NewTile());
-                fore.AddToContinuousCache(Key(10 + i), NewTile());
+                back.ContinuousPart.AddToContinuousCache(Key(i), NewTile());
+                fore.ContinuousPart.AddToContinuousCache(Key(10 + i), NewTile());
             }
 
             budget.ByteBudget = 5 * Tile;
@@ -162,8 +162,8 @@ public class SharedTileBudgetTests
             budget.ViewerCount.Should().Be(1);
             budget.Foreground.Should().BeSameAs(fore);
             budget.ResidentBytes.Should().Be(fore.ContinuousTileCacheResidentBytes);
-            fore.AddToContinuousCache(Key(20), NewTile());
-            fore.AddToContinuousCache(Key(21), NewTile());
+            fore.ContinuousPart.AddToContinuousCache(Key(20), NewTile());
+            fore.ContinuousPart.AddToContinuousCache(Key(21), NewTile());
             Keys(fore).Should().HaveCount(5, "alone again, the foreground has the whole budget");
             Keys(back).Should().HaveCount(2, "a detached viewer is not touched");
 
@@ -181,5 +181,5 @@ public class SharedTileBudgetTests
         new(new PixelSize(Side, Side), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Premul);
 
     private static List<PdfViewerControl.ContinuousTileKey> Keys(PdfViewerControl viewer) =>
-        viewer.ContinuousCacheEntriesForTests().Select(e => e.Key).ToList();
+        viewer.ContinuousPart.ContinuousCacheEntriesForTests().Select(e => e.Key).ToList();
 }

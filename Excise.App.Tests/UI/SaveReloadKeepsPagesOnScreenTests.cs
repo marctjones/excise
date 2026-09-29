@@ -44,14 +44,14 @@ public class SaveReloadKeepsPagesOnScreenTests
     {
         using var s = await Session.OpenAsync();
         // Read from inside the page, not at its top: a rebuild jumped back to the top.
-        var scroller = s.Viewer.ContinuousScrollViewer!;
+        var scroller = s.Viewer.ContinuousPart.ContinuousScrollViewer!;
         scroller.Offset = new Vector(scroller.Offset.X, scroller.Offset.Y + 300);
         await AnnotationPlacementAccuracyTests.WaitForIdleLayout(s.Window);
         await AnnotationPlacementAccuracyTests.WaitForContinuousPageRendered(s.Window, s.Viewer, Page);
         await AnnotationPlacementAccuracyTests.WaitForIdleLayout(s.Window);
         var readingAt = scroller.Offset.Y;
         var shown = s.Composite()!;
-        int renders = s.Viewer.ContinuousRenderStartCount;
+        int renders = s.Viewer.ContinuousPart.ContinuousRenderStartCount;
         using var before = AnnotationPlacementAccuracyTests.Capture(s.Window, s.Viewer);
         using var watch = new CompositeWatch(s.Viewer, Page);
 
@@ -61,7 +61,7 @@ public class SaveReloadKeepsPagesOnScreenTests
             await s.Vm.SaveFileAsAsync(s.Output);
         s.Window.UpdateLayout();
         using var rightAfterSave = AnnotationPlacementAccuracyTests.Capture(s.Window, s.Viewer);
-        var rerendered = await s.WaitForComposite(c => !ReferenceEquals(c, shown) && s.Viewer.ContinuousRenderStartCount > renders);
+        var rerendered = await s.WaitForComposite(c => !ReferenceEquals(c, shown) && s.Viewer.ContinuousPart.ContinuousRenderStartCount > renders);
         using var after = AnnotationPlacementAccuracyTests.Capture(s.Window, s.Viewer);
 
         watch.DocumentChanges.Should().ContainSingle("the save reopens the document once");
@@ -171,7 +171,7 @@ public class SaveReloadKeepsPagesOnScreenTests
         }
 
         public WriteableBitmap? Composite() =>
-            Viewer.ContinuousItems!.ItemsSource?.Cast<PdfPageSlot>()
+            Viewer.ContinuousPart.ContinuousItems!.ItemsSource?.Cast<PdfPageSlot>()
                 .FirstOrDefault(slot => slot.PageNumber == Page)?.Bitmap;
 
         public async Task<WriteableBitmap> WaitForComposite(
@@ -182,13 +182,13 @@ public class SaveReloadKeepsPagesOnScreenTests
             {
                 Window.UpdateLayout();
                 Dispatcher.UIThread.RunJobs();
-                if (Composite() is { } c && done(c) && Viewer.ContinuousInFlightCount == 0)
+                if (Composite() is { } c && done(c) && Viewer.ContinuousPart.ContinuousInFlightCount == 0)
                 {
                     await AnnotationPlacementAccuracyTests.WaitForIdleLayout(Window);
                     return c;
                 }
                 if (DateTime.UtcNow > deadline)
-                    throw new TimeoutException($"page {Page} never re-rendered: {Viewer.ContinuousDiagnostics()}");
+                    throw new TimeoutException($"page {Page} never re-rendered: {Viewer.ContinuousPart.ContinuousDiagnostics()}");
                 await Task.Delay(25);
             }
         }
@@ -215,7 +215,7 @@ public class SaveReloadKeepsPagesOnScreenTests
         public CompositeWatch(PdfViewerControl viewer, int page)
         {
             _viewer = viewer;
-            _items = viewer.ContinuousItems!;
+            _items = viewer.ContinuousPart.ContinuousItems!;
             _page = page;
             _items.PropertyChanged += OnItemsChanged;
             _viewer.PropertyChanged += OnViewerChanged;

@@ -228,7 +228,7 @@ public class ModeSwitchDisplayTests
             await PumpUntilAsync(window, () => SinglePageImage(viewer)?.Source != null);
             window.UpdateLayout();
 
-            var zoomHost = viewer.ZoomHost!;
+            var zoomHost = viewer.SinglePagePart.ZoomHost!;
             var displayed = zoomHost.Bounds.Width;
             var continuousEquivalent = LetterWidthPt * (96.0 / 72.0) * viewer.ZoomLevel;
             displayed.Should().BeApproximately(continuousEquivalent, 3.0,
@@ -261,7 +261,7 @@ public class ModeSwitchDisplayTests
         var (vm, window, viewer, path) = await OpenTestDocumentAsync();
         try
         {
-            var cont = viewer.ContinuousScrollViewer!;
+            var cont = viewer.ContinuousPart.ContinuousScrollViewer!;
             await PumpUntilAsync(window, () => cont.Extent.Height > cont.Viewport.Height + 100);
 
             // Scroll mid-document, then nudge to land mid-page (see the
@@ -345,7 +345,7 @@ public class ModeSwitchDisplayTests
         try
         {
             viewer.RenderScalingOverride = dpr;
-            var cont = viewer.ContinuousScrollViewer!;
+            var cont = viewer.ContinuousPart.ContinuousScrollViewer!;
             await PumpUntilAsync(window, () => cont.Extent.Height > cont.Viewport.Height + 100);
 
             // Scroll mid-document. A page-crossing scroll can settle snapped
@@ -366,7 +366,7 @@ public class ModeSwitchDisplayTests
             // which no longer forces single-page — #815).
             ModeCommand(vm, "redact").Execute().Subscribe();
             await PumpUntilAsync(window, () => SinglePageImage(viewer)?.Source != null);
-            var single = viewer.PdfScrollViewer!;
+            var single = viewer.SinglePagePart.PdfScrollViewer!;
             // The carried fraction applies via bounded deferred retries once
             // the freshly-rendered page has an extent — wait for it.
             try
@@ -418,8 +418,8 @@ public class ModeSwitchDisplayTests
         var (vm, window, viewer, path) = await OpenTestDocumentAsync();
         try
         {
-            var cont = viewer.ContinuousScrollViewer!;
-            var items = viewer.ContinuousItems!;
+            var cont = viewer.ContinuousPart.ContinuousScrollViewer!;
+            var items = viewer.ContinuousPart.ContinuousItems!;
             await PumpUntilAsync(window, () => cont.Extent.Height > cont.Viewport.Height + 100);
 
             PdfPageSlot Page2() => items.ItemsSource!.Cast<PdfPageSlot>().Single(s => s.PageNumber == 2);
@@ -431,7 +431,7 @@ public class ModeSwitchDisplayTests
             await PumpUntilAsync(window, () => viewer.CurrentPage == 2 && Math.Abs(ContinuousFraction() - intoContinuous) < 0.005);
 
             ModeCommand(vm, "redact").Execute().Subscribe();
-            var single = viewer.PdfScrollViewer!;
+            var single = viewer.SinglePagePart.PdfScrollViewer!;
             await PumpUntilAsync(window, () => SinglePageImage(viewer)?.Source != null && single.Extent.Height > 1);
             // The carried fraction lands in a posted retry after the render; give
             // it time, then let the assertion below say what arrived.
@@ -515,7 +515,7 @@ public class ModeSwitchDisplayTests
     };
 
     private static Image? SinglePageImage(PdfViewerControl viewer) =>
-        viewer.PdfImage;
+        viewer.SinglePagePart.PdfImage;
 
     private static async Task PumpUntilAsync(Window window, Func<bool> condition, int timeoutMs = 20000)
     {

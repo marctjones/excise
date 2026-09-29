@@ -203,8 +203,8 @@ public class RtlMouseSelectionClipboardTests : IDisposable
 
         AssertHighlightsLandOnGlyphs(window, page, expectedCount: leftColumn.Count);
         // No highlight rect should sit in the right column's X range.
-        var img = window.FindControl<PdfViewerControl>("PdfViewerControl")!.PdfImage!;
-        var layer = window.FindControl<PdfViewerControl>("PdfViewerControl")!.TextSelectionLayer!;
+        var img = window.FindControl<PdfViewerControl>("PdfViewerControl")!.SinglePagePart.PdfImage!;
+        var layer = window.FindControl<PdfViewerControl>("PdfViewerControl")!.SinglePagePart.TextSelectionLayer!;
         var rects = layer.Children.OfType<Rectangle>().ToList();
         var rightGlyphImageLeft = ExpectedGlyphImageRect(rightColumn[0], page, img).X;
         foreach (var r in rects)
@@ -241,7 +241,7 @@ public class RtlMouseSelectionClipboardTests : IDisposable
     private async Task DragAsync(MainWindow window, PdfPage page, Letter anchor, Letter focus)
     {
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
-        var overlay = viewer.OverlayCanvas!;
+        var overlay = viewer.SinglePagePart.OverlayCanvas!;
         var start = ToWindowPoint(anchor, page, overlay, window);
         var end = ToWindowPoint(focus, page, overlay, window);
 
@@ -267,8 +267,8 @@ public class RtlMouseSelectionClipboardTests : IDisposable
     private static void AssertHighlightsLandOnGlyphs(MainWindow window, PdfPage page, int expectedCount)
     {
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
-        var img = viewer.PdfImage!;
-        var layer = viewer.TextSelectionLayer!;
+        var img = viewer.SinglePagePart.PdfImage!;
+        var layer = viewer.SinglePagePart.TextSelectionLayer!;
         var rects = layer.Children.OfType<Rectangle>().ToList();
 
         rects.Should().HaveCount(expectedCount,

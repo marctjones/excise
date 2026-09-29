@@ -96,7 +96,7 @@ public class GuiLatencyBenchmarkTests
             // Continuous scroll-offset lookup (cached slot binary search).
             vm.ViewMode = PdfViewMode.Continuous;
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
-            var scroll = viewer?.ContinuousScrollViewer;
+            var scroll = viewer?.ContinuousPart.ContinuousScrollViewer;
             if (scroll != null)
             {
                 double y = 0;

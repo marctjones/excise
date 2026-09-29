@@ -157,7 +157,7 @@ public class ViewerMetricsTests
             using var capture = MetricCapture.Start();
             var withTile = new PdfViewerControl();
             var empty = new PdfViewerControl();
-            withTile.AddToContinuousCache(
+            withTile.ContinuousPart.AddToContinuousCache(
                 new PdfViewerControl.ContinuousTileKey(Page: 1, Dpi: 120, PageWidthDip: 816, PageHeightDip: 1056, Col: 0, Row: 0),
                 new WriteableBitmap(new PixelSize(256, 128), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Premul));
 

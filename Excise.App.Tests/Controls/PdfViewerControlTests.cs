@@ -76,21 +76,21 @@ public class PdfViewerControlTests
     public void PdfViewerControl_ErrorState_ShowsAndHidesTheErrorOverlay()
     {
         var control = new PdfViewerControl();
-        control.ErrorOverlay.IsVisible.Should().BeFalse();
+        control.SinglePagePart.ErrorOverlay.IsVisible.Should().BeFalse();
 
         control.SetValue(PdfViewerControl.ErrorMessageProperty, "Failed to render page: planted");
         control.SetValue(PdfViewerControl.HasErrorProperty, true);
 
-        control.ErrorOverlay.IsVisible.Should().BeTrue();
-        control.ErrorOverlay.IsHitTestVisible.Should().BeTrue();
-        control.ErrorOverlay.Background.Should().NotBeNull("the dim wash is what shows the error");
-        control.ErrorMessageText.Text.Should().Be("Failed to render page: planted");
+        control.SinglePagePart.ErrorOverlay.IsVisible.Should().BeTrue();
+        control.SinglePagePart.ErrorOverlay.IsHitTestVisible.Should().BeTrue();
+        control.SinglePagePart.ErrorOverlay.Background.Should().NotBeNull("the dim wash is what shows the error");
+        control.SinglePagePart.ErrorMessageText.Text.Should().Be("Failed to render page: planted");
 
         control.SetValue(PdfViewerControl.HasErrorProperty, false);
 
-        control.ErrorOverlay.IsVisible.Should().BeFalse();
-        control.ErrorOverlay.IsHitTestVisible.Should().BeFalse();
-        control.ErrorOverlay.Background.Should().BeNull("with no error the overlay must not take clicks");
+        control.SinglePagePart.ErrorOverlay.IsVisible.Should().BeFalse();
+        control.SinglePagePart.ErrorOverlay.IsHitTestVisible.Should().BeFalse();
+        control.SinglePagePart.ErrorOverlay.Background.Should().BeNull("with no error the overlay must not take clicks");
     }
 
     #endregion
@@ -413,7 +413,7 @@ public class PdfViewerControlTests
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            var layer = control.TypewriterLayer;
+            var layer = control.SinglePagePart.TypewriterLayer;
 
             layer.Should().NotBeNull();
             layer!.Children.Should().HaveCount(1);
@@ -506,7 +506,7 @@ public class PdfViewerControlTests
             bool hasChildren = false;
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                layer = control.AnnotationsLayer;
+                layer = control.SinglePagePart.AnnotationsLayer;
                 hasChildren = layer?.Children.Count > 0;
             });
             if (hasChildren) break;
@@ -514,7 +514,7 @@ public class PdfViewerControlTests
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            var annotLayer = control.AnnotationsLayer;
+            var annotLayer = control.SinglePagePart.AnnotationsLayer;
             annotLayer.Should().NotBeNull("AnnotationsLayer canvas must exist");
             annotLayer!.Children.Count.Should().BeGreaterThan(0,
                 "one annotation should produce at least one rectangle in the overlay");
@@ -556,7 +556,7 @@ public class PdfViewerControlTests
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            var annotLayer = control.AnnotationsLayer;
+            var annotLayer = control.SinglePagePart.AnnotationsLayer;
             annotLayer.Should().NotBeNull("AnnotationsLayer canvas must exist");
             annotLayer!.Children.Should().BeEmpty(
                 "a /Text annotation's card is already fully rendered by SkiaRenderer; " +
@@ -592,14 +592,14 @@ public class PdfViewerControlTests
             bool ready = false;
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                ready = control.AnnotationsLayer?.Children.Count == 2;
+                ready = control.SinglePagePart.AnnotationsLayer?.Children.Count == 2;
             });
             if (ready) break;
         }
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            var rects = control.AnnotationsLayer!
+            var rects = control.SinglePagePart.AnnotationsLayer!
                                .Children.OfType<Rectangle>().ToList();
             rects.Should().HaveCount(2,
                 "two inline annotations should produce exactly two overlay rectangles");
@@ -631,7 +631,7 @@ public class PdfViewerControlTests
             await Task.Delay(50);
             bool has = false;
             await Dispatcher.UIThread.InvokeAsync(() =>
-                has = control.AnnotationsLayer?.Children.Count > 0);
+                has = control.SinglePagePart.AnnotationsLayer?.Children.Count > 0);
             if (has) break;
         }
 
@@ -646,7 +646,7 @@ public class PdfViewerControlTests
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            var layer = control.AnnotationsLayer;
+            var layer = control.SinglePagePart.AnnotationsLayer;
             layer?.Children.Count.Should().Be(0,
                 "annotations must be cleared when the document is removed");
         });
@@ -707,8 +707,8 @@ public class PdfViewerControlTests
     public void ViewMode_TogglesScrollViewerVisibility()
     {
         var control = new PdfViewerControl();
-        var single = control.PdfScrollViewer!;
-        var continuous = control.ContinuousScrollViewer!;
+        var single = control.SinglePagePart.PdfScrollViewer!;
+        var continuous = control.ContinuousPart.ContinuousScrollViewer!;
 
         single.IsVisible.Should().BeTrue("single-page is the default view");
         continuous.IsVisible.Should().BeFalse();
@@ -742,11 +742,11 @@ public class PdfViewerControlTests
         DispatcherUnhandledExceptionEventHandler onError = (_, e) => dispatcherErrors.Add(e.Exception);
         Dispatcher.UIThread.UnhandledException += onError;
         window.Show();
-        var image = viewer.PdfImage!;
+        var image = viewer.SinglePagePart.PdfImage!;
         try
         {
             viewer.Document = PdfCoreDocument.Open(bytes);
-            var items = viewer.ContinuousItems!;
+            var items = viewer.ContinuousPart.ContinuousItems!;
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
 
             SinglePageRenderAttempts(viewer).Should().Be(0,
@@ -813,8 +813,8 @@ public class PdfViewerControlTests
         var viewer = new PdfViewerControl();
         var window = new Window { Content = viewer, Width = 900, Height = 700 };
         window.Show();
-        var image = viewer.PdfImage!;
-        var zoomHost = viewer.ZoomHost!;
+        var image = viewer.SinglePagePart.PdfImage!;
+        var zoomHost = viewer.SinglePagePart.ZoomHost!;
         try
         {
             // A 7200 x 7200 pt page exceeds the single-page pixel budget at 120 DPI,
@@ -936,7 +936,7 @@ public class PdfViewerControlTests
         var control = new PdfViewerControl { Document = PdfCoreDocument.Open(bytes) };
         control.ViewMode = PdfViewMode.Continuous;
 
-        var items = control.ContinuousItems!;
+        var items = control.ContinuousPart.ContinuousItems!;
         items.ItemsSource.Should().NotBeNull();
         items.ItemsSource!.Cast<PdfPageSlot>().Select(s => s.PageNumber)
             .Should().Equal(1, 2, 3);
@@ -948,7 +948,7 @@ public class PdfViewerControlTests
         var control = new PdfViewerControl { Document = PdfCoreDocument.Open(TestPdfGenerator.CreateSimplePdf("zoom")) };
         control.ViewMode = PdfViewMode.Continuous;
 
-        var slot = control.ContinuousItems!
+        var slot = control.ContinuousPart.ContinuousItems!
             .ItemsSource!.Cast<PdfPageSlot>().First();
         var widthAt1x = slot.DisplayWidth;
         widthAt1x.Should().BeGreaterThan(0);
@@ -971,7 +971,7 @@ public class PdfViewerControlTests
         var control = new PdfViewerControl { Document = PdfCoreDocument.Open(bytes) };
         control.ViewMode = PdfViewMode.Continuous;
 
-        var slots = control.ContinuousItems!
+        var slots = control.ContinuousPart.ContinuousItems!
             .ItemsSource!.Cast<PdfPageSlot>().ToArray();
 
         slots[0].TopDip.Should().Be(0);

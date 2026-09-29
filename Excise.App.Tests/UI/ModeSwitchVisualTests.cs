@@ -185,7 +185,7 @@ public class ModeSwitchVisualTests
             await CaptureWhenInkedAsync(window, viewer, inkThreshold: InkThreshold); // continuous view settled
 
             // Scroll into the middle of the document.
-            var continuous = viewer.ContinuousScrollViewer!;
+            var continuous = viewer.ContinuousPart.ContinuousScrollViewer!;
             continuous.Offset = new Vector(continuous.Offset.X, continuous.Extent.Height * 0.4);
             await PumpUntilAsync(window, () => vm.CurrentPage > 1);
             var pageBefore = vm.CurrentPage;
@@ -331,7 +331,7 @@ public class ModeSwitchVisualTests
         mode == "select-text"
             ? vm.ViewMode == PdfViewMode.Continuous
             : vm.ViewMode == PdfViewMode.SinglePage
-              && viewer.PdfImage?.Source != null
+              && viewer.SinglePagePart.PdfImage?.Source != null
               && !viewer.IsLoading;
 
     private static async Task PumpUntilAsync(Window window, Func<bool> condition, int timeoutMs = 20000)

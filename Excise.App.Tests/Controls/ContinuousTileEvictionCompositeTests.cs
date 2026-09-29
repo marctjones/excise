@@ -46,22 +46,22 @@ public class ContinuousTileEvictionCompositeTests
             before.ContinuousEntryCount.Should().BeGreaterThan(2,
                 "fixture: the band must span more cells than ContinuousCacheMinEntries (2), " +
                 "or the junk tiles below cannot push every page tile out");
-            int rendersBefore = viewer.ContinuousRenderStartCount;
+            int rendersBefore = viewer.ContinuousPart.ContinuousRenderStartCount;
 
             // Under a zero budget the LRU keeps only its two newest entries, so two
             // unrelated tiles evict — and dispose — every tile of page 1.
-            viewer.ContinuousCacheByteBudgetOverride = 0;
-            viewer.AddToContinuousCache(JunkKey(0), NewJunkTile());
-            viewer.AddToContinuousCache(JunkKey(1), NewJunkTile());
+            viewer.ContinuousPart.ContinuousCacheByteBudgetOverride = 0;
+            viewer.ContinuousPart.AddToContinuousCache(JunkKey(0), NewJunkTile());
+            viewer.ContinuousPart.AddToContinuousCache(JunkKey(1), NewJunkTile());
             viewer.GetRenderDiagnostics().ContinuousEntryCount.Should().Be(2);
-            viewer.ContinuousCacheByteBudgetOverride = null;
+            viewer.ContinuousPart.ContinuousCacheByteBudgetOverride = null;
 
             // Rebuild the slots (a structural refresh keeps the scroll offset and
             // therefore the band), so page 1 must be re-rendered and re-composited.
             viewer.RefreshContinuousLayout();
 
             var rebuilt = await WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
-            viewer.ContinuousRenderStartCount.Should().BeGreaterThan(rendersBefore,
+            viewer.ContinuousPart.ContinuousRenderStartCount.Should().BeGreaterThan(rendersBefore,
                 "every tile of the band was evicted, so the band had to be rendered again");
             ReferenceEquals(rebuilt, original).Should().BeFalse();
 
@@ -100,7 +100,7 @@ public class ContinuousTileEvictionCompositeTests
         window.Show();
         viewer.Document = PdfCoreDocument.Open(bytes);
         viewer.ViewMode = PdfViewMode.Continuous;
-        var items = viewer.ContinuousItems!;
+        var items = viewer.ContinuousPart.ContinuousItems!;
         return (window, viewer, items);
     }
 
@@ -126,7 +126,7 @@ public class ContinuousTileEvictionCompositeTests
             var bitmap = items.ItemsSource?.Cast<PdfPageSlot>()
                 .FirstOrDefault(s => s.PageNumber == pageNumber)?.Bitmap;
             if (bitmap != null && !ReferenceEquals(bitmap, notThis)
-                && viewer.ContinuousInFlightCount == 0 && ReferenceEquals(bitmap, last))
+                && viewer.ContinuousPart.ContinuousInFlightCount == 0 && ReferenceEquals(bitmap, last))
             {
                 if (++stable >= 3) return bitmap;
             }
@@ -139,7 +139,7 @@ public class ContinuousTileEvictionCompositeTests
             if (sw.Elapsed > timeout)
                 throw new TimeoutException(
                     $"Continuous page {pageNumber} did not settle within {timeout.TotalSeconds:0}s. " +
-                    viewer.ContinuousDiagnostics());
+                    viewer.ContinuousPart.ContinuousDiagnostics());
             await Task.Delay(25);
         }
     }

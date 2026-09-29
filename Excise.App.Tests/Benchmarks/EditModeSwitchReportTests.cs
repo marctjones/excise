@@ -118,7 +118,7 @@ public sealed class EditModeSwitchReportTests
 
             var zoomBefore = vm.ZoomLevel;
             var hits0 = viewer.GetRenderDiagnostics().SinglePageHits;
-            var publish0 = viewer.SinglePagePublishCount;
+            var publish0 = viewer.SinglePagePart.SinglePagePublishCount;
             double visibleMs = -1, finalMs = -1;
             var visibleWasFinal = false;
             long loops = 0;
@@ -130,7 +130,7 @@ public sealed class EditModeSwitchReportTests
                 window.UpdateLayout();
                 Dispatcher.UIThread.RunJobs();
                 var visible = PageImageVisible(viewer);
-                var published = viewer.SinglePagePublishCount > publish0;
+                var published = viewer.SinglePagePart.SinglePagePublishCount > publish0;
                 if (visibleMs < 0 && visible)
                 {
                     visibleMs = sw.Elapsed.TotalMilliseconds;
@@ -165,9 +165,9 @@ public sealed class EditModeSwitchReportTests
         try
         {
             await OpenAndSettleAsync(vm, window, viewer, pdf, page);
-            var publish0 = viewer.SinglePagePublishCount;
-            var image = viewer.PdfImage!;
-            var zoomHost = viewer.ZoomHost!;
+            var publish0 = viewer.SinglePagePart.SinglePagePublishCount;
+            var image = viewer.SinglePagePart.PdfImage!;
+            var zoomHost = viewer.SinglePagePart.ZoomHost!;
 
             // "0 ms": the toggle, then the single layout pass the next frame
             // would run, then the click. No dispatcher pump and no render wait.
@@ -179,7 +179,7 @@ public sealed class EditModeSwitchReportTests
             window.MouseUp(aim, MouseButton.Left);
 
             var sw = Stopwatch.StartNew();
-            while (!(PageImageVisible(viewer) && viewer.SinglePagePublishCount > publish0 && !viewer.IsLoading))
+            while (!(PageImageVisible(viewer) && viewer.SinglePagePart.SinglePagePublishCount > publish0 && !viewer.IsLoading))
             {
                 if (sw.Elapsed > PhaseTimeout)
                     throw new TimeoutException($"single-page render never published after the click: {Describe(viewer)}");
@@ -191,11 +191,11 @@ public sealed class EditModeSwitchReportTests
 
             // Where the same window point lands on the final layout: the box a
             // click on the sharp page would have placed.
-            var overlay = viewer.OverlayCanvas!;
+            var overlay = viewer.SinglePagePart.OverlayCanvas!;
             var local = window.TranslatePoint(aim, overlay)
                 ?? throw new InvalidOperationException("overlay not attached to the window");
-            var expected = viewer.ViewerDipsToPdfRect(
-                viewer.NormalizeTypewriterDipRect(new Rect(local.X, local.Y, 0, 0)), page);
+            var expected = viewer.SinglePagePart.ViewerDipsToPdfRect(
+                viewer.SinglePagePart.NormalizeTypewriterDipRect(new Rect(local.X, local.Y, 0, 0)), page);
 
             var ops = vm.TypewriterTextOperations.ToList();
             if (ops.Count == 0)
@@ -224,7 +224,7 @@ public sealed class EditModeSwitchReportTests
         try
         {
             await OpenAndSettleAsync(vm, window, viewer, pdf, page);
-            var publish0 = viewer.SinglePagePublishCount;
+            var publish0 = viewer.SinglePagePart.SinglePagePublishCount;
             vm.ToggleTypewriterModeCommand.Execute().Subscribe();
             var sw = Stopwatch.StartNew();
             while (!PageImageVisible(viewer))
@@ -234,11 +234,11 @@ public sealed class EditModeSwitchReportTests
                 Dispatcher.UIThread.RunJobs();
                 await Task.Yield();
             }
-            var firstWasFinal = viewer.SinglePagePublishCount > publish0;
+            var firstWasFinal = viewer.SinglePagePart.SinglePagePublishCount > publish0;
             var firstGeometry = Geometry(viewer);
             using var first = CaptureZoomHost(viewer);
 
-            while (!(viewer.SinglePagePublishCount > publish0 && !viewer.IsLoading))
+            while (!(viewer.SinglePagePart.SinglePagePublishCount > publish0 && !viewer.IsLoading))
             {
                 if (sw.Elapsed > PhaseTimeout) throw new TimeoutException(Describe(viewer));
                 window.UpdateLayout();
@@ -323,7 +323,7 @@ public sealed class EditModeSwitchReportTests
         if (page > 1)
             vm.CurrentPageIndex = page - 1;
 
-        var items = viewer.ContinuousItems
+        var items = viewer.ContinuousPart.ContinuousItems
             ?? throw new InvalidOperationException("viewer has no ContinuousItems");
         await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, page);
         var quiet = 0;
@@ -333,7 +333,7 @@ public sealed class EditModeSwitchReportTests
                 throw new TimeoutException($"viewer did not go quiet after open: {Describe(viewer)}");
             window.UpdateLayout();
             Dispatcher.UIThread.RunJobs();
-            quiet = viewer.HasPendingSinglePageWork || viewer.ContinuousInFlightCount > 0 ? 0 : quiet + 1;
+            quiet = viewer.HasPendingSinglePageWork || viewer.ContinuousPart.ContinuousInFlightCount > 0 ? 0 : quiet + 1;
             await Task.Delay(25);
         }
 
@@ -345,14 +345,14 @@ public sealed class EditModeSwitchReportTests
             throw new InvalidOperationException($"expected continuous view on page {page}: {Describe(viewer)}");
 
         var diagnostics = viewer.GetRenderDiagnostics();
-        return new OpenCost(wall, cpu, alloc, viewer.SinglePageCacheResidentBytes(),
+        return new OpenCost(wall, cpu, alloc, viewer.SinglePagePart.SinglePageCacheResidentBytes(),
             diagnostics.SinglePageEntryCount, diagnostics.ContinuousResidentBytes, idleWaitMs);
     }
 
     private static bool PageImageVisible(PdfViewerControl viewer)
     {
-        var image = viewer.PdfImage;
-        var zoomHost = viewer.ZoomHost;
+        var image = viewer.SinglePagePart.PdfImage;
+        var zoomHost = viewer.SinglePagePart.ZoomHost;
         return viewer.ViewMode == PdfViewMode.SinglePage
             && image?.Source != null
             && image.IsEffectivelyVisible
@@ -362,8 +362,8 @@ public sealed class EditModeSwitchReportTests
     /// <summary>The window point over (50%, 40%) of the laid-out page.</summary>
     private static Point AimWindowPoint(Window window, PdfViewerControl viewer)
     {
-        var image = viewer.PdfImage!;
-        var overlay = viewer.OverlayCanvas!;
+        var image = viewer.SinglePagePart.PdfImage!;
+        var overlay = viewer.SinglePagePart.OverlayCanvas!;
         var local = new Point(image.Bounds.Width * 0.5, image.Bounds.Height * 0.4);
         return overlay.TranslatePoint(local, window)
             ?? throw new InvalidOperationException("overlay not attached to the window");
@@ -372,8 +372,8 @@ public sealed class EditModeSwitchReportTests
     /// <summary>Layout geometry of the page Image and ZoomHost, for the offset line.</summary>
     private static string Geometry(PdfViewerControl viewer)
     {
-        var image = viewer.PdfImage!;
-        var zoomHost = viewer.ZoomHost!;
+        var image = viewer.SinglePagePart.PdfImage!;
+        var zoomHost = viewer.SinglePagePart.ZoomHost!;
         var origin = zoomHost.TranslatePoint(default, viewer) ?? default;
         var pixels = image.Source is Bitmap b ? $"{b.PixelSize.Width}x{b.PixelSize.Height}" : "none";
         return string.Create(CultureInfo.InvariantCulture,
@@ -392,7 +392,7 @@ public sealed class EditModeSwitchReportTests
         using var whole = SKBitmap.Decode(ms)
             ?? throw new InvalidOperationException("could not decode the viewer capture");
 
-        var zoomHost = viewer.ZoomHost!;
+        var zoomHost = viewer.SinglePagePart.ZoomHost!;
         var topLeft = zoomHost.TranslatePoint(default, viewer) ?? default;
         var host = zoomHost.Bounds;
         var bottomRight = zoomHost.TranslatePoint(new Point(host.Width, host.Height), viewer) ?? default;
@@ -448,11 +448,11 @@ public sealed class EditModeSwitchReportTests
 
     private static string Describe(PdfViewerControl viewer)
     {
-        var image = viewer.PdfImage;
-        var zoomHost = viewer.ZoomHost;
+        var image = viewer.SinglePagePart.PdfImage;
+        var zoomHost = viewer.SinglePagePart.ZoomHost;
         return $"viewMode={viewer.ViewMode} page={viewer.CurrentPage} loading={viewer.IsLoading} " +
-               $"src={image?.Source != null} zoomHost={zoomHost?.Bounds} published={viewer.SinglePagePublishCount} " +
-               $"contInFlight={viewer.ContinuousInFlightCount} error={viewer.ErrorMessage}";
+               $"src={image?.Source != null} zoomHost={zoomHost?.Bounds} published={viewer.SinglePagePart.SinglePagePublishCount} " +
+               $"contInFlight={viewer.ContinuousPart.ContinuousInFlightCount} error={viewer.ErrorMessage}";
     }
 
     private void Emit(string line)

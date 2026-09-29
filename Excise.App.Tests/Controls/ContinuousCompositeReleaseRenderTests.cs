@@ -92,7 +92,7 @@ public class ContinuousCompositeReleaseRenderTests
                 slots.Where(s => s.Bitmap != null).Select(s => s.Bitmap!), ReferenceEqualityComparer.Instance);
             ReportBitmapMemory(viewer, $"after {steps} zoom recomposites");
             _out.WriteLine($"composites observed={seen.Count} live={live.Count} " +
-                           $"residentBytes={viewer.ContinuousCompositeResidentBytes()}");
+                           $"residentBytes={viewer.ContinuousPart.ContinuousCompositeResidentBytes()}");
 
             seen.Count.Should().BeGreaterThan(steps, "fixture: every zoom step must have published a composite");
             foreach (var bitmap in seen)
@@ -102,7 +102,7 @@ public class ContinuousCompositeReleaseRenderTests
             }
 
             long liveBytes = live.Sum(b => PdfViewerControl.ContinuousTileByteSize(b.PixelSize.Width, b.PixelSize.Height));
-            viewer.ContinuousCompositeResidentBytes().Should().Be(liveBytes,
+            viewer.ContinuousPart.ContinuousCompositeResidentBytes().Should().Be(liveBytes,
                 "composite accounting counts exactly the composites the slots hold");
             liveBytes.Should().BeLessThanOrEqualTo(PdfViewerControl.ContinuousCompositeByteBound);
             dispatcherErrors.Should().BeEmpty("no dispatcher job may throw while composites are released");
@@ -128,24 +128,24 @@ public class ContinuousCompositeReleaseRenderTests
         {
             var original = await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(
                 window, viewer, items, pageNumber: 1);
-            viewer.ContinuousCompositeResidentBytes().Should().BeGreaterThan(1,
+            viewer.ContinuousPart.ContinuousCompositeResidentBytes().Should().BeGreaterThan(1,
                 "fixture: the page must hold a composite for a 1-byte bound to be exceeded");
-            viewer.ContinuousCompositeOverBoundCount.Should().Be(0,
+            viewer.ContinuousPart.ContinuousCompositeOverBoundCount.Should().Be(0,
                 "a one-page document at the default zoom is far inside the documented bound");
 
-            viewer.ContinuousCompositeByteBoundOverride = 1;
+            viewer.ContinuousPart.ContinuousCompositeByteBoundOverride = 1;
             viewer.ZoomLevel = 1.1;
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(
                 window, viewer, items, pageNumber: 1, notThis: original);
 
-            _out.WriteLine($"overBound={viewer.ContinuousCompositeOverBoundCount} " +
-                           $"residentBytes={viewer.ContinuousCompositeResidentBytes()}");
-            viewer.ContinuousCompositeOverBoundCount.Should().BeGreaterThan(0,
+            _out.WriteLine($"overBound={viewer.ContinuousPart.ContinuousCompositeOverBoundCount} " +
+                           $"residentBytes={viewer.ContinuousPart.ContinuousCompositeResidentBytes()}");
+            viewer.ContinuousPart.ContinuousCompositeOverBoundCount.Should().BeGreaterThan(0,
                 "a composite published while the slots' composites exceed the bound must raise the warning");
         }
         finally
         {
-            viewer.ContinuousCompositeByteBoundOverride = null;
+            viewer.ContinuousPart.ContinuousCompositeByteBoundOverride = null;
             window.Close();
             viewer.Document?.Dispose();
         }
@@ -190,7 +190,7 @@ public class ContinuousCompositeReleaseRenderTests
             {
                 viewer.CurrentPage = page;
                 await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, page);
-                overlapSamples.Add(viewer.MeasureContinuousBitmapOverlap());
+                overlapSamples.Add(viewer.ContinuousPart.MeasureContinuousBitmapOverlap());
             }
             ReportOverlapSummary(overlapSamples);
             ReportBitmapMemory(viewer, $"paging end (page {pageCount})");
@@ -205,7 +205,7 @@ public class ContinuousCompositeReleaseRenderTests
             var holding = slots.Where(s => s.Bitmap != null).ToList();
             _out.WriteLine($"clearings={clearings} realized=[{string.Join(",", realized.Select(s => s.PageNumber).Order())}] " +
                            $"holding=[{string.Join(",", holding.Select(s => s.PageNumber))}] composites observed={seen.Count} " +
-                           $"residentBytes={viewer.ContinuousCompositeResidentBytes()}");
+                           $"residentBytes={viewer.ContinuousPart.ContinuousCompositeResidentBytes()}");
 
             clearings.Should().BeGreaterThan(0, "fixture: paging 30 pages must recycle containers");
             seen.Count.Should().BeGreaterThanOrEqualTo(pageCount, "fixture: every visited page must have published a composite");
@@ -218,7 +218,7 @@ public class ContinuousCompositeReleaseRenderTests
                 IsDisposed(bitmap).Should().Be(!live.Contains(bitmap),
                     "a composite that no slot shows is released, and a shown one never is");
             }
-            viewer.ContinuousCompositeResidentBytes().Should().Be(
+            viewer.ContinuousPart.ContinuousCompositeResidentBytes().Should().Be(
                 live.Sum(b => PdfViewerControl.ContinuousTileByteSize(b.PixelSize.Width, b.PixelSize.Height)),
                 "composite accounting counts exactly the composites the slots hold");
         }
@@ -238,7 +238,7 @@ public class ContinuousCompositeReleaseRenderTests
     private void ReportBitmapMemory(PdfViewerControl viewer, string label)
     {
         Dispatcher.UIThread.RunJobs();
-        var o = viewer.MeasureContinuousBitmapOverlap();
+        var o = viewer.ContinuousPart.MeasureContinuousBitmapOverlap();
         using var process = System.Diagnostics.Process.GetCurrentProcess();
         _out.WriteLine($"[#1479 report-only] {label}: tiles={o.Tiles} tileMB={Mb(o.TileBytes)} " +
                        $"compositeMB={Mb(o.CompositeBytes)} bakedTiles={o.BakedTiles} bakedTileMB={Mb(o.BakedTileBytes)} " +

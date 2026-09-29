@@ -33,25 +33,25 @@ public class SinglePagePlaceholderTests
         {
             var composite = await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(
                 window, viewer, items, pageNumber: 1);
-            var image = viewer.PdfImage!;
+            var image = viewer.SinglePagePart.PdfImage!;
             var page = viewer.Document!.GetPage(1);
-            var published = viewer.SinglePagePublishCount;
+            var published = viewer.SinglePagePart.SinglePagePublishCount;
 
             viewer.ViewMode = PdfViewMode.SinglePage;
 
             // No pump: the placeholder is in place inside the view-mode change.
-            var placeholder = viewer.SinglePagePlaceholderForTests;
+            var placeholder = viewer.SinglePagePart.SinglePagePlaceholderForTests;
             placeholder.Should().NotBeNull("a matching continuous composite exists for page 1");
             image.Source.Should().BeSameAs(placeholder);
             image.Source.Should().NotBeSameAs(composite, "the slot composite must never be bound directly");
             image.Width.Should().BeApproximately(page.VisualWidth * 120.0 / 72.0, 0.01);
             image.Height.Should().BeApproximately(page.VisualHeight * 120.0 / 72.0, 0.01);
-            viewer.SinglePagePublishCount.Should().Be(published, "the placeholder is not the final render");
+            viewer.SinglePagePart.SinglePagePublishCount.Should().Be(published, "the placeholder is not the final render");
             viewer.IsLoading.Should().BeTrue();
             CountNonWhite(placeholder!).Should().BeGreaterThan(0, "the copy carries the composite's ink");
             var placeholderPixels = placeholder!.PixelSize;
 
-            await PumpUntilAsync(window, () => viewer.SinglePagePublishCount > published && !viewer.IsLoading);
+            await PumpUntilAsync(window, () => viewer.SinglePagePart.SinglePagePublishCount > published && !viewer.IsLoading);
             image.Source.Should().NotBeSameAs(placeholder);
             // Both views now render at device resolution, 96 × zoom × dpr (#1480
             // continuous, #1487 single-page), so at this test's zoom 1 × dpr 1 the
@@ -60,7 +60,7 @@ public class SinglePagePlaceholderTests
             // two paths ceil different products, so elsewhere they may differ by 1 px.
             ((Bitmap)image.Source!).PixelSize.Should().Be(placeholderPixels,
                 "at zoom 1 × dpr 1 the single-page render and the continuous composite share one device resolution");
-            viewer.SinglePagePlaceholderForTests.Should().BeNull();
+            viewer.SinglePagePart.SinglePagePlaceholderForTests.Should().BeNull();
 
             for (var i = 0; i < 5; i++)
             {
@@ -82,17 +82,17 @@ public class SinglePagePlaceholderTests
         try
         {
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
-            var image = viewer.PdfImage!;
+            var image = viewer.SinglePagePart.PdfImage!;
             var page = viewer.Document!.GetPage(1);
-            var sizedOnly = viewer.SinglePagePlaceholderSizedOnlyCount;
+            var sizedOnly = viewer.SinglePagePart.SinglePagePlaceholderSizedOnlyCount;
 
             // The zoom changes and the switch follows before any recomposite, so
             // the slot still holds a composite built for the old zoom.
             viewer.ZoomLevel = 2.0;
             viewer.ViewMode = PdfViewMode.SinglePage;
 
-            viewer.SinglePagePlaceholderSizedOnlyCount.Should().Be(sizedOnly + 1);
-            viewer.SinglePagePlaceholderForTests.Should().BeNull("a composite at another zoom must not be shown");
+            viewer.SinglePagePart.SinglePagePlaceholderSizedOnlyCount.Should().Be(sizedOnly + 1);
+            viewer.SinglePagePart.SinglePagePlaceholderForTests.Should().BeNull("a composite at another zoom must not be shown");
             image.Source.Should().BeNull();
             image.Width.Should().BeApproximately(page.VisualWidth * 120.0 / 72.0, 0.01,
                 "the page is still sized so the overlay has its real geometry");
@@ -116,7 +116,7 @@ public class SinglePagePlaceholderTests
         {
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
             viewer.ViewMode = PdfViewMode.SinglePage;
-            var placeholder = viewer.SinglePagePlaceholderForTests;
+            var placeholder = viewer.SinglePagePart.SinglePagePlaceholderForTests;
             placeholder.Should().NotBeNull();
             RenderFrames(window, viewer);
 
@@ -129,8 +129,8 @@ public class SinglePagePlaceholderTests
             }
 
             errors.Should().BeEmpty();
-            viewer.PdfImage!.Source.Should().BeNull();
-            viewer.SinglePagePlaceholderForTests.Should().BeNull();
+            viewer.SinglePagePart.PdfImage!.Source.Should().BeNull();
+            viewer.SinglePagePart.SinglePagePlaceholderForTests.Should().BeNull();
             IsDisposed(placeholder!).Should().BeTrue();
         }
         finally
@@ -151,7 +151,7 @@ public class SinglePagePlaceholderTests
         var window = new Window { Content = viewer, Width = 900, Height = 700 };
         window.Show();
         viewer.Document = Excise.Core.Document.PdfDocument.Open(bytes);
-        var items = viewer.ContinuousItems!;
+        var items = viewer.ContinuousPart.ContinuousItems!;
         return (window, viewer, items);
     }
 

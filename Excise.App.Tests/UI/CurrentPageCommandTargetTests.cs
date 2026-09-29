@@ -51,10 +51,10 @@ public sealed class CurrentPageCommandTargetTests
             await vm.LoadDocumentAsync(path);
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
             vm.ViewMode = PdfViewMode.Continuous;
-            var scroller = viewer.ContinuousScrollViewer!;
+            var scroller = viewer.ContinuousPart.ContinuousScrollViewer!;
             await PumpUntilAsync(window, () => scroller.Extent.Height > scroller.Viewport.Height + 100);
 
-            var slots = viewer.ContinuousItems!
+            var slots = viewer.ContinuousPart.ContinuousItems!
                 .ItemsSource!.Cast<PdfPageSlot>().ToArray();
             slots.Should().HaveCount(3);
 

@@ -47,7 +47,7 @@ public class ContinuousImageSampleReleaseTests
         var (window, viewer, items) = ShowContinuousViewerWithoutSinglePageRender(ImageDocument(pageCount));
         try
         {
-            viewer.SinglePagePublishCount.Should().Be(0, "fixture: no single-page render competes with the continuous one");
+            viewer.SinglePagePart.SinglePagePublishCount.Should().Be(0, "fixture: no single-page render competes with the continuous one");
             var first = await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
             var reference = PixelCopy.Of(first);
             reference.InkFraction().Should().BeGreaterThan(0.0005, "fixture: page 1 must show its images");
@@ -69,7 +69,7 @@ public class ContinuousImageSampleReleaseTests
 
             var realized = RealizedPages(items);
             _out.WriteLine($"realized=[{string.Join(",", realized.Order())}] " +
-                           $"recorded=[{string.Join(",", viewer.ContinuousImageSamplesForTests.RecordsForTests.Keys.Order())}] " +
+                           $"recorded=[{string.Join(",", viewer.ContinuousPart.ContinuousImageSamplesForTests.RecordsForTests.Keys.Order())}] " +
                            $"decodedOwn=[{string.Join(",", Enumerable.Range(1, pageCount).Where(p => XObject(doc, p, "Own").IsDecoded))}]");
             realized.Should().NotContain(1).And.NotContain(2).And.Contain(pageCount, "fixture");
 
@@ -84,7 +84,7 @@ public class ContinuousImageSampleReleaseTests
             XObject(doc, pageCount, "Own").IsDecoded.Should().BeTrue("the realized page keeps its samples");
             logo.IsDecoded.Should().BeTrue("the realized page still draws the logo that unrealized pages shared");
             pair.IsDecoded.Should().BeFalse("both pages that drew it are unrealized");
-            viewer.ContinuousImageSamplesForTests.RecordsForTests.Keys.Should().OnlyContain(p => realized.Contains(p),
+            viewer.ContinuousPart.ContinuousImageSamplesForTests.RecordsForTests.Keys.Should().OnlyContain(p => realized.Contains(p),
                 "a page that is no longer realized keeps no record");
             XObject(doc, 1, "Logo").Should().BeSameAs(logo,
                 "#1207: an object is evicted only when its samples are released, and page 12 still draws the logo");
@@ -93,10 +93,10 @@ public class ContinuousImageSampleReleaseTests
 
             // Drop every tile so page 1 has to render again, from re-decoded samples.
             viewer.TrimCaches(PdfViewerCacheTrimLevel.Critical);
-            int startsBefore = viewer.ContinuousRenderStartCount;
+            int startsBefore = viewer.ContinuousPart.ContinuousRenderStartCount;
             viewer.CurrentPage = 1;
             var rebuilt = await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
-            viewer.ContinuousRenderStartCount.Should().BeGreaterThan(startsBefore, "fixture: page 1 rendered again");
+            viewer.ContinuousPart.ContinuousRenderStartCount.Should().BeGreaterThan(startsBefore, "fixture: page 1 rendered again");
             // #1207/#1461 (F3 for the viewer): releasing page 1's samples also
             // evicted the object, so its ENCODED bytes went too. The re-render
             // resolved a re-parsed instance; the one this test held stays cold.
@@ -133,7 +133,7 @@ public class ContinuousImageSampleReleaseTests
         var (window, viewer, items) = ShowContinuousViewerWithoutSinglePageRender(ImageDocument(pageCount));
         // Hold EVERY band render of page 1 (a page can render as more than one
         // batch), so none of them reads its images before the page is unrealized.
-        viewer.ContinuousBandRenderStartingForTests = page =>
+        viewer.ContinuousPart.ContinuousBandRenderStartingForTests = page =>
         {
             if (page == 1)
             {
@@ -152,35 +152,35 @@ public class ContinuousImageSampleReleaseTests
             await PumpUntilAsync(window,
                 () => SlotOf(items, pageCount)?.Bitmap != null && !RealizedPages(items).Contains(1),
                 "page 12 composited and page 1 unrealized while page 1's render is held");
-            viewer.ContinuousInFlightCount.Should().BeGreaterThan(0, "fixture: page 1's render is still in flight");
+            viewer.ContinuousPart.ContinuousInFlightCount.Should().BeGreaterThan(0, "fixture: page 1's render is still in flight");
             // The viewer is opened in single-page view before the helper switches
             // it to continuous, and that first single-page render may already have
             // decoded page 1's image. Nothing continuous has read it (every page 1
             // band render is held), so give it back to start from "not decoded".
-            _out.WriteLine($"before hold release: own1.IsDecoded={own1.IsDecoded} singlePagePublishes={viewer.SinglePagePublishCount} " +
-                           $"recorded=[{string.Join(",", viewer.ContinuousImageSamplesForTests.RecordsForTests.Keys.Order())}]");
-            viewer.ContinuousImageSamplesForTests.StreamsOf(1).Should().BeEmpty("fixture: no band render of page 1 has landed");
+            _out.WriteLine($"before hold release: own1.IsDecoded={own1.IsDecoded} singlePagePublishes={viewer.SinglePagePart.SinglePagePublishCount} " +
+                           $"recorded=[{string.Join(",", viewer.ContinuousPart.ContinuousImageSamplesForTests.RecordsForTests.Keys.Order())}]");
+            viewer.ContinuousPart.ContinuousImageSamplesForTests.StreamsOf(1).Should().BeEmpty("fixture: no band render of page 1 has landed");
             own1.TryReleaseDecoded();
             own1.IsDecoded.Should().BeFalse("fixture: the held render has not read page 1's image yet");
 
             long releasedBefore = releases.Streams;
             gate.Set();
-            await PumpUntilAsync(window, () => viewer.ContinuousInFlightCount == 0, "page 1's render landed");
+            await PumpUntilAsync(window, () => viewer.ContinuousPart.ContinuousInFlightCount == 0, "page 1's render landed");
             Dispatcher.UIThread.RunJobs();
 
             _out.WriteLine($"released streams before={releasedBefore} after={releases.Streams} " +
-                           $"recorded=[{string.Join(",", viewer.ContinuousImageSamplesForTests.RecordsForTests.Keys.Order())}]");
+                           $"recorded=[{string.Join(",", viewer.ContinuousPart.ContinuousImageSamplesForTests.RecordsForTests.Keys.Order())}]");
             releases.Streams.Should().BeGreaterThan(releasedBefore,
                 "fixture: the landed render read page 1's images, and they were released");
             own1.IsDecoded.Should().BeFalse(
                 "page 1 was unrealized while its render ran; what that render pinned must be released when it lands");
-            viewer.ContinuousImageSamplesForTests.StreamsOf(1).Should().BeEmpty();
+            viewer.ContinuousPart.ContinuousImageSamplesForTests.StreamsOf(1).Should().BeEmpty();
             XObject(doc, pageCount, "Own").IsDecoded.Should().BeTrue("the realized page keeps its samples");
         }
         finally
         {
             gate.Set();
-            viewer.ContinuousBandRenderStartingForTests = null;
+            viewer.ContinuousPart.ContinuousBandRenderStartingForTests = null;
             window.Close();
             viewer.Document?.Dispose();
         }
@@ -210,7 +210,7 @@ public class ContinuousImageSampleReleaseTests
         var window = new Window { Content = viewer, Width = 900, Height = 700 };
         window.Show();
         viewer.Document = PdfCoreDocument.Open(pdfBytes);
-        var items = viewer.ContinuousItems!;
+        var items = viewer.ContinuousPart.ContinuousItems!;
         return (window, viewer, items);
     }
 

@@ -211,7 +211,7 @@ public class UnencodableTextSurfacedTests
     private static async Task<TextBox> FindFieldTextBoxAsync(MainWindow window)
     {
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
-        var formLayer = viewer.FormFieldsLayer;
+        var formLayer = viewer.SinglePagePart.FormFieldsLayer;
         for (var i = 0; i < 40 && formLayer?.Children.OfType<TextBox>().Any() != true; i++)
         {
             await Task.Delay(50);

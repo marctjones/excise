@@ -73,8 +73,8 @@ public class PdfViewerViewportDiagnosticsTests
             window.UpdateLayout();
             Dispatcher.UIThread.RunJobs();
 
-            var single = viewer.PdfScrollViewer!;
-            var continuous = viewer.ContinuousScrollViewer!;
+            var single = viewer.SinglePagePart.PdfScrollViewer!;
+            var continuous = viewer.ContinuousPart.ContinuousScrollViewer!;
 
             ConfigureScrollableViewport(window, single, contentHeight: 900);
             var singleSnapshot = viewer.GetViewportDiagnostics();
