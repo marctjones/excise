@@ -102,26 +102,12 @@ public partial class PdfViewerControl
         letter = null;
         letters = ContinuousPageLetters.Empty;
 
-        var doc = Document;
-        if (doc == null || ContinuousItems == null || _continuousSlots == null) return false;
-        var zoom = ZoomLevel;
-        if (zoom <= 0) return false;
-
-        var itemsPoint = e.GetPosition(ContinuousItems);
-        if (!TryMapContinuousPointToPage(
-                _continuousSlots, ContinuousItems.Bounds.Width, itemsPoint,
-                out pageNumber, out var pagePointDip))
+        // The same funnel as the link hit-test (#667), on the continuous surface.
+        if (!TryMapPointerToContent(ContinuousSurface, e, out pageNumber, out var pdfX, out var pdfY))
             return false;
-        if (pageNumber < 1 || pageNumber > doc.PageCount) return false;
-
-        var page = doc.GetPage(pageNumber);
-        var contentPoint = PdfCoordinateMapper.ToContentPoints(
-            page,
-            new PdfPageRect(pageNumber, pagePointDip.X, pagePointDip.Y, 0, 0,
-                PdfCoordinateSpace.ContinuousDips, PointsToDip * zoom));
 
         letters = GetContinuousPageLetters(pageNumber);
-        letter = TextSelectionEngine.HitTest(letters.Raw, contentPoint.X, contentPoint.Y);
+        letter = TextSelectionEngine.HitTest(letters.Raw, pdfX, pdfY);
         return true;
     }
 
