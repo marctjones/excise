@@ -700,6 +700,132 @@ public class FormFieldsOverlayTests
         }
     }
 
+    /// <summary>
+    /// #1842 step 1: an edit to a field that does not know its own page is reported on
+    /// the viewer's page AT COMMIT TIME, not the page current when the input was built.
+    /// The shared input factory is static and reports through <c>IFormFieldEditSink</c>;
+    /// an input outlives page changes (a continuous slot's inputs always do, and a
+    /// bare single-page overlay keeps its inputs until the host resets
+    /// <c>FormFields</c>), so a page captured at build time would be stale.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task EditToAFieldWithNoPage_IsReportedOnTheCurrentPageAtCommitTime()
+    {
+        var document = PdfDocument.Open(BuildPagelessFieldPdf());
+        var field = document.GetAcroForm()!.Fields.Single();
+        field.PageNumber.Should().BeNull("fixture: the widget is on no page's /Annots and has no /P");
+
+        var viewer = new PdfViewerControl();
+        var window = new Window { Content = viewer, Width = 900, Height = 700 };
+        window.Show();
+        try
+        {
+            viewer.Document = document;
+            viewer.FormFields = new[] { field };
+            var layer = viewer.FindControl<Canvas>("FormFieldsLayer")!;
+            for (int i = 0; i < 40 && (viewer.IsLoading || layer.Children.Count == 0); i++)
+            {
+                await Task.Delay(25);
+                window.UpdateLayout();
+            }
+            var box = layer.Children.OfType<TextBox>().Single();
+            viewer.CurrentPage.Should().Be(1, "fixture: the input was built on page 1");
+
+            viewer.CurrentPage = 2;
+            for (int i = 0; i < 40 && viewer.IsLoading; i++) { await Task.Delay(25); window.UpdateLayout(); }
+            layer.Children.OfType<TextBox>().Single().Should().BeSameAs(box,
+                "fixture: a page turn does not rebuild the overlay by itself");
+
+            var edits = new System.Collections.Generic.List<int>();
+            viewer.FormFieldEdited += (_, e) => edits.Add(e.PageNumber);
+            box.Text = "typed on page 2";
+            box.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter, Source = box });
+
+            field.Value.Should().Be("typed on page 2", "Enter commits a single-line field");
+            edits.Should().Equal(new[] { 2 },
+                "a field with no page of its own is reported on the page current when the edit is committed");
+        }
+        finally
+        {
+            window.Close();
+            global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            document.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// #1842 step 1 / #1874: the host's <c>FormFieldEditGate</c> is asked before a
+    /// value is stored, through the sink the shared input factory reports to. A
+    /// refusal stores nothing, reports nothing, and puts the stored value back in
+    /// the box. No other viewer test drove the gate through a real input.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task RefusedByTheEditGate_StoresNothing_ReportsNothing_AndRestoresTheBox()
+    {
+        var document = PdfDocument.Open(BuildPagelessFieldPdf());
+        var field = document.GetAcroForm()!.Fields.Single();
+
+        var viewer = new PdfViewerControl();
+        var window = new Window { Content = viewer, Width = 900, Height = 700 };
+        window.Show();
+        try
+        {
+            viewer.Document = document;
+            int asked = 0;
+            viewer.FormFieldEditGate = () => { asked++; return false; };
+            viewer.FormFields = new[] { field };
+            var layer = viewer.FindControl<Canvas>("FormFieldsLayer")!;
+            for (int i = 0; i < 40 && (viewer.IsLoading || layer.Children.Count == 0); i++)
+            {
+                await Task.Delay(25);
+                window.UpdateLayout();
+            }
+            var box = layer.Children.OfType<TextBox>().Single();
+
+            int edits = 0;
+            viewer.FormFieldEdited += (_, _) => edits++;
+            box.Text = "not allowed";
+            box.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter, Source = box });
+
+            asked.Should().Be(1, "the gate is asked before the value is stored");
+            field.Value.Should().Be("start", "a refused edit is not stored");
+            edits.Should().Be(0, "a refused edit is not reported as an edit");
+            box.Text.Should().Be("start", "the box shows the stored value again");
+        }
+        finally
+        {
+            window.Close();
+            global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            document.Dispose();
+        }
+    }
+
+    /// <summary>Two pages; one text field whose widget no page lists and that names no /P.</summary>
+    private static byte[] BuildPagelessFieldPdf()
+    {
+        var objects = new[]
+        {
+            "<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [6 0 R] >> >>",
+            "<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 5 0 R >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 5 0 R >>",
+            "<< /Length 0 >>\nstream\n\nendstream",
+            "<< /Type /Annot /Subtype /Widget /FT /Tx /T (Pageless) /V (start) /Rect [72 700 300 720] >>",
+        };
+        var sb = new StringBuilder("%PDF-1.7\n");
+        var offsets = new long[objects.Length];
+        for (int i = 0; i < objects.Length; i++)
+        {
+            offsets[i] = sb.Length;
+            sb.Append($"{i + 1} 0 obj\n{objects[i]}\nendobj\n");
+        }
+        long xref = sb.Length;
+        sb.Append($"xref\n0 {objects.Length + 1}\n0000000000 65535 f \n");
+        foreach (var offset in offsets) sb.Append($"{offset:D10} 00000 n \n");
+        sb.Append($"trailer << /Size {objects.Length + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n");
+        return Encoding.Latin1.GetBytes(sb.ToString());
+    }
+
     private static T? FindNamedDescendant<T>(Control root, string name) where T : Control
     {
         if (root.Name == name && root is T t) return t;
