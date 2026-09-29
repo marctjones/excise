@@ -229,4 +229,135 @@ public class InPageLinkClickTests
         }
         return root.FindControl<T>(name);
     }
+
+    /// <summary>
+    /// #1842 step 4: the single-page view's link hit-test reads the SAME per-page
+    /// cache the continuous view does. It used to hold one page; now it is keyed by
+    /// page, so a page turn must hit-test the new page's links and a turn back the
+    /// old page's again. Two pages whose links sit at different places: a link
+    /// kept from the wrong page would hover where the current page has none.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 60000)]
+    public async Task SinglePageView_HitTestsTheLinksOfThePageItShows_AcrossPageTurns()
+    {
+        // Page 1: a link near the top to page 3. Page 2: a link lower down to page 1.
+        var linkOnPage1 = new PdfRectangle(72, 690, 300, 720);
+        var linkOnPage2 = new PdfRectangle(72, 490, 300, 520);
+        var document = PdfDocument.Open(BuildTwoLinkPagesPdf(linkOnPage1, linkOnPage2));
+
+        var viewer = new PdfViewerControl { RenderAheadEnabled = false };
+        var window = new Window { Content = viewer, Width = 900, Height = 900 };
+        window.Show();
+        viewer.Document = document;
+        try
+        {
+            string? hovered = null;
+            viewer.LinkHovered += (_, e) => hovered = e.DisplayText;
+
+            async Task ShowPageAsync(int page)
+            {
+                viewer.CurrentPage = page;
+                var image = viewer.FindControl<Image>("PdfImage")!;
+                for (int i = 0; i < 200 && (viewer.IsLoading || image.Source == null); i++)
+                {
+                    await Task.Delay(25);
+                    window.UpdateLayout();
+                }
+                window.UpdateLayout();
+            }
+
+            async Task<string?> HoverAsync(PdfRectangle rect)
+            {
+                var page = document.GetPage(viewer.CurrentPage);
+                double scale = PdfViewerControl.EffectiveSinglePageRenderDpi(page) / 72.0;
+                double top = page.CropBox.Normalize().Top;
+                var local = new Point(((rect.Left + rect.Right) / 2) * scale, (top - (rect.Bottom + rect.Top) / 2) * scale);
+                var overlay = viewer.FindControl<Canvas>("OverlayCanvas")!;
+                var point = overlay.TranslatePoint(local, window)!.Value;
+                // Leave first, so each probe reports its own enter edge.
+                await Dispatcher.UIThread.InvokeAsync(() => window.MouseMove(new Point(2, 2)));
+                await Dispatcher.UIThread.InvokeAsync(() => window.MouseMove(point));
+                for (int i = 0; i < 4; i++) { await Task.Delay(25); window.UpdateLayout(); }
+                return hovered;
+            }
+
+            await ShowPageAsync(1);
+            (await HoverAsync(linkOnPage1)).Should().Be("Go to page 3", "fixture: page 1's link hovers");
+            (await HoverAsync(linkOnPage2)).Should().BeNull("page 1 has no link where page 2's is");
+
+            await ShowPageAsync(2);
+            (await HoverAsync(linkOnPage1)).Should().BeNull("after the turn, page 1's link is not on this page");
+            (await HoverAsync(linkOnPage2)).Should().Be("Go to page 1", "page 2's own link hovers");
+
+            await ShowPageAsync(1);
+            (await HoverAsync(linkOnPage1)).Should().Be("Go to page 3", "turning back finds page 1's link again");
+            (await HoverAsync(linkOnPage2)).Should().BeNull();
+
+            // Continuous view, pages 1 and 2 both on screen: no page change sits
+            // between the two hovers, so nothing clears the cache in between and a
+            // cache that confused one page with another would answer with the
+            // first page's links.
+            const double zoom = 0.4;
+            viewer.ViewMode = PdfViewMode.Continuous;
+            viewer.ZoomLevel = zoom;
+            var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            await Controls.ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+            await Controls.ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 2);
+
+            async Task<string?> HoverContinuousAsync(int pageNumber, PdfRectangle rect)
+            {
+                var page = document.GetPage(pageNumber);
+                double scale = PdfViewerControl.PointsToDip * zoom;
+                double top = page.CropBox.Normalize().Top;
+                var border = (items.ContainerFromIndex(pageNumber - 1) as global::Avalonia.Controls.Presenters.ContentPresenter)?.Child as Border;
+                border.Should().NotBeNull($"fixture: page {pageNumber}'s slot is realized");
+                var local = new Point(((rect.Left + rect.Right) / 2) * scale, (top - (rect.Bottom + rect.Top) / 2) * scale);
+                var point = border!.TranslatePoint(local, window)!.Value;
+                await Dispatcher.UIThread.InvokeAsync(() => window.MouseMove(new Point(2, 2)));
+                await Dispatcher.UIThread.InvokeAsync(() => window.MouseMove(point));
+                for (int i = 0; i < 4; i++) { await Task.Delay(25); window.UpdateLayout(); }
+                return hovered;
+            }
+
+            (await HoverContinuousAsync(1, linkOnPage1)).Should().Be("Go to page 3", "page 1's link, in continuous view");
+            (await HoverContinuousAsync(2, linkOnPage2)).Should().Be("Go to page 1",
+                "page 2's link, straight after hovering page 1 with no page change between");
+            (await HoverContinuousAsync(2, linkOnPage1)).Should().BeNull("page 2 has no link where page 1's is");
+        }
+        finally
+        {
+            window.Close();
+            Dispatcher.UIThread.RunJobs();
+            document.Dispose();
+        }
+    }
+
+    /// <summary>Three pages; page 1 links to page 3 at one rect, page 2 to page 1 at another.</summary>
+    private static byte[] BuildTwoLinkPagesPdf(PdfRectangle onPage1, PdfRectangle onPage2)
+    {
+        static string R(PdfRectangle r) => $"[{r.Left} {r.Bottom} {r.Right} {r.Top}]";
+        var objects = new[]
+        {
+            "<< /Type /Catalog /Pages 2 0 R >>",
+            "<< /Type /Pages /Kids [3 0 R 4 0 R 5 0 R] /Count 3 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 6 0 R /Annots [7 0 R] >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 6 0 R /Annots [8 0 R] >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 6 0 R >>",
+            "<< /Length 0 >>\nstream\n\nendstream",
+            $"<< /Type /Annot /Subtype /Link /Rect {R(onPage1)} /Border [0 0 0] /Dest [5 0 R /XYZ 0 792 0] >>",
+            $"<< /Type /Annot /Subtype /Link /Rect {R(onPage2)} /Border [0 0 0] /Dest [3 0 R /XYZ 0 792 0] >>",
+        };
+        var sb = new System.Text.StringBuilder("%PDF-1.7\n");
+        var offsets = new long[objects.Length];
+        for (int i = 0; i < objects.Length; i++)
+        {
+            offsets[i] = sb.Length;
+            sb.Append($"{i + 1} 0 obj\n{objects[i]}\nendobj\n");
+        }
+        long xref = sb.Length;
+        sb.Append($"xref\n0 {objects.Length + 1}\n0000000000 65535 f \n");
+        foreach (var offset in offsets) sb.Append($"{offset:D10} 00000 n \n");
+        sb.Append($"trailer << /Size {objects.Length + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n");
+        return System.Text.Encoding.Latin1.GetBytes(sb.ToString());
+    }
 }
