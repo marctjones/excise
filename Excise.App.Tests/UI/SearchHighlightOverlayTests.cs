@@ -77,7 +77,7 @@ public class SearchHighlightOverlayTests : IDisposable
         // A timeout is not swallowed: the assertions below fail on whatever is missing.
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
         viewer.Should().NotBeNull("MainWindow exposes PdfViewerControl by name");
-        var searchLayer = FindNamedDescendant<Canvas>(viewer!, "SearchHighlightsLayer");
+        var searchLayer = viewer!.SearchHighlightsLayer;
         searchLayer.Should().NotBeNull("SearchHighlightsLayer Canvas must exist in PdfViewerControl");
 
         var deadline = DateTime.UtcNow.AddSeconds(20);
@@ -156,7 +156,7 @@ public class SearchHighlightOverlayTests : IDisposable
         {
             var items = viewer.ContinuousItems!;
             await Controls.ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
-            var searchLayer = viewer.FindControl<Canvas>("SearchHighlightsLayer")!;
+            var searchLayer = viewer.SearchHighlightsLayer!;
             var continuousScroller = viewer.ContinuousScrollViewer!;
             int continuousRectangles = continuousScroller.GetVisualDescendants().OfType<Rectangle>().Count();
             int layerRectangles = searchLayer.Children.OfType<Rectangle>().Count();

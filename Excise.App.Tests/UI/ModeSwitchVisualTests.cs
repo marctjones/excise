@@ -331,7 +331,7 @@ public class ModeSwitchVisualTests
         mode == "select-text"
             ? vm.ViewMode == PdfViewMode.Continuous
             : vm.ViewMode == PdfViewMode.SinglePage
-              && viewer.FindControl<Image>("PdfImage")?.Source != null
+              && viewer.PdfImage?.Source != null
               && !viewer.IsLoading;
 
     private static async Task PumpUntilAsync(Window window, Func<bool> condition, int timeoutMs = 20000)

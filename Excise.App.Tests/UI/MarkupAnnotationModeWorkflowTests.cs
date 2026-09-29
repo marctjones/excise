@@ -82,7 +82,7 @@ public class MarkupAnnotationModeWorkflowTests
 
         var first = letters.First();
         var last = letters.Last();
-        var overlay = viewer!.FindControl<Canvas>("OverlayCanvas")!;
+        var overlay = viewer!.OverlayCanvas!;
 
         Point WindowPointFor(Letter l)
         {

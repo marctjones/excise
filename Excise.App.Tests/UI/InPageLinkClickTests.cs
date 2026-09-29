@@ -146,7 +146,7 @@ public class InPageLinkClickTests
         // view mode hides that ScrollViewer (#653), which is what silently
         // degenerates TranslatePoint to null (?? default = window (0,0)),
         // not InteractionLayer's own size.
-        var interaction = FindNamedDescendant<Canvas>(viewer!, "InteractionLayer");
+        var interaction = viewer!.InteractionLayer;
         interaction.Should().NotBeNull("InteractionLayer must exist");
         _out.WriteLine($"InteractionLayer Bounds={interaction!.Bounds}");
 
@@ -257,7 +257,7 @@ public class InPageLinkClickTests
             async Task ShowPageAsync(int page)
             {
                 viewer.CurrentPage = page;
-                var image = viewer.FindControl<Image>("PdfImage")!;
+                var image = viewer.PdfImage!;
                 for (int i = 0; i < 200 && (viewer.IsLoading || image.Source == null); i++)
                 {
                     await Task.Delay(25);
@@ -272,7 +272,7 @@ public class InPageLinkClickTests
                 double scale = PdfViewerControl.EffectiveSinglePageRenderDpi(page) / 72.0;
                 double top = page.CropBox.Normalize().Top;
                 var local = new Point(((rect.Left + rect.Right) / 2) * scale, (top - (rect.Bottom + rect.Top) / 2) * scale);
-                var overlay = viewer.FindControl<Canvas>("OverlayCanvas")!;
+                var overlay = viewer.OverlayCanvas!;
                 var point = overlay.TranslatePoint(local, window)!.Value;
                 // Leave first, so each probe reports its own enter edge.
                 await Dispatcher.UIThread.InvokeAsync(() => window.MouseMove(new Point(2, 2)));

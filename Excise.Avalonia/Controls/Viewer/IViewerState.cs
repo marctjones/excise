@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Excise.Core.Document;
+using Excise.Core.Editing;
 using Excise.Core.Text;
 
 namespace Excise.Avalonia.Controls;
@@ -42,4 +43,16 @@ internal interface IViewerState
     bool ShowFieldAndLinkAnnotations { get; }
     bool RevealHiddenAnnotations { get; }
     bool HighlightFormFields { get; }
+
+    // The host's per-page collections the single-page overlays draw (#1842 step 7).
+    IEnumerable<PdfAnnotation>? Annotations { get; }
+    IReadOnlyList<PdfField>? FormFields { get; }
+    IEnumerable<HiddenTextHighlight>? HiddenTextHighlights { get; }
+    IEnumerable<PdfTypewriterTextOperation>? TypewriterTextOperations { get; }
+
+    // The single-page render state the viewer publishes as styled properties. The
+    // single-page view is the only writer (through the viewer's own setters).
+    bool IsLoading { get; }
+    bool HasError { get; }
+    string? ErrorMessage { get; }
 }

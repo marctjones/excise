@@ -104,7 +104,7 @@ public class PerformancePreferencesLiveApplyTests
         var window = new Window { Content = viewer, Width = 900, Height = 700 };
         window.Show();
         viewer.Document = PdfCoreDocument.Open(MultiPagePdfBytes(8));
-        var image = viewer.FindControl<Image>("PdfImage")!;
+        var image = viewer.PdfImage!;
         try
         {
             var published = new List<WriteableBitmap>();

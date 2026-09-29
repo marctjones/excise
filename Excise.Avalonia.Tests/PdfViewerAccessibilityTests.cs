@@ -302,6 +302,65 @@ public class PdfViewerAccessibilityTests
         });
     }
 
+    /// <summary>
+    /// An untagged document swapped for another untagged one: the text comes from the
+    /// single-page view's letter cache, not a structure tree, so the swap must drop that
+    /// cache even though the page number (1) is unchanged (#1842 step 7).
+    /// </summary>
+    [Fact]
+    public async Task PageTextPeer_NameFollowsSwapToAnotherUntaggedDocument()
+    {
+        await OnUiThread(() =>
+        {
+            var (viewer, peer) = CreateViewerWithPeer(TwoPageTextDoc());
+            var textChild = PageTextChild(peer);
+            Normalized(textChild.GetName()).Should().Contain("Alpha");
+
+            viewer.Document = PdfDocument.Open(PdfDocumentBuilder.Create()
+                .Paragraph("Delta replacement text")
+                .SaveToBytes());
+
+            Normalized(textChild.GetName())
+                .Should().Contain("Delta replacement", "a document swap must swap the accessible text")
+                .And.NotContain("Alpha");
+            return true;
+        });
+    }
+
+    /// <summary>
+    /// Changing the reading-order strategy re-sorts the displayed page's letters (#774): the
+    /// single-page view's reading order is dropped while its raw letters are kept (#1842 step 7).
+    /// The lower line is drawn first, so content order and geometric order disagree.
+    /// </summary>
+    [Fact]
+    public async Task PageTextPeer_FollowsReadingOrderStrategyChange()
+    {
+        await OnUiThread(() =>
+        {
+            var doc = PdfDocument.Open(PdfDocumentBuilder.Create()
+                .Custom((g, ctx) =>
+                {
+                    g.DrawString("Zulu lower line", PdfFont.Helvetica(12), PdfBrush.Black, ctx.Left, ctx.Top - 200);
+                    g.DrawString("Yankee upper line", PdfFont.Helvetica(12), PdfBrush.Black, ctx.Left, ctx.Top - 20);
+                })
+                .SaveToBytes());
+            var (viewer, peer) = CreateViewerWithPeer(doc);
+            var textChild = PageTextChild(peer);
+
+            var geometric = Normalized(textChild.GetName());
+            geometric.IndexOf("Yankee", StringComparison.Ordinal).Should()
+                .BeLessThan(geometric.IndexOf("Zulu", StringComparison.Ordinal), "the default order is geometric");
+
+            viewer.ReadingOrderStrategy = Excise.Core.Text.ReadingOrderStrategy.RawStream;
+
+            var content = Normalized(textChild.GetName());
+            content.IndexOf("Zulu", StringComparison.Ordinal).Should()
+                .BeLessThan(content.IndexOf("Yankee", StringComparison.Ordinal),
+                    "a strategy change must re-sort the page, not reuse the old order");
+            return true;
+        });
+    }
+
     [Fact]
     public async Task RenderVersionBump_RaisesNameChangeOnTextPeer()
     {

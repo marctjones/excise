@@ -78,7 +78,7 @@ public class TextSelectionAlignmentTests
             vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; this battery covers the single-page highlight
             vm.CurrentPageIndex = 19; // page 20: paragraphs of body text
             await PumpUntilAsync(window, () =>
-                viewer.FindControl<Image>("PdfImage")?.Source != null && !viewer.IsLoading);
+                viewer.PdfImage?.Source != null && !viewer.IsLoading);
 
             // Set the zoom under test and wait for the raster to settle to it.
             vm.SetManualZoom(zoom);
@@ -100,13 +100,13 @@ public class TextSelectionAlignmentTests
             window.MouseMove(new Point(endX, y));
             window.MouseUp(new Point(endX, y), MouseButton.Left);
             await PumpUntilAsync(window, () =>
-                (viewer.FindControl<Canvas>("TextSelectionLayer")?.Children.Count ?? 0) > 0,
+                (viewer.TextSelectionLayer?.Children.Count ?? 0) > 0,
                 timeoutMs: 10000,
                 failure: $"dragging across the text at zoom={zoom} dpr={dpr} must produce selection highlights");
 
             // The highlight layer's rects, mapped to viewer coordinates, must
             // OVERLAP the line we dragged across — 'way off' fails here.
-            var layer = viewer.FindControl<Canvas>("TextSelectionLayer")!;
+            var layer = viewer.TextSelectionLayer!;
             var rects = layer.Children.OfType<Rectangle>()
                 .Select(r =>
                 {
@@ -160,7 +160,7 @@ public class TextSelectionAlignmentTests
             vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; this battery covers the single-page highlight
             vm.CurrentPageIndex = 19;
             await PumpUntilAsync(window, () =>
-                viewer.FindControl<Image>("PdfImage")?.Source != null && !viewer.IsLoading);
+                viewer.PdfImage?.Source != null && !viewer.IsLoading);
 
             // Churn the zoom the way the live session did, then press Fit Width.
             vm.SetManualZoom(0.525);
@@ -176,8 +176,8 @@ public class TextSelectionAlignmentTests
             // ARE the displayed size (its scale is zoom × 96/renderDpi since
             // the #693 display-scale unification — img.Width × zoom would
             // overestimate by 25%).
-            var scroller = viewer.FindControl<ScrollViewer>("PdfScrollViewer")!;
-            var displayedWidth = viewer.FindControl<global::Avalonia.Controls.LayoutTransformControl>("ZoomHost")!.Bounds.Width;
+            var scroller = viewer.PdfScrollViewer!;
+            var displayedWidth = viewer.ZoomHost!.Bounds.Width;
             var viewport = scroller.Viewport.Width;
             viewport.Should().BeGreaterThan(100, "single-page scroller must have a real viewport");
             displayedWidth.Should().BeLessThanOrEqualTo(viewport + 1,
@@ -217,8 +217,8 @@ public class TextSelectionAlignmentTests
         while (Environment.TickCount64 < deadline)
         {
             window.UpdateLayout();
-            var img = viewer.FindControl<Image>("PdfImage");
-            var host = viewer.FindControl<global::Avalonia.Controls.LayoutTransformControl>("ZoomHost");
+            var img = viewer.PdfImage;
+            var host = viewer.ZoomHost;
             if (img?.Source is Bitmap src && !double.IsNaN(img.Width) && host != null)
             {
                 sawBitmap = true;
@@ -324,7 +324,7 @@ public class TextSelectionAlignmentTests
             vm.IsTextSelectionMode = true; // #831: selection is default-on; set explicitly (toggling would turn it OFF)
             vm.ViewMode = PdfViewMode.SinglePage; // #815: selection no longer forces single-page; this battery covers the single-page highlight
             await PumpUntilAsync(window, () =>
-                viewer.FindControl<Image>("PdfImage")?.Source != null && !viewer.IsLoading);
+                viewer.PdfImage?.Source != null && !viewer.IsLoading);
             await SettleAsync(window, viewer, viewer.ZoomLevel, dpr);
 
             // drag across the page middle to build a selection
@@ -338,7 +338,7 @@ public class TextSelectionAlignmentTests
                 window.MouseUp(new Point(origin.X + ink.Right - 4, y), MouseButton.Left);
             }
             await PumpUntilAsync(window, () =>
-                (viewer.FindControl<Canvas>("TextSelectionLayer")?.Children.Count ?? 0) > 0);
+                (viewer.TextSelectionLayer?.Children.Count ?? 0) > 0);
 
             // FIT — the live-repro trigger
             vm.ZoomFitWidthCommand.Execute().Subscribe();
@@ -347,14 +347,14 @@ public class TextSelectionAlignmentTests
             await Task.Delay(200); window.UpdateLayout();
 
             // 1) only the single-page scroller may be visible in an editing mode
-            var single = viewer.FindControl<ScrollViewer>("PdfScrollViewer")!;
+            var single = viewer.PdfScrollViewer!;
             var continuous = viewer.ContinuousScrollViewer!;
             single.IsVisible.Should().BeTrue("select-text mode displays the single-page scroller");
             continuous.IsVisible.Should().BeFalse(
                 "the continuous scroller must be hidden in an editing mode — a visible one paints stale tiles over/under the page");
 
             // 2) the highlight rects must sit on ink (text), not blank space
-            var layer = viewer.FindControl<Canvas>("TextSelectionLayer")!;
+            var layer = viewer.TextSelectionLayer!;
             layer.Children.Count.Should().BeGreaterThan(0, "the selection must survive the fit");
             using var after = Capture(viewer);
             var rect0 = layer.Children.OfType<global::Avalonia.Controls.Shapes.Rectangle>().First();
@@ -376,11 +376,11 @@ public class TextSelectionAlignmentTests
             // near the top of the displayed image (crop pushes it ~halfway
             // down) and must leave the page's right margin visible (crop fills
             // ink to the image's right edge).
-            var img = viewer.FindControl<Image>("PdfImage")!;
+            var img = viewer.PdfImage!;
             var imgTopLeft = img.TranslatePoint(new Point(0, 0), viewer)!.Value;
             // ZoomHost bounds = true displayed size (scale is zoom × 96/renderDpi
             // since the #693 display-scale unification).
-            var zoomHostBounds = viewer.FindControl<global::Avalonia.Controls.LayoutTransformControl>("ZoomHost")!.Bounds;
+            var zoomHostBounds = viewer.ZoomHost!.Bounds;
             var displayedW = zoomHostBounds.Width;
             var displayedH = zoomHostBounds.Height;
             var pageInk = InkBounds(after);

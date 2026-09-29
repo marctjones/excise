@@ -84,7 +84,7 @@ public class RedactionMouseWorkflowTests
             await WaitForIdleLayout(window);
 
             var page = vm.PdfCoreDocument!.GetPage(1);
-            var overlay = FindNamedDescendant<Canvas>(viewer!, "OverlayCanvas")!;
+            var overlay = viewer!.OverlayCanvas!;
             var (start, end) = ToWindowDragPoints(scenario.DragArea, page, overlay, window);
 
             await global::Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>

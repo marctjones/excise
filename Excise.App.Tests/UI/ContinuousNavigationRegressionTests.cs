@@ -191,7 +191,7 @@ public class ContinuousNavigationRegressionTests
         viewer.Document = Excise.Core.Document.PdfDocument.Open(bytes);
         try
         {
-            var single = viewer.FindControl<ScrollViewer>("PdfScrollViewer")!;
+            var single = viewer.PdfScrollViewer!;
             var cont = viewer.ContinuousScrollViewer!;
             var items = viewer.ContinuousItems!;
             await PumpUntilAsync(window, () => viewer.SinglePageLookAheadInFlight && !viewer.IsLoading

@@ -173,8 +173,6 @@ public partial class PdfViewerControl
 
     // Guards the scroll -> CurrentPage -> scroll feedback loop.
     private bool _syncingPageFromScroll;
-    private double _pendingSingleFraction = -1;
-    private IDisposable? _pendingSingleFractionSub;
     private void OnViewModeChanged()
     {
         bool continuous = ViewMode == PdfViewMode.Continuous;
@@ -185,100 +183,31 @@ public partial class PdfViewerControl
         // Capture the reader's intra-page position BEFORE flipping
         // visibility — a hidden ScrollViewer's offset is not trustworthy.
         // Applied to the destination view once it has laid out (#693).
-        double fraction = continuous ? SingleIntraPageFraction() : ContinuousPart.ContinuousIntraPageFraction();
+        IReadingPositionSource outgoing = continuous ? SinglePagePart : ContinuousPart;
+        double fraction = outgoing.CaptureIntraPageFraction();
 
         if (ContinuousScrollViewer != null) ContinuousScrollViewer.IsVisible = continuous;
         if (PdfScrollViewer != null) PdfScrollViewer.IsVisible = !continuous;
 
         // #1564: render-ahead belongs to the view that scheduled it.
-        if (continuous) CancelSinglePageLookAhead();
+        if (continuous) SinglePagePart.CancelSinglePageLookAhead();
         else ContinuousPart.CancelContinuousLookAhead();
 
         if (continuous)
         {
-            ContinuousPart.RebuildContinuous();
+            // ShowAt rebuilds the layout synchronously and POSTS the scroll-to, so
+            // reporting the viewport after it still happens after the rebuild and
+            // before the scroll, as it always did.
+            ContinuousPart.ShowAt(fraction);
             ReportActiveViewport();
-
-            // Defer the scroll-to until the items panel has measured the slots —
-            // but read CurrentPage when the callback RUNS, not when it is posted.
-            //
-            // Capturing it here (`int target = CurrentPage;`) captured a STALE page:
-            // a navigation issued between the post and the callback would be
-            // overwritten by this deferred scroll dragging the user back to
-            // wherever they were when the view mode flipped. Switching to
-            // continuous and immediately jumping to a page did exactly that.
-            Dispatcher.UIThread.Post(() => ContinuousPart.ScrollToPageContinuous(CurrentPage, fraction), DispatcherPriority.Background);
         }
         else
         {
             ReportActiveViewport();
-            // Back to single-page: make sure the current page is rendered.
-            // The carried fraction is applied from the render-completion
-            // paths, NOT posted here: a post now would burn all its retries
-            // through the dispatcher before the async render gives the
-            // ScrollViewer a real extent, then give up.
-            _pendingSingleFraction = fraction;
-            _ = RenderCurrentPageAsync();
+            SinglePagePart.ShowAt(fraction);
         }
 
         UpdateViewerAutomationProperties();
-    }
-    /// <summary>Fraction of the page above the viewport top in single-page view.</summary>
-    private double SingleIntraPageFraction()
-    {
-        if (PdfScrollViewer == null) return 0;
-        var extent = PdfScrollViewer.Extent.Height;
-        if (extent <= 1) return 0;
-        return Math.Clamp(PdfScrollViewer.Offset.Y / extent, 0, 0.99);
-    }
-
-    /// <summary>
-    /// The single-page ScrollViewer clamps Offset to a zero extent until the
-    /// freshly-rendered page has laid out — and layout may be arbitrarily far
-    /// away (headless hosts only lay out on explicit pumps), so
-    /// dispatcher-post retries drain uselessly before it. Instead, wait on
-    /// the Extent property itself and apply the carried fraction the moment
-    /// the content gets a real size.
-    /// </summary>
-    private bool _applyingSingleFraction;
-
-    private void ApplyPendingSingleFraction()
-    {
-        // Same re-entrancy guard as ApplyPendingZoomAnchor: GetObservable
-        // emits the current value synchronously on subscribe, which would
-        // re-enter here before the subscription field is assigned.
-        if (_applyingSingleFraction) return;
-        _applyingSingleFraction = true;
-        try
-        {
-            ApplyPendingSingleFractionCore();
-        }
-        finally
-        {
-            _applyingSingleFraction = false;
-        }
-    }
-
-    private void ApplyPendingSingleFractionCore()
-    {
-        if (_pendingSingleFraction < 0 || PdfScrollViewer == null)
-        {
-            _pendingSingleFractionSub?.Dispose();
-            _pendingSingleFractionSub = null;
-            return;
-        }
-        var extent = PdfScrollViewer.Extent.Height;
-        if (extent <= 1)
-        {
-            _pendingSingleFractionSub ??= PdfScrollViewer
-                .GetObservable(ScrollViewer.ExtentProperty)
-                .Subscribe(new AnonymousObserver<Size>(_ => ApplyPendingSingleFraction()));
-            return;
-        }
-        _pendingSingleFractionSub?.Dispose();
-        _pendingSingleFractionSub = null;
-        PdfScrollViewer.Offset = new Vector(PdfScrollViewer.Offset.X, _pendingSingleFraction * extent);
-        _pendingSingleFraction = -1;
     }
     /// <summary>
     /// The pages whose image samples stay pinned (#1492): <paramref name="pages"/>

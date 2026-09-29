@@ -101,7 +101,7 @@ public class ShapeAnnotationModeWorkflowTests
     private static (Point Start, Point End) DragPoints(
         Window window, PdfViewerControl viewer, MainWindowViewModel vm)
     {
-        var overlay = viewer.FindControl<Canvas>("OverlayCanvas")!;
+        var overlay = viewer.OverlayCanvas!;
         var page = vm.PdfCoreDocument!.GetPage(1);
         var scale = 120.0 / 72.0;
         var startLocal = new Point(page.VisualWidth * scale * 0.25, page.VisualHeight * scale * 0.25);

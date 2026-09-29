@@ -50,7 +50,7 @@ public class SinglePageLayoutGeometryTests
         var (window, viewer) = await OpenSinglePageAsync(widthPt, heightPt, zoom, dpr);
         try
         {
-            var image = viewer.FindControl<Image>("PdfImage")!;
+            var image = viewer.PdfImage!;
             var bitmap = (Bitmap)image.Source!;
             var logicalWidth = widthPt * 120.0 / 72.0;
             var logicalHeight = heightPt * 120.0 / 72.0;
@@ -98,7 +98,7 @@ public class SinglePageLayoutGeometryTests
         var (window, viewer) = await OpenSinglePageAsync(widthPt, heightPt, zoom, dpr);
         try
         {
-            var image = viewer.FindControl<Image>("PdfImage")!;
+            var image = viewer.PdfImage!;
             var bitmap = (Bitmap)image.Source!;
             var deviceDpi = (int)Math.Round(96 * Math.Max(1.0, zoom * dpr));
 

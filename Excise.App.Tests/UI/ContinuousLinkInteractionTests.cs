@@ -376,7 +376,7 @@ public class ContinuousLinkInteractionTests
             await SinglePageViewerWaits.WaitForSinglePageLaidOutAsync(window, viewer);
             viewer.ZoomLevel.Should().Be(zoom, "fixture: the switch keeps the zoom");
             double singleScale = PdfViewerControl.EffectiveSinglePageRenderDpi(page) / 72.0;
-            var overlay = viewer.FindControl<Canvas>("OverlayCanvas")!;
+            var overlay = viewer.OverlayCanvas!;
             var singleWindow = overlay.TranslatePoint(
                 new Point((pdfX - box.Left) * singleScale, (box.Top - pdfY) * singleScale), window);
             singleWindow.Should().NotBeNull();

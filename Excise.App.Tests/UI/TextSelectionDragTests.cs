@@ -80,7 +80,7 @@ public class TextSelectionDragTests : IDisposable
 
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
         viewer.InteractionMode.Should().Be(InteractionMode.TextSelection);
-        var overlay = FindNamedDescendant<Canvas>(viewer, "OverlayCanvas")!;
+        var overlay = viewer.OverlayCanvas!;
         var start = ToWindowPoint(ordered[0], page, overlay, window);
         var end = ToWindowPoint(ordered[^1], page, overlay, window);
         var historyBefore = vm.ClipboardHistory.Count;
@@ -140,7 +140,7 @@ public class TextSelectionDragTests : IDisposable
         viewer!.InteractionMode.Should().Be(InteractionMode.TextSelection,
             "the viewer's mode binding must be wired to vm.IsTextSelectionMode");
 
-        var overlay = FindNamedDescendant<Canvas>(viewer, "OverlayCanvas")!;
+        var overlay = viewer.OverlayCanvas!;
         var anchorWindow = ToWindowPoint(anchor, page, overlay, window);
         var focusWindow = ToWindowPoint(focus, page, overlay, window);
         _out.WriteLine($"anchor='{anchor.Value}' window={anchorWindow}, focus='{focus.Value}' window={focusWindow}");
@@ -191,7 +191,7 @@ public class TextSelectionDragTests : IDisposable
         var initialHistoryCount = vm.ClipboardHistory.Count;
 
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
-        var overlay = FindNamedDescendant<Canvas>(viewer!, "OverlayCanvas")!;
+        var overlay = viewer!.OverlayCanvas!;
         var startWindow = ToWindowPoint(anchor, page, overlay, window);
         var endWindow = ToWindowPoint(focus, page, overlay, window);
 
@@ -249,7 +249,7 @@ public class TextSelectionDragTests : IDisposable
         for (int i = 0; i < 20; i++) { await Task.Delay(150); window.UpdateLayout(); }
 
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
-        var overlay = FindNamedDescendant<Canvas>(viewer!, "OverlayCanvas")!;
+        var overlay = viewer!.OverlayCanvas!;
         var startWindow = ToWindowPoint(ordered[startIdx], page, overlay, window);
         var endWindow = ToWindowPoint(ordered[startIdx + targetPhrase.Length - 1], page, overlay, window);
 

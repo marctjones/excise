@@ -191,7 +191,7 @@ public class CjkMouseSelectionClipboardTests : IDisposable
     private async Task DragAsync(MainWindow window, PdfPage page, Letter anchor, Letter focus)
     {
         var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
-        var overlay = FindNamedDescendant<Canvas>(viewer, "OverlayCanvas")!;
+        var overlay = viewer.OverlayCanvas!;
         var start = ToWindowPoint(anchor, page, overlay, window);
         var end = ToWindowPoint(focus, page, overlay, window);
 

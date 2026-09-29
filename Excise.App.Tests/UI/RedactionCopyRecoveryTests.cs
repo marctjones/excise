@@ -65,7 +65,7 @@ public class RedactionCopyRecoveryTests
             await SettleLayout(window);
 
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
-            var overlay = FindNamedDescendant<Canvas>(viewer, "OverlayCanvas")!;
+            var overlay = viewer.OverlayCanvas!;
             var page = vm.PdfCoreDocument!.GetPage(1);
 
             var (anchorWindow, focusWindow) = SecretDragPoints(page, overlay, window);

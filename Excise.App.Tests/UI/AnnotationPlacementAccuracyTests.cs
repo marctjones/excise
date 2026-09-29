@@ -88,7 +88,7 @@ public class AnnotationPlacementAccuracyTests
             await WaitForFinalSinglePageRender(window, viewer);
             viewer.CurrentPage.Should().Be(pageNumber, "arming a tool must keep the page the reader was on");
 
-            var image = viewer.FindControl<Image>("PdfImage")!;
+            var image = viewer.PdfImage!;
             var bitmap = (Bitmap)image.Source!;
             var ink = InkBoundsPx(bitmap);
             ink.Width.Should().BeGreaterThan(0,

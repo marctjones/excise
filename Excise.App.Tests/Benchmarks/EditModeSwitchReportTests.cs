@@ -166,8 +166,8 @@ public sealed class EditModeSwitchReportTests
         {
             await OpenAndSettleAsync(vm, window, viewer, pdf, page);
             var publish0 = viewer.SinglePagePublishCount;
-            var image = viewer.FindControl<Image>("PdfImage")!;
-            var zoomHost = viewer.FindControl<Control>("ZoomHost")!;
+            var image = viewer.PdfImage!;
+            var zoomHost = viewer.ZoomHost!;
 
             // "0 ms": the toggle, then the single layout pass the next frame
             // would run, then the click. No dispatcher pump and no render wait.
@@ -191,7 +191,7 @@ public sealed class EditModeSwitchReportTests
 
             // Where the same window point lands on the final layout: the box a
             // click on the sharp page would have placed.
-            var overlay = viewer.FindControl<Canvas>("OverlayCanvas")!;
+            var overlay = viewer.OverlayCanvas!;
             var local = window.TranslatePoint(aim, overlay)
                 ?? throw new InvalidOperationException("overlay not attached to the window");
             var expected = viewer.ViewerDipsToPdfRect(
@@ -351,8 +351,8 @@ public sealed class EditModeSwitchReportTests
 
     private static bool PageImageVisible(PdfViewerControl viewer)
     {
-        var image = viewer.FindControl<Image>("PdfImage");
-        var zoomHost = viewer.FindControl<Control>("ZoomHost");
+        var image = viewer.PdfImage;
+        var zoomHost = viewer.ZoomHost;
         return viewer.ViewMode == PdfViewMode.SinglePage
             && image?.Source != null
             && image.IsEffectivelyVisible
@@ -362,8 +362,8 @@ public sealed class EditModeSwitchReportTests
     /// <summary>The window point over (50%, 40%) of the laid-out page.</summary>
     private static Point AimWindowPoint(Window window, PdfViewerControl viewer)
     {
-        var image = viewer.FindControl<Image>("PdfImage")!;
-        var overlay = viewer.FindControl<Canvas>("OverlayCanvas")!;
+        var image = viewer.PdfImage!;
+        var overlay = viewer.OverlayCanvas!;
         var local = new Point(image.Bounds.Width * 0.5, image.Bounds.Height * 0.4);
         return overlay.TranslatePoint(local, window)
             ?? throw new InvalidOperationException("overlay not attached to the window");
@@ -372,8 +372,8 @@ public sealed class EditModeSwitchReportTests
     /// <summary>Layout geometry of the page Image and ZoomHost, for the offset line.</summary>
     private static string Geometry(PdfViewerControl viewer)
     {
-        var image = viewer.FindControl<Image>("PdfImage")!;
-        var zoomHost = viewer.FindControl<Control>("ZoomHost")!;
+        var image = viewer.PdfImage!;
+        var zoomHost = viewer.ZoomHost!;
         var origin = zoomHost.TranslatePoint(default, viewer) ?? default;
         var pixels = image.Source is Bitmap b ? $"{b.PixelSize.Width}x{b.PixelSize.Height}" : "none";
         return string.Create(CultureInfo.InvariantCulture,
@@ -392,7 +392,7 @@ public sealed class EditModeSwitchReportTests
         using var whole = SKBitmap.Decode(ms)
             ?? throw new InvalidOperationException("could not decode the viewer capture");
 
-        var zoomHost = viewer.FindControl<Control>("ZoomHost")!;
+        var zoomHost = viewer.ZoomHost!;
         var topLeft = zoomHost.TranslatePoint(default, viewer) ?? default;
         var host = zoomHost.Bounds;
         var bottomRight = zoomHost.TranslatePoint(new Point(host.Width, host.Height), viewer) ?? default;
@@ -448,8 +448,8 @@ public sealed class EditModeSwitchReportTests
 
     private static string Describe(PdfViewerControl viewer)
     {
-        var image = viewer.FindControl<Image>("PdfImage");
-        var zoomHost = viewer.FindControl<Control>("ZoomHost");
+        var image = viewer.PdfImage;
+        var zoomHost = viewer.ZoomHost;
         return $"viewMode={viewer.ViewMode} page={viewer.CurrentPage} loading={viewer.IsLoading} " +
                $"src={image?.Source != null} zoomHost={zoomHost?.Bounds} published={viewer.SinglePagePublishCount} " +
                $"contInFlight={viewer.ContinuousInFlightCount} error={viewer.ErrorMessage}";

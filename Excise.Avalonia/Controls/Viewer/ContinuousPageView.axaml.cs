@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Threading;
 using Excise.Core.Document;
 using Excise.Core.Text;
 using static Excise.Avalonia.Controls.PdfViewerControl;
@@ -26,7 +27,7 @@ namespace Excise.Avalonia.Controls;
 /// <see cref="PdfViewerControl"/> (tests address them as <c>PdfViewerControl.X</c>) and
 /// are imported here with <c>using static</c>.</para>
 /// </remarks>
-internal sealed partial class ContinuousPageView : UserControl, IPageHitSurface
+internal sealed partial class ContinuousPageView : UserControl, IPageHitSurface, IReadingPositionSource
 {
     private PdfViewerControl _viewer = null!;
     private IViewerState _state = null!;
@@ -110,6 +111,25 @@ internal sealed partial class ContinuousPageView : UserControl, IPageHitSurface
 
     /// <summary>The viewer is back in a visual tree (the re-subscription gap is #1929).</summary>
     internal void OnAttached() => _continuousDetached = false;
+
+    // ── IReadingPositionSource (#693) ────────────────────────────────────────
+
+    public double CaptureIntraPageFraction() => ContinuousIntraPageFraction();
+
+    public void ShowAt(double intraPageFraction)
+    {
+        RebuildContinuous();
+
+        // Defer the scroll-to until the items panel has measured the slots —
+        // but read CurrentPage when the callback RUNS, not when it is posted.
+        //
+        // Capturing it here (`int target = CurrentPage;`) captured a STALE page:
+        // a navigation issued between the post and the callback would be
+        // overwritten by this deferred scroll dragging the user back to
+        // wherever they were when the view mode flipped. Switching to
+        // continuous and immediately jumping to a page did exactly that.
+        Dispatcher.UIThread.Post(() => ScrollToPageContinuous(CurrentPage, intraPageFraction), DispatcherPriority.Background);
+    }
 
     // ── IPageHitSurface (#1842 step 5) ──────────────────────────────────────
 

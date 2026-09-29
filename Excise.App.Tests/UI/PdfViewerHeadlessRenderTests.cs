@@ -574,7 +574,7 @@ public class PdfViewerHeadlessRenderTests
         // Poll for the async render to produce an Image.Source. The renderer
         // dispatches a background SkiaRenderer.RenderPage and marshals the
         // Bitmap back to the UI thread, so we have to yield repeatedly.
-        var pdfImage = viewer.FindControl<Image>("PdfImage");
+        var pdfImage = viewer.PdfImage;
         pdfImage.Should().NotBeNull("PdfViewerControl must expose the PdfImage element");
 
         await WaitForViewerRender(viewer, pdfImage!);
@@ -612,7 +612,7 @@ public class PdfViewerHeadlessRenderTests
         await Task.Delay(50);
         viewer.Document = doc;
 
-        var pdfImage = viewer.FindControl<Image>("PdfImage");
+        var pdfImage = viewer.PdfImage;
         pdfImage.Should().NotBeNull("PdfViewerControl must expose the PdfImage element");
 
         await WaitForViewerRender(viewer, pdfImage!, renderTimeout);

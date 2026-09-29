@@ -258,7 +258,7 @@ public class PdfViewerControlTypewriterTests
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 window.UpdateLayout();
-                layer = control.FindControl<Canvas>("TypewriterLayer");
+                layer = control.TypewriterLayer;
             });
             if (layer is not null && layer.IsAttachedToVisualTree())
                 break;
@@ -273,7 +273,7 @@ public class PdfViewerControlTypewriterTests
             };
             window.UpdateLayout();
 
-            var currentLayer = control.FindControl<Canvas>("TypewriterLayer")!;
+            var currentLayer = control.TypewriterLayer!;
             currentLayer.IsAttachedToVisualTree().Should().BeTrue("the overlay must be attached for the gesture");
 
             var shell = currentLayer.GetVisualDescendants().OfType<Grid>().First();
@@ -354,13 +354,13 @@ public class PdfViewerControlTypewriterTests
             {
                 PdfTypewriterTextOperation.Create(1, new PdfRectangle(40, 600, 300, 660), "already typed"),
             };
-            var image = control.FindControl<Image>("PdfImage")!;
+            var image = control.PdfImage!;
             for (int i = 0; i < 200 && (control.IsLoading || image.Source == null); i++)
             {
                 await Task.Delay(25);
                 window.UpdateLayout();
             }
-            var layer = control.FindControl<Canvas>("TypewriterLayer")!;
+            var layer = control.TypewriterLayer!;
             var editor = layer.GetVisualDescendants().OfType<TextBox>().Single();
             window.UpdateLayout();
             var centre = editor.TranslatePoint(new Point(editor.Bounds.Width / 2, editor.Bounds.Height / 2), window);
@@ -405,7 +405,7 @@ public class PdfViewerControlTypewriterTests
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            var layer = control.FindControl<Canvas>("TypewriterLayer");
+            var layer = control.TypewriterLayer;
             layer.Should().NotBeNull();
             var textBox = layer!.GetVisualDescendants().OfType<TextBox>().Single();
 

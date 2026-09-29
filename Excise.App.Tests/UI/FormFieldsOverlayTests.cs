@@ -374,7 +374,7 @@ public class FormFieldsOverlayTests
 
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
             viewer.Should().NotBeNull();
-            var formLayer = FindNamedDescendant<Canvas>(viewer!, "FormFieldsLayer");
+            var formLayer = viewer!.FormFieldsLayer;
             formLayer.Should().NotBeNull("PdfViewerControl should host the FormFieldsLayer canvas");
 
             // Wait for the binding pipeline (vm → viewer.FormFields → redraw)
@@ -424,7 +424,7 @@ public class FormFieldsOverlayTests
             // inputs appearing — below. (#363)
 
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
-            var formLayer = FindNamedDescendant<Canvas>(viewer!, "FormFieldsLayer");
+            var formLayer = viewer!.FormFieldsLayer;
             for (int i = 0; i < 30 && formLayer!.Children.Count == 0; i++)
             {
                 await Task.Delay(50);
@@ -473,7 +473,7 @@ public class FormFieldsOverlayTests
             await vm.LoadDocumentAsync(path);
 
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
-            var formLayer = FindNamedDescendant<Canvas>(viewer!, "FormFieldsLayer");
+            var formLayer = viewer!.FormFieldsLayer;
             for (int i = 0; i < 30 && formLayer!.Children.Count == 0; i++)
             {
                 await Task.Delay(50);
@@ -524,7 +524,7 @@ public class FormFieldsOverlayTests
             await vm.LoadDocumentAsync(path);
 
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
-            var formLayer = FindNamedDescendant<Canvas>(viewer!, "FormFieldsLayer");
+            var formLayer = viewer!.FormFieldsLayer;
             for (int i = 0; i < 30 && formLayer!.Children.Count == 0; i++)
             {
                 await Task.Delay(50);
@@ -568,7 +568,7 @@ public class FormFieldsOverlayTests
             await vm.LoadDocumentAsync(path);
 
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
-            var formLayer = FindNamedDescendant<Canvas>(viewer!, "FormFieldsLayer");
+            var formLayer = viewer!.FormFieldsLayer;
             for (int i = 0; i < 30 && formLayer!.Children.OfType<TextBox>().Count() < 2; i++)
             {
                 await Task.Delay(50);
@@ -610,7 +610,7 @@ public class FormFieldsOverlayTests
             await vm.LoadDocumentAsync(path);
 
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
-            var formLayer = FindNamedDescendant<Canvas>(viewer!, "FormFieldsLayer");
+            var formLayer = viewer!.FormFieldsLayer;
             for (int i = 0; i < 30 && formLayer!.Children.OfType<TextBox>().Count() < 1; i++)
             {
                 await Task.Delay(50);
@@ -648,7 +648,7 @@ public class FormFieldsOverlayTests
             await vm.LoadDocumentAsync(path);
 
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl");
-            var formLayer = FindNamedDescendant<Canvas>(viewer!, "FormFieldsLayer");
+            var formLayer = viewer!.FormFieldsLayer;
             for (int i = 0; i < 30 && formLayer!.Children.OfType<TextBox>().Count() < 1; i++)
             {
                 await Task.Delay(50);
@@ -722,7 +722,7 @@ public class FormFieldsOverlayTests
         {
             viewer.Document = document;
             viewer.FormFields = new[] { field };
-            var layer = viewer.FindControl<Canvas>("FormFieldsLayer")!;
+            var layer = viewer.FormFieldsLayer!;
             for (int i = 0; i < 40 && (viewer.IsLoading || layer.Children.Count == 0); i++)
             {
                 await Task.Delay(25);
@@ -774,7 +774,7 @@ public class FormFieldsOverlayTests
             int asked = 0;
             viewer.FormFieldEditGate = () => { asked++; return false; };
             viewer.FormFields = new[] { field };
-            var layer = viewer.FindControl<Canvas>("FormFieldsLayer")!;
+            var layer = viewer.FormFieldsLayer!;
             for (int i = 0; i < 40 && (viewer.IsLoading || layer.Children.Count == 0); i++)
             {
                 await Task.Delay(25);
