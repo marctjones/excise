@@ -15,8 +15,8 @@ namespace Excise.Avalonia.Controls;
 
 public partial class PdfViewerControl
 {
-    private const double MinimumTypewriterWidthDips = 48;
-    private const double MinimumTypewriterHeightDips = 24;
+    private const double MinimumTypewriterWidthDips = TypewriterEditorBox.MinimumWidthDips;
+    private const double MinimumTypewriterHeightDips = TypewriterEditorBox.MinimumHeightDips;
     private const double DefaultTypewriterWidthDips = 220;
     private const double DefaultTypewriterHeightDips = 42;
 
@@ -102,290 +102,57 @@ public partial class PdfViewerControl
 
     private Control CreateTypewriterEditor(PdfTypewriterTextOperation operation, Rect rect)
     {
-        var shell = new Grid
-        {
-            Width = Math.Max(rect.Width, MinimumTypewriterWidthDips),
-            Height = Math.Max(rect.Height, MinimumTypewriterHeightDips),
-            MinWidth = MinimumTypewriterWidthDips,
-            MinHeight = MinimumTypewriterHeightDips,
-            ClipToBounds = false,
-        };
-        shell.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-        shell.RowDefinitions.Add(new RowDefinition(new GridLength(1, GridUnitType.Star)));
-
-        // #1648: chrome belongs to the box being EDITED, not to the mode. Every
-        // other box — pending or not, mode on or off — renders as the document
-        // will render it.
+        // #1648: chrome belongs to the box being EDITED, not to the mode.
         var inTypewriterMode = InteractionMode == InteractionMode.Typewriter;
         var editing = inTypewriterMode && _focusedTypewriterId == operation.Id;
-        var frame = new Border
-        {
-            CornerRadius = new CornerRadius(2),
-        };
-        Grid.SetRowSpan(frame, 2);
-        shell.Children.Add(frame);
+        var box = new TypewriterEditorBox(operation, rect, ViewerUnitsPerPoint, _typewriterLayer!, this);
 
-        var dragHandle = new Border
-        {
-            Height = 10,
-            Background = new SolidColorBrush(Color.FromArgb(0x55, 0x00, 0x7A, 0xCC)),
-            Cursor = new Cursor(StandardCursorType.SizeAll),
-        };
-        Grid.SetRow(dragHandle, 0);
-        shell.Children.Add(dragHandle);
-
-        var textBox = new TextBox
-        {
-            Text = operation.Text,
-            AcceptsReturn = true,
-            TextWrapping = TextWrapping.Wrap,
-            Background = Brushes.Transparent,
-            BorderBrush = Brushes.Transparent,
-            BorderThickness = new Thickness(0),
-            Padding = new Thickness(4, 1, 4, 3),
-            FontSize = Math.Max(8, operation.Style.FontSize * ViewerUnitsPerPoint),
-            Foreground = ToAvaloniaBrush(operation.Style.Color),
-            TextAlignment = ToAvaloniaTextAlignment(operation.Style.Alignment),
-            VerticalContentAlignment = VerticalAlignment.Top,
-        };
-        textBox.TextChanged += (_, _) =>
-        {
-            TypewriterTextEdited?.Invoke(this,
-                new TypewriterTextEditedEventArgs(
-                    operation.Id,
-                    textBox.Text ?? string.Empty,
-                    operation.PageNumber));
-        };
-        // Esc on the active box (#780). An EMPTY box is removed — the user
-        // backed out before typing, so nothing is lost. A NON-empty box keeps
-        // its typed text (already committed via TextChanged) and only exits
-        // editing focus: Esc must never silently drop text the user entered.
-        textBox.KeyDown += (_, e) =>
-        {
-            if (e.Key != Key.Escape)
-                return;
-
-            if (string.IsNullOrEmpty(textBox.Text))
-            {
-                TypewriterTextDeleted?.Invoke(this,
-                    new TypewriterTextDeletedEventArgs(operation.Id, operation.PageNumber));
-            }
-            else
-            {
-                Focus(); // blur the editor, keep the text
-            }
-
-            e.Handled = true;
-        };
-        Grid.SetRow(textBox, 1);
-        shell.Children.Add(textBox);
-
-        var deleteButton = new Button
-        {
-            Content = "x",
-            Width = 20,
-            Height = 18,
-            Padding = new Thickness(0),
-            Margin = new Thickness(0),
-            FontSize = 11,
-            HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Top,
-        };
-        ToolTip.SetTip(deleteButton, "Delete typewriter text");
-        deleteButton.Click += (_, _) =>
-        {
-            TypewriterTextDeleted?.Invoke(this,
-                new TypewriterTextDeletedEventArgs(operation.Id, operation.PageNumber));
-        };
-        Grid.SetRowSpan(deleteButton, 2);
-        shell.Children.Add(deleteButton);
-
-        var resizeGrip = new Border
-        {
-            Width = 12,
-            Height = 12,
-            Background = new SolidColorBrush(Color.FromArgb(0xCC, 0x00, 0x7A, 0xCC)),
-            HorizontalAlignment = HorizontalAlignment.Right,
-            VerticalAlignment = VerticalAlignment.Bottom,
-            Cursor = new Cursor(StandardCursorType.TopLeftCorner),
-        };
-        Grid.SetRowSpan(resizeGrip, 2);
-        shell.Children.Add(resizeGrip);
-
-        AttachTypewriterMoveBehavior(shell, dragHandle, operation);
-        AttachTypewriterResizeBehavior(shell, resizeGrip, operation);
-
-        // ── #1648: chrome on the focused box only ───────────────────────────
-        void ApplyChrome(bool focused)
-        {
-            frame.Background = focused
-                ? new SolidColorBrush(Color.FromArgb(0x0A, 0x00, 0x7A, 0xCC))
-                : Brushes.Transparent;
-            frame.BorderBrush = focused
-                ? new SolidColorBrush(Color.FromArgb(0xE0, 0x00, 0x7A, 0xCC))
-                : Brushes.Transparent;
-            frame.BorderThickness = focused ? new Thickness(1.5) : new Thickness(0);
-            dragHandle.IsVisible = focused;
-            deleteButton.IsVisible = focused;
-            resizeGrip.IsVisible = focused;
-            // Read-only rather than disabled: a read-only TextBox still takes
-            // focus, so clicking the text enters editing with the caret where
-            // the click landed. Rebuilding the editor to switch modes would
-            // throw that caret away.
-            textBox.IsReadOnly = !focused;
-        }
-
-        textBox.GotFocus += (_, _) => FocusTypewriterBox(operation.Id);
-        textBox.LostFocus += (_, _) =>
-        {
-            // Chrome only. An empty box is NOT deleted here: focus leaves for
-            // the style flyout too, and picking a colour before typing is a
-            // real way to use this — deleting there broke
-            // TypewriterColorPresetAccessibilityTests, which styles a box it
-            // has not typed into yet. Empty boxes are swept where they would
-            // actually be left behind: when another box is created, and when
-            // the mode is left.
-            if (_focusedTypewriterId == operation.Id)
-                _focusedTypewriterId = null;
-            ApplyChrome(false);
-        };
-
-        _typewriterChrome[operation.Id] = ApplyChrome;
-        ApplyChrome(editing);
+        _typewriterChrome[operation.Id] = box.ApplyChrome;
+        box.ApplyChrome(editing);
 
         // A box in the mode is clickable so it can be edited again; out of the
         // mode it is inert and the page reads normally.
-        shell.IsHitTestVisible = inTypewriterMode;
+        box.Shell.IsHitTestVisible = inTypewriterMode;
 
         if (inTypewriterMode && string.IsNullOrEmpty(operation.Text))
         {
-            Dispatcher.UIThread.Post(() => textBox.Focus(), DispatcherPriority.Background);
+            Dispatcher.UIThread.Post(() => box.Editor.Focus(), DispatcherPriority.Background);
         }
 
-        return shell;
+        return box.Shell;
     }
 
-    private void AttachTypewriterMoveBehavior(Control shell, Control dragHandle, PdfTypewriterTextOperation operation)
+    // ── ITypewriterEditSink (#1842): what a box reports, mapped onto the viewer ──
+
+    void ITypewriterEditSink.TextEdited(PdfTypewriterTextOperation operation, string text) =>
+        TypewriterTextEdited?.Invoke(this,
+            new TypewriterTextEditedEventArgs(operation.Id, text, operation.PageNumber));
+
+    void ITypewriterEditSink.DeleteRequested(PdfTypewriterTextOperation operation) =>
+        TypewriterTextDeleted?.Invoke(this,
+            new TypewriterTextDeletedEventArgs(operation.Id, operation.PageNumber));
+
+    void ITypewriterEditSink.BoundsChanged(PdfTypewriterTextOperation operation, Rect dipRect)
     {
-        var isMoving = false;
-        var startPointer = default(Point);
-        var startLeft = 0.0;
-        var startTop = 0.0;
-
-        dragHandle.PointerPressed += (_, e) =>
-        {
-            if (_typewriterLayer == null)
-                return;
-
-            isMoving = true;
-            startPointer = e.GetPosition(_typewriterLayer);
-            startLeft = Canvas.GetLeft(shell);
-            startTop = Canvas.GetTop(shell);
-            if (double.IsNaN(startLeft)) startLeft = 0;
-            if (double.IsNaN(startTop)) startTop = 0;
-            e.Pointer.Capture(dragHandle);
-            e.Handled = true;
-        };
-
-        dragHandle.PointerMoved += (_, e) =>
-        {
-            if (!isMoving || _typewriterLayer == null)
-                return;
-
-            var current = e.GetPosition(_typewriterLayer);
-            var rect = NormalizeTypewriterDipRect(new Rect(
-                startLeft + current.X - startPointer.X,
-                startTop + current.Y - startPointer.Y,
-                shell.Width,
-                shell.Height));
-
-            Canvas.SetLeft(shell, rect.X);
-            Canvas.SetTop(shell, rect.Y);
-            e.Handled = true;
-        };
-
-        dragHandle.PointerReleased += (_, e) =>
-        {
-            if (!isMoving)
-                return;
-
-            isMoving = false;
-            e.Pointer.Capture(null);
-            RaiseTypewriterBoundsChanged(shell, operation);
-            e.Handled = true;
-        };
-    }
-
-    private void AttachTypewriterResizeBehavior(Control shell, Control resizeGrip, PdfTypewriterTextOperation operation)
-    {
-        var isResizing = false;
-        var startPointer = default(Point);
-        var startWidth = 0.0;
-        var startHeight = 0.0;
-
-        resizeGrip.PointerPressed += (_, e) =>
-        {
-            if (_typewriterLayer == null)
-                return;
-
-            isResizing = true;
-            startPointer = e.GetPosition(_typewriterLayer);
-            startWidth = shell.Width;
-            startHeight = shell.Height;
-            e.Pointer.Capture(resizeGrip);
-            e.Handled = true;
-        };
-
-        resizeGrip.PointerMoved += (_, e) =>
-        {
-            if (!isResizing || _typewriterLayer == null)
-                return;
-
-            var current = e.GetPosition(_typewriterLayer);
-            var left = Canvas.GetLeft(shell);
-            var top = Canvas.GetTop(shell);
-            if (double.IsNaN(left)) left = 0;
-            if (double.IsNaN(top)) top = 0;
-
-            var rect = NormalizeTypewriterDipRect(new Rect(
-                left,
-                top,
-                Math.Max(MinimumTypewriterWidthDips, startWidth + current.X - startPointer.X),
-                Math.Max(MinimumTypewriterHeightDips, startHeight + current.Y - startPointer.Y)));
-
-            shell.Width = rect.Width;
-            shell.Height = rect.Height;
-            Canvas.SetLeft(shell, rect.X);
-            Canvas.SetTop(shell, rect.Y);
-            e.Handled = true;
-        };
-
-        resizeGrip.PointerReleased += (_, e) =>
-        {
-            if (!isResizing)
-                return;
-
-            isResizing = false;
-            e.Pointer.Capture(null);
-            RaiseTypewriterBoundsChanged(shell, operation);
-            e.Handled = true;
-        };
-    }
-
-    private void RaiseTypewriterBoundsChanged(Control shell, PdfTypewriterTextOperation operation)
-    {
-        var left = Canvas.GetLeft(shell);
-        var top = Canvas.GetTop(shell);
-        if (double.IsNaN(left)) left = 0;
-        if (double.IsNaN(top)) top = 0;
-
-        var rect = NormalizeTypewriterDipRect(new Rect(left, top, shell.Width, shell.Height));
+        var rect = NormalizeTypewriterDipRect(dipRect);
         TypewriterTextBoundsChanged?.Invoke(this,
             new TypewriterTextBoundsChangedEventArgs(
                 operation.Id,
                 ViewerDipsToPdfRect(rect, operation.PageNumber),
                 operation.PageNumber));
     }
+
+    Rect ITypewriterEditSink.NormalizeDipRect(Rect dipRect) => NormalizeTypewriterDipRect(dipRect);
+
+    void ITypewriterEditSink.FocusEntered(PdfTypewriterTextOperation operation) => FocusTypewriterBox(operation.Id);
+
+    void ITypewriterEditSink.FocusLeft(PdfTypewriterTextOperation operation)
+    {
+        if (_focusedTypewriterId == operation.Id)
+            _focusedTypewriterId = null;
+    }
+
+    void ITypewriterEditSink.ReleaseEditorFocus() => Focus();
 
     private void DrawTemporaryTypewriterRectangle(Point start, Point end)
     {
@@ -498,21 +265,4 @@ public partial class PdfViewerControl
             _currentSinglePageRenderDpi);
         return NormalizeTypewriterDipRect(ToAvaloniaRect(viewerRect));
     }
-
-    private static SolidColorBrush ToAvaloniaBrush(Excise.Core.Graphics.PdfColor color)
-    {
-        static byte Channel(double value) => (byte)Math.Clamp(Math.Round(value * 255), 0, 255);
-        return new SolidColorBrush(Color.FromRgb(
-            Channel(color.R),
-            Channel(color.G),
-            Channel(color.B)));
-    }
-
-    private static global::Avalonia.Media.TextAlignment ToAvaloniaTextAlignment(Excise.Core.Graphics.TextAlignment alignment) =>
-        alignment switch
-        {
-            Excise.Core.Graphics.TextAlignment.Center => global::Avalonia.Media.TextAlignment.Center,
-            Excise.Core.Graphics.TextAlignment.Right => global::Avalonia.Media.TextAlignment.Right,
-            _ => global::Avalonia.Media.TextAlignment.Left,
-        };
 }

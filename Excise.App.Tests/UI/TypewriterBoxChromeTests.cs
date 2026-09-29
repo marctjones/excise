@@ -180,6 +180,79 @@ public sealed class TypewriterBoxChromeTests
         }
     }
 
+    /// <summary>
+    /// #1842 step 2: the box reports "I lost focus" to the viewer, which forgets
+    /// it was being edited, and the box takes its own chrome off. Both halves are
+    /// pinned: the chrome right after the blur, and a redraw afterwards, which
+    /// dresses whichever box the viewer still thinks is being edited.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 30000)]
+    public async Task LeavingTheEditor_TakesItsChromeOff_AndARedrawDressesNothing()
+    {
+        var (vm, window, pdf) = await OpenWithTwoBoxesAsync();
+        try
+        {
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+            var second = TypewriterEditors(window)[1];
+            TextBoxOf(second).Focus();
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+            Chrome(second).Should().BeTrue("fixture: the box being typed in wears its chrome");
+
+            viewer.Focus();
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+            TextBoxOf(second).IsFocused.Should().BeFalse("fixture: the editor lost the focus");
+            Chrome(second).Should().BeFalse("a box you left takes its chrome off at once");
+
+            // A content change redraws the layer; nothing is being edited, so
+            // nothing may come back dressed.
+            viewer.RenderVersion = vm.RenderVersion + 1;
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+            window.UpdateLayout();
+            var redrawn = TypewriterEditors(window);
+            redrawn.Should().HaveCount(2, "fixture: both boxes are redrawn");
+            redrawn.Should().NotContain(b => Chrome(b),
+                "the viewer must forget the box it was editing once that box lost the focus");
+        }
+        finally
+        {
+            Close(window, pdf);
+        }
+    }
+
+    /// <summary>
+    /// #780, pinned for #1842 step 2: Esc on a box with text leaves editing and keeps
+    /// the text. The box asks the viewer to take the focus back; it does not own
+    /// where the focus goes.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 30000)]
+    public async Task EscapeOnATypedBox_LeavesEditing_AndKeepsTheText()
+    {
+        var (vm, window, pdf) = await OpenWithTwoBoxesAsync();
+        try
+        {
+            var second = TypewriterEditors(window)[1];
+            var editor = TextBoxOf(second);
+            editor.Focus();
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+            editor.IsFocused.Should().BeTrue("fixture: the box is being edited");
+            editor.Text = "typed in the box";
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+            vm.TypewriterTextOperations.Last().Text.Should().Be("typed in the box", "fixture: typing reached the operation");
+
+            editor.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape, Source = editor });
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+
+            editor.IsFocused.Should().BeFalse("Esc on a box with text leaves editing");
+            Chrome(second).Should().BeFalse("and the box goes back to looking like the document");
+            vm.TypewriterTextOperations.Select(o => o.Text).Should().Equal(["first", "typed in the box"],
+                "Esc must never drop text the user typed");
+        }
+        finally
+        {
+            Close(window, pdf);
+        }
+    }
+
     // ── helpers ─────────────────────────────────────────────────────────────
 
     /// <summary>

@@ -26,7 +26,7 @@ namespace Excise.Avalonia.Controls;
 /// <summary>
 /// Reusable PDF viewer control with zoom, pan, and overlay support.
 /// </summary>
-public partial class PdfViewerControl : UserControl, IFormFieldEditSink
+public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewriterEditSink
 {
     #region Dependency Properties
 
