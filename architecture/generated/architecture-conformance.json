@@ -2,7 +2,7 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "9ba2b350c9cf559e0d76e988229337e805751d06",
+  "sourceRevision": "82e435f2540c9469c15b44f8eb72843529f09ad1",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
@@ -66,7 +66,7 @@
     {
       "source": "avalonia",
       "target": "core-document",
-      "references": 505,
+      "references": 504,
       "typeDependencyCount": 60,
       "classification": "declared",
       "evidence": [

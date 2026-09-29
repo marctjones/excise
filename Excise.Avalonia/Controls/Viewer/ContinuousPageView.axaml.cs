@@ -79,8 +79,16 @@ internal sealed partial class ContinuousPageView : UserControl, IPageHitSurface,
 
     private void OnScrollViewerViewportChanged(Size viewport) => ViewportChanged?.Invoke(viewport);
 
-    /// <summary>Turn render-ahead in this view on or off (#1564); the viewer owns the switch.</summary>
-    internal void SetRenderAheadEnabled(bool enabled) => _renderAheadEnabled = enabled;
+    /// <summary>
+    /// Turn render-ahead in this view on or off (#1564); the viewer owns the switch.
+    /// Turning it off cancels this view's look-ahead in flight.
+    /// </summary>
+    internal void SetRenderAheadEnabled(bool enabled)
+    {
+        _renderAheadEnabled = enabled;
+        if (!enabled)
+            CancelContinuousLookAhead();
+    }
 
     /// <summary>
     /// The viewer left the visual tree: hard-stop all continuous work so a closed viewer
@@ -174,10 +182,14 @@ internal sealed partial class ContinuousPageView : UserControl, IPageHitSurface,
 
     /// <summary>
     /// Select every glyph on <paramref name="page"/> (#1814), draw it and report it as a
-    /// finished selection. False when the page has no text.
+    /// finished selection. 0 means the page filling the viewport. False when the page is
+    /// out of range or has no text.
     /// </summary>
     internal bool SelectAll(int page)
     {
+        if (page <= 0) page = MostVisiblePage;
+        if (Document is not { } doc || page < 1 || page > doc.PageCount) return false;
+
         var letters = GetContinuousPageLetters(page);
         if (letters.Reading.Count == 0) return false;
 

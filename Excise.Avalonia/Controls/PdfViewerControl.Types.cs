@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Avalonia;
 using Excise.Core.Document;
 
 namespace Excise.Avalonia.Controls;
@@ -430,4 +431,143 @@ public enum InteractionMode
     /// <see cref="PathAnnotation"/> already have.
     /// </summary>
     ShapeAnnotation,
+}
+
+/// <summary>
+/// How much of its bitmap caches <see cref="PdfViewerControl.TrimCaches"/>
+/// releases (#1478). Each level includes everything the levels below it drop.
+/// </summary>
+public enum PdfViewerCacheTrimLevel
+{
+    /// <summary>
+    /// The app is in the background or idle. Drops the continuous view's
+    /// render-ahead tiles (#1564) and scroll-back tiles (every tile outside the
+    /// current bands) and every single-page bitmap except the one on screen,
+    /// render-ahead pages included. Render-ahead is not restarted until the
+    /// reader moves. What is visible stays
+    /// cached, so returning to the window costs nothing; scrolling back to a
+    /// dropped band re-renders it.
+    /// </summary>
+    Background = 0,
+
+    /// <summary>
+    /// The OS reports memory pressure. Inside the viewer this drops exactly
+    /// what <see cref="Background"/> does: the viewer owns no other cache that
+    /// can be released without re-rendering what is on screen.
+    /// </summary>
+    Warn = 1,
+
+    /// <summary>
+    /// The OS reports critical memory pressure. Also releases the composites
+    /// of pages whose band no longer intersects the viewport and every
+    /// remaining tile, including those baked into the visible composites, so
+    /// the next scroll step re-renders its band. A render can cost seconds on
+    /// a heavy page (Altona p1 ~3.8 s), which is why this is its own level.
+    /// </summary>
+    Critical = 2,
+}
+
+/// <summary>
+/// Immutable diagnostic snapshot of the viewer's active viewport.
+/// </summary>
+/// <remarks>
+/// This deliberately carries values rather than the underlying
+/// <see cref="ScrollViewer"/>. Hosts and automation can observe scroll state
+/// without depending on the viewer's XAML template or taking ownership of its
+/// controls.
+/// </remarks>
+public readonly struct PdfViewerViewportDiagnostics
+{
+    /// <summary>Create a viewport diagnostic snapshot.</summary>
+    public PdfViewerViewportDiagnostics(
+        PdfViewMode viewMode,
+        Size extent,
+        Size viewport,
+        Vector offset,
+        bool isAvailable)
+    {
+        ViewMode = viewMode;
+        Extent = extent;
+        Viewport = viewport;
+        Offset = offset;
+        IsAvailable = isAvailable;
+    }
+
+    /// <summary>The view mode whose active viewport was sampled.</summary>
+    public PdfViewMode ViewMode { get; }
+
+    /// <summary>Total laid-out content size in DIPs.</summary>
+    public Size Extent { get; }
+
+    /// <summary>Visible viewport size in DIPs.</summary>
+    public Size Viewport { get; }
+
+    /// <summary>Current viewport offset in DIPs.</summary>
+    public Vector Offset { get; }
+
+    /// <summary>Whether the active viewport is initialized and available.</summary>
+    public bool IsAvailable { get; }
+}
+
+/// <summary>
+/// Immutable diagnostic snapshot of the two interactive render caches owned by
+/// <see cref="PdfViewerControl"/>. Thumbnail and image-export lifetimes are
+/// intentionally absent because they belong to their App workflows.
+/// </summary>
+public readonly struct PdfViewerRenderDiagnostics
+{
+    /// <summary>Create a render-cache diagnostic snapshot.</summary>
+    public PdfViewerRenderDiagnostics(
+        PdfViewMode viewMode,
+        int singlePageEntryCount,
+        int singlePageCapacity,
+        long singlePageHits,
+        long singlePageMisses,
+        int continuousEntryCount,
+        long continuousResidentBytes,
+        long continuousByteBudget,
+        int continuousHits,
+        int continuousInFlightCount)
+    {
+        ViewMode = viewMode;
+        SinglePageEntryCount = singlePageEntryCount;
+        SinglePageCapacity = singlePageCapacity;
+        SinglePageHits = singlePageHits;
+        SinglePageMisses = singlePageMisses;
+        ContinuousEntryCount = continuousEntryCount;
+        ContinuousResidentBytes = continuousResidentBytes;
+        ContinuousByteBudget = continuousByteBudget;
+        ContinuousHits = continuousHits;
+        ContinuousInFlightCount = continuousInFlightCount;
+    }
+
+    /// <summary>View mode active when the caches were sampled.</summary>
+    public PdfViewMode ViewMode { get; }
+
+    /// <summary>Single-page bitmaps currently retained by its LRU.</summary>
+    public int SinglePageEntryCount { get; }
+
+    /// <summary>Maximum number of bitmaps in the single-page LRU.</summary>
+    public int SinglePageCapacity { get; }
+
+    /// <summary>Single-page LRU hits since this viewer was constructed.</summary>
+    public long SinglePageHits { get; }
+
+    /// <summary>Single-page LRU misses since this viewer was constructed.</summary>
+    public long SinglePageMisses { get; }
+
+    /// <summary>Continuous-view tiles currently retained by its LRU.</summary>
+    public int ContinuousEntryCount { get; }
+
+    /// <summary>Estimated resident bytes retained by continuous-view tiles.</summary>
+    public long ContinuousResidentBytes { get; }
+
+    /// <summary>Continuous-view tile-cache byte budget.</summary>
+    public long ContinuousByteBudget { get; }
+
+    /// <summary>Continuous tile-cache hits since this viewer was constructed.</summary>
+    public int ContinuousHits { get; }
+
+    /// <summary>Continuous tile renders currently in flight.</summary>
+    public int ContinuousInFlightCount { get; }
 }

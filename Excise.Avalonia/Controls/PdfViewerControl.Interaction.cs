@@ -16,6 +16,25 @@ public partial class PdfViewerControl
 {
     #region Interaction
 
+    // ── routing: each view is its own hit surface (#1842) ────────────────────
+
+    /// <summary>The single-page view is its own surface (#1842 step 7).</summary>
+    private IPageHitSurface SinglePageSurface => SinglePagePart;
+
+    /// <summary>The continuous view is its own surface (#1842 step 6).</summary>
+    private IPageHitSurface ContinuousSurface => ContinuousPart;
+
+    /// <summary>The surface of the view on screen.</summary>
+    private IPageHitSurface ActiveHitSurface =>
+        ViewMode == PdfViewMode.Continuous ? ContinuousSurface : SinglePageSurface;
+
+    /// <summary>
+    /// Whether the event belongs to either view's own overlay. Both are asked, as
+    /// the root handlers always did; only the visible view's overlays can raise one.
+    /// </summary>
+    private bool IsOwnOverlayEvent(PointerEventArgs e) =>
+        SinglePageSurface.IsOwnOverlayEvent(e) || ContinuousSurface.IsOwnOverlayEvent(e);
+
     private void OnInteractionLayerPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (IsOwnOverlayEvent(e))
@@ -796,6 +815,34 @@ public partial class PdfViewerControl
         _tempRedactionRect.Width = rect.Width;
         _tempRedactionRect.Height = rect.Height;
         _tempRedactionRect.IsVisible = true;
+    }
+
+    private Rectangle? _tempTypewriterRect;
+
+    private void DrawTemporaryTypewriterRectangle(Point start, Point end)
+    {
+        if (InteractionLayer == null)
+            return;
+
+        var rect = CreateRect(start, end);
+
+        if (_tempTypewriterRect == null)
+        {
+            _tempTypewriterRect = new Rectangle
+            {
+                Fill = new SolidColorBrush(Color.FromArgb(0x24, 0x00, 0x7A, 0xCC)),
+                Stroke = new SolidColorBrush(Color.FromArgb(0xEE, 0x00, 0x7A, 0xCC)),
+                StrokeThickness = 1.5,
+                StrokeDashArray = new global::Avalonia.Collections.AvaloniaList<double> { 4, 3 },
+            };
+            InteractionLayer.Children.Add(_tempTypewriterRect);
+        }
+
+        Canvas.SetLeft(_tempTypewriterRect, rect.X);
+        Canvas.SetTop(_tempTypewriterRect, rect.Y);
+        _tempTypewriterRect.Width = rect.Width;
+        _tempTypewriterRect.Height = rect.Height;
+        _tempTypewriterRect.IsVisible = true;
     }
 
     private void ClearTemporaryDrawings()

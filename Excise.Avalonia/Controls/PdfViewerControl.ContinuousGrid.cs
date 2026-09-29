@@ -158,4 +158,12 @@ public partial class PdfViewerControl
             Math.Max(1, (int)Math.Ceiling(cell.WidthDip)),
             Math.Max(1, (int)Math.Ceiling(cell.HeightDip)));
     }
+
+    /// <summary>
+    /// A page intersects the viewport exactly when it requires grid cells —
+    /// the same test RecomposeSlotCore uses to keep a page's last composite.
+    /// </summary>
+    internal static bool SlotIntersectsViewport(PdfPageSlot slot, global::Avalonia.Vector offset, global::Avalonia.Size viewport) =>
+        RequiredTileCells(slot.DisplayWidth, slot.DisplayHeight, slot.TopDip,
+            offset, viewport, ContinuousTileQuantumDip, ContinuousTileOverscanDip).Count > 0;
 }

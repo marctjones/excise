@@ -17,14 +17,13 @@ using static Excise.Avalonia.Controls.PdfViewerControl;
 namespace Excise.Avalonia.Controls;
 
 /// <summary>
-/// Continuous (reading) view mode for <see cref="PdfViewerControl"/> (#371 part 2).
-/// A render-virtualized vertical scroll of every page: only the pages near the
-/// viewport are rendered, bitmaps are bounded, and off-screen renders are
-/// cancelled. This view is read-only — all editing happens in single-page mode
-/// (entering an editing interaction auto-switches back), so none of the
-/// security-critical redaction/selection overlays run here. Non-editing
-/// ambient affordances DO run here: link click/hover hit-testing maps pointer
-/// positions through the slot geometry below (#667, Interaction partial).
+/// The continuous view's pipeline (#371 part 2): a render-virtualized vertical
+/// scroll of every page. Only the pages near the viewport are rendered, bitmaps
+/// are bounded, and off-screen renders are cancelled. Editing other than form
+/// fills (#1807) happens in single-page mode (the viewer switches back when an
+/// editing interaction starts), so none of the security-critical redaction
+/// overlays run here. Link click/hover hit-testing maps pointer positions
+/// through the slot geometry (#667) via <see cref="TryMapPointToPage"/>.
 /// </summary>
 internal sealed partial class ContinuousPageView
 {

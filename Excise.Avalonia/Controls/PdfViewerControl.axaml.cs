@@ -26,7 +26,7 @@ namespace Excise.Avalonia.Controls;
 /// <summary>
 /// Reusable PDF viewer control with zoom, pan, and overlay support.
 /// </summary>
-public partial class PdfViewerControl : UserControl, IFormFieldEditSink
+public partial class PdfViewerControl : UserControl, IFormFieldEditSink, IViewerState
 {
     #region Dependency Properties
 
@@ -790,6 +790,10 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink
     }
 
 
+    // #1842: the facade is the one state both views read (IViewerState); the
+    // interface is implemented by the styled properties above, except this one.
+    double IViewerState.RenderScaling => EffectiveRenderScaling;
+
     // #1842: the facade is the sink every form-field input reports to, in both views.
     bool IFormFieldEditSink.AdmitEdit() => FormFieldEditGate?.Invoke() != false;
 
@@ -1188,7 +1192,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink
     }
 
 
-    #region Rendering
+    #region Property reactions and the single-page render plan
 
     private async void OnDocumentChanged()
     {
