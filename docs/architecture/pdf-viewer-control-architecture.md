@@ -747,6 +747,16 @@ on; `Continuous.cs` holds `SingleIntraPageFraction` and
    (`ViewerCacheTrimCoordinator.cs:189-194`); and the shared tile budget,
    the metrics registry and the automation peer all take the facade type.
    `TemplatedControl` is a Phase B question (§6).
+   **Phase B (step 9) made them `TemplatedControl`s.** None of the three
+   reasons held against a template whose `ControlTheme` ships with the
+   viewer: `PdfViewerControl.axaml` merges both themes into its own
+   resources, so no host loads anything, and the coordinator, budget,
+   metrics and peer key on the facade, which Phase A made independent of
+   what the children derive from. What a template does change is timing
+   (it applies on first style and measure, never for a viewer outside a
+   window) and the logical tree (template parts are not logical children).
+   The facade's constructor therefore applies both views' styling and
+   template before it wires them, and a view refuses a second template.
 3. **Children declare no `StyledProperty` that the facade already declares.**
    They receive `Document`, `CurrentPage`, `ZoomLevel`, the flags,
    `ReadingOrderStrategy`, `WhitespaceMode`, `PageFormFieldsProvider` and
@@ -777,7 +787,8 @@ on; `Continuous.cs` holds `SingleIntraPageFraction` and
    the order the single handler runs today.
 8. **Internal test seams keep their names on the facade in Phase A** as
    one-line forwards, so the ~60 names in §1.6 and the 34 part lookups keep
-   working; retiring them is Phase B (§6).
+   working; retiring them is Phase B (§6). Phase B retired them: tests
+   address `viewer.SinglePagePart.X` / `viewer.ContinuousPart.X`.
 9. **Every new file is perf-path.** A step that creates a file under
    `Excise.Avalonia/Controls/Viewer/` adds that folder to `PERF_PATHS` in the
    same commit (§1.6).
@@ -874,7 +885,7 @@ Depends on: `IViewerState`, `FormFieldInputFactory`, `ViewerPageCaches`
 (through the facade's forward), `ViewerMetrics`.
 
 ```csharp
-internal sealed partial class ContinuousPageView : UserControl, IPageHitSurface, IPagePreviewSource, IReadingPositionSource
+internal sealed partial class ContinuousPageView : TemplatedControl, IPageHitSurface, IPagePreviewSource, IReadingPositionSource
 {
     internal ContinuousPageView(IViewerState state);
     // lifecycle
@@ -932,7 +943,7 @@ child, for the placeholder), `FormFieldInputFactory`, `TypewriterEditorBox`,
 `ViewerPageCaches`, `SkiaInterop`, `ViewerMetrics`.
 
 ```csharp
-internal sealed partial class SinglePageView : UserControl, IPageHitSurface, IReadingPositionSource
+internal sealed partial class SinglePageView : TemplatedControl, IPageHitSurface, IReadingPositionSource
 {
     internal SinglePageView(IViewerState state, IPagePreviewSource preview);
     internal Task RenderCurrentPageAsync();  internal void InvalidateCache();  internal void ClearDisplay();
@@ -1047,8 +1058,8 @@ implementation step may reuse it rather than add a second record.
 flowchart TB
   Host["MainWindow.axaml / ViewerCacheTrimCoordinator / PdfViewerTileBudget / ViewerMetrics / automation peer"]
   F["PdfViewerControl (facade)<br/>25 styled properties, 21 events, class handlers,<br/>root input + mode dispatch, TryMapPointerToContent,<br/>hover/cursor, ViewerPageCaches, accessibility model,<br/>mode switch, cache governance composition, seam forwards"]
-  S["SinglePageView : UserControl<br/>render + LRU + placeholder + look-ahead,<br/>overlay canvases, letter selection, typewriter layer"]
-  C["ContinuousPageView : UserControl<br/>slots, tile cache, render pass, band render,<br/>composites, scroll↔anchor, zoom anchor, look-ahead,<br/>per-slot selection and forms, trim/budget half"]
+  S["SinglePageView : TemplatedControl<br/>render + LRU + placeholder + look-ahead,<br/>overlay canvases, letter selection, typewriter layer"]
+  C["ContinuousPageView : TemplatedControl<br/>slots, tile cache, render pass, band render,<br/>composites, scroll↔anchor, zoom anchor, look-ahead,<br/>per-slot selection and forms, trim/budget half"]
   FF["FormFieldInputFactory (static)"]
   TW["TypewriterEditorBox"]
   Host -- "bindings, events, public methods" --> F
@@ -1244,7 +1255,9 @@ honest caveats:
   design would rather blit from the continuous composite's pixels into its
   own slice; the interface should therefore be allowed to grow a second
   method (`TryCopyCompositeInto(Span<byte>/IntPtr, stride)`) without the
-  copy. This document does not add it now.
+  copy. Phase B added it as two members, `CompositeCopySize` and
+  `TryCopyCompositeInto(..., IntPtr destination, int rowBytes, PixelSize)`,
+  which write the same pixels into caller-owned memory.
 - The continuous view is not touched by #1926's first step, and step 6
   keeps it a separate class, so a spike can proceed in `SinglePageView`
   while `ContinuousPageView` is untouched — the isolation #1926 asks for.
@@ -1261,7 +1274,9 @@ honest caveats:
   `SharedTileBudgetTests`' headless half, the accessibility tests) exercise
   the template's `ScrollViewer` extents. A child `UserControl` with inline
   XAML needs no theme, like the facade today; this is the concrete reason
-  §3.1 principle 2 rejects `TemplatedControl` for Phase A.
+  §3.1 principle 2 rejects `TemplatedControl` for Phase A. Phase B's
+  templated children keep that property because their themes live in the
+  viewer's own resources; `ViewerTemplatePartsTests` pins it.
 - 34 test files reach template parts by name through the facade (§1.6).
   Step 7 must decide the re-export before it moves `PdfImage`; §6
   decision 2. Until then, `SinglePageViewerWaits.cs:39-42` is the one
@@ -1368,12 +1383,16 @@ their full serial runs.
    in `Excise.Avalonia`'s own resource dictionary that the control
    registers itself, not in the app's `App.axaml`, or the two test hosts
    silently lose extents.
+   **Adopted in Phase B** that way: `PdfViewerControl.axaml` merges the two
+   views' `ControlTheme` dictionaries into its own resources (§3.1
+   principle 2).
 6. **Registry generator scope.** Today the nine `mouse` rows come from a
    glob on `PdfViewerControl*.cs`. This design keeps every `AddHandler` on
    the facade so the generator and the JSON are unchanged. If a future step
    wants a child to register its own handlers, the generator's glob is a
    t0-gate input and the change needs the owner's agreement, as #1500 §6
-   item 6 already says of the shortcut table.
+   item 6 already says of the shortcut table. Phase B moved no `AddHandler`: all nine stay
+   in `PdfViewerControl.axaml.cs` and the generator is unchanged.
 7. **Which §1.8 behaviours to keep.** The dead branch and the doc rot are
    free to fix under a housekeeping issue. The re-attach gap, the invisible
    search/redaction overlays in continuous view, the never-shown
