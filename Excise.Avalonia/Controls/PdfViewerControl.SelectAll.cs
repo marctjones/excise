@@ -13,19 +13,9 @@ public partial class PdfViewerControl
     /// <returns>False when there is no document or the page has no text.</returns>
     public bool SelectAllText(int pageNumber = 0)
     {
-        var doc = Document;
-        if (doc == null) return false;
-
-        if (ViewMode == PdfViewMode.Continuous)
-        {
-            var page = pageNumber > 0 ? pageNumber
-                : ContextMenuPageNumber > 0 ? ContextMenuPageNumber
-                : MostVisiblePage;
-            if (page < 1 || page > doc.PageCount) return false;
-
-            return ContinuousPart.SelectAll(page);
-        }
-
-        return SinglePagePart.SelectAll();
+        if (Document == null) return false;
+        return ViewMode == PdfViewMode.Continuous
+            ? ContinuousPart.SelectAll(pageNumber > 0 ? pageNumber : ContextMenuPageNumber)
+            : SinglePagePart.SelectAll();
     }
 }

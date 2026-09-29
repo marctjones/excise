@@ -10,7 +10,13 @@ using static Excise.Avalonia.Controls.PdfViewerControl;
 
 namespace Excise.Avalonia.Controls;
 
-/// <summary>Render-ahead for the single-page view (#1564); see the viewer's LookAhead partial for the design.</summary>
+/// <summary>
+/// Render-ahead for the single-page view (#1564): once the page on screen has
+/// drawn and the viewer is idle, render the page a turn would show next (then
+/// the one before it) at the current zoom, so the turn is a cache hit. The
+/// measurements behind the feature and the continuous half are described on
+/// <see cref="ContinuousPageView"/>'s look-ahead partial.
+/// </summary>
 internal sealed partial class SinglePageView
 {
     // ---- Single-page view -------------------------------------------------

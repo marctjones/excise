@@ -248,7 +248,7 @@
         "Excise.Avalonia.Tests",
         "Excise.App.Tests/UI",
         "Excise.Avalonia/Controls/SinglePageRenderLifetime.cs",
-        "Excise.Avalonia/Controls/PdfViewerControl.Diagnostics.cs",
+        "Excise.Avalonia/Controls/PdfViewerControl.CacheGovernance.cs",
         "Excise.Avalonia.Tests/SinglePageRenderLifetimeTests.cs"
       ],
       "gaps": [

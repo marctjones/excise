@@ -270,6 +270,55 @@ public class TypewriterWorkflowTests
         Cleanup(tempDir);
     }
 
+    // #1842 step 8: the drag preview (a dashed rectangle on the interaction layer) is
+    // shown while a typewriter box is dragged out and hidden when the drag ends. The
+    // capture code that owns it moved within the viewer; no other test looked at it.
+    [FixedAvaloniaFact]
+    public async Task RealDragInTypewriterMode_ShowsThePreview_AndHidesItOnRelease()
+    {
+        var (sourcePath, _, tempDir) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Drag to size");
+
+        var vm = MainWindowViewModelTestFactory.Create();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        await Task.Delay(200);
+
+        await vm.LoadDocumentAsync(sourcePath);
+        await Task.Delay(400);
+        await vm.ToggleTypewriterModeCommand.Execute();
+
+        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+        await SinglePageViewerWaits.WaitForSinglePageLaidOutAsync(window, viewer);
+
+        var page = vm.PdfCoreDocument!.GetPage(1);
+        var localCenter = new Point(
+            page.VisualWidth * 120.0 / 72.0 / 2.0,
+            page.VisualHeight * 120.0 / 72.0 / 2.0);
+        var start = viewer.OverlayCanvas.TranslatePoint(localCenter, window)!.Value;
+        var end = start + new Point(80, 40);
+
+        bool PreviewVisible() => viewer.InteractionLayer.Children
+            .OfType<global::Avalonia.Controls.Shapes.Rectangle>().Any(r => r.IsVisible);
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            window.MouseDown(start, MouseButton.Left);
+            window.MouseMove(end);
+        });
+        window.UpdateLayout();
+        PreviewVisible().Should().BeTrue("dragging out a box shows its outline");
+
+        await Dispatcher.UIThread.InvokeAsync(() => window.MouseUp(end, MouseButton.Left));
+        for (var i = 0; i < 3; i++) { await Task.Delay(100); window.UpdateLayout(); }
+
+        vm.TypewriterTextOperations.Should().HaveCount(1, "fixture: the drag placed a box");
+        PreviewVisible().Should().BeFalse("the outline goes when the box is placed");
+
+        window.Close();
+        Cleanup(tempDir);
+    }
+
     // #780/#642: defence in depth — the permission re-check on CREATE, not just
     // on the mode toggle. Uses the GUI load path (LoadDocumentAsync) so the
     // in-memory document is set and OnTypewriterTextCreated's permission gate is

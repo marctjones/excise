@@ -16,14 +16,15 @@ using SkiaSharp;
 namespace Excise.Avalonia.Controls;
 
 /// <summary>
-/// Continuous (reading) view mode for <see cref="PdfViewerControl"/> (#371 part 2).
-/// A render-virtualized vertical scroll of every page: only the pages near the
-/// viewport are rendered, bitmaps are bounded, and off-screen renders are
-/// cancelled. This view is read-only — all editing happens in single-page mode
-/// (entering an editing interaction auto-switches back), so none of the
-/// security-critical redaction/selection overlays run here. Non-editing
-/// ambient affordances DO run here: link click/hover hit-testing maps pointer
-/// positions through the slot geometry below (#667, Interaction partial).
+/// The viewer's side of the continuous (reading) view mode (#371 part 2, #1842):
+/// the tile and DPI constants and pure math the view and the tests share, the
+/// view-mode switch, the public continuous API, and the wiring and test seams
+/// of <see cref="ContinuousPageView"/>, which holds the pipeline. The view is
+/// read-only apart from form fields (#1807): entering an editing interaction
+/// switches back to single-page (the <see cref="InteractionModeProperty"/>
+/// class handler), so none of the security-critical redaction overlays run
+/// there. Non-editing ambient affordances do: link click/hover hit-testing
+/// maps pointer positions through the view's slot geometry (#667).
 /// </summary>
 public partial class PdfViewerControl
 {

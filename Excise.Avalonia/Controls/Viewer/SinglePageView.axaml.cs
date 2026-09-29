@@ -121,8 +121,19 @@ internal sealed partial class SinglePageView : UserControl, IPageHitSurface, IRe
         IsLoading = false;
     }
 
-    /// <summary>Turn render-ahead in this view on or off (#1564); the viewer owns the switch.</summary>
-    internal void SetRenderAheadEnabled(bool enabled) => _renderAheadEnabled = enabled;
+    /// <summary>
+    /// Turn render-ahead in this view on or off (#1564); the viewer owns the switch.
+    /// Turning it off cancels this view's look-ahead in flight.
+    /// </summary>
+    internal void SetRenderAheadEnabled(bool enabled)
+    {
+        _renderAheadEnabled = enabled;
+        if (!enabled)
+            CancelSinglePageLookAhead();
+    }
+
+    /// <summary>Whether this view renders ahead; the viewer's switch reads it back from here.</summary>
+    internal bool RenderAheadEnabled => _renderAheadEnabled;
 
     /// <summary>Zoom changed: the single scale transform gives instant visual zoom.</summary>
     internal void OnZoomLevelChanged()

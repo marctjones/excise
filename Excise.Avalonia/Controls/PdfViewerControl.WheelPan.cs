@@ -17,15 +17,6 @@ public partial class PdfViewerControl
     private Vector _panStartOffset;
 
     /// <summary>
-    /// The ScrollViewer that currently owns the viewport — the continuous
-    /// stack in Continuous mode, otherwise the single-page scroller.
-    /// </summary>
-    private ScrollViewer? ActiveScrollViewer =>
-        ViewMode == PdfViewMode.Continuous && ContinuousScrollViewer != null
-            ? ContinuousScrollViewer
-            : PdfScrollViewer;
-
-    /// <summary>
     /// Ctrl (or Meta/⌘) + wheel zooms; a plain wheel is left untouched so the
     /// ScrollViewer scrolls natively. Registered on the Tunnel pass at the root
     /// so it runs before the inner ScrollViewer's wheel handler; marking the
@@ -54,7 +45,7 @@ public partial class PdfViewerControl
         if (!e.GetCurrentPoint(this).Properties.IsMiddleButtonPressed)
             return;
 
-        var scroller = ActiveScrollViewer;
+        var scroller = ActiveViewportScrollViewer();
         if (scroller == null)
             return;
 
@@ -71,7 +62,7 @@ public partial class PdfViewerControl
         if (!_isPanning)
             return;
 
-        var scroller = ActiveScrollViewer;
+        var scroller = ActiveViewportScrollViewer();
         if (scroller == null)
             return;
 
