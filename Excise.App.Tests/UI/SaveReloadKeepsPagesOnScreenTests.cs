@@ -44,7 +44,7 @@ public class SaveReloadKeepsPagesOnScreenTests
     {
         using var s = await Session.OpenAsync();
         // Read from inside the page, not at its top: a rebuild jumped back to the top.
-        var scroller = s.Viewer.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
+        var scroller = s.Viewer.ContinuousScrollViewer!;
         scroller.Offset = new Vector(scroller.Offset.X, scroller.Offset.Y + 300);
         await AnnotationPlacementAccuracyTests.WaitForIdleLayout(s.Window);
         await AnnotationPlacementAccuracyTests.WaitForContinuousPageRendered(s.Window, s.Viewer, Page);
@@ -171,7 +171,7 @@ public class SaveReloadKeepsPagesOnScreenTests
         }
 
         public WriteableBitmap? Composite() =>
-            Viewer.FindControl<ItemsControl>("ContinuousItems")!.ItemsSource?.Cast<PdfPageSlot>()
+            Viewer.ContinuousItems!.ItemsSource?.Cast<PdfPageSlot>()
                 .FirstOrDefault(slot => slot.PageNumber == Page)?.Bitmap;
 
         public async Task<WriteableBitmap> WaitForComposite(
@@ -215,7 +215,7 @@ public class SaveReloadKeepsPagesOnScreenTests
         public CompositeWatch(PdfViewerControl viewer, int page)
         {
             _viewer = viewer;
-            _items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            _items = viewer.ContinuousItems!;
             _page = page;
             _items.PropertyChanged += OnItemsChanged;
             _viewer.PropertyChanged += OnViewerChanged;

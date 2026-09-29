@@ -300,7 +300,7 @@ public class InPageLinkClickTests
             const double zoom = 0.4;
             viewer.ViewMode = PdfViewMode.Continuous;
             viewer.ZoomLevel = zoom;
-            var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            var items = viewer.ContinuousItems!;
             await Controls.ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
             await Controls.ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 2);
 

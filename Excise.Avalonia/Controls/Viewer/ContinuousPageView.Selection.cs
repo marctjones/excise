@@ -5,6 +5,8 @@ using Avalonia.Input;
 using Excise.Core.Document;
 using Excise.Core.Text;
 
+using static Excise.Avalonia.Controls.PdfViewerControl;
+
 namespace Excise.Avalonia.Controls;
 
 /// <summary>
@@ -34,7 +36,7 @@ namespace Excise.Avalonia.Controls;
 /// gets a hard line break at the boundary (the whitespace layer, #824/#826, does
 /// not reflow across pages — a documented limit, not a regression).
 /// </summary>
-public partial class PdfViewerControl
+internal sealed partial class ContinuousPageView
 {
     private int _continuousSelectionPage;        // anchor (press) page, 1-based
     private Letter? _continuousSelectionAnchor;
@@ -103,7 +105,7 @@ public partial class PdfViewerControl
         letters = ContinuousPageLetters.Empty;
 
         // The same funnel as the link hit-test (#667), on the continuous surface.
-        if (!TryMapPointerToContent(ContinuousSurface, e, out pageNumber, out var pdfX, out var pdfY))
+        if (!_viewer.TryMapPointerToContent(this, e, out pageNumber, out var pdfX, out var pdfY))
             return false;
 
         letters = GetContinuousPageLetters(pageNumber);
@@ -111,7 +113,7 @@ public partial class PdfViewerControl
         return true;
     }
 
-    private void BeginContinuousTextSelection(PointerEventArgs e)
+    internal void BeginContinuousTextSelection(PointerEventArgs e)
     {
         ClearContinuousSelectionHighlight();
         _continuousSelectionAnchor = null;
@@ -133,7 +135,7 @@ public partial class PdfViewerControl
         DrawContinuousSelectionSpan();
     }
 
-    private void UpdateContinuousTextSelection(PointerEventArgs e)
+    internal void UpdateContinuousTextSelection(PointerEventArgs e)
     {
         if (!TryContinuousPointToLetter(e, out var page, out var letter, out _))
             return;
@@ -198,7 +200,7 @@ public partial class PdfViewerControl
         return result;
     }
 
-    private void EndContinuousTextSelection()
+    internal void EndContinuousTextSelection()
     {
         if (Document == null ||
             _continuousSelectionAnchor == null || _continuousSelectionFocus == null ||
@@ -290,7 +292,7 @@ public partial class PdfViewerControl
     }
 
     /// <summary>Clear every page's continuous selection highlight.</summary>
-    public void ClearContinuousSelectionHighlight()
+    internal void ClearContinuousSelectionHighlight()
     {
         if (_continuousSlots == null) return;
         foreach (var slot in _continuousSlots)

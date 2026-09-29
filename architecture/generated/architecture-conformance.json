@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "44aa53078d065678c714bd58fc6b2c879212938e",
+  "sourceRevision": "d7532535928f5559a29dbddafa0bb59522a73173",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8313,
+    "retainedSymbols": 8372,
     "observedComponentDependencies": 83,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -66,14 +66,14 @@
     {
       "source": "avalonia",
       "target": "core-document",
-      "references": 487,
-      "typeDependencyCount": 46,
+      "references": 491,
+      "typeDependencyCount": 51,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Avalonia.Controls.PdfViewerControl",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 76
+          "references": 53
         }
       ]
     },
@@ -94,14 +94,14 @@
     {
       "source": "avalonia",
       "target": "core-text",
-      "references": 52,
-      "typeDependencyCount": 8,
+      "references": 56,
+      "typeDependencyCount": 15,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Avalonia.Controls.PdfViewerControl",
           "target": "Excise.Core.Text.TextSelectionEngine",
-          "references": 26
+          "references": 15
         }
       ]
     },
@@ -109,13 +109,13 @@
       "source": "avalonia",
       "target": "rendering",
       "references": 26,
-      "typeDependencyCount": 2,
+      "typeDependencyCount": 4,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Avalonia.Controls.PdfViewerControl",
+          "source": "Excise.Avalonia.Controls.ContinuousPageView",
           "target": "Excise.Rendering.RenderOptions",
-          "references": 20
+          "references": 10
         }
       ]
     },

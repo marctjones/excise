@@ -129,8 +129,8 @@ public class ContinuousNavigationRegressionTests
             vm.IsContinuousView.Should().BeTrue("continuous scroll is the default view mode");
 
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
-            var cont = viewer.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
-            var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            var cont = viewer.ContinuousScrollViewer!;
+            var items = viewer.ContinuousItems!;
             var deadline = DateTime.UtcNow.AddSeconds(15);
             while (DateTime.UtcNow < deadline && !(items.ItemsSource != null && cont.Extent.Height > cont.Viewport.Height * 3))
             {
@@ -192,8 +192,8 @@ public class ContinuousNavigationRegressionTests
         try
         {
             var single = viewer.FindControl<ScrollViewer>("PdfScrollViewer")!;
-            var cont = viewer.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
-            var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            var cont = viewer.ContinuousScrollViewer!;
+            var items = viewer.ContinuousItems!;
             await PumpUntilAsync(window, () => viewer.SinglePageLookAheadInFlight && !viewer.IsLoading
                 && single.Extent.Height > single.Viewport.Height + 100, "page 1 shown and page 2 rendering ahead");
 

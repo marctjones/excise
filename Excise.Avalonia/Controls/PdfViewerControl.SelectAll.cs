@@ -26,16 +26,7 @@ public partial class PdfViewerControl
                 : MostVisiblePage;
             if (page < 1 || page > doc.PageCount) return false;
 
-            var letters = GetContinuousPageLetters(page);
-            if (letters.Reading.Count == 0) return false;
-
-            ClearContinuousSelectionHighlight();
-            _continuousSelectionPage = _continuousSelectionFocusPage = page;
-            _continuousSelectionAnchor = letters.Reading[0];
-            _continuousSelectionFocus = letters.Reading[^1];
-            DrawContinuousSelectionSpan();
-            EndContinuousTextSelection();
-            return true;
+            return ContinuousPart.SelectAll(page);
         }
 
         EnsurePageLettersLoaded();

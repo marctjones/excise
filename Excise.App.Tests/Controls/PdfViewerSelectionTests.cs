@@ -268,7 +268,7 @@ public class PdfViewerSelectionTests
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 window.UpdateLayout();
-                items = control.FindControl<ItemsControl>("ContinuousItems")!;
+                items = control.ContinuousItems!;
                 slot = items.ItemsSource?.Cast<PdfPageSlot>().FirstOrDefault()!;
                 ready = slot != null && items.Bounds.Width > 1 && slot.DisplayWidth > 1
                         && doc.GetPage(1).Letters.Count > 0;
@@ -441,7 +441,7 @@ public class PdfViewerSelectionTests
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 window.UpdateLayout();
-                items = control.FindControl<ItemsControl>("ContinuousItems")!;
+                items = control.ContinuousItems!;
                 ready = items.ItemsSource?.Cast<PdfPageSlot>().Count() == 2 && items.Bounds.Width > 1
                         && doc.GetPage(2).Letters.Count > 0;
             });
@@ -550,7 +550,7 @@ public class PdfViewerSelectionTests
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 window.UpdateLayout();
-                items = control.FindControl<ItemsControl>("ContinuousItems")!;
+                items = control.ContinuousItems!;
                 slot = items.ItemsSource?.Cast<PdfPageSlot>().FirstOrDefault()!;
                 ready = slot != null && items.Bounds.Width > 1 && slot.DisplayWidth > 1
                         && doc.GetPage(1).Letters.Count > 0;

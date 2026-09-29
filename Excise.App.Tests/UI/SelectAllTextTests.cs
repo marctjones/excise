@@ -55,7 +55,7 @@ public class SelectAllTextTests : IDisposable
         await Task.Delay(600);
         window.UpdateLayout();
 
-        var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+        var items = viewer.ContinuousItems!;
         var container = (Control)items.ContainerFromIndex(2)!;   // page 3, deliberately not the most-visible page
         var border = ((container as global::Avalonia.Controls.Presenters.ContentPresenter)?.Child as Border ?? container as Border)!;
         var centre = border.TranslatePoint(new Point(border.Bounds.Width / 2, border.Bounds.Height / 2), window)!.Value;

@@ -185,7 +185,7 @@ public class ModeSwitchVisualTests
             await CaptureWhenInkedAsync(window, viewer, inkThreshold: InkThreshold); // continuous view settled
 
             // Scroll into the middle of the document.
-            var continuous = viewer.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
+            var continuous = viewer.ContinuousScrollViewer!;
             continuous.Offset = new Vector(continuous.Offset.X, continuous.Extent.Height * 0.4);
             await PumpUntilAsync(window, () => vm.CurrentPage > 1);
             var pageBefore = vm.CurrentPage;

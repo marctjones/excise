@@ -580,7 +580,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
         Focusable = true;
         UpdateViewerAutomationProperties();
         DetachedFromVisualTree += OnDetachedFromVisualTreeHandler;
-        AttachedToVisualTree += (_, _) => _continuousDetached = false;
+        AttachedToVisualTree += (_, _) => ContinuousPart.OnAttached();
     }
 
     /// <summary>
@@ -613,10 +613,10 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
         FormFieldsProperty.Changed.AddClassHandler<PdfViewerControl>((control, _) =>
         {
             control.RedrawFormFieldsLayer();
-            control.RefreshContinuousFormFieldsIfChanged();
+            control.ContinuousPart.RefreshContinuousFormFieldsIfChanged();
         });
         PageFormFieldsProviderProperty.Changed.AddClassHandler<PdfViewerControl>((control, _) =>
-            control.RefreshContinuousFormFieldsIfChanged());
+            control.ContinuousPart.RefreshContinuousFormFieldsIfChanged());
 
         // #1817: forget the right-clicked page when its menu closes. Posted, not immediate: a menu
         // item's command runs around the time the menu closes and must still see the page. Registered
@@ -683,27 +683,12 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
         // continuous rendering: a queued render pass / in-flight cell completion
         // touching the now-disposed document would throw and destabilise the
         // shared dispatcher (observed as a cross-test ObjectDisposedException
-        // cleanup-failure cascade). This flag hard-stops all continuous work.
-        _continuousDetached = true;
+        // cleanup-failure cascade). The continuous view's Detach sets the flag
+        // that hard-stops all continuous work, drops its scroll subscriptions and
+        // container hooks, and cancels in-flight cell renders (#848).
         _viewportSubscription?.Dispose();
         _viewportSubscription = null;
-        _continuousOffsetSubscription?.Dispose();
-        _continuousOffsetSubscription = null;
-        _continuousViewportSubscription?.Dispose();
-        _continuousViewportSubscription = null;
-        _continuousExtentSubscription?.Dispose();
-        _continuousExtentSubscription = null;
-
-        if (ContinuousItems != null)
-        {
-            ContinuousItems.ContainerPrepared -= OnContinuousContainerPrepared;
-            ContinuousItems.ContainerClearing -= OnContinuousContainerClearing;
-            ContinuousItems.LayoutUpdated -= OnContinuousItemsLayoutUpdated;
-        }
-
-        // Cancel in-flight grid-cell renders for the now-detached control and
-        // start a fresh generation, so a re-attach renders cleanly (#848).
-        CancelContinuousCellRenders();
+        ContinuousPart.Detach();
     }
 
     /// <summary>
@@ -877,7 +862,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
             || change.Property == RevealHiddenAnnotationsProperty
             || change.Property == HighlightFormFieldsProperty)
         {
-            InvalidateContinuousCache();
+            ContinuousPart.InvalidateContinuousCache();
             InvalidateSinglePageLookAhead();
             InvalidateVisual();
             // #1473: no hidden single-page render in continuous view; the switch
@@ -1109,7 +1094,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
                 .Subscribe(new AnonymousObserver<Size>(OnScrollViewerViewportChanged));
         }
 
-        InitializeContinuous();
+        WireContinuousView();
     }
 
     private void OnContextMenuClosed(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e) =>
@@ -1145,9 +1130,6 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
 
     private Size _lastReportedViewport;
     private IDisposable? _viewportSubscription;
-    private IDisposable? _continuousOffsetSubscription;
-    private IDisposable? _continuousViewportSubscription;
-    private IDisposable? _continuousExtentSubscription;
 
     private void OnScrollViewerViewportChanged(Size newViewport)
     {
@@ -1412,7 +1394,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
         }
         if (ViewMode == PdfViewMode.Continuous)
         {
-            ApplyContinuousZoom();
+            ContinuousPart.ApplyContinuousZoom();
         }
         else
         {
@@ -1492,8 +1474,8 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
         _pageCaches.ClearLinks();
         ClearSelectionHighlight();
 
-        var keepPagesOnScreen = TakeKeepPagesOnScreenRequest();
-        InvalidateContinuousCache(keepPagesOnScreen);
+        var keepPagesOnScreen = ContinuousPart.TakeKeepPagesOnScreenRequest();
+        ContinuousPart.InvalidateContinuousCache(keepPagesOnScreen);
         if (Document != null)
         {
             RefreshPageAnnotations();
@@ -1502,9 +1484,9 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
             {
                 // #1876: a save's reload renders into the slots it kept.
                 if (keepPagesOnScreen)
-                    RenderVisibleContinuousTiles();
+                    ContinuousPart.RenderVisibleContinuousTiles();
                 else
-                    RebuildContinuous();
+                    ContinuousPart.RebuildContinuous();
                 // #1473: the single-page Image is hidden in continuous view, so
                 // rendering it here was a full page render nobody saw, plus a
                 // bitmap held in the single-page cache. OnViewModeChanged renders
@@ -1523,7 +1505,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
             Annotations = null;
             RedrawTypewriterLayer();
             ClearDisplay();
-            ClearContinuous();
+            ContinuousPart.ClearContinuous();
         }
 
         UpdateViewerAutomationProperties();
@@ -1537,7 +1519,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
             {
                 if (!_syncingPageFromScroll)
                 {
-                    ScrollToPageContinuous(CurrentPage);
+                    ContinuousPart.ScrollToPageContinuous(CurrentPage);
                 }
 
                 PageChanged?.Invoke(this, new PageChangedEventArgs(CurrentPage));
@@ -1568,7 +1550,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
             // from the user scrolling (e.g. a "go to page" command or a clicked
             // link) should scroll the reading view to that page.
             if (ViewMode == PdfViewMode.Continuous && !_syncingPageFromScroll)
-                ScrollToPageContinuous(CurrentPage);
+                ContinuousPart.ScrollToPageContinuous(CurrentPage);
         }
     }
 
@@ -1584,7 +1566,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
         _lettersPageNumber = -1;
         _selectionAnchor = null;
         _selectionFocus = null;
-        InvalidateContinuousCache();
+        ContinuousPart.InvalidateContinuousCache();
     }
 
     private void OnRenderVersionChanged()
@@ -1593,7 +1575,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
             return;
 
         InvalidatePageCache();
-        InvalidateContinuousCache();
+        ContinuousPart.InvalidateContinuousCache();
         _currentPageLetters = null;
         _readingOrderedLetters = null;
         _lettersPageNumber = -1;
@@ -1606,8 +1588,8 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
 
         if (ViewMode == PdfViewMode.Continuous)
         {
-            RebuildContinuous();
-            RenderVisibleContinuousTiles();
+            ContinuousPart.RebuildContinuous();
+            ContinuousPart.RenderVisibleContinuousTiles();
             // InvalidatePageCache above disposed the bitmap the hidden
             // single-page Image may still show (#1473).
             ClearDisplay();

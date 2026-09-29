@@ -96,7 +96,7 @@ public partial class PdfViewerControl
 
     private WriteableBitmap? TryCopyContinuousCompositeForPage(int pageNumber, double widthPt, double heightPt)
     {
-        var slots = _continuousSlots;
+        var slots = ContinuousPart.ContinuousSlots;
         if (slots == null || pageNumber < 1 || pageNumber > slots.Count || ZoomLevel <= 0)
             return null;
         var slot = slots[pageNumber - 1];
@@ -104,7 +104,7 @@ public partial class PdfViewerControl
         if (source == null || slot.PageNumber != pageNumber)
             return null;
 
-        int dpi = ContinuousRenderDpi;
+        int dpi = ContinuousPart.ContinuousRenderDpi;
         var key = slot.CompositeKey;
         double pageWidthDip = widthPt * 96.0 / 72.0 * ZoomLevel;
         double pageHeightDip = heightPt * 96.0 / 72.0 * ZoomLevel;

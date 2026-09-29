@@ -104,7 +104,7 @@ public class DefaultTextSelectionTests
                 {
                     window.UpdateLayout();
                     viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
-                    items = viewer?.FindControl<ItemsControl>("ContinuousItems")!;
+                    items = viewer?.ContinuousItems!;
                     slot = items?.ItemsSource?.Cast<PdfPageSlot>().FirstOrDefault()!;
                     ready = viewer != null && slot != null && items!.Bounds.Width > 1
                             && slot.DisplayWidth > 1
