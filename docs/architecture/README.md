@@ -73,7 +73,10 @@ second implementation-status list.
    component: [Main-window architecture](main-window-architecture.md) — the
    member-level target structure for `app-main-window` (owners, contracts,
    view/behaviour split) and the sequencing constraints its refactor must
-   respect (#1500). [Dynamic XFA display](xfa-rendering.md) — how excise
+   respect (#1500). [PDF viewer control architecture](pdf-viewer-control-architecture.md) —
+   the member-level target structure for `PdfViewerControl`'s single-page/continuous
+   split, the shared-state cycle that blocks it today, and the migration sequencing (#1842).
+   [Dynamic XFA display](xfa-rendering.md) — how excise
    lays out dynamic XFA forms into ordinary pages, and the redaction rule that
    comes with it (#1547).
 
