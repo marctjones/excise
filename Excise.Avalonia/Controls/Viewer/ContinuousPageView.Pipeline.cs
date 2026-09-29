@@ -129,6 +129,8 @@ internal sealed partial class ContinuousPageView
     // True once the control has left the visual tree — hard-stops all continuous
     // rendering so a closed viewer can't touch a disposed document (#848).
     private bool _continuousDetached;
+    // True while the scroller subscriptions and page-list hooks are live (#1929).
+    private bool _continuousSubscribed;
 
     // Intra-page position carried across a view-mode switch (#693): the
     // fraction of the current page sitting at the viewport top. Continuous
@@ -177,8 +179,15 @@ internal sealed partial class ContinuousPageView
                $"viewport={vp.Width:F0}x{vp.Height:F0} offsetY={off.Y:F0} slots={slots}";
     }
 
-    private void InitializeContinuous()
+    /// <summary>
+    /// Subscribe to the scroller and hook the page list. Runs at construction and on every
+    /// attach (#1929); <see cref="UnsubscribeContinuous"/> is its mirror, run on detach. The
+    /// guard keeps the first attach, which follows construction, from subscribing twice.
+    /// </summary>
+    private void SubscribeContinuous()
     {
+        if (_continuousSubscribed) return;
+        _continuousSubscribed = true;
 
         if (ContinuousItems != null)
         {
@@ -206,6 +215,24 @@ internal sealed partial class ContinuousPageView
                     if (_pendingZoomAnchorPage > 0)
                         Dispatcher.UIThread.Post(ApplyPendingZoomAnchor, DispatcherPriority.Loaded);
                 }));
+        }
+    }
+
+    private void UnsubscribeContinuous()
+    {
+        _continuousSubscribed = false;
+        _continuousOffsetSubscription?.Dispose();
+        _continuousOffsetSubscription = null;
+        _continuousViewportSubscription?.Dispose();
+        _continuousViewportSubscription = null;
+        _continuousExtentSubscription?.Dispose();
+        _continuousExtentSubscription = null;
+
+        if (ContinuousItems != null)
+        {
+            ContinuousItems.ContainerPrepared -= OnContinuousContainerPrepared;
+            ContinuousItems.ContainerClearing -= OnContinuousContainerClearing;
+            ContinuousItems.LayoutUpdated -= OnContinuousItemsLayoutUpdated;
         }
     }
 

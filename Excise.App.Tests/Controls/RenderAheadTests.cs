@@ -702,8 +702,9 @@ public class RenderAheadTests
     /// #1842 step 6: re-attaching the viewer re-arms the continuous view (the viewer's
     /// attach handler clears the view's "detached" hard-stop), so a render it is asked
     /// for afterwards runs. Pinned through <c>RefreshContinuousLayout</c>, which calls the
-    /// render pass directly: the scroll and container hooks a re-attach does not restore
-    /// are the separate gap #1929.
+    /// render pass directly, so this holds the hard-stop reset on its own; the scroll and
+    /// container hooks a re-attach restores are pinned in
+    /// <c>Excise.Avalonia.Tests/ViewerReattachTests</c> (#1929).
     /// </summary>
     [FixedAvaloniaFact]
     public async Task Reattached_TheContinuousViewRendersWhenAsked()
