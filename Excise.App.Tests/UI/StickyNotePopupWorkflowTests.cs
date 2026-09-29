@@ -665,6 +665,75 @@ public class StickyNotePopupWorkflowTests
         }
     }
 
+    /// <summary>
+    /// #1842 step 4: a structural refresh (<c>RefreshContinuousLayout</c>, the path the
+    /// app takes after a document mutation, #917/#1651) drops the per-page hit-test
+    /// caches through the continuous invalidation alone. <see
+    /// cref="DragThenHover_InContinuousView_InvalidatePageCacheDropsTheStaleAnnotationHitTest"/>
+    /// pins the other clearing path; here <c>InvalidatePageCache</c> is never called,
+    /// so only the continuous invalidation can make the moved card hover.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task MovedInPlace_ThenRefreshContinuousLayout_TheNoteHoversWhereItNowIs()
+    {
+        const string contents = "Refresh-then-hover fixture";
+        var document = PdfDocument.Open(TestPdfGenerator.CreateSimplePdf("Continuous-view refresh"));
+        var pageBox = document.GetPage(1).CropBox.Normalize();
+        var icon = new PdfRectangle(pageBox.Left + 120, pageBox.Top - 330, pageBox.Left + 120 + PdfAnnotation.TextIconSize,
+            pageBox.Top - 330 + PdfAnnotation.TextIconSize);
+        var card = new PdfRectangle(pageBox.Left + 120, pageBox.Top - 380, pageBox.Left + 200, pageBox.Top - 330);
+        var movedCard = new PdfRectangle(card.Left + 200, card.Bottom - 100, card.Right + 200, card.Top - 100);
+        document.AddTextAnnotation(1, icon, contents, withPopup: true, popupRect: card);
+
+        var viewer = new PdfViewerControl();
+        var window = new Window { Content = viewer, Width = 900, Height = 700 };
+        window.Show();
+        viewer.Document = document;
+        viewer.ViewMode = PdfViewMode.Continuous;
+        try
+        {
+            var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            string? hovered = null;
+            viewer.AnnotationHovered += (_, e) => hovered = e.DisplayText;
+
+            async Task<string?> HoverAsync(PdfRectangle rect)
+            {
+                await Controls.ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+                var border = (items.ContainerFromIndex(0) as global::Avalonia.Controls.Presenters.ContentPresenter)?.Child as Border;
+                border.Should().NotBeNull("fixture: page 1's slot border is realized");
+                double scale = PdfViewerControl.PointsToDip * viewer.ZoomLevel;
+                var center = border!.TranslatePoint(new Point(
+                    ((rect.Left + rect.Right) / 2 - pageBox.Left) * scale,
+                    (pageBox.Top - (rect.Top + rect.Bottom) / 2) * scale), window)!.Value;
+                var offPage = border.TranslatePoint(new Point(-20 * scale, 100 * scale), window)!.Value;
+                await Dispatcher.UIThread.InvokeAsync(() => window.MouseMove(offPage));
+                for (int i = 0; i < 4; i++) { await Task.Delay(25); window.UpdateLayout(); }
+                await Dispatcher.UIThread.InvokeAsync(() => window.MouseMove(center));
+                for (int i = 0; i < 4; i++) { await Task.Delay(25); window.UpdateLayout(); }
+                return hovered;
+            }
+
+            (await HoverAsync(card)).Should().Contain(contents, "fixture: the resting card hovers (and is cached)");
+
+            var note = document.GetPage(1).GetAnnotations().Single(a => a.Subtype == PdfAnnotationSubtype.Text);
+            document.MoveTextAnnotationPopup(note, movedCard);
+            viewer.RefreshContinuousLayout();
+            // The refresh resets the viewer's hover state without raising an event;
+            // forget the last reported value too, or a stale one would pass below.
+            hovered = null;
+
+            (await HoverAsync(movedCard)).Should().Contain(contents,
+                "after a structural refresh the hover hit-test must see the card where it now is");
+            (await HoverAsync(card)).Should().BeNull("and no longer where it was");
+        }
+        finally
+        {
+            window.Close();
+            Dispatcher.UIThread.RunJobs();
+            document.Dispose();
+        }
+    }
+
     // ── shared workflow helper ───────────────────────────────────────────────
 
     /// <summary>

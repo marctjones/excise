@@ -476,23 +476,6 @@ public partial class PdfViewerControl
         return root;
     }
 
-    private void EnsurePageLinksLoaded()
-    {
-        if (Document == null) return;
-        if (_linksPageNumber == CurrentPage && _currentPageLinks != null) return;
-        try
-        {
-            var page = Document.GetPage(CurrentPage);
-            _currentPageLinks = page.GetLinks();
-            _linksPageNumber = CurrentPage;
-        }
-        catch
-        {
-            _currentPageLinks = Array.Empty<PdfLink>();
-            _linksPageNumber = CurrentPage;
-        }
-    }
-
     /// <summary>
     /// Link hit-test for a pointer event in whatever view mode is active
     /// (#667). Single-page mode reads the pointer relative to the overlay
@@ -506,9 +489,7 @@ public partial class PdfViewerControl
         if (!TryMapPointerToContent(e, out var pageNumber, out var pdfX, out var pdfY))
             return null;
 
-        var links = ViewMode == PdfViewMode.Continuous
-            ? GetContinuousPageLinks(pageNumber)
-            : LoadedCurrentPageLinks();
+        var links = _pageCaches.Links(pageNumber);
         return links.Count == 0 ? null : FindLinkAt(links, pdfX, pdfY);
     }
 
@@ -562,12 +543,6 @@ public partial class PdfViewerControl
         return true;
     }
 
-    private IReadOnlyList<PdfLink> LoadedCurrentPageLinks()
-    {
-        EnsurePageLinksLoaded();
-        return _currentPageLinks ?? (IReadOnlyList<PdfLink>)Array.Empty<PdfLink>();
-    }
-
     /// <summary>
     /// The annotation under the pointer whose <c>/Contents</c> is worth showing
     /// (#1074), or null.
@@ -583,7 +558,7 @@ public partial class PdfViewerControl
         if (!TryMapPointerToContent(e, out var pageNumber, out var pdfX, out var pdfY))
             return null;
 
-        var annots = GetPageAnnotations(pageNumber);
+        var annots = _pageCaches.Annotations(pageNumber);
         if (annots.Count == 0) return null;
 
         // Topmost first: /Annots is painted in array order, so the LAST entry
@@ -613,7 +588,7 @@ public partial class PdfViewerControl
         if (!TryMapPointerToContent(e, out var pageNumber, out var pdfX, out var pdfY))
             return null;
 
-        var annots = GetPageAnnotations(pageNumber);
+        var annots = _pageCaches.Annotations(pageNumber);
         for (var i = annots.Count - 1; i >= 0; i--)
         {
             var a = annots[i];
@@ -639,7 +614,7 @@ public partial class PdfViewerControl
             return null;
         pageNumber = mappedPage;
 
-        var annots = GetPageAnnotations(mappedPage);
+        var annots = _pageCaches.Annotations(mappedPage);
         for (var i = annots.Count - 1; i >= 0; i--)
         {
             var a = annots[i];
@@ -779,31 +754,6 @@ public partial class PdfViewerControl
         return x >= left && x <= right && y >= bottom && y <= top;
     }
 
-    /// <summary>
-    /// Per-page annotation cache, for the same reason the link cache exists:
-    /// hover hit-testing runs on every pointer move, and re-parsing /Annots per
-    /// move is off the table. Cleared with the rest of the per-document state.
-    /// </summary>
-    private IReadOnlyList<PdfAnnotation> GetPageAnnotations(int pageNumber)
-    {
-        if (_pageAnnotations.TryGetValue(pageNumber, out var cached))
-            return cached;
-
-        IReadOnlyList<PdfAnnotation> annots;
-        try
-        {
-            annots = Document?.GetPage(pageNumber).GetAnnotations()
-                     ?? (IReadOnlyList<PdfAnnotation>)Array.Empty<PdfAnnotation>();
-        }
-        catch
-        {
-            annots = Array.Empty<PdfAnnotation>();
-        }
-        _pageAnnotations[pageNumber] = annots;
-        return annots;
-    }
-
-    private readonly Dictionary<int, IReadOnlyList<PdfAnnotation>> _pageAnnotations = new();
     private PdfAnnotation? _lastHoveredAnnotation;
 
     /// <summary>
@@ -859,33 +809,6 @@ public partial class PdfViewerControl
                 return link;
         }
         return null;
-    }
-
-    /// <summary>
-    /// Per-page link cache for continuous mode. Hover hit-testing runs on
-    /// every pointer move over the reading view and the view shows many
-    /// pages, so re-parsing /Annots per move is off the table — each page's
-    /// links are parsed once and kept until the document changes or the host
-    /// bumps RenderVersion (both call <see cref="InvalidateContinuousCache"/>,
-    /// which clears this cache). Link lists are tiny (a few rects), so an
-    /// unbounded per-document dictionary is fine where bitmaps were not.
-    /// </summary>
-    private IReadOnlyList<PdfLink> GetContinuousPageLinks(int pageNumber)
-    {
-        if (_continuousPageLinks.TryGetValue(pageNumber, out var cached))
-            return cached;
-
-        IReadOnlyList<PdfLink> links;
-        try
-        {
-            links = Document?.GetPage(pageNumber).GetLinks() ?? Array.Empty<PdfLink>();
-        }
-        catch
-        {
-            links = Array.Empty<PdfLink>();
-        }
-        _continuousPageLinks[pageNumber] = links;
-        return links;
     }
 
     /// <summary>

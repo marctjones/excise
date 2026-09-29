@@ -52,11 +52,6 @@ public partial class PdfViewerControl
     // composites are bounded separately, by ContinuousCompositeByteBound.
     private readonly LinkedList<(ContinuousTileKey Key, WriteableBitmap Bitmap)> _continuousCache = new();
 
-    // Per-page PdfLink lists for continuous-mode link click/hover hit-testing
-    // (#667). Populated lazily by GetContinuousPageLinks (Interaction partial);
-    // cleared alongside the tile cache on document change / RenderVersion bump.
-    private readonly Dictionary<int, IReadOnlyList<Excise.Core.Document.PdfLink>> _continuousPageLinks = new();
-
     // #848 grid render state. One document-wide CTS cancels every in-flight cell
     // render on a document/cache invalidation. In-flight keys coalesce duplicate
     // requests for the same cell; the required-key set (rebuilt each pass) lets a
@@ -604,10 +599,10 @@ public partial class PdfViewerControl
         _continuousCache.Clear();
         _continuousLookAheadTiles.Clear();
         RefreshContinuousByteMirrors();
-        _continuousPageLinks.Clear();
-        // Same lifetime as the link cache: an annotation cache that outlived
-        // the document would hover notes from the previous file (#1074).
-        _pageAnnotations.Clear();
+        // Links (#667) and annotations (#1074) share the tile cache's lifetime:
+        // an annotation cache that outlived the document would hover notes
+        // from the previous file.
+        _pageCaches.Clear();
         _lastHoveredAnnotation = null;
         // Selection state is per-document/page; drop the letter cache and any
         // in-flight selection so a document or render change can't reuse stale

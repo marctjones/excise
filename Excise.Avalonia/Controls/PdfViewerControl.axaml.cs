@@ -561,12 +561,10 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
     private Letter? _selectionAnchor;
     private Letter? _selectionFocus;
 
-    // Internal-link annotations on the current page. Lazy-loaded the
-    // first time we hit-test on a given page; cleared when the page or
-    // document changes. The same DPI and Y-flip rules used for letters
-    // apply here.
-    private int _linksPageNumber = -1;
-    private IReadOnlyList<PdfLink>? _currentPageLinks;
+    // Per-page link and annotation lists for hit-testing, both views (#1842).
+    // The single-page view drops the links when its page changes, as it
+    // always has.
+    private readonly ViewerPageCaches _pageCaches;
     /// <summary>Last link the pointer hovered, for hover enter/exit edge detection (#625).</summary>
     private PdfLink? _lastHoveredLink;
 
@@ -574,6 +572,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
 
     public PdfViewerControl()
     {
+        _pageCaches = new ViewerPageCaches(() => Document);
         InitializeComponent();
         WireTemplateParts();
         _renderer = new SkiaRenderer();
@@ -1490,8 +1489,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
         _currentPageLetters = null;
         _readingOrderedLetters = null;
         _lettersPageNumber = -1;
-        _currentPageLinks = null;
-        _linksPageNumber = -1;
+        _pageCaches.ClearLinks();
         ClearSelectionHighlight();
 
         var keepPagesOnScreen = TakeKeepPagesOnScreenRequest();
@@ -1555,8 +1553,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
             _lettersPageNumber = -1;
             _selectionAnchor = null;
             _selectionFocus = null;
-            _currentPageLinks = null;
-            _linksPageNumber = -1;
+            _pageCaches.ClearLinks();
             ClearSelectionHighlight();
 
             // Load annotations for the new page and refresh the overlay.
@@ -1602,8 +1599,7 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
         _lettersPageNumber = -1;
         _selectionAnchor = null;
         _selectionFocus = null;
-        _currentPageLinks = null;
-        _linksPageNumber = -1;
+        _pageCaches.ClearLinks();
         ClearSelectionHighlight();
         RefreshPageAnnotations();
         RedrawTypewriterLayer();
@@ -1919,14 +1915,14 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, ITypewr
 
         // #1794: a sticky-note edit or drag-to-move mutates an existing
         // annotation's /Rect/Contents on the SAME PdfAnnotation-owning
-        // PdfDocument instance in place — GetPageAnnotations' cache holds
+        // PdfDocument instance in place — the annotation cache holds
         // PdfAnnotation wrappers whose Rect/Contents were captured at parse
         // time, so a stale entry here would hit-test a moved note at its OLD
         // position (or an edited one with its OLD text) until the next
         // unrelated cache-clearing event. Content edits invalidating prior
         // renders is exactly this case, even in single-page view where
         // RefreshContinuousLayout's own clear is a no-op.
-        _pageAnnotations.Clear();
+        _pageCaches.ClearAnnotations();
     }
 
     private void ClearDisplay()
