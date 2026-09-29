@@ -120,6 +120,7 @@ echo "==> range $RANGE base=$(git rev-parse "$BASE") head=$(git rev-parse "$HEAD
 PERF_PATHS='
 Excise.Rendering/
 Excise.Avalonia/Controls/PdfViewerControl*
+Excise.Avalonia/Controls/Viewer/
 Excise.Core/Content/ContentStreamParser*
 Excise.Core/Fonts/
 tools/Excise.RenderTools/

@@ -561,6 +561,82 @@ public class RenderAheadTests
         }
     }
 
+    // ---- Detach (#1842 step 0 (e)) ------------------------------------------
+    //
+    // The look-ahead halves of "detach cancels" are pinned above (closing the
+    // window in each view). These pin the VISIBLE renders: the split gives each
+    // view its own Detach(), and forgetting one lets a closed viewer publish into
+    // controls that are no longer attached, or cache tiles for a document nobody
+    // shows.
+
+    [FixedAvaloniaFact]
+    public async Task Detach_CancelsTheInFlightSinglePageRender_SoItNeverPublishes()
+    {
+        var (window, viewer, image) = ShowSinglePageViewer(MultiPagePdf(3), renderAhead: false);
+        try
+        {
+            await WaitUntilAsync(window, () => !viewer.IsLoading && image.Source is WriteableBitmap, "page 1 rendered");
+            var published = viewer.SinglePagePublishCount;
+            var shown = image.Source;
+            int turnsFinished = 0;
+            viewer.PageChanged += (_, _) => turnsFinished++;
+
+            // Same UI-thread turn, no await between: the page-3 render is on the
+            // thread pool when the window closes (render-ahead is off, so nothing
+            // can make the turn complete synchronously from the cache).
+            viewer.CurrentPage = 3;
+            viewer.IsLoading.Should().BeTrue("fixture: the page-3 render is in flight");
+            window.Close();
+            viewer.IsLoading.Should().BeFalse("detach clears the loading state");
+
+            await WaitUntilAsync(window, () => turnsFinished > 0, "the page-3 turn to finish");
+            await PumpAsync(window, TimeSpan.FromMilliseconds(200));
+            viewer.SinglePagePublishCount.Should().Be(published, "a render cancelled by detach publishes nothing");
+            image.Source.Should().BeSameAs(shown, "the detached Image keeps what it showed");
+            viewer.IsLoading.Should().BeFalse();
+        }
+        finally
+        {
+            Close(window, viewer);
+        }
+    }
+
+    [FixedAvaloniaFact]
+    public async Task Detach_CancelsTheInFlightContinuousBandRender_SoItCachesNothing()
+    {
+        var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(pageCount: 3);
+        viewer.RenderAheadEnabled = false;
+        using var holds = new RenderHolds();
+        var hold1 = holds.Hold(1);
+        var started = new ConcurrentQueue<int>();
+        viewer.ContinuousBandRenderStartingForTests = page =>
+        {
+            started.Enqueue(page);
+            holds.Wait(page);
+        };
+        try
+        {
+            await WaitUntilAsync(window, () => started.Contains(1), "page 1's band render to start");
+            int completed = viewer.ContinuousRenderCompletedCount;
+            window.Close();
+            hold1.Set();
+            await WaitUntilAsync(window, () => viewer.ContinuousRenderCompletedCount > completed,
+                "the held band render to return");
+            await PumpAsync(window, TimeSpan.FromMilliseconds(200));
+
+            viewer.ContinuousCacheEntriesForTests().Should().NotContain(e => e.Key.Page == 1,
+                "a band render cancelled by detach caches nothing");
+            items.ItemsSource!.Cast<PdfPageSlot>().Single(s => s.PageNumber == 1).Bitmap.Should().BeNull(
+                "nor composites into a detached slot");
+        }
+        finally
+        {
+            holds.ReleaseAll();
+            viewer.ContinuousBandRenderStartingForTests = null;
+            Close(window, viewer);
+        }
+    }
+
     // ---- helpers ----------------------------------------------------------
 
     private static byte[] MultiPagePdf(int pageCount)

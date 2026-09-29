@@ -569,6 +569,102 @@ public class StickyNotePopupWorkflowTests
         Cleanup(tempDir);
     }
 
+    /// <summary>
+    /// #1842 step 0 (d): <c>InvalidatePageCache</c> — named for the single-page
+    /// bitmap cache — also drops the per-page annotation cache hover hit-tests read,
+    /// and must keep doing so in continuous view (#1794). A drag moves the card on
+    /// the SAME document in place; the cached <see cref="PdfAnnotation"/> wrappers
+    /// captured the card's old /Rect, so until the cache is dropped the note hovers
+    /// at its old position and not at its new one.
+    ///
+    /// <para>A bare viewer, not MainWindow: the app's move path also bumps
+    /// <c>RenderVersion</c>, which clears the same cache through the continuous
+    /// invalidation, and would hide a regression in this one.</para>
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task DragThenHover_InContinuousView_InvalidatePageCacheDropsTheStaleAnnotationHitTest()
+    {
+        const string contents = "Drag-then-hover fixture";
+        var fixture = TestPdfGenerator.CreateSimplePdf("Continuous-view sticky note");
+        var document = PdfDocument.Open(fixture);
+        var pageBox = document.GetPage(1).CropBox.Normalize();
+        var icon = new PdfRectangle(pageBox.Left + 120, pageBox.Top - 330, pageBox.Left + 120 + PdfAnnotation.TextIconSize,
+            pageBox.Top - 330 + PdfAnnotation.TextIconSize);
+        var card = new PdfRectangle(pageBox.Left + 120, pageBox.Top - 380, pageBox.Left + 200, pageBox.Top - 330);
+        document.AddTextAnnotation(1, icon, contents, withPopup: true, popupRect: card);
+
+        var viewer = new PdfViewerControl();
+        var window = new Window { Content = viewer, Width = 900, Height = 700 };
+        window.Show();
+        viewer.Document = document;
+        viewer.ViewMode = PdfViewMode.Continuous;
+        try
+        {
+            var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            await Controls.ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+
+            var border = (items.ContainerFromIndex(0) as global::Avalonia.Controls.Presenters.ContentPresenter)?.Child as Border;
+            border.Should().NotBeNull("fixture: page 1's slot border is realized");
+            Point ToWindow(double pdfX, double pdfY)
+            {
+                double scale = PdfViewerControl.PointsToDip * viewer.ZoomLevel;
+                return border!.TranslatePoint(
+                    new Point((pdfX - pageBox.Left) * scale, (pageBox.Top - pdfY) * scale), window)!.Value;
+            }
+
+            string? hovered = null;
+            viewer.AnnotationHovered += (_, e) => hovered = e.DisplayText;
+            StickyNoteMovedEventArgs? moved = null;
+            viewer.StickyNoteMoved += (_, e) =>
+            {
+                moved = e;
+                // What the app's move does to the document: rewrite the linked
+                // /Popup's /Rect in place, then tell the viewer its caches are stale.
+                var note = document.GetPage(1).GetAnnotations().Single(a => a.Subtype == PdfAnnotationSubtype.Text);
+                document.MoveTextAnnotationPopup(note, e.NewCardRect);
+                viewer.InvalidatePageCache();
+            };
+
+            async Task MoveAsync(Point p)
+            {
+                await Dispatcher.UIThread.InvokeAsync(() => window.MouseMove(p));
+                for (int i = 0; i < 4; i++) { await Task.Delay(25); window.UpdateLayout(); }
+            }
+
+            var cardCenter = ToWindow((card.Left + card.Right) / 2, (card.Top + card.Bottom) / 2);
+            var offPage = ToWindow(pageBox.Left - 20, pageBox.Top - 100); // the letterbox margin left of the page
+            await MoveAsync(offPage);
+            await MoveAsync(cardCenter);
+            hovered.Should().Contain(contents, "fixture: hovering the resting card reports the note (and caches the page's annotations)");
+
+            // A real drag, far enough that the new card does not overlap the old one.
+            var dragEnd = new Point(cardCenter.X + 160, cardCenter.Y + 120);
+            await Dispatcher.UIThread.InvokeAsync(() => window.MouseDown(cardCenter, MouseButton.Left));
+            await Task.Delay(50);
+            await Dispatcher.UIThread.InvokeAsync(() => window.MouseMove(dragEnd));
+            await Task.Delay(50);
+            await Dispatcher.UIThread.InvokeAsync(() => window.MouseUp(dragEnd, MouseButton.Left));
+            for (int i = 0; i < 4; i++) { await Task.Delay(25); window.UpdateLayout(); }
+            moved.Should().NotBeNull("a drag past the threshold on a resting card in continuous view moves it");
+            var newCard = moved!.NewCardRect;
+            (newCard.Left > card.Right || newCard.Top < card.Bottom).Should().BeTrue(
+                "fixture: the moved card must not overlap the old one, or a stale hit-test could still land");
+
+            var newCenter = ToWindow((newCard.Left + newCard.Right) / 2, (newCard.Top + newCard.Bottom) / 2);
+            await MoveAsync(offPage);
+            hovered.Should().BeNull("fixture: off the page nothing is hovered");
+            await MoveAsync(newCenter);
+            hovered.Should().Contain(contents,
+                "after InvalidatePageCache the hover hit-test must see the card where it now is, in continuous view too");
+        }
+        finally
+        {
+            window.Close();
+            Dispatcher.UIThread.RunJobs();
+            document.Dispose();
+        }
+    }
+
     // ── shared workflow helper ───────────────────────────────────────────────
 
     /// <summary>

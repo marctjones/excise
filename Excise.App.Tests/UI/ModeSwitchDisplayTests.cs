@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -392,6 +393,85 @@ public class ModeSwitchDisplayTests
             await PumpUntilAsync(window, () => cont.IsVisible);
             await PumpUntilAsync(window, () => Math.Abs(cont.Offset.Y - offBefore) < 40,
                 timeoutMs: 10000);
+        }
+        finally
+        {
+            window.Close();
+            TestPdfGenerator.CleanupTestFile(path);
+        }
+    }
+
+    /// <summary>
+    /// #1842 step 0 (b): the mode switch carries the intra-page reading fraction in
+    /// BOTH directions, each measured on its own. <see cref="ModeSwitch_PreservesReadingPosition"/>
+    /// checks "not at the page top" going in and a round trip coming back; that
+    /// cannot tell a lost fraction on one leg from a compensating error on the other.
+    /// Here each leg starts from a known fraction and must deliver the same one:
+    /// continuous → single through <c>_pendingSingleFraction</c> (applied once the
+    /// single-page render lands), single → continuous through the posted
+    /// <c>ScrollToPageContinuous(page, fraction)</c>. The split moves the two ends
+    /// into different classes, so each end is pinned separately.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task ModeSwitch_CarriesTheIntraPageFraction_InEachDirection()
+    {
+        var (vm, window, viewer, path) = await OpenTestDocumentAsync();
+        try
+        {
+            var cont = viewer.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
+            var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            await PumpUntilAsync(window, () => cont.Extent.Height > cont.Viewport.Height + 100);
+
+            PdfPageSlot Page2() => items.ItemsSource!.Cast<PdfPageSlot>().Single(s => s.PageNumber == 2);
+            double ContinuousFraction() => (cont.Offset.Y - Page2().TopDip) / Page2().DisplayHeight;
+
+            // Continuous → single-page, from 15% into page 2.
+            const double intoContinuous = 0.15;
+            cont.Offset = new global::Avalonia.Vector(cont.Offset.X, Page2().TopDip + intoContinuous * Page2().DisplayHeight);
+            await PumpUntilAsync(window, () => viewer.CurrentPage == 2 && Math.Abs(ContinuousFraction() - intoContinuous) < 0.005);
+
+            ModeCommand(vm, "redact").Execute().Subscribe();
+            var single = viewer.FindControl<ScrollViewer>("PdfScrollViewer")!;
+            await PumpUntilAsync(window, () => SinglePageImage(viewer)?.Source != null && single.Extent.Height > 1);
+            // The carried fraction lands in a posted retry after the render; give
+            // it time, then let the assertion below say what arrived.
+            try
+            {
+                await PumpUntilAsync(window, () => Math.Abs(single.Offset.Y / single.Extent.Height - intoContinuous) < 0.01,
+                    timeoutMs: 5000);
+            }
+            catch (TimeoutException) { }
+            await Task.Delay(100); window.UpdateLayout();
+
+            viewer.CurrentPage.Should().Be(2, "the switch stays on the page");
+            (single.Extent.Height - single.Viewport.Height).Should().BeGreaterThan(intoContinuous * single.Extent.Height,
+                "fixture: the carried fraction must be reachable, or clamping would hide a lost fraction");
+            (single.Offset.Y / single.Extent.Height).Should().BeApproximately(intoContinuous, 0.01,
+                "entering single-page must open at the fraction continuous view was at (#693)");
+
+            // Single-page → continuous, from a DIFFERENT fraction, so a value left
+            // over from the first leg cannot pass this one.
+            // 80% of the way to the deepest reachable single-page offset.
+            double intoSingle = Math.Round(0.8 * (single.Extent.Height - single.Viewport.Height) / single.Extent.Height, 3);
+            Math.Abs(intoSingle - intoContinuous).Should().BeGreaterThan(0.05,
+                $"fixture: the second leg's fraction ({intoSingle}) must differ from the first's");
+            single.Offset = new global::Avalonia.Vector(single.Offset.X, intoSingle * single.Extent.Height);
+            await PumpUntilAsync(window, () => Math.Abs(single.Offset.Y / single.Extent.Height - intoSingle) < 0.001);
+
+            ModeCommand(vm, "redact").Execute().Subscribe();
+            await PumpUntilAsync(window, () => cont.IsVisible && items.ItemsSource != null);
+            try
+            {
+                await PumpUntilAsync(window, () => Math.Abs(ContinuousFraction() - intoSingle) < 0.01, timeoutMs: 10000);
+            }
+            catch (TimeoutException)
+            {
+                throw new Xunit.Sdk.XunitException(
+                    $"continuous view did not open at the single-page fraction {intoSingle}: " +
+                    $"fraction={ContinuousFraction():F3} offset={cont.Offset.Y:F0} page2Top={Page2().TopDip:F0} " +
+                    $"page2Height={Page2().DisplayHeight:F0} page={viewer.CurrentPage}");
+            }
+            viewer.CurrentPage.Should().Be(2, "the switch back stays on the page");
         }
         finally
         {
