@@ -74,7 +74,7 @@ internal sealed partial class ContinuousPageView : TemplatedControl, IPageHitSur
     {
         _viewer = viewer;
         _state = viewer;
-        InitializeContinuous();
+        SubscribeContinuous();
     }
 
     /// <summary>The page at the viewport top changed because the reader scrolled (#1650).</summary>
@@ -124,32 +124,30 @@ internal sealed partial class ContinuousPageView : TemplatedControl, IPageHitSur
     /// <summary>
     /// The viewer left the visual tree: hard-stop all continuous work so a closed viewer
     /// cannot touch a disposed document (#848), drop the scroll subscriptions and the
-    /// container hooks, and cancel in-flight cell renders.
+    /// container hooks, and cancel in-flight cell renders. <see cref="OnAttached"/> restores
+    /// all of it.
     /// </summary>
     internal void Detach()
     {
         _continuousDetached = true;
-        _continuousOffsetSubscription?.Dispose();
-        _continuousOffsetSubscription = null;
-        _continuousViewportSubscription?.Dispose();
-        _continuousViewportSubscription = null;
-        _continuousExtentSubscription?.Dispose();
-        _continuousExtentSubscription = null;
-
-        if (ContinuousItems != null)
-        {
-            ContinuousItems.ContainerPrepared -= OnContinuousContainerPrepared;
-            ContinuousItems.ContainerClearing -= OnContinuousContainerClearing;
-            ContinuousItems.LayoutUpdated -= OnContinuousItemsLayoutUpdated;
-        }
+        UnsubscribeContinuous();
 
         // Cancel in-flight grid-cell renders for the now-detached control and
         // start a fresh generation, so a re-attach renders cleanly (#848).
         CancelContinuousCellRenders();
     }
 
-    /// <summary>The viewer is back in a visual tree (the re-subscription gap is #1929).</summary>
-    internal void OnAttached() => _continuousDetached = false;
+    /// <summary>
+    /// The viewer is in a visual tree again: lift the hard-stop, then restore what
+    /// <see cref="Detach"/> dropped (#1929). In that order, because subscribing replays the
+    /// scroller's current offset and viewport at once, and the handlers they reach check the
+    /// hard-stop.
+    /// </summary>
+    internal void OnAttached()
+    {
+        _continuousDetached = false;
+        SubscribeContinuous();
+    }
 
     // ── IReadingPositionSource (#693) ────────────────────────────────────────
 

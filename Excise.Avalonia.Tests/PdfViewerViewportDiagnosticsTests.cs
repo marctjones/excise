@@ -122,58 +122,6 @@ public class PdfViewerViewportDiagnosticsTests
         });
     }
 
-    /// <summary>
-    /// #1842 step 0 (f): pinned AS IT BEHAVES TODAY, not as it should (#1929). Detach
-    /// disposes the continuous scroller's subscriptions and nothing re-creates them on
-    /// re-attach, so a re-attached viewer in continuous view no longer reports a
-    /// viewport change. The split moves this detach code into the continuous view;
-    /// the pin keeps that move from changing the behaviour by accident in either
-    /// direction, until #1929 changes it on purpose (and flips this assertion).
-    /// </summary>
-    [Fact]
-    public async Task ReattachedViewer_InContinuousView_NoLongerReportsViewportChanges()
-    {
-        await OnUiThread(() =>
-        {
-            var viewer = new PdfViewerControl();
-            var window = new Window { Width = 320, Height = 240, Content = viewer };
-            window.Show();
-            viewer.ViewMode = PdfViewMode.Continuous;
-            Settle(window);
-
-            var reported = new List<Size>();
-            viewer.VisibleViewportChanged += (_, size) => reported.Add(size);
-
-            window.Width = 400;
-            Settle(window);
-            reported.Should().NotBeEmpty("fixture: an attached continuous viewer reports a resize");
-            var beforeDetach = viewer.GetVisibleViewportSize();
-
-            window.Content = null;
-            Settle(window);
-            window.Content = viewer;
-            Settle(window);
-            reported.Clear();
-
-            window.Width = 520;
-            Settle(window);
-            viewer.GetVisibleViewportSize().Width.Should().BeGreaterThan(beforeDetach.Width + 50,
-                "fixture: the re-attached continuous viewport really did grow");
-            reported.Should().BeEmpty(
-                "today a re-attached viewer's continuous scroller has no viewport subscription (#1929)");
-
-            window.Close();
-            return true;
-        });
-    }
-
-    private static void Settle(Window window)
-    {
-        window.UpdateLayout();
-        Dispatcher.UIThread.RunJobs();
-        window.UpdateLayout();
-    }
-
     private static void ConfigureScrollableViewport(
         Window window,
         ScrollViewer viewport,

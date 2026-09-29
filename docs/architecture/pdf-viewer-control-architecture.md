@@ -612,7 +612,9 @@ under its own issue. None is filed by this pass; the orchestrator decides.
   comment at `cs:683-687` says the control "may be reattached". Latent in
   the app (one viewer per window, never re-parented; the tab design in
   `main-window-architecture.md` §7.3 shares one viewer per window), visible
-  only if a test or a future host re-attaches.
+  only if a test or a future host re-attaches. **Fixed (#1929):** attach now
+  restores the viewport subscription and the continuous view's subscriptions
+  and hooks, once (`Excise.Avalonia.Tests/ViewerReattachTests.cs`).
 - `AddSearchHighlight`, `AddPendingRedaction`, `AddAppliedRedaction` and
   `ClearSelectionHighlight` draw on canvases inside `PdfScrollViewer`, which
   is hidden in continuous view (`Continuous.cs:388`). `MainWindow.axaml.cs`

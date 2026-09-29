@@ -556,7 +556,18 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, IViewer
         Focusable = true;
         UpdateViewerAutomationProperties();
         DetachedFromVisualTree += OnDetachedFromVisualTreeHandler;
-        AttachedToVisualTree += (_, _) => ContinuousPart.OnAttached();
+        AttachedToVisualTree += OnAttachedToVisualTreeHandler;
+    }
+
+    /// <summary>
+    /// The mirror of <see cref="OnDetachedFromVisualTreeHandler"/> (#1929): restore the
+    /// viewport subscription and re-arm the continuous view, so a viewer moved to another
+    /// host keeps reporting its viewport and following scrolls.
+    /// </summary>
+    private void OnAttachedToVisualTreeHandler(object? sender, VisualTreeAttachmentEventArgs e)
+    {
+        SubscribeSinglePageViewport();
+        ContinuousPart.OnAttached();
     }
 
     /// <summary>
@@ -913,18 +924,26 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, IViewer
         // (sometimes oscillating sub-pixel) to the VM, ReapplyFitModeIfNeeded
         // re-set ZoomLevel, triggering yet more layout. Result: button
         // tooltips flickered and the button was unclickable.
-        if (SinglePagePart.PdfScrollViewer != null)
-        {
-            // AnonymousObserver (Avalonia.Reactive) rather than a Subscribe(Action<T>)
-            // overload — the latter comes from System.Reactive (Rx), which this
-            // library deliberately does NOT depend on (the app got it transitively
-            // via ReactiveUI). Avalonia ships AnonymousObserver for exactly this. (#365)
-            _viewportSubscription = SinglePagePart.PdfScrollViewer
-                .GetObservable(ScrollViewer.ViewportProperty)
-                .Subscribe(new AnonymousObserver<Size>(OnScrollViewerViewportChanged));
-        }
+        SubscribeSinglePageViewport();
 
         WireContinuousView();
+    }
+
+    /// <summary>
+    /// Subscribe to the single-page scroller's viewport. Runs at construction and on every
+    /// attach (#1929); the detach handler disposes it. Once while subscribed.
+    /// </summary>
+    private void SubscribeSinglePageViewport()
+    {
+        if (_viewportSubscription != null || SinglePagePart.PdfScrollViewer == null) return;
+
+        // AnonymousObserver (Avalonia.Reactive) rather than a Subscribe(Action<T>)
+        // overload — the latter comes from System.Reactive (Rx), which this
+        // library deliberately does NOT depend on (the app got it transitively
+        // via ReactiveUI). Avalonia ships AnonymousObserver for exactly this. (#365)
+        _viewportSubscription = SinglePagePart.PdfScrollViewer
+            .GetObservable(ScrollViewer.ViewportProperty)
+            .Subscribe(new AnonymousObserver<Size>(OnScrollViewerViewportChanged));
     }
 
     private void OnContextMenuClosed(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e) =>
