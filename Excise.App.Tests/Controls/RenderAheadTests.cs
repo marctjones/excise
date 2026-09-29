@@ -637,6 +637,44 @@ public class RenderAheadTests
         }
     }
 
+    /// <summary>
+    /// #1842 step 6: re-attaching the viewer re-arms the continuous view (the viewer's
+    /// attach handler clears the view's "detached" hard-stop), so a render it is asked
+    /// for afterwards runs. Pinned through <c>RefreshContinuousLayout</c>, which calls the
+    /// render pass directly: the scroll and container hooks a re-attach does not restore
+    /// are the separate gap #1929.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task Reattached_TheContinuousViewRendersWhenAsked()
+    {
+        var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(pageCount: 2);
+        try
+        {
+            await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+
+            window.Content = null;
+            await PumpAsync(window, TimeSpan.FromMilliseconds(100));
+            window.Content = viewer;
+            await PumpAsync(window, TimeSpan.FromMilliseconds(100));
+            int starts = viewer.ContinuousRenderStartCount;
+
+            viewer.RefreshContinuousLayout();
+            var page1 = () => items.ItemsSource?.Cast<PdfPageSlot>().FirstOrDefault(s => s.PageNumber == 1);
+            var sw = Stopwatch.StartNew();
+            while (sw.Elapsed < TimeSpan.FromSeconds(10)
+                   && !(viewer.ContinuousRenderStartCount > starts && page1()?.Bitmap != null))
+                await PumpAsync(window, TimeSpan.FromMilliseconds(50));
+
+            viewer.ContinuousRenderStartCount.Should().BeGreaterThan(starts,
+                "a structural refresh drops the tiles, so the re-attached view must render again");
+            page1()?.Bitmap.Should().NotBeNull("and page 1 shows its new composite");
+        }
+        finally
+        {
+            Close(window, viewer);
+        }
+    }
+
     // ---- helpers ----------------------------------------------------------
 
     private static byte[] MultiPagePdf(int pageCount)

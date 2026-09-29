@@ -10,10 +10,10 @@ namespace Excise.Avalonia.Controls;
 /// </summary>
 public partial class PdfViewerControl
 {
-    private static readonly bool TraceEnabled =
+    internal static readonly bool TraceEnabled =
         Environment.GetEnvironmentVariable("EXCISE_TRACE_VIEWER") == "1";
 
-    private static void Trace(string message)
+    internal static void Trace(string message)
     {
         if (TraceEnabled)
             Console.WriteLine($"[viewer {DateTime.Now:HH:mm:ss.fff}] {message}");

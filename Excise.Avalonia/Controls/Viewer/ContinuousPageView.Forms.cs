@@ -6,6 +6,8 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Excise.Core.Document;
 
+using static Excise.Avalonia.Controls.PdfViewerControl;
+
 namespace Excise.Avalonia.Controls;
 
 /// <summary>
@@ -28,7 +30,7 @@ namespace Excise.Avalonia.Controls;
 /// never keeps 400 pages of text boxes.
 /// </para>
 /// </remarks>
-public partial class PdfViewerControl
+internal sealed partial class ContinuousPageView
 {
     private const string ContinuousFormFieldClass = "continuous-form-field";
 
@@ -70,7 +72,7 @@ public partial class PdfViewerControl
                 page, PdfPageRect.FromContentPoints(page.PageNumber, field.Rect!.Value), unitsPerPoint);
 
             var input = FormFieldInputFactory.Build(
-                field, Math.Max(dips.Width, 4), Math.Max(dips.Height, 4), tabIndex, this);
+                field, Math.Max(dips.Width, 4), Math.Max(dips.Height, 4), tabIndex, _viewer);
             if (input == null) continue;
 
             input.Classes.Add(ContinuousFormFieldClass);
@@ -96,7 +98,7 @@ public partial class PdfViewerControl
     /// inputs, so scrolling, which re-raises <see cref="FormFields"/>, never steals the
     /// focus from a box being typed in.
     /// </summary>
-    private void RefreshContinuousFormFieldsIfChanged()
+    internal void RefreshContinuousFormFieldsIfChanged()
     {
         if (ViewMode != PdfViewMode.Continuous || ContinuousItems == null || _continuousSlots == null)
             return;

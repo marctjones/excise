@@ -154,7 +154,7 @@ public partial class PdfViewerControl
             {
                 // Continuous reading view: select on the page under the pointer,
                 // drawing onto that page's own overlay (#815).
-                BeginContinuousTextSelection(e);
+                ContinuousPart.BeginContinuousTextSelection(e);
             }
             else
             {
@@ -262,7 +262,7 @@ public partial class PdfViewerControl
         else if (InteractionMode == InteractionMode.TextSelection && ViewMode == PdfViewMode.Continuous)
         {
             // Continuous reading view: extend the per-page highlight (#815).
-            UpdateContinuousTextSelection(e);
+            ContinuousPart.UpdateContinuousTextSelection(e);
         }
         else if (InteractionMode == InteractionMode.TextSelection)
         {
@@ -370,7 +370,7 @@ public partial class PdfViewerControl
         else if (InteractionMode == InteractionMode.TextSelection && ViewMode == PdfViewMode.Continuous)
         {
             // Continuous reading view: finalize the per-page selection (#815).
-            EndContinuousTextSelection();
+            ContinuousPart.EndContinuousTextSelection();
         }
         else if (InteractionMode == InteractionMode.TextSelection &&
                  _selectionAnchor != null && _selectionFocus != null &&
@@ -512,7 +512,7 @@ public partial class PdfViewerControl
     /// the pointer and where, tagged with its own DIP space and scale, and this performs
     /// the one conversion to content points.
     /// </summary>
-    private bool TryMapPointerToContent(
+    internal bool TryMapPointerToContent(
         IPageHitSurface surface, PointerEventArgs e, out int pageNumber, out double pdfX, out double pdfY)
     {
         pageNumber = 0; pdfX = 0; pdfY = 0;
@@ -884,7 +884,7 @@ public partial class PdfViewerControl
     /// </summary>
     internal Rect GlyphRectToViewerDipsForTest(PdfRectangle glyphRect) => PdfRectangleToDips(glyphRect);
 
-    private static Rect UnionRects(IReadOnlyList<Rect> rects)
+    internal static Rect UnionRects(IReadOnlyList<Rect> rects)
     {
         var x1 = double.PositiveInfinity; var y1 = double.PositiveInfinity;
         var x2 = double.NegativeInfinity; var y2 = double.NegativeInfinity;

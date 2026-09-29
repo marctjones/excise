@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using Excise.Core.Document;
+using Excise.Core.Text;
 
 namespace Excise.Avalonia.Controls;
 
@@ -19,4 +22,24 @@ internal interface IViewerState
     double ZoomLevel { get; }
 
     InteractionMode InteractionMode { get; }
+
+    PdfViewMode ViewMode { get; }
+
+    /// <summary>The display's device-pixel ratio, or the test override (#682).</summary>
+    double RenderScaling { get; }
+
+    ReadingOrderStrategy ReadingOrderStrategy { get; }
+
+    WhitespaceMode WhitespaceMode { get; }
+
+    /// <summary>Any page's form fields, for the continuous slots (#1807).</summary>
+    Func<int, IReadOnlyList<PdfField>>? PageFormFieldsProvider { get; }
+
+    // The five annotation-render flags. Read on the UI thread at the point a render
+    // captures them (the "read the styled property HERE" rule of the band render).
+    bool ShowAnnotations { get; }
+    bool ShowCommentAnnotations { get; }
+    bool ShowFieldAndLinkAnnotations { get; }
+    bool RevealHiddenAnnotations { get; }
+    bool HighlightFormFields { get; }
 }

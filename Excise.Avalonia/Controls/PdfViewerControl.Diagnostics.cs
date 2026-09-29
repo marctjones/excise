@@ -161,11 +161,11 @@ public partial class PdfViewerControl
             single.Capacity,
             single.Hits,
             single.Misses,
-            _continuousCache.Count,
-            ContinuousCacheResidentBytes(),
-            _continuousCacheByteBudget,
-            ContinuousRenderCacheHitCount,
-            _continuousInFlight.Count);
+            ContinuousPart.ContinuousCacheCount,
+            ContinuousPart.ContinuousCacheResidentBytes(),
+            ContinuousPart.ContinuousCacheByteBudgetSetting,
+            ContinuousPart.ContinuousRenderCacheHitCount,
+            ContinuousPart.ContinuousInFlightCount);
     }
 
     /// <summary>
@@ -208,72 +208,25 @@ public partial class PdfViewerControl
         return true;
     }
 
-    /// <summary>
-    /// #1479 measurement: how many continuous-view tile bytes are also baked into
-    /// a live page composite. A tile counts when its page's slot shows a composite
-    /// built at the same DPI and page DIP size, and its grid cell lies inside that
-    /// composite's band. RecomposeSlotCore publishes only once every cell of the
-    /// band is cached, so at publish time this is ~all of the composite's bytes;
-    /// it falls only as the LRU evicts. Report-only; internal for tests.
-    /// </summary>
-    internal ContinuousBitmapOverlap MeasureContinuousBitmapOverlap()
-    {
-        long tileBytes = 0, bakedBytes = 0;
-        int baked = 0;
-        int q = ContinuousTileQuantumDip;
-        foreach (var (key, bitmap) in _continuousCache)
-        {
-            long bytes = ContinuousTileByteSize(bitmap.PixelSize.Width, bitmap.PixelSize.Height);
-            tileBytes += bytes;
-            if (_continuousSlots == null || key.Page < 1 || key.Page > _continuousSlots.Count) continue;
-            var slot = _continuousSlots[key.Page - 1];
-            var composite = slot.CompositeKey;
-            if (slot.Bitmap == null || composite.Dpi != key.Dpi ||
-                composite.PageWidthDip != key.PageWidthDip || composite.PageHeightDip != key.PageHeightDip)
-                continue;
-            int lastCol = (int)Math.Floor((slot.TileDisplayX + slot.TileDisplayWidth - 0.5) / q);
-            int lastRow = (int)Math.Floor((slot.TileDisplayY + slot.TileDisplayHeight - 0.5) / q);
-            if (key.Col < composite.Col || key.Col > lastCol || key.Row < composite.Row || key.Row > lastRow)
-                continue;
-            bakedBytes += bytes;
-            baked++;
-        }
-        return new ContinuousBitmapOverlap(
-            _continuousCache.Count, tileBytes, baked, bakedBytes, ContinuousCompositeResidentBytes());
-    }
-
     /// <summary>#1479 snapshot; see <see cref="MeasureContinuousBitmapOverlap"/>.</summary>
     internal readonly record struct ContinuousBitmapOverlap(
         int Tiles, long TileBytes, int BakedTiles, long BakedTileBytes, long CompositeBytes);
 
-    // #1491 gauge sources. ViewerMetrics reads these from the listener's thread,
-    // so the byte totals (which walk UI-thread collections) are mirrors refreshed
-    // on the UI thread; the counts are single int reads.
-    private long _metricsContinuousTileBytes;
-    private long _metricsContinuousCompositeBytes;
 
     /// <summary>This viewer's <c>viewer</c> tag on the per-viewer gauges (#1491).</summary>
     internal int MetricsViewerId { get; }
 
-    internal long MetricsContinuousTileBytes => Volatile.Read(ref _metricsContinuousTileBytes);
-    internal long MetricsContinuousCompositeBytes => Volatile.Read(ref _metricsContinuousCompositeBytes);
-    internal int MetricsContinuousTileCount => _continuousCache.Count;
-    internal int MetricsContinuousInFlightCount => _continuousInFlight.Count;
-    internal int MetricsContinuousCacheHits => ContinuousRenderCacheHitCount;
 
     internal SinglePageRenderLifetime<global::Avalonia.Media.Imaging.WriteableBitmap>.CacheDiagnostics
         MetricsSinglePageCache() => _singlePageRenderLifetime.GetCacheDiagnostics();
 
-    /// <summary>
-    /// Refresh the continuous byte mirrors after the tile cache or the slot
-    /// composites change. UI thread only; a no-op unless a byte gauge is enabled.
-    /// </summary>
-    private void RefreshContinuousByteMirrors()
-    {
-        if (!ViewerMetrics.ByteGaugesEnabled) return;
-        Volatile.Write(ref _metricsContinuousTileBytes, ContinuousCacheResidentBytes());
-        Volatile.Write(ref _metricsContinuousCompositeBytes, ContinuousCompositeResidentBytes());
-    }
+    // #1491 gauge sources, owned by the continuous view (its mirrors are refreshed
+    // on the UI thread; ViewerMetrics reads them from the listener's thread).
+    internal long MetricsContinuousTileBytes => ContinuousPart.MetricsContinuousTileBytes;
+    internal long MetricsContinuousCompositeBytes => ContinuousPart.MetricsContinuousCompositeBytes;
+    internal int MetricsContinuousTileCount => ContinuousPart.MetricsContinuousTileCount;
+    internal int MetricsContinuousInFlightCount => ContinuousPart.MetricsContinuousInFlightCount;
+    internal int MetricsContinuousCacheHits => ContinuousPart.MetricsContinuousCacheHits;
 
     private ScrollViewer? ActiveViewportScrollViewer() =>
         ViewMode == PdfViewMode.Continuous ? ContinuousScrollViewer : PdfScrollViewer;

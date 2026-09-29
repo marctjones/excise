@@ -58,7 +58,7 @@ public enum PdfViewerCacheTrimLevel
 /// <item>The bitmap the single-page Image shows is never dropped.</item>
 /// <item>In-flight cell renders are not cancelled. Their keys are not in the
 /// tile cache until they land, so dropping cache entries cannot touch them,
-/// and they still check <see cref="_continuousRequiredKeys"/> when they
+/// and they still check the continuous view's required keys when they
 /// run.</item>
 /// </list>
 /// </remarks>
@@ -85,20 +85,20 @@ public partial class PdfViewerControl
         // do not need is cancelled, and none is planned again until the reader
         // moves: a trim must not cause a render (#1478), and re-rendering what
         // was just released would undo the trim.
-        SuppressContinuousLookAheadAfterTrim();
+        ContinuousPart.SuppressContinuousLookAheadAfterTrim();
         SuppressSinglePageLookAheadAfterTrim();
 
         // Background and Warn keep the current bands' tiles; Critical keeps
         // none. _continuousRequiredKeys is the set the last render pass
         // computed, and the one a queued render checks, so it is the band the
         // pipeline itself considers current.
-        var (tiles, tileBytes, lookAheadTiles) = TrimContinuousTiles(
-            level == PdfViewerCacheTrimLevel.Critical ? null : _continuousRequiredKeys);
+        var (tiles, tileBytes, lookAheadTiles) = ContinuousPart.TrimContinuousTiles(
+            level == PdfViewerCacheTrimLevel.Critical ? null : ContinuousPart.ContinuousRequiredKeysForTests);
 
         int composites = 0;
         long compositeBytes = 0;
         if (level == PdfViewerCacheTrimLevel.Critical)
-            (composites, compositeBytes) = ClearCompositesOutsideViewport();
+            (composites, compositeBytes) = ContinuousPart.ClearCompositesOutsideViewport();
 
         // Reference identity with the Image's source IS the never-drop rule.
         // When the page has settled, that bitmap is the current page at the
@@ -116,12 +116,12 @@ public partial class PdfViewerControl
         // samples there, but a trim lets them go (a later band render of that
         // page decodes again). Pages with a render in flight are always kept.
         var bandPages = new HashSet<int>();
-        foreach (var key in _continuousRequiredKeys)
+        foreach (var key in ContinuousPart.ContinuousRequiredKeysForTests)
             bandPages.Add(key.Page);
-        var (sampleStreams, sampleBytes) = ReleaseContinuousImageSamples(
+        var (sampleStreams, sampleBytes) = ContinuousPart.ReleaseContinuousImageSamples(
             bandPages, ViewerMetrics.DecodedSampleReleaseTrim);
 
-        RefreshContinuousByteMirrors();
+        ContinuousPart.RefreshContinuousByteMirrors();
 
         var result = new CacheTrimResult(level, tiles, tileBytes, composites, compositeBytes, singlePage, singlePageBytes,
             sampleStreams, sampleBytes, lookAheadTiles);
@@ -132,63 +132,6 @@ public partial class PdfViewerControl
             Trace($"TrimCaches {result}");
     }
 
-    /// <summary>
-    /// Unlink and dispose every tile whose key is not in <paramref name="keep"/>
-    /// (all of them when it is null). Sized before disposal: a disposed bitmap
-    /// throws on PixelSize. <c>LookAhead</c> counts the render-ahead tiles
-    /// among them (#1564); a look-ahead tile is never in the bands, so every
-    /// level releases all of them.
-    /// </summary>
-    private (int Count, long Bytes, int LookAhead) TrimContinuousTiles(IReadOnlySet<ContinuousTileKey>? keep)
-    {
-        int count = 0;
-        long bytes = 0;
-        int lookAhead = 0;
-        var node = _continuousCache.First;
-        while (node != null)
-        {
-            var next = node.Next;
-            if (keep == null || !keep.Contains(node.Value.Key))
-            {
-                var bitmap = node.Value.Bitmap;
-                bytes += ContinuousTileByteSize(bitmap.PixelSize.Width, bitmap.PixelSize.Height);
-                _continuousCache.Remove(node);
-                if (_continuousLookAheadTiles.Remove(node.Value.Key))
-                    lookAhead++;
-                bitmap.Dispose();
-                count++;
-            }
-            node = next;
-        }
-        return (count, bytes, lookAhead);
-    }
-
-    /// <summary>
-    /// Clear the composite of every page whose band no longer intersects the
-    /// viewport — the realized slot outside the #1466 bound, which keeps its
-    /// last composite until its container is recycled. Visible pages keep
-    /// theirs. Released via <see cref="PdfPageSlot.ClearComposite"/>, never
-    /// disposed directly.
-    /// </summary>
-    private (int Count, long Bytes) ClearCompositesOutsideViewport()
-    {
-        if (_continuousSlots == null)
-            return default;
-
-        var viewport = ContinuousScrollViewer?.Viewport ?? default;
-        var offset = ContinuousScrollViewer?.Offset ?? default;
-        int count = 0;
-        long bytes = 0;
-        foreach (var slot in _continuousSlots)
-        {
-            if (slot.Bitmap is not { } composite || SlotIntersectsViewport(slot, offset, viewport))
-                continue;
-            bytes += ContinuousTileByteSize(composite.PixelSize.Width, composite.PixelSize.Height);
-            slot.ClearComposite();
-            count++;
-        }
-        return (count, bytes);
-    }
 
     /// <summary>
     /// A page intersects the viewport exactly when it requires grid cells —
@@ -197,13 +140,6 @@ public partial class PdfViewerControl
     internal static bool SlotIntersectsViewport(PdfPageSlot slot, global::Avalonia.Vector offset, global::Avalonia.Size viewport) =>
         RequiredTileCells(slot.DisplayWidth, slot.DisplayHeight, slot.TopDip,
             offset, viewport, ContinuousTileQuantumDip, ContinuousTileOverscanDip).Count > 0;
-
-    /// <summary>Snapshot of the tile LRU, most recent first (tests only).</summary>
-    internal IReadOnlyList<(ContinuousTileKey Key, WriteableBitmap Bitmap)> ContinuousCacheEntriesForTests() =>
-        new List<(ContinuousTileKey, WriteableBitmap)>(_continuousCache);
-
-    /// <summary>The band keys the last continuous render pass required (tests only).</summary>
-    internal IReadOnlySet<ContinuousTileKey> ContinuousRequiredKeysForTests => _continuousRequiredKeys;
 
     /// <summary>
     /// What one <see cref="TrimCaches"/> call released, by cache, plus the

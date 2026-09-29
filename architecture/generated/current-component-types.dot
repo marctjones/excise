@@ -39,7 +39,7 @@ digraph excise_architecture {
     label="presentation";
     color="#cbd5e1";
     "app-main-window" [label="Main-window orchestration and feature state\npartial\n644 retained symbols", fillcolor="#fff3bf"];
-    "avalonia" [label="Excise.Avalonia project\npartial\n612 retained symbols", fillcolor="#fff3bf"];
+    "avalonia" [label="Excise.Avalonia project\npartial\n671 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_verification {
     label="verification";
@@ -50,10 +50,10 @@ digraph excise_architecture {
   "app" -> "app-main-window" [label="456 refs / 29 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "app-main-window" -> "app" [label="743 refs / 77 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "core" [label="7 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "avalonia" -> "core-document" [label="487 refs / 46 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "avalonia" -> "core-document" [label="491 refs / 51 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "core-primitives" [label="11 refs / 3 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "avalonia" -> "core-text" [label="52 refs / 8 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "avalonia" -> "rendering" [label="26 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "avalonia" -> "core-text" [label="56 refs / 15 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "avalonia" -> "rendering" [label="26 refs / 4 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core" [label="38 refs / 9 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-content" [label="10 refs / 3 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-document" [label="184 refs / 58 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
