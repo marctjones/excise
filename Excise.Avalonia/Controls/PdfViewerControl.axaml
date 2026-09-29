@@ -6,6 +6,20 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="Excise.Avalonia.Controls.PdfViewerControl">
 
+    <!-- The ControlThemes of the two views (#1842 Phase B). They live in the viewer's own
+         resources, not a host's, so every host gets them with the viewer. The app loads
+         FluentAvalonia and both headless test apps FluentTheme; none of those can carry a
+         theme for these internal types, and a TemplatedControl with no theme in reach
+         silently has no template (HeadlessTestApp.cs). -->
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://Excise.Avalonia/Controls/Viewer/ContinuousPageView.axaml" />
+                <ResourceInclude Source="avares://Excise.Avalonia/Controls/Viewer/SinglePageView.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
     <Grid>
         <!-- Continuous (reading) view: a vertically-scrolling, render-virtualized
              stack of all pages. Shown only when ViewMode=Continuous; hidden (and

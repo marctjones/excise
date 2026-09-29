@@ -220,20 +220,4 @@ public class UnencodableTextSurfacedTests
 
         return formLayer!.Children.OfType<TextBox>().Single();
     }
-
-    private static T? FindDescendant<T>(Control root, string name) where T : Control
-    {
-        if (root.Name == name && root is T t) return t;
-        if (root is Panel p)
-        {
-            foreach (var child in p.Children)
-                if (child is Control c && FindDescendant<T>(c, name) is { } hit)
-                    return hit;
-        }
-        if (root is Decorator d && d.Child is Control dc && FindDescendant<T>(dc, name) is { } dHit)
-            return dHit;
-        if (root is ContentControl cc && cc.Content is Control ccc && FindDescendant<T>(ccc, name) is { } cHit)
-            return cHit;
-        return root.FindControl<T>(name);
-    }
 }

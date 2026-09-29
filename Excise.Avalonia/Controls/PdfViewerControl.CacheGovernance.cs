@@ -270,16 +270,6 @@ public partial class PdfViewerControl
     }
 
     /// <summary>
-    /// Times a finished single-page render (fresh or cached) was bound to the
-    /// page Image. A placeholder does not count. Report-only, for the
-    /// edit-mode switch measurements.
-    /// </summary>
-    internal long SinglePagePublishCount => SinglePagePart.SinglePagePublishCount;
-
-    /// <summary>Bytes held by the single-page LRU (BGRA, 4 bytes per pixel).</summary>
-    internal long SinglePageCacheResidentBytes() => SinglePagePart.SinglePageCacheResidentBytes();
-
-    /// <summary>
     /// True while single-page work that the viewer started on its own is still
     /// running, so a measurement can wait for the viewer to go quiet.
     /// </summary>
@@ -372,7 +362,7 @@ public partial class PdfViewerControl
     /// wheel/pan handlers and the viewport diagnostics share it.
     /// </summary>
     private ScrollViewer? ActiveViewportScrollViewer() =>
-        ViewMode == PdfViewMode.Continuous ? ContinuousScrollViewer : PdfScrollViewer;
+        ViewMode == PdfViewMode.Continuous ? ContinuousPart.ContinuousScrollViewer : SinglePagePart.PdfScrollViewer;
 
     private static void SetVerticalOffset(ScrollViewer viewport, double requestedY)
     {

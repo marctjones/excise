@@ -535,7 +535,7 @@ public partial class PdfViewerControl
     {
         if (Document == null || pageNumber < 1 || pageNumber > Document.PageCount)
             return null;
-        return PdfRectToViewerDips(rect, pageNumber);
+        return SinglePagePart.PdfRectToViewerDips(rect, pageNumber);
     }
 
     /// <summary>
@@ -794,7 +794,7 @@ public partial class PdfViewerControl
 
     private void DrawTemporaryRedactionRectangle(Point start, Point end)
     {
-        if (InteractionLayer == null) return;
+        if (SinglePagePart.InteractionLayer == null) return;
 
         var rect = CreateRect(start, end);
 
@@ -807,7 +807,7 @@ public partial class PdfViewerControl
                 StrokeThickness = 2,
                 StrokeDashArray = new AvaloniaList<double> { 5, 5 }
             };
-            InteractionLayer.Children.Add(_tempRedactionRect);
+            SinglePagePart.InteractionLayer.Children.Add(_tempRedactionRect);
         }
 
         Canvas.SetLeft(_tempRedactionRect, rect.X);
@@ -821,7 +821,7 @@ public partial class PdfViewerControl
 
     private void DrawTemporaryTypewriterRectangle(Point start, Point end)
     {
-        if (InteractionLayer == null)
+        if (SinglePagePart.InteractionLayer == null)
             return;
 
         var rect = CreateRect(start, end);
@@ -835,7 +835,7 @@ public partial class PdfViewerControl
                 StrokeThickness = 1.5,
                 StrokeDashArray = new global::Avalonia.Collections.AvaloniaList<double> { 4, 3 },
             };
-            InteractionLayer.Children.Add(_tempTypewriterRect);
+            SinglePagePart.InteractionLayer.Children.Add(_tempTypewriterRect);
         }
 
         Canvas.SetLeft(_tempTypewriterRect, rect.X);
@@ -968,7 +968,7 @@ public partial class PdfViewerControl
 
     private void DrawTemporaryFreehandPath()
     {
-        if (InteractionLayer == null) return;
+        if (SinglePagePart.InteractionLayer == null) return;
 
         if (_tempFreehandPath == null)
         {
@@ -980,7 +980,7 @@ public partial class PdfViewerControl
                 StrokeLineCap = PenLineCap.Round,
                 IsHitTestVisible = false,
             };
-            InteractionLayer.Children.Add(_tempFreehandPath);
+            SinglePagePart.InteractionLayer.Children.Add(_tempFreehandPath);
         }
 
         _tempFreehandPath.Points = new Points(_freehandDips);
@@ -1060,7 +1060,7 @@ public partial class PdfViewerControl
     /// </summary>
     private void DrawTemporaryVertexPath(Point cursor)
     {
-        if (InteractionLayer == null) return;
+        if (SinglePagePart.InteractionLayer == null) return;
 
         if (_tempVertexPath == null)
         {
@@ -1072,7 +1072,7 @@ public partial class PdfViewerControl
                 StrokeLineCap = PenLineCap.Round,
                 IsHitTestVisible = false,
             };
-            InteractionLayer.Children.Add(_tempVertexPath);
+            SinglePagePart.InteractionLayer.Children.Add(_tempVertexPath);
         }
 
         var points = new List<Point>(_vertexDips) { cursor };

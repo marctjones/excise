@@ -307,7 +307,7 @@ public class MouseInputTests : IDisposable
     private static async Task<ScrollViewer> WaitForContinuousLaidOutAsync(
         MainWindow window, PdfViewerControl viewer)
     {
-        var sv = FindNamedDescendant<ScrollViewer>(viewer, "ContinuousScrollViewer");
+        var sv = viewer.ContinuousPart.ContinuousScrollViewer;
         sv.Should().NotBeNull();
         var deadline = DateTime.UtcNow.AddSeconds(30);
         while (DateTime.UtcNow < deadline && sv!.Extent.Height <= 0)
@@ -1035,31 +1035,6 @@ public class MouseInputTests : IDisposable
         var start = overlay.TranslatePoint(new Point(viewerRect.X, viewerRect.Y), window) ?? default;
         var end = overlay.TranslatePoint(new Point(viewerRect.Right, viewerRect.Y2), window) ?? default;
         return (start, end);
-    }
-
-    private static T? FindNamedDescendant<T>(Control root, string name) where T : Control
-    {
-        if (root.Name == name && root is T t) return t;
-        if (root is Panel p)
-        {
-            foreach (var child in p.Children)
-                if (child is Control c)
-                {
-                    var hit = FindNamedDescendant<T>(c, name);
-                    if (hit != null) return hit;
-                }
-        }
-        if (root is Decorator d && d.Child is Control dc)
-        {
-            var hit = FindNamedDescendant<T>(dc, name);
-            if (hit != null) return hit;
-        }
-        if (root is ContentControl cc && cc.Content is Control ccc)
-        {
-            var hit = FindNamedDescendant<T>(ccc, name);
-            if (hit != null) return hit;
-        }
-        return root.FindControl<T>(name);
     }
 
     #endregion
