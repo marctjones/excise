@@ -407,7 +407,7 @@ internal sealed partial class SinglePageView
                     _singlePageRenderLifetime.Add(pageNumber, renderDpi, bitmap, dip,
                         keep: b => ReferenceEquals(b, stillShown));
                     ViewerMetrics.RecordSinglePageRender(renderStart, renderDpi);
-                    Trace($"ContVis={_viewer.ContinuousScrollViewer?.IsVisible} SingleVis={PdfScrollViewer?.IsVisible}");
+                    Trace($"ContVis={_viewer.ContinuousPart.ContinuousScrollViewer?.IsVisible} SingleVis={PdfScrollViewer?.IsVisible}");
                     Trace($"ImageSet page={pageNumber} imgWidth={PdfImage?.Width:F0} srcDip={dip.Width:F0}x{dip.Height:F0} srcPx={bitmap.PixelSize.Width} zoom={ZoomLevel:F3}");
                     if (PdfImage != null)
                     {

@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "bcc6a2b3d1f121f5c5de3389d8ba1f13a0bb9a37",
+  "sourceRevision": "af0b3777e69421d1f78b93df8dd8e38bbf71e716",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8469,
+    "retainedSymbols": 8359,
     "observedComponentDependencies": 83,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -66,14 +66,14 @@
     {
       "source": "avalonia",
       "target": "core-document",
-      "references": 504,
+      "references": 501,
       "typeDependencyCount": 60,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Avalonia.Controls.PdfViewerControl",
           "target": "Excise.Core.Document.PdfRectangle",
-          "references": 38
+          "references": 35
         }
       ]
     },

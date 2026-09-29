@@ -18,8 +18,9 @@ namespace Excise.Avalonia.Controls;
 /// <summary>
 /// The viewer's side of the continuous (reading) view mode (#371 part 2, #1842):
 /// the tile and DPI constants and pure math the view and the tests share, the
-/// view-mode switch, the public continuous API, and the wiring and test seams
-/// of <see cref="ContinuousPageView"/>, which holds the pipeline. The view is
+/// view-mode switch, the public continuous API, and the wiring of
+/// <see cref="ContinuousPageView"/>, which holds the pipeline; tests reach its
+/// parts and seams through <c>ContinuousPart</c> itself (#1842 Phase B). The view is
 /// read-only apart from form fields (#1807): entering an editing interaction
 /// switches back to single-page (the <see cref="InteractionModeProperty"/>
 /// class handler), so none of the security-critical redaction overlays run
@@ -178,8 +179,8 @@ public partial class PdfViewerControl
     {
         bool continuous = ViewMode == PdfViewMode.Continuous;
         Trace($"ViewMode -> {ViewMode} page={CurrentPage} zoom={ZoomLevel:F3} " +
-              $"contOffset={ContinuousScrollViewer?.Offset.Y:F0}/{ContinuousScrollViewer?.Extent.Height:F0} " +
-              $"singleOffset={PdfScrollViewer?.Offset.Y:F0}/{PdfScrollViewer?.Extent.Height:F0}");
+              $"contOffset={ContinuousPart.ContinuousScrollViewer?.Offset.Y:F0}/{ContinuousPart.ContinuousScrollViewer?.Extent.Height:F0} " +
+              $"singleOffset={SinglePagePart.PdfScrollViewer?.Offset.Y:F0}/{SinglePagePart.PdfScrollViewer?.Extent.Height:F0}");
 
         // Capture the reader's intra-page position BEFORE flipping
         // visibility — a hidden ScrollViewer's offset is not trustworthy.
@@ -187,8 +188,8 @@ public partial class PdfViewerControl
         IReadingPositionSource outgoing = continuous ? SinglePagePart : ContinuousPart;
         double fraction = outgoing.CaptureIntraPageFraction();
 
-        if (ContinuousScrollViewer != null) ContinuousScrollViewer.IsVisible = continuous;
-        if (PdfScrollViewer != null) PdfScrollViewer.IsVisible = !continuous;
+        if (ContinuousPart.ContinuousScrollViewer != null) ContinuousPart.ContinuousScrollViewer.IsVisible = continuous;
+        if (SinglePagePart.PdfScrollViewer != null) SinglePagePart.PdfScrollViewer.IsVisible = !continuous;
 
         // #1564: render-ahead belongs to the view that scheduled it.
         if (continuous) SinglePagePart.CancelSinglePageLookAhead();
@@ -296,12 +297,6 @@ public partial class PdfViewerControl
 
     // ── the continuous view (#1842 step 6) ──────────────────────────────────
 
-    /// <summary>The continuous view's scroller (template part of the child).</summary>
-    internal ScrollViewer ContinuousScrollViewer => ContinuousPart.ContinuousScrollViewer;
-
-    /// <summary>The continuous view's page list (template part of the child).</summary>
-    internal ItemsControl ContinuousItems => ContinuousPart.ContinuousItems;
-
     /// <summary>
     /// Wire the continuous view to this viewer: it reads the viewer's state and
     /// reports the scroll-derived anchor page, its viewport, finished selections and
@@ -321,50 +316,6 @@ public partial class PdfViewerControl
         };
         ContinuousPart.Attach(this);
     }
-
-    // ── Test seams of the continuous view, forwarded under their old names so the
-    //    tests keep addressing the viewer (#1842, design §3.1 principle 8). ──────
-    internal bool AddToContinuousCache(ContinuousTileKey key, WriteableBitmap bmp, bool lookAhead = false) =>
-        ContinuousPart.AddToContinuousCache(key, bmp, lookAhead);
-    internal IReadOnlyList<(ContinuousTileKey Key, WriteableBitmap Bitmap)> ContinuousCacheEntriesForTests() =>
-        ContinuousPart.ContinuousCacheEntriesForTests();
-    internal IReadOnlySet<ContinuousTileKey> ContinuousRequiredKeysForTests => ContinuousPart.ContinuousRequiredKeysForTests;
-    internal long ContinuousCompositeResidentBytes() => ContinuousPart.ContinuousCompositeResidentBytes();
-    internal ContinuousBitmapOverlap MeasureContinuousBitmapOverlap() => ContinuousPart.MeasureContinuousBitmapOverlap();
-    internal string ContinuousDiagnostics() => ContinuousPart.ContinuousDiagnostics();
-    internal DecodedImageSampleRetention ContinuousImageSamplesForTests => ContinuousPart.ContinuousImageSamplesForTests;
-    internal Action<int>? ContinuousBandRenderStartingForTests
-    {
-        get => ContinuousPart.ContinuousBandRenderStartingForTests;
-        set => ContinuousPart.ContinuousBandRenderStartingForTests = value;
-    }
-    internal long? ContinuousCacheByteBudgetOverride
-    {
-        get => ContinuousPart.ContinuousCacheByteBudgetOverride;
-        set => ContinuousPart.ContinuousCacheByteBudgetOverride = value;
-    }
-    internal long? ContinuousCompositeByteBoundOverride
-    {
-        get => ContinuousPart.ContinuousCompositeByteBoundOverride;
-        set => ContinuousPart.ContinuousCompositeByteBoundOverride = value;
-    }
-    internal int ContinuousCompositeOverBoundCount => ContinuousPart.ContinuousCompositeOverBoundCount;
-    internal int ContinuousRenderStartCount => ContinuousPart.ContinuousRenderStartCount;
-    internal int ContinuousRenderCancellationCount => ContinuousPart.ContinuousRenderCancellationCount;
-    internal int ContinuousRenderCoalescedRequestCount => ContinuousPart.ContinuousRenderCoalescedRequestCount;
-    internal int ContinuousRenderCompletedCount => ContinuousPart.ContinuousRenderCompletedCount;
-    internal long ContinuousRenderWallMs => ContinuousPart.ContinuousRenderWallMs;
-    internal int ContinuousRequiredCellCount => ContinuousPart.ContinuousRequiredCellCount;
-    internal int ContinuousInFlightCount => ContinuousPart.ContinuousInFlightCount;
-    internal int ContinuousEffectiveRenderDpi => ContinuousPart.ContinuousEffectiveRenderDpi;
-    internal bool RecomposeFromCacheOnLayoutPending => ContinuousPart.RecomposeFromCacheOnLayoutPending;
-    internal int ContinuousLookAheadStartCount => ContinuousPart.ContinuousLookAheadStartCount;
-    internal int ContinuousLookAheadCompletedCount => ContinuousPart.ContinuousLookAheadCompletedCount;
-    internal int ContinuousLookAheadCancellationCount => ContinuousPart.ContinuousLookAheadCancellationCount;
-    internal bool ContinuousLookAheadInFlight => ContinuousPart.ContinuousLookAheadInFlight;
-    internal bool ContinuousLookAheadCancellationRequested => ContinuousPart.ContinuousLookAheadCancellationRequested;
-    internal IReadOnlyCollection<ContinuousTileKey> ContinuousLookAheadTilesForTests => ContinuousPart.ContinuousLookAheadTilesForTests;
-    internal IReadOnlyCollection<int> ContinuousLookAheadSamplePagesForTests => ContinuousPart.ContinuousLookAheadSamplePagesForTests;
 
     /// <summary>
     /// The reader scrolled a different page to the viewport top. Mark the change as

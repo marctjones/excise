@@ -890,13 +890,13 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, IViewer
         // (sometimes oscillating sub-pixel) to the VM, ReapplyFitModeIfNeeded
         // re-set ZoomLevel, triggering yet more layout. Result: button
         // tooltips flickered and the button was unclickable.
-        if (PdfScrollViewer != null)
+        if (SinglePagePart.PdfScrollViewer != null)
         {
             // AnonymousObserver (Avalonia.Reactive) rather than a Subscribe(Action<T>)
             // overload — the latter comes from System.Reactive (Rx), which this
             // library deliberately does NOT depend on (the app got it transitively
             // via ReactiveUI). Avalonia ships AnonymousObserver for exactly this. (#365)
-            _viewportSubscription = PdfScrollViewer
+            _viewportSubscription = SinglePagePart.PdfScrollViewer
                 .GetObservable(ScrollViewer.ViewportProperty)
                 .Subscribe(new AnonymousObserver<Size>(OnScrollViewerViewportChanged));
         }
@@ -918,15 +918,15 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, IViewer
     /// </summary>
     public Size GetVisibleViewportSize()
     {
-        if (ViewMode == PdfViewMode.Continuous && ContinuousScrollViewer != null)
+        if (ViewMode == PdfViewMode.Continuous && ContinuousPart.ContinuousScrollViewer != null)
         {
-            var cv = ContinuousScrollViewer.Viewport;
+            var cv = ContinuousPart.ContinuousScrollViewer.Viewport;
             if (cv.Width > 0 && cv.Height > 0) return cv;
         }
 
-        if (PdfScrollViewer != null)
+        if (SinglePagePart.PdfScrollViewer != null)
         {
-            var v = PdfScrollViewer.Viewport;
+            var v = SinglePagePart.PdfScrollViewer.Viewport;
             if (v.Width > 0 && v.Height > 0) return v;
         }
         return Bounds.Size;
