@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "4c0c9484b89a7269b4c20b616f7d7ee332b901ab",
+  "sourceRevision": "9ba2b350c9cf559e0d76e988229337e805751d06",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -22,7 +22,7 @@
     "commitsRequested": 200,
     "commitsObserved": 199,
     "broadCommitsExcluded": 1,
-    "newestProductionCommit": "4c0c9484b89a7269b4c20b616f7d7ee332b901ab",
+    "newestProductionCommit": "267910ea0e15b4cba9b2f9dd677d936b48161e14",
     "oldestProductionCommit": "40359359a016a9e7a0d464baf8551c583eeb94d2"
   },
   "files": [

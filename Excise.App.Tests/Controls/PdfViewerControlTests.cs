@@ -66,6 +66,33 @@ public class PdfViewerControlTests
         AutomationProperties.GetHelpText(control).Should().Contain("Use Page Up and Page Down");
     }
 
+    /// <summary>
+    /// The viewer's error state drives the single-page view's error chrome (#1842 step 7):
+    /// HasError and ErrorMessage stay the viewer's styled properties, and the viewer's class
+    /// handlers show, fill and hide the overlay that now lives in SinglePageView. No other
+    /// test reaches the error overlay; a render failure cannot be forced headless.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public void PdfViewerControl_ErrorState_ShowsAndHidesTheErrorOverlay()
+    {
+        var control = new PdfViewerControl();
+        control.ErrorOverlay.IsVisible.Should().BeFalse();
+
+        control.SetValue(PdfViewerControl.ErrorMessageProperty, "Failed to render page: planted");
+        control.SetValue(PdfViewerControl.HasErrorProperty, true);
+
+        control.ErrorOverlay.IsVisible.Should().BeTrue();
+        control.ErrorOverlay.IsHitTestVisible.Should().BeTrue();
+        control.ErrorOverlay.Background.Should().NotBeNull("the dim wash is what shows the error");
+        control.ErrorMessageText.Text.Should().Be("Failed to render page: planted");
+
+        control.SetValue(PdfViewerControl.HasErrorProperty, false);
+
+        control.ErrorOverlay.IsVisible.Should().BeFalse();
+        control.ErrorOverlay.IsHitTestVisible.Should().BeFalse();
+        control.ErrorOverlay.Background.Should().BeNull("with no error the overlay must not take clicks");
+    }
+
     #endregion
 
     #region Document Loading Tests

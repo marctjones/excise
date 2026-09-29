@@ -2,26 +2,26 @@
   "$schema": "../schemas/artifact-set.schema.json",
   "schemaVersion": 2,
   "generator": "scripts/architecture_artifacts.py",
-  "sourceRevision": "4c0c9484b89a7269b4c20b616f7d7ee332b901ab",
+  "sourceRevision": "9ba2b350c9cf559e0d76e988229337e805751d06",
   "revisionSemantics": "provenance-only; normalized content and hashes determine freshness",
   "artifacts": [
     {
       "path": "architecture/inventory.generated.json",
       "format": "json",
       "schema": "architecture/schemas/inventory.schema.json",
-      "sha256": "b2e44b09d165196441bd69cf6af73b1b82ae82eb62f49a8f4da6e7c82109ddac"
+      "sha256": "e81dd775c7fe993c645df0f61cd1348876166b4243a0106d77243bdc921e0235"
     },
     {
       "path": "architecture/generated/code-topology.json",
       "format": "json",
       "schema": "architecture/schemas/topology.schema.json",
-      "sha256": "6f2f14a546c2548818a3ede77ace665c80a434d380d901eed88057b4a8258eb9"
+      "sha256": "b18452b855f8a1cdd993d1d7d39e23b48ce80569294a7c57de6ee849e1621b81"
     },
     {
       "path": "architecture/generated/architecture-conformance.json",
       "format": "json",
       "schema": "architecture/schemas/architecture-conformance.schema.json",
-      "sha256": "a130541454fba07d13663882616b982e1b92d5207ccba87cc5a0b2508d5cf3fa"
+      "sha256": "16cc75d5aced580ce06c8945fc2882c067bfc401e51f0f2480f96c2da932cadb"
     },
     {
       "path": "architecture/generated/current-projects.dot",
