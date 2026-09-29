@@ -459,15 +459,15 @@ public partial class PdfViewerControl
         // zoom != 1, every mapped point is off by the zoom factor. Trace which
         // basis served the point so a live 'overlay way off' report can be
         // pinned to its source (#693 investigation).
-        if (_overlayCanvas != null)
+        if (OverlayCanvas != null)
         {
-            var p = e.GetPosition(_overlayCanvas);
+            var p = e.GetPosition(OverlayCanvas);
             Trace($"PressPoint basis=overlay p=({p.X:F0},{p.Y:F0}) zoom={ZoomLevel:F3}");
             return p;
         }
-        if (_pdfImage != null)
+        if (PdfImage != null)
         {
-            var p = e.GetPosition(_pdfImage);
+            var p = e.GetPosition(PdfImage);
             Trace($"PressPoint basis=IMAGE-FALLBACK p=({p.X:F0},{p.Y:F0}) zoom={ZoomLevel:F3}");
             return p;
         }
@@ -531,13 +531,13 @@ public partial class PdfViewerControl
 
         if (ViewMode == PdfViewMode.Continuous)
         {
-            if (_continuousItems == null || _continuousSlots == null) return false;
+            if (ContinuousItems == null || _continuousSlots == null) return false;
             var zoom = ZoomLevel;
             if (zoom <= 0) return false;
 
-            var itemsPoint = e.GetPosition(_continuousItems);
+            var itemsPoint = e.GetPosition(ContinuousItems);
             if (!TryMapContinuousPointToPage(
-                    _continuousSlots, _continuousItems.Bounds.Width, itemsPoint,
+                    _continuousSlots, ContinuousItems.Bounds.Width, itemsPoint,
                     out pageNumber, out var pagePointDip))
                 return false;
             if (pageNumber < 1 || pageNumber > doc.PageCount) return false;
@@ -995,7 +995,7 @@ public partial class PdfViewerControl
 
     private void DrawSelectionRange(IReadOnlyList<Letter> letters)
     {
-        var layer = this.FindControl<Canvas>("TextSelectionLayer");
+        var layer = TextSelectionLayer;
         if (layer == null) return;
         layer.Children.Clear();
         if (letters.Count > 0)
@@ -1004,12 +1004,12 @@ public partial class PdfViewerControl
             // The origin probe: if the highlight canvas and the page image do
             // not share an origin in viewer space, every highlight is offset by
             // the delta — the live 'highlight far to the left' report.
-            var imgO = _pdfImage?.TranslatePoint(new Point(0, 0), this);
+            var imgO = PdfImage?.TranslatePoint(new Point(0, 0), this);
             var layO = layer.TranslatePoint(new Point(0, 0), this);
             Trace($"DrawSelection n={letters.Count} first=({first.X:F0},{first.Y:F0} {first.Width:F0}x{first.Height:F0}) " +
                   $"page={CurrentPage} zoom={ZoomLevel:F3} " +
                   $"imgOrigin=({imgO?.X:F0},{imgO?.Y:F0}) layerOrigin=({layO?.X:F0},{layO?.Y:F0}) " +
-                  $"imgW={_pdfImage?.Width:F0} layerW={layer.Bounds.Width:F0}");
+                  $"imgW={PdfImage?.Width:F0} layerW={layer.Bounds.Width:F0}");
         }
         var fill = new SolidColorBrush(Color.FromArgb(0x60, 0x33, 0x99, 0xFF));
         for (int i = 0; i < letters.Count; i++)
@@ -1033,7 +1033,7 @@ public partial class PdfViewerControl
     /// <summary>Clear any in-progress text selection (e.g. switching pages).</summary>
     public void ClearSelectionHighlight()
     {
-        var layer = this.FindControl<Canvas>("TextSelectionLayer");
+        var layer = TextSelectionLayer;
         layer?.Children.Clear();
     }
 
@@ -1051,7 +1051,7 @@ public partial class PdfViewerControl
 
     private void DrawTemporaryRedactionRectangle(Point start, Point end)
     {
-        if (_interactionLayer == null) return;
+        if (InteractionLayer == null) return;
 
         var rect = CreateRect(start, end);
 
@@ -1064,7 +1064,7 @@ public partial class PdfViewerControl
                 StrokeThickness = 2,
                 StrokeDashArray = new AvaloniaList<double> { 5, 5 }
             };
-            _interactionLayer.Children.Add(_tempRedactionRect);
+            InteractionLayer.Children.Add(_tempRedactionRect);
         }
 
         Canvas.SetLeft(_tempRedactionRect, rect.X);
@@ -1197,7 +1197,7 @@ public partial class PdfViewerControl
 
     private void DrawTemporaryFreehandPath()
     {
-        if (_interactionLayer == null) return;
+        if (InteractionLayer == null) return;
 
         if (_tempFreehandPath == null)
         {
@@ -1209,7 +1209,7 @@ public partial class PdfViewerControl
                 StrokeLineCap = PenLineCap.Round,
                 IsHitTestVisible = false,
             };
-            _interactionLayer.Children.Add(_tempFreehandPath);
+            InteractionLayer.Children.Add(_tempFreehandPath);
         }
 
         _tempFreehandPath.Points = new Points(_freehandDips);
@@ -1289,7 +1289,7 @@ public partial class PdfViewerControl
     /// </summary>
     private void DrawTemporaryVertexPath(Point cursor)
     {
-        if (_interactionLayer == null) return;
+        if (InteractionLayer == null) return;
 
         if (_tempVertexPath == null)
         {
@@ -1301,7 +1301,7 @@ public partial class PdfViewerControl
                 StrokeLineCap = PenLineCap.Round,
                 IsHitTestVisible = false,
             };
-            _interactionLayer.Children.Add(_tempVertexPath);
+            InteractionLayer.Children.Add(_tempVertexPath);
         }
 
         var points = new List<Point>(_vertexDips) { cursor };

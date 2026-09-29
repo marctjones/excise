@@ -21,9 +21,9 @@ public partial class PdfViewerControl
     /// stack in Continuous mode, otherwise the single-page scroller.
     /// </summary>
     private ScrollViewer? ActiveScrollViewer =>
-        ViewMode == PdfViewMode.Continuous && _continuousScrollViewer != null
-            ? _continuousScrollViewer
-            : _scrollViewer;
+        ViewMode == PdfViewMode.Continuous && ContinuousScrollViewer != null
+            ? ContinuousScrollViewer
+            : PdfScrollViewer;
 
     /// <summary>
     /// Ctrl (or Meta/⌘) + wheel zooms; a plain wheel is left untouched so the

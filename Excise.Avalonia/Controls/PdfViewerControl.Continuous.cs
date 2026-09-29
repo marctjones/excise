@@ -27,8 +27,6 @@ namespace Excise.Avalonia.Controls;
 /// </summary>
 public partial class PdfViewerControl
 {
-    private ScrollViewer? _continuousScrollViewer;
-    private ItemsControl? _continuousItems;
     private List<PdfPageSlot>? _continuousSlots;
 
     // Grid-cell TILES, bounded by an LRU list and owned by it. A tile is disposed
@@ -316,8 +314,8 @@ public partial class PdfViewerControl
     /// </summary>
     internal string ContinuousDiagnostics()
     {
-        var vp = _continuousScrollViewer?.Viewport ?? default;
-        var off = _continuousScrollViewer?.Offset ?? default;
+        var vp = ContinuousScrollViewer?.Viewport ?? default;
+        var off = ContinuousScrollViewer?.Offset ?? default;
         int slots = _continuousSlots?.Count ?? -1;
         long perCell = ContinuousRenderCompletedCount > 0
             ? ContinuousRenderWallMs / ContinuousRenderCompletedCount
@@ -334,21 +332,19 @@ public partial class PdfViewerControl
 
     private void InitializeContinuous()
     {
-        _continuousScrollViewer = this.FindControl<ScrollViewer>("ContinuousScrollViewer");
-        _continuousItems = this.FindControl<ItemsControl>("ContinuousItems");
 
-        if (_continuousItems != null)
+        if (ContinuousItems != null)
         {
-            _continuousItems.ContainerPrepared += OnContinuousContainerPrepared;
-            _continuousItems.ContainerClearing += OnContinuousContainerClearing;
-            _continuousItems.LayoutUpdated += OnContinuousItemsLayoutUpdated;
+            ContinuousItems.ContainerPrepared += OnContinuousContainerPrepared;
+            ContinuousItems.ContainerClearing += OnContinuousContainerClearing;
+            ContinuousItems.LayoutUpdated += OnContinuousItemsLayoutUpdated;
         }
-        if (_continuousScrollViewer != null)
+        if (ContinuousScrollViewer != null)
         {
-            _continuousOffsetSubscription = _continuousScrollViewer
+            _continuousOffsetSubscription = ContinuousScrollViewer
                 .GetObservable(ScrollViewer.OffsetProperty)
                 .Subscribe(new AnonymousObserver<Vector>(_ => OnContinuousScrolled()));
-            _continuousViewportSubscription = _continuousScrollViewer
+            _continuousViewportSubscription = ContinuousScrollViewer
                 .GetObservable(ScrollViewer.ViewportProperty)
                 .Subscribe(new AnonymousObserver<Size>(OnContinuousViewportChanged));
             // Permanent: re-apply a pending zoom anchor once layout gives the
@@ -356,7 +352,7 @@ public partial class PdfViewerControl
             // synchronously — an Offset write inside the extent-change
             // notification is re-clamped by the ScrollViewer's own layout
             // coercion and silently lost (#700).
-            _continuousExtentSubscription = _continuousScrollViewer
+            _continuousExtentSubscription = ContinuousScrollViewer
                 .GetObservable(ScrollViewer.ExtentProperty)
                 .Subscribe(new AnonymousObserver<Size>(_ =>
                 {
@@ -376,16 +372,16 @@ public partial class PdfViewerControl
     {
         bool continuous = ViewMode == PdfViewMode.Continuous;
         Trace($"ViewMode -> {ViewMode} page={CurrentPage} zoom={ZoomLevel:F3} " +
-              $"contOffset={_continuousScrollViewer?.Offset.Y:F0}/{_continuousScrollViewer?.Extent.Height:F0} " +
-              $"singleOffset={_scrollViewer?.Offset.Y:F0}/{_scrollViewer?.Extent.Height:F0}");
+              $"contOffset={ContinuousScrollViewer?.Offset.Y:F0}/{ContinuousScrollViewer?.Extent.Height:F0} " +
+              $"singleOffset={PdfScrollViewer?.Offset.Y:F0}/{PdfScrollViewer?.Extent.Height:F0}");
 
         // Capture the reader's intra-page position BEFORE flipping
         // visibility — a hidden ScrollViewer's offset is not trustworthy.
         // Applied to the destination view once it has laid out (#693).
         double fraction = continuous ? SingleIntraPageFraction() : ContinuousIntraPageFraction();
 
-        if (_continuousScrollViewer != null) _continuousScrollViewer.IsVisible = continuous;
-        if (_scrollViewer != null) _scrollViewer.IsVisible = !continuous;
+        if (ContinuousScrollViewer != null) ContinuousScrollViewer.IsVisible = continuous;
+        if (PdfScrollViewer != null) PdfScrollViewer.IsVisible = !continuous;
 
         // #1564: render-ahead belongs to the view that scheduled it.
         if (continuous) CancelSinglePageLookAhead();
@@ -424,22 +420,22 @@ public partial class PdfViewerControl
     /// <summary>Fraction of the current page above the viewport top in continuous view.</summary>
     private double ContinuousIntraPageFraction()
     {
-        if (_continuousScrollViewer == null || _continuousSlots == null) return 0;
+        if (ContinuousScrollViewer == null || _continuousSlots == null) return 0;
         int idx = CurrentPage - 1;
         if (idx < 0 || idx >= _continuousSlots.Count) return 0;
         var slot = _continuousSlots[idx];
         if (slot.DisplayHeight <= 0) return 0;
         return Math.Clamp(
-            (_continuousScrollViewer.Offset.Y - slot.TopDip) / slot.DisplayHeight, 0, 0.99);
+            (ContinuousScrollViewer.Offset.Y - slot.TopDip) / slot.DisplayHeight, 0, 0.99);
     }
 
     /// <summary>Fraction of the page above the viewport top in single-page view.</summary>
     private double SingleIntraPageFraction()
     {
-        if (_scrollViewer == null) return 0;
-        var extent = _scrollViewer.Extent.Height;
+        if (PdfScrollViewer == null) return 0;
+        var extent = PdfScrollViewer.Extent.Height;
         if (extent <= 1) return 0;
-        return Math.Clamp(_scrollViewer.Offset.Y / extent, 0, 0.99);
+        return Math.Clamp(PdfScrollViewer.Offset.Y / extent, 0, 0.99);
     }
 
     /// <summary>
@@ -471,30 +467,30 @@ public partial class PdfViewerControl
 
     private void ApplyPendingSingleFractionCore()
     {
-        if (_pendingSingleFraction < 0 || _scrollViewer == null)
+        if (_pendingSingleFraction < 0 || PdfScrollViewer == null)
         {
             _pendingSingleFractionSub?.Dispose();
             _pendingSingleFractionSub = null;
             return;
         }
-        var extent = _scrollViewer.Extent.Height;
+        var extent = PdfScrollViewer.Extent.Height;
         if (extent <= 1)
         {
-            _pendingSingleFractionSub ??= _scrollViewer
+            _pendingSingleFractionSub ??= PdfScrollViewer
                 .GetObservable(ScrollViewer.ExtentProperty)
                 .Subscribe(new AnonymousObserver<Size>(_ => ApplyPendingSingleFraction()));
             return;
         }
         _pendingSingleFractionSub?.Dispose();
         _pendingSingleFractionSub = null;
-        _scrollViewer.Offset = new Vector(_scrollViewer.Offset.X, _pendingSingleFraction * extent);
+        PdfScrollViewer.Offset = new Vector(PdfScrollViewer.Offset.X, _pendingSingleFraction * extent);
         _pendingSingleFraction = -1;
     }
 
     /// <summary>(Re)build the per-page slots from the current document.</summary>
     private void RebuildContinuous()
     {
-        if (_continuousItems == null) return;
+        if (ContinuousItems == null) return;
         var doc = Document;
         if (doc == null) { ClearContinuous(); return; }
 
@@ -513,7 +509,7 @@ public partial class PdfViewerControl
         ReleaseSlotComposites(_continuousSlots);
         _continuousSlots = slots;
         RefreshContinuousByteMirrors();
-        _continuousItems.ItemsSource = slots;
+        ContinuousItems.ItemsSource = slots;
 
         // Re-assert CurrentPage now that the slots exist.
         //
@@ -553,7 +549,7 @@ public partial class PdfViewerControl
     private void ClearContinuous()
     {
         ReleaseSlotComposites(_continuousSlots);
-        if (_continuousItems != null) _continuousItems.ItemsSource = null;
+        if (ContinuousItems != null) ContinuousItems.ItemsSource = null;
         _continuousSlots = null;
         RefreshContinuousByteMirrors();
     }
@@ -669,9 +665,9 @@ public partial class PdfViewerControl
         if (realizedPages == null)
         {
             var pages = new HashSet<int>();
-            if (_continuousItems != null)
+            if (ContinuousItems != null)
             {
-                foreach (var container in _continuousItems.GetRealizedContainers())
+                foreach (var container in ContinuousItems.GetRealizedContainers())
                 {
                     if (container.DataContext is PdfPageSlot slot)
                         pages.Add(slot.PageNumber);
@@ -756,17 +752,17 @@ public partial class PdfViewerControl
         // wins over anchoring.
         int anchorPage = 0;
         double anchorFraction = 0;
-        if (_continuousScrollViewer != null && _pendingContinuousPage == null)
+        if (ContinuousScrollViewer != null && _pendingContinuousPage == null)
         {
             var anchor = ContinuousReadingAnchor.Capture(
-                SlotBoxes(_continuousSlots), _continuousScrollViewer.Offset.Y, PageGapDip);
+                SlotBoxes(_continuousSlots), ContinuousScrollViewer.Offset.Y, PageGapDip);
             anchorPage = anchor.Page;
             anchorFraction = anchor.Fraction;
         }
 
         ApplyContinuousSlotLayout(_continuousSlots);
 
-        if (anchorPage > 0 && _continuousScrollViewer != null)
+        if (anchorPage > 0 && ContinuousScrollViewer != null)
         {
             // The ScrollViewer clamps Offset against the PRE-layout extent
             // until the next layout pass, so a zoom-IN target (which grows)
@@ -880,7 +876,7 @@ public partial class PdfViewerControl
 
     public void PreserveContinuousReadingPositionOnNextRebuild()
     {
-        if (ViewMode != PdfViewMode.Continuous || _continuousScrollViewer == null || _continuousSlots == null)
+        if (ViewMode != PdfViewMode.Continuous || ContinuousScrollViewer == null || _continuousSlots == null)
             return;
         // Snapshot the fraction of the reader's page (CurrentPage) NOW, while slots
         // and CurrentPage still describe the pre-mutation world. RebuildContinuous
@@ -902,7 +898,7 @@ public partial class PdfViewerControl
 
     private void ApplyPendingZoomAnchor()
     {
-        if (_pendingZoomAnchorPage <= 0 || _continuousScrollViewer == null || _continuousSlots == null ||
+        if (_pendingZoomAnchorPage <= 0 || ContinuousScrollViewer == null || _continuousSlots == null ||
             _pendingZoomAnchorPage > _continuousSlots.Count)
         {
             return;
@@ -915,11 +911,11 @@ public partial class PdfViewerControl
         // zoom-out near the end of the document), pinning to the max IS the anchor
         // — the viewport now covers proportionally more document.
         var reachable = ContinuousReadingAnchor.ClampToExtent(
-            target, _continuousScrollViewer.Extent.Height, _continuousScrollViewer.Viewport.Height);
-        _continuousScrollViewer.Offset = new Vector(_continuousScrollViewer.Offset.X, reachable);
+            target, ContinuousScrollViewer.Extent.Height, ContinuousScrollViewer.Viewport.Height);
+        ContinuousScrollViewer.Offset = new Vector(ContinuousScrollViewer.Offset.X, reachable);
 
-        if (Math.Abs(_continuousScrollViewer.Offset.Y - target) <= 1.0 ||
-            (reachable < target && Math.Abs(_continuousScrollViewer.Offset.Y - reachable) <= 1.0 && ExtentReflectsSlots()))
+        if (Math.Abs(ContinuousScrollViewer.Offset.Y - target) <= 1.0 ||
+            (reachable < target && Math.Abs(ContinuousScrollViewer.Offset.Y - reachable) <= 1.0 && ExtentReflectsSlots()))
         {
             // Anchored (or correctly pinned at the true max). Done — the
             // permanent extent subscription stops re-posting once this is 0.
@@ -932,10 +928,10 @@ public partial class PdfViewerControl
     /// <summary>The ScrollViewer's extent matches the freshly-laid-out slots.</summary>
     private bool ExtentReflectsSlots()
     {
-        if (_continuousScrollViewer == null || _continuousSlots == null || _continuousSlots.Count == 0)
+        if (ContinuousScrollViewer == null || _continuousSlots == null || _continuousSlots.Count == 0)
             return true;
         var last = _continuousSlots[^1];
-        return Math.Abs(_continuousScrollViewer.Extent.Height - (last.TopDip + last.DisplayHeight + PageGapDip)) < 2.0;
+        return Math.Abs(ContinuousScrollViewer.Extent.Height - (last.TopDip + last.DisplayHeight + PageGapDip)) < 2.0;
     }
 
     private void ApplyContinuousSlotLayout(IReadOnlyList<PdfPageSlot> slots)
@@ -965,7 +961,7 @@ public partial class PdfViewerControl
         // what silently swallowed "go to page N" issued right after open — the
         // caller's CurrentPage was then overwritten by the first scroll event.
         // Remember it and retry once the slots arrive.
-        if (_continuousScrollViewer == null || _continuousSlots == null)
+        if (ContinuousScrollViewer == null || _continuousSlots == null)
         {
             _pendingContinuousPage = pageNumber;
             _pendingContinuousAttempts = 0;
@@ -977,8 +973,8 @@ public partial class PdfViewerControl
 
         var slot = _continuousSlots[pageNumber - 1];
         var targetY = slot.TopDip + intraPageFraction * slot.DisplayHeight;
-        var x = _continuousScrollViewer.Offset.X;
-        _continuousScrollViewer.Offset = new Vector(x, targetY);
+        var x = ContinuousScrollViewer.Offset.X;
+        ContinuousScrollViewer.Offset = new Vector(x, targetY);
 
         // A ScrollViewer CLAMPS Offset to its extent. Before layout has run the
         // extent is 0, so the assignment above silently becomes Offset.Y = 0 —
@@ -1024,7 +1020,7 @@ public partial class PdfViewerControl
         }
 
         // Slots still not built — the items panel hasn't measured yet. Wait.
-        if (_continuousScrollViewer == null || _continuousSlots == null)
+        if (ContinuousScrollViewer == null || _continuousSlots == null)
         {
             Dispatcher.UIThread.Post(RetryPendingContinuousScroll, DispatcherPriority.Loaded);
             return;
@@ -1040,14 +1036,14 @@ public partial class PdfViewerControl
             return;
         }
 
-        var before = _continuousScrollViewer.Offset.Y;
-        _continuousScrollViewer.Offset = new Vector(_continuousScrollViewer.Offset.X, targetY);
+        var before = ContinuousScrollViewer.Offset.Y;
+        ContinuousScrollViewer.Offset = new Vector(ContinuousScrollViewer.Offset.X, targetY);
 
         if (ReachedContinuousTarget(targetY))
         {
             _pendingContinuousPage = null;
         }
-        else if (!_continuousScrollViewer.Offset.Y.Equals(before))
+        else if (!ContinuousScrollViewer.Offset.Y.Equals(before))
         {
             // We moved but haven't arrived — layout is still settling. Try again.
             Dispatcher.UIThread.Post(RetryPendingContinuousScroll, DispatcherPriority.Loaded);
@@ -1064,7 +1060,7 @@ public partial class PdfViewerControl
 
     private bool ReachedContinuousTarget(double targetY)
     {
-        if (_continuousScrollViewer == null) return false;
+        if (ContinuousScrollViewer == null) return false;
 
         // No extent yet => layout has not run => the Offset assignment was clamped
         // to 0 and we have arrived NOWHERE.
@@ -1074,14 +1070,14 @@ public partial class PdfViewerControl
         // at offset 0. The pending-navigation latch cleared itself immediately, and
         // the scroll handler was then free to derive CurrentPage from the stale
         // offset and snap the user back to page 1. The guard was disarming itself.
-        var extentHeight = _continuousScrollViewer.Extent.Height;
+        var extentHeight = ContinuousScrollViewer.Extent.Height;
         if (extentHeight <= 0) return false;
 
         // With a real extent, clamped-to-max DOES count as arrival: the last page's
         // top can legitimately exceed the maximum scroll offset, and demanding exact
         // equality there would spin forever.
-        var offsetY = _continuousScrollViewer.Offset.Y;
-        var maxY = Math.Max(0, extentHeight - _continuousScrollViewer.Viewport.Height);
+        var offsetY = ContinuousScrollViewer.Offset.Y;
+        var maxY = Math.Max(0, extentHeight - ContinuousScrollViewer.Viewport.Height);
         var effectiveTarget = Math.Min(targetY, maxY);
 
         return Math.Abs(offsetY - effectiveTarget) < 1.0;
@@ -1089,7 +1085,7 @@ public partial class PdfViewerControl
 
     private void OnContinuousScrolled()
     {
-        if (ViewMode != PdfViewMode.Continuous || _continuousScrollViewer == null || _continuousSlots == null)
+        if (ViewMode != PdfViewMode.Continuous || ContinuousScrollViewer == null || _continuousSlots == null)
             return;
 
         // A programmatic jump is in flight and hasn't landed. The offset we would
@@ -1113,7 +1109,7 @@ public partial class PdfViewerControl
         // offset/extent ratio legitimately changes which page dominates, so the
         // anchor stopped being stable). The page a "current page" COMMAND acts
         // on is a different question and is answered by MostVisiblePage.
-        double offsetY = _continuousScrollViewer.Offset.Y + 1;
+        double offsetY = ContinuousScrollViewer.Offset.Y + 1;
         int top = FindTopVisibleContinuousPage(_continuousSlots, offsetY);
 
         if (top != CurrentPage)
@@ -1160,12 +1156,12 @@ public partial class PdfViewerControl
         if (!_recomposeFromCacheOnLayout)
             return;
         _recomposeFromCacheOnLayout = false;
-        if (_continuousDetached || _continuousItems == null || ViewMode != PdfViewMode.Continuous
+        if (_continuousDetached || ContinuousItems == null || ViewMode != PdfViewMode.Continuous
             || _pendingContinuousPage is not null)
             return;
         try
         {
-            foreach (var container in _continuousItems.GetRealizedContainers())
+            foreach (var container in ContinuousItems.GetRealizedContainers())
             {
                 if (container.DataContext is PdfPageSlot slot)
                     RecomposeSlot(slot);
@@ -1203,7 +1199,7 @@ public partial class PdfViewerControl
 
     private void RenderVisibleContinuousTiles()
     {
-        if (_continuousDetached || _continuousItems == null || _continuousRenderPassScheduled)
+        if (_continuousDetached || ContinuousItems == null || _continuousRenderPassScheduled)
             return;
 
         _continuousRenderPassScheduled = true;
@@ -1224,10 +1220,10 @@ public partial class PdfViewerControl
 
     private void RenderVisibleContinuousTilesNowCore()
     {
-        if (_continuousDetached || _continuousItems == null || _continuousScrollViewer == null) return;
+        if (_continuousDetached || ContinuousItems == null || ContinuousScrollViewer == null) return;
 
-        var viewport = _continuousScrollViewer.Viewport;
-        var offset = _continuousScrollViewer.Offset;
+        var viewport = ContinuousScrollViewer.Viewport;
+        var offset = ContinuousScrollViewer.Offset;
         if (viewport.Width <= 0 || viewport.Height <= 0 || ZoomLevel <= 0) return;
         var doc = Document;
         if (doc == null) return;
@@ -1240,7 +1236,7 @@ public partial class PdfViewerControl
         var required = new HashSet<ContinuousTileKey>();
         var realized = new HashSet<PdfPageSlot>(ReferenceEqualityComparer.Instance);
 
-        foreach (var container in _continuousItems.GetRealizedContainers())
+        foreach (var container in ContinuousItems.GetRealizedContainers())
         {
             if (container.DataContext is not PdfPageSlot slot) continue;
             realized.Add(slot);
@@ -1563,7 +1559,7 @@ public partial class PdfViewerControl
                         // A render-ahead page is normally not realized; only a
                         // realized one (zoomed out, or paged onto mid-render)
                         // has a composite to rebuild.
-                        if (lookAhead == null || _continuousItems?.ContainerFromItem(slot) != null)
+                        if (lookAhead == null || ContinuousItems?.ContainerFromItem(slot) != null)
                             RecomposeSlot(slot);
                     }
                 }
@@ -1684,7 +1680,7 @@ public partial class PdfViewerControl
     {
         get
         {
-            if (ViewMode != PdfViewMode.Continuous || _continuousScrollViewer == null
+            if (ViewMode != PdfViewMode.Continuous || ContinuousScrollViewer == null
                 || _continuousSlots is not { Count: > 0 } slots)
                 return CurrentPage;
 
@@ -1707,8 +1703,8 @@ public partial class PdfViewerControl
 
             return FindMostVisibleContinuousPage(
                 slots,
-                _continuousScrollViewer.Offset.Y + 1,
-                _continuousScrollViewer.Viewport.Height);
+                ContinuousScrollViewer.Offset.Y + 1,
+                ContinuousScrollViewer.Viewport.Height);
         }
     }
 
@@ -1852,7 +1848,7 @@ public partial class PdfViewerControl
 
     private void RecomposeSlotCore(PdfPageSlot slot)
     {
-        if (_continuousDetached || _continuousScrollViewer == null || _continuousDocCts.IsCancellationRequested) return;
+        if (_continuousDetached || ContinuousScrollViewer == null || _continuousDocCts.IsCancellationRequested) return;
         var doc = Document;
         if (doc == null || slot.PageNumber < 1 || slot.PageNumber > doc.PageCount) return;
 
@@ -1860,7 +1856,7 @@ public partial class PdfViewerControl
         // finish after its page's container was recycled (a page jump realizes
         // the destination only); publishing then would leave a composite that
         // nothing releases until the next render pass.
-        if (_continuousItems?.ContainerFromItem(slot) == null)
+        if (ContinuousItems?.ContainerFromItem(slot) == null)
         {
             slot.ClearComposite();
             RefreshContinuousByteMirrors();
@@ -1870,8 +1866,8 @@ public partial class PdfViewerControl
             return;
         }
 
-        var viewport = _continuousScrollViewer.Viewport;
-        var offset = _continuousScrollViewer.Offset;
+        var viewport = ContinuousScrollViewer.Viewport;
+        var offset = ContinuousScrollViewer.Offset;
         if (viewport.Width <= 0 || viewport.Height <= 0 || ZoomLevel <= 0) return;
         int dpi = ContinuousRenderDpi;
 

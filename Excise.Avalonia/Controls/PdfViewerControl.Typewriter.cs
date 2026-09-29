@@ -79,10 +79,10 @@ public partial class PdfViewerControl
 
     private void RedrawTypewriterLayer()
     {
-        if (_typewriterLayer == null)
+        if (TypewriterLayer == null)
             return;
 
-        _typewriterLayer.Children.Clear();
+        TypewriterLayer.Children.Clear();
         _typewriterChrome.Clear();
 
         if (Document == null || TypewriterTextOperations == null)
@@ -96,7 +96,7 @@ public partial class PdfViewerControl
 
             Canvas.SetLeft(editor, rect.X);
             Canvas.SetTop(editor, rect.Y);
-            _typewriterLayer.Children.Add(editor);
+            TypewriterLayer.Children.Add(editor);
         }
     }
 
@@ -105,7 +105,7 @@ public partial class PdfViewerControl
         // #1648: chrome belongs to the box being EDITED, not to the mode.
         var inTypewriterMode = InteractionMode == InteractionMode.Typewriter;
         var editing = inTypewriterMode && _focusedTypewriterId == operation.Id;
-        var box = new TypewriterEditorBox(operation, rect, ViewerUnitsPerPoint, _typewriterLayer!, this);
+        var box = new TypewriterEditorBox(operation, rect, ViewerUnitsPerPoint, TypewriterLayer!, this);
 
         _typewriterChrome[operation.Id] = box.ApplyChrome;
         box.ApplyChrome(editing);
@@ -156,7 +156,7 @@ public partial class PdfViewerControl
 
     private void DrawTemporaryTypewriterRectangle(Point start, Point end)
     {
-        if (_interactionLayer == null)
+        if (InteractionLayer == null)
             return;
 
         var rect = CreateRect(start, end);
@@ -170,7 +170,7 @@ public partial class PdfViewerControl
                 StrokeThickness = 1.5,
                 StrokeDashArray = new global::Avalonia.Collections.AvaloniaList<double> { 4, 3 },
             };
-            _interactionLayer.Children.Add(_tempTypewriterRect);
+            InteractionLayer.Children.Add(_tempTypewriterRect);
         }
 
         Canvas.SetLeft(_tempTypewriterRect, rect.X);
@@ -182,12 +182,12 @@ public partial class PdfViewerControl
 
     private bool IsTypewriterOverlayEvent(PointerEventArgs e)
     {
-        if (_typewriterLayer == null || e.Source is not Control source)
+        if (TypewriterLayer == null || e.Source is not Control source)
             return false;
 
         for (Control? current = source; current != null; current = current.Parent as Control)
         {
-            if (ReferenceEquals(current, _typewriterLayer))
+            if (ReferenceEquals(current, TypewriterLayer))
                 return true;
         }
 

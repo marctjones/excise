@@ -276,7 +276,7 @@ public partial class PdfViewerControl
     }
 
     private ScrollViewer? ActiveViewportScrollViewer() =>
-        ViewMode == PdfViewMode.Continuous ? _continuousScrollViewer : _scrollViewer;
+        ViewMode == PdfViewMode.Continuous ? ContinuousScrollViewer : PdfScrollViewer;
 
     private static void SetVerticalOffset(ScrollViewer viewport, double requestedY)
     {
