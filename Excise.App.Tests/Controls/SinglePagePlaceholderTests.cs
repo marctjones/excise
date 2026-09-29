@@ -33,7 +33,7 @@ public class SinglePagePlaceholderTests
         {
             var composite = await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(
                 window, viewer, items, pageNumber: 1);
-            var image = viewer.FindControl<Image>("PdfImage")!;
+            var image = viewer.PdfImage!;
             var page = viewer.Document!.GetPage(1);
             var published = viewer.SinglePagePublishCount;
 
@@ -82,7 +82,7 @@ public class SinglePagePlaceholderTests
         try
         {
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
-            var image = viewer.FindControl<Image>("PdfImage")!;
+            var image = viewer.PdfImage!;
             var page = viewer.Document!.GetPage(1);
             var sizedOnly = viewer.SinglePagePlaceholderSizedOnlyCount;
 
@@ -129,7 +129,7 @@ public class SinglePagePlaceholderTests
             }
 
             errors.Should().BeEmpty();
-            viewer.FindControl<Image>("PdfImage")!.Source.Should().BeNull();
+            viewer.PdfImage!.Source.Should().BeNull();
             viewer.SinglePagePlaceholderForTests.Should().BeNull();
             IsDisposed(placeholder!).Should().BeTrue();
         }

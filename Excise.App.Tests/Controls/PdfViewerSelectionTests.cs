@@ -65,7 +65,7 @@ public class PdfViewerSelectionTests
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 window.UpdateLayout();
-                pdfImage = control.FindControl<Image>("PdfImage");
+                pdfImage = control.PdfImage;
                 ready = pdfImage is { } img
                         && img.IsAttachedToVisualTree()
                         && img.Bounds.Width > 1
@@ -83,7 +83,7 @@ public class PdfViewerSelectionTests
             window.UpdateLayout();
             control.InteractionMode = InteractionMode.TextSelection;
 
-            var overlay = control.FindControl<Canvas>("OverlayCanvas")!;
+            var overlay = control.OverlayCanvas!;
             overlay.IsAttachedToVisualTree().Should().BeTrue();
 
             // Press at the visually leftmost glyph, drag to the rightmost. Pointer
@@ -100,9 +100,9 @@ public class PdfViewerSelectionTests
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            var layer = control.FindControl<Canvas>("TextSelectionLayer")!;
-            var overlay = control.FindControl<Canvas>("OverlayCanvas")!;
-            var img = control.FindControl<Image>("PdfImage")!;
+            var layer = control.TextSelectionLayer!;
+            var overlay = control.OverlayCanvas!;
+            var img = control.PdfImage!;
 
             var rects = layer.Children.OfType<Rectangle>().ToList();
 
@@ -205,7 +205,7 @@ public class PdfViewerSelectionTests
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 window.UpdateLayout();
-                var img = control.FindControl<Image>("PdfImage");
+                var img = control.PdfImage;
                 ready = img is { } i && i.Bounds.Width > 1 && doc.GetPage(1).Letters.Count > 0;
             });
             if (ready) break;
@@ -216,18 +216,18 @@ public class PdfViewerSelectionTests
         {
             window.UpdateLayout();
             control.InteractionMode = InteractionMode.TextSelection;
-            var overlay = control.FindControl<Canvas>("OverlayCanvas")!;
+            var overlay = control.OverlayCanvas!;
             var letters = doc.GetPage(1).Letters;
             var a = control.GlyphRectToViewerDipsForTest(letters[0].GlyphRectangle);
             var f = control.GlyphRectToViewerDipsForTest(letters[^1].GlyphRectangle);
             RaiseSelectionDrag(overlay, a.Center, f.Center);
 
-            control.FindControl<Canvas>("TextSelectionLayer")!.Children.OfType<Rectangle>()
+            control.TextSelectionLayer!.Children.OfType<Rectangle>()
                 .Should().NotBeEmpty("a drag drew a highlight");
 
             control.ClearSelectionHighlight();
 
-            control.FindControl<Canvas>("TextSelectionLayer")!.Children
+            control.TextSelectionLayer!.Children
                 .Should().BeEmpty("ClearSelectionHighlight removes every highlight rect");
         });
 

@@ -692,7 +692,7 @@ public class RenderAheadTests
         var window = new Window { Content = viewer, Width = 900, Height = 700 };
         window.Show();
         viewer.Document = PdfCoreDocument.Open(bytes);
-        return (window, viewer, viewer.FindControl<Image>("PdfImage")!);
+        return (window, viewer, viewer.PdfImage!);
     }
 
     /// <summary>Per-page gates a render-thread hook waits on, so a test can hold one render in flight.</summary>

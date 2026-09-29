@@ -228,7 +228,7 @@ public class ModeSwitchDisplayTests
             await PumpUntilAsync(window, () => SinglePageImage(viewer)?.Source != null);
             window.UpdateLayout();
 
-            var zoomHost = viewer.FindControl<global::Avalonia.Controls.LayoutTransformControl>("ZoomHost")!;
+            var zoomHost = viewer.ZoomHost!;
             var displayed = zoomHost.Bounds.Width;
             var continuousEquivalent = LetterWidthPt * (96.0 / 72.0) * viewer.ZoomLevel;
             displayed.Should().BeApproximately(continuousEquivalent, 3.0,
@@ -366,7 +366,7 @@ public class ModeSwitchDisplayTests
             // which no longer forces single-page — #815).
             ModeCommand(vm, "redact").Execute().Subscribe();
             await PumpUntilAsync(window, () => SinglePageImage(viewer)?.Source != null);
-            var single = viewer.FindControl<ScrollViewer>("PdfScrollViewer")!;
+            var single = viewer.PdfScrollViewer!;
             // The carried fraction applies via bounded deferred retries once
             // the freshly-rendered page has an extent — wait for it.
             try
@@ -431,7 +431,7 @@ public class ModeSwitchDisplayTests
             await PumpUntilAsync(window, () => viewer.CurrentPage == 2 && Math.Abs(ContinuousFraction() - intoContinuous) < 0.005);
 
             ModeCommand(vm, "redact").Execute().Subscribe();
-            var single = viewer.FindControl<ScrollViewer>("PdfScrollViewer")!;
+            var single = viewer.PdfScrollViewer!;
             await PumpUntilAsync(window, () => SinglePageImage(viewer)?.Source != null && single.Extent.Height > 1);
             // The carried fraction lands in a posted retry after the render; give
             // it time, then let the assertion below say what arrived.
@@ -515,7 +515,7 @@ public class ModeSwitchDisplayTests
     };
 
     private static Image? SinglePageImage(PdfViewerControl viewer) =>
-        viewer.FindControl<Image>("PdfImage");
+        viewer.PdfImage;
 
     private static async Task PumpUntilAsync(Window window, Func<bool> condition, int timeoutMs = 20000)
     {

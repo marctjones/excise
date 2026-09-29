@@ -60,7 +60,7 @@ public class IdleAnimationQuiescenceTests
                 "precondition: no animation may already be running in the shared test host, " +
                 "or this test cannot tell the loading bar's animation apart from someone else's");
 
-            var loadingBar = viewer.FindControl<ProgressBar>("LoadingProgressBar");
+            var loadingBar = viewer.LoadingProgressBar;
             loadingBar.Should().NotBeNull("PdfViewerControl must expose LoadingProgressBar");
 
             // Setting the document starts the first page render synchronously up to

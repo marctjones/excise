@@ -266,7 +266,7 @@ public class ViewerCacheTrimTests
         window.Show();
         try
         {
-            var image = viewer.FindControl<Image>("PdfImage")!;
+            var image = viewer.PdfImage!;
             viewer.Document = PdfCoreDocument.Open(bytes);
             var shown = new WriteableBitmap[3];
             for (int page = 1; page <= 3; page++)

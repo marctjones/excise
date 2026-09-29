@@ -242,7 +242,7 @@ public class TypewriterWorkflowTests
         // which renders the page then (#1473); a user cannot aim at it earlier.
         await SinglePageViewerWaits.WaitForSinglePageLaidOutAsync(window, viewer!);
 
-        var overlay = viewer!.FindControl<Canvas>("OverlayCanvas");
+        var overlay = viewer!.OverlayCanvas;
         overlay.Should().NotBeNull();
 
         // Centre of the page in viewer-DIP space (render DPI 120), translated to

@@ -806,7 +806,7 @@ public class StickyNotePopupWorkflowTests
     private static Point? PageCenterInWindow(
         Window window, PdfViewerControl viewer, MainWindowViewModel vm)
     {
-        var overlay = viewer.FindControl<Canvas>("OverlayCanvas");
+        var overlay = viewer.OverlayCanvas;
         if (overlay == null) return null;
         var page = vm.PdfCoreDocument!.GetPage(1);
         var localCenter = new Point(
@@ -832,7 +832,7 @@ public class StickyNotePopupWorkflowTests
     private static Point? PdfPointToWindow(
         Window window, PdfViewerControl viewer, MainWindowViewModel vm, (double X, double Y) pdfPoint)
     {
-        var overlay = viewer.FindControl<Canvas>("OverlayCanvas");
+        var overlay = viewer.OverlayCanvas;
         if (overlay == null) return null;
         var page = vm.PdfCoreDocument!.GetPage(1);
         const double dpi = 120.0;
