@@ -114,10 +114,11 @@ git -C "$REPO" config commit.gpgsign false
 
 # Every pathspec check-gate-asymmetry.sh declares must match a TRACKED file or
 # its own preflight fails the run (a pathspec matching nothing is silent, #941).
-mkdir -p Excise.Rendering/Differential Excise.Avalonia/Controls Excise.Core/Content \
-         Excise.Core/Fonts tools/Excise.RenderTools Excise.Benchmarks Demo.Tests
+mkdir -p Excise.Rendering/Differential Excise.Avalonia/Controls Excise.Avalonia/Controls/Viewer \
+         Excise.Core/Content Excise.Core/Fonts tools/Excise.RenderTools Excise.Benchmarks Demo.Tests
 echo "// hot path" > Excise.Rendering/Renderer.cs
 echo "// oracle" > Excise.Rendering/Differential/Oracle.cs
+echo "// viewer child" > Excise.Avalonia/Controls/Viewer/ContinuousPageView.cs
 
 # #1627: the hook refuses a v* tag that disagrees with the tree, so the
 # synthetic repo needs the two files that declare the version. v9.9.9 below
