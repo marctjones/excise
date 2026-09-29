@@ -198,9 +198,7 @@ internal sealed partial class SinglePageView
                     var bitmap = Imaging.SkiaInterop.ToAvaloniaBitmap(skBitmap);
                     if (bitmap == null)
                         return;
-                    var shown = PdfImage?.Source as WriteableBitmap;
-                    _singlePageRenderLifetime.Add(pageNumber, spec.DeviceDpi, bitmap, spec.LayoutSize,
-                        keep: b => ReferenceEquals(b, shown));
+                    AddToCache(pageNumber, spec.DeviceDpi, bitmap, spec.LayoutSize);
                     ViewerMetrics.RecordLookAheadRender(watch.Elapsed, spec.DeviceDpi, ViewerMetrics.LookAheadSinglePage);
                     SinglePageLookAheadCompletedCount++;
                     landed = true;
