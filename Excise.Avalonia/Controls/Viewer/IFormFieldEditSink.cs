@@ -15,10 +15,11 @@ internal interface IFormFieldEditSink
     bool AdmitEdit();
 
     /// <summary>
-    /// The value was stored. <paramref name="fallbackPage"/> is the viewer's current
-    /// page at commit time, used only when the field does not know its own page.
+    /// The value was stored. The sink resolves the page it reports (the field's
+    /// own, else the viewer's current page) when this is called, never when the
+    /// input was built: a continuous slot's inputs outlive page changes.
     /// </summary>
-    void EditStored(PdfField field, string? newValue, string? oldValue, int fallbackPage);
+    void EditStored(PdfField field, string? newValue, string? oldValue);
 
     /// <summary>The field refused the value (#1671): it was not stored.</summary>
     void EditRejected(string fieldName, string message);

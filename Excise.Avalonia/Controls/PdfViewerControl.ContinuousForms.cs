@@ -17,7 +17,7 @@ namespace Excise.Avalonia.Controls;
 /// single-page mode", #371), and it is the DEFAULT view: a form opened there
 /// looked like a plain page and silently took no input. Each realized page slot
 /// now carries its own field inputs, built by the same
-/// <see cref="BuildFormFieldInput"/> the single-page overlay uses, so the two
+/// <see cref="FormFieldInputFactory.Build"/> the single-page overlay uses, so the two
 /// views cannot fill a field differently, and positioned through the same
 /// <see cref="PdfCoordinateMapper"/> the continuous selection highlight uses,
 /// so there is one continuous transform, not a second one.
@@ -31,14 +31,6 @@ namespace Excise.Avalonia.Controls;
 public partial class PdfViewerControl
 {
     private const string ContinuousFormFieldClass = "continuous-form-field";
-
-    /// <summary>Order fields the way a person reads a form: top to bottom, then left to right.</summary>
-    private static List<PdfField> OrderFormFieldsForTabbing(IEnumerable<PdfField> fields) => fields
-        .Where(field => field.Rect.HasValue)
-        .OrderByDescending(field => field.Rect!.Value.Top)
-        .ThenBy(field => field.Rect!.Value.Left)
-        .ThenBy(field => field.FullName, StringComparer.Ordinal)
-        .ToList();
 
     /// <summary>Build (or keep) the inputs of one realized page slot at the current zoom.</summary>
     private void SyncContinuousSlotFormFields(PdfPageSlot slot)
@@ -70,15 +62,15 @@ public partial class PdfViewerControl
 
         slot.FormFieldControls.Clear();
         var unitsPerPoint = PointsToDip * ZoomLevel;
-        var ordered = OrderFormFieldsForTabbing(fields);
+        var ordered = FormFieldInputFactory.OrderFormFieldsForTabbing(fields);
         for (var tabIndex = 0; tabIndex < ordered.Count; tabIndex++)
         {
             var field = ordered[tabIndex];
             var dips = PdfCoordinateMapper.ToContinuousDips(
                 page, PdfPageRect.FromContentPoints(page.PageNumber, field.Rect!.Value), unitsPerPoint);
 
-            var input = BuildFormFieldInput(
-                field, Math.Max(dips.Width, 4), Math.Max(dips.Height, 4), tabIndex);
+            var input = FormFieldInputFactory.Build(
+                field, Math.Max(dips.Width, 4), Math.Max(dips.Height, 4), tabIndex, this);
             if (input == null) continue;
 
             input.Classes.Add(ContinuousFormFieldClass);
@@ -88,7 +80,7 @@ public partial class PdfViewerControl
         }
 
         slot.FormFieldsBuiltForZoom = ZoomLevel;
-        slot.FormFieldsSignature = FormFieldSetSignature(ordered);
+        slot.FormFieldsSignature = FormFieldInputFactory.FormFieldSetSignature(ordered);
     }
 
     private static void ClearContinuousFormFields(PdfPageSlot slot)
@@ -96,18 +88,6 @@ public partial class PdfViewerControl
         if (slot.FormFieldControls.Count > 0) slot.FormFieldControls.Clear();
         slot.FormFieldsBuiltForZoom = double.NaN;
         slot.FormFieldsSignature = 0;
-    }
-
-    /// <summary>Names and rectangles only: a typed value must not look like a changed page.</summary>
-    private static int FormFieldSetSignature(IEnumerable<PdfField> fields)
-    {
-        var hash = new HashCode();
-        foreach (var field in fields)
-        {
-            hash.Add(field.FullName, StringComparer.Ordinal);
-            hash.Add(field.Rect);
-        }
-        return hash.ToHashCode();
     }
 
     /// <summary>
@@ -128,7 +108,8 @@ public partial class PdfViewerControl
             if (provider == null) { ClearContinuousFormFields(slot); continue; }
             try
             {
-                if (FormFieldSetSignature(OrderFormFieldsForTabbing(provider(slot.PageNumber)))
+                if (FormFieldInputFactory.FormFieldSetSignature(
+                        FormFieldInputFactory.OrderFormFieldsForTabbing(provider(slot.PageNumber)))
                     != slot.FormFieldsSignature)
                 {
                     slot.FormFieldsBuiltForZoom = double.NaN;
