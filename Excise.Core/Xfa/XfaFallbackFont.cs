@@ -16,15 +16,68 @@ internal static class XfaFallbackFont
     /// <summary>Font files larger than this are not read.</summary>
     private const long MaxFontBytes = 64L * 1024 * 1024;
 
-    private static readonly Lazy<byte[]?> Program = new(Discover, LazyThreadSafetyMode.ExecutionAndPublication);
+    /// <summary>
+    /// The font bytes plus a size-1 <see cref="PdfFont"/> for measuring, held together so a
+    /// reload re-derives both from one file read.
+    /// </summary>
+    private sealed class Cached
+    {
+        public readonly byte[] Bytes;
+        public readonly PdfFont Metrics; // Size 1: widths scale linearly. Never adds glyphs to a subset.
+        public Cached(byte[] bytes)
+        {
+            Bytes = bytes;
+            Metrics = PdfFont.FromTrueType(bytes, 1);
+        }
+    }
 
-    // Size 1: widths scale linearly with size. Measuring never adds glyphs to a subset.
-    private static readonly Lazy<PdfFont?> Metrics = new(
-        () => Program.Value is { } bytes ? PdfFont.FromTrueType(bytes, 1) : null,
-        LazyThreadSafetyMode.ExecutionAndPublication);
+    private static readonly object Sync = new();
+
+    // #1921: the resolved path (and the fact that no candidate was found) are cheap and never
+    // change while the process runs, so they are cached strongly. The font bytes themselves
+    // (tens of MB, e.g. Arial Unicode) are cached only weakly: reused across documents opened
+    // back-to-back in the same session as long as something keeps them reachable, but
+    // reclaimable under memory pressure or once nothing has needed them for a while, instead
+    // of being held for the life of the process (#1921).
+    private static string? _resolvedPath;
+    private static bool _discoveryFailed;
+    private static WeakReference<Cached>? _cache;
+
+    private static Cached? GetOrLoad()
+    {
+        lock (Sync)
+        {
+            if (_cache != null && _cache.TryGetTarget(out var cached))
+                return cached;
+
+            var bytes = _resolvedPath != null ? LoadFromPath(_resolvedPath) : null;
+            if (bytes == null)
+            {
+                if (_discoveryFailed)
+                    return null;
+                var found = DiscoverPath();
+                if (found == null)
+                {
+                    _discoveryFailed = true;
+                    return null;
+                }
+                _resolvedPath = found;
+                bytes = LoadFromPath(found);
+                if (bytes == null)
+                {
+                    _discoveryFailed = true;
+                    return null;
+                }
+            }
+
+            var created = new Cached(bytes);
+            _cache = new WeakReference<Cached>(created);
+            return created;
+        }
+    }
 
     /// <summary>A new embeddable instance for one document, or null when no font was found.</summary>
-    public static PdfFont? ForDocument(double size) => Program.Value is { } bytes ? PdfFont.FromTrueType(bytes, size) : null;
+    public static PdfFont? ForDocument(double size) => GetOrLoad() is { } cached ? PdfFont.FromTrueType(cached.Bytes, size) : null;
 
     /// <summary>
     /// Split <paramref name="text"/> into runs drawn with <paramref name="base14"/> and runs
@@ -34,7 +87,7 @@ internal static class XfaFallbackFont
     /// </summary>
     public static List<(string Text, bool Fallback)> Segments(string text, PdfFont base14)
     {
-        var fallback = Metrics.Value;
+        var fallback = GetOrLoad()?.Metrics;
         var segments = new List<(string, bool)>();
         var current = new StringBuilder();
         bool currentFallback = false;
@@ -56,9 +109,10 @@ internal static class XfaFallbackFont
     }
 
     /// <summary>The width of <paramref name="text"/> in the fallback font at <paramref name="size"/> points.</summary>
-    public static double Width(string text, double size) => (Metrics.Value?.MeasureWidth(text) ?? 0) * size;
+    public static double Width(string text, double size) => (GetOrLoad()?.Metrics.MeasureWidth(text) ?? 0) * size;
 
-    private static byte[]? Discover()
+    /// <summary>Scans <see cref="Candidates"/> for the first font that passes the coverage check.</summary>
+    private static string? DiscoverPath()
     {
         foreach (var path in Candidates())
         {
@@ -67,11 +121,9 @@ internal static class XfaFallbackFont
                 var info = new FileInfo(path);
                 if (!info.Exists || info.Length > MaxFontBytes)
                     continue;
-                var bytes = File.ReadAllBytes(path);
-                if (IsCollection(bytes))
-                    bytes = FirstFontOfCollection(bytes);
+                var bytes = LoadFromPath(path);
                 if (bytes != null && PdfFont.FromTrueType(bytes, 1).CanEncodeFully("中Ж"))
-                    return bytes;
+                    return path;
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException
                 or InvalidDataException or ArgumentException or IndexOutOfRangeException
@@ -81,6 +133,22 @@ internal static class XfaFallbackFont
             }
         }
         return null;
+    }
+
+    /// <summary>Reads a font file already known to be a suitable candidate, unwrapping a collection.</summary>
+    private static byte[]? LoadFromPath(string path)
+    {
+        try
+        {
+            var bytes = File.ReadAllBytes(path);
+            return IsCollection(bytes) ? FirstFontOfCollection(bytes) : bytes;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException
+            or InvalidDataException or ArgumentException or IndexOutOfRangeException
+            or InvalidOperationException or OverflowException)
+        {
+            return null;
+        }
     }
 
     /// <summary>
