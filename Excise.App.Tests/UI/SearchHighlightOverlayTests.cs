@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Headless.XUnit;
+using Avalonia.VisualTree;
 using AwesomeAssertions;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
@@ -131,6 +132,51 @@ public class SearchHighlightOverlayTests : IDisposable
             else
                 left.Should().BeInRange(140 * DipsPerPoint, 170 * DipsPerPoint,
                     "'Page' follows 'Secret on ' on the second line, so it starts right of x = 100 pt");
+        }
+    }
+
+    /// <summary>
+    /// #1842 step 0 (f): pinned AS IT BEHAVES TODAY, not as it should. The host's
+    /// overlay methods (<c>AddSearchHighlight</c>, and the redaction ones beside it)
+    /// draw on canvases inside the single-page <c>PdfScrollViewer</c>, which is
+    /// hidden in continuous view — the app's default — and the continuous slots
+    /// draw nothing for them. So in continuous view a search highlight is added and
+    /// is visible nowhere. The split moves these canvases into the single-page
+    /// view; this pins that the move neither drops the call nor silently starts
+    /// drawing it somewhere, until the behaviour is changed on purpose (#1631).
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task AddSearchHighlight_InContinuousView_LandsOnTheHiddenSinglePageLayer_AndDrawsNothingVisible()
+    {
+        var viewer = new PdfViewerControl();
+        var window = _windows.Show(new Window { Content = viewer, Width = 900, Height = 700 });
+        viewer.Document = PdfDocument.Open(TestPdfGenerator.CreateSimplePdf("Search highlight in continuous view"));
+        viewer.ViewMode = PdfViewMode.Continuous;
+        try
+        {
+            var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            await Controls.ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+            var searchLayer = viewer.FindControl<Canvas>("SearchHighlightsLayer")!;
+            var continuousScroller = viewer.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
+            int continuousRectangles = continuousScroller.GetVisualDescendants().OfType<Rectangle>().Count();
+            int layerRectangles = searchLayer.Children.OfType<Rectangle>().Count();
+
+            viewer.AddSearchHighlight(PdfPageRect.FromContentPoints(1, new PdfRectangle(100, 600, 200, 620)));
+            window.UpdateLayout();
+
+            searchLayer.Children.OfType<Rectangle>().Count().Should().Be(layerRectangles + 1,
+                "the call still adds its rectangle to the single-page search layer");
+            searchLayer.IsEffectivelyVisible.Should().BeFalse(
+                "that layer is inside the hidden single-page scroller in continuous view");
+            continuousScroller.IsEffectivelyVisible.Should().BeTrue("fixture: continuous view is showing");
+            continuousScroller.GetVisualDescendants().OfType<Rectangle>().Count().Should().Be(continuousRectangles,
+                "continuous view draws nothing for a search highlight today");
+        }
+        finally
+        {
+            window.Close();
+            global::Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            viewer.Document?.Dispose();
         }
     }
 

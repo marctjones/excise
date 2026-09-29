@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Avalonia.Controls;
+using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Excise.App.Views;
 using Excise.TestSupport;
@@ -301,5 +302,102 @@ public class ContinuousLinkInteractionTests
         viewer.Cursor.Should().NotBeNull();
         viewer.Cursor.Should().NotBe(Cursor.Default,
             "over selectable text (selection is the default mode) the cursor is the I-beam, not the arrow");
+    }
+
+    /// <summary>
+    /// #1842 step 0 (a): the pointer→content funnel (<c>TryMapPointerToContent</c>)
+    /// must give the SAME content point for the same page point in both views. Its
+    /// continuous half maps through slot geometry at <c>PointsToDip × zoom</c>, its
+    /// single-page half through the overlay canvas at the logical render DPI; the
+    /// split gives each half to a different class, and a wrong unit in either is a
+    /// silent offset in every link, annotation and sticky-note hit.
+    ///
+    /// <para>Sticky-note placement is the probe because its event carries the exact
+    /// content point the funnel produced, and it is not an editing mode, so the
+    /// control stays in continuous view. The window point for each view is derived
+    /// independently of production: page points × the view's own DIP scale through
+    /// the realized page <c>Border</c> (continuous) or <c>OverlayCanvas</c>
+    /// (single-page). At zoom ≠ 1 so a dropped zoom factor cannot pass.</para>
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 120000)]
+    public async Task SamePagePoint_MapsToTheSameContentPoint_InBothViews()
+    {
+        var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"excise-map-parity-{Guid.NewGuid():N}.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 2);
+        var bytes = System.IO.File.ReadAllBytes(path);
+        System.IO.File.Delete(path);
+
+        const double zoom = 0.8;
+        var viewer = new PdfViewerControl();
+        var window = new Window { Content = viewer, Width = 900, Height = 700 };
+        window.Show();
+        viewer.Document = PdfDocument.Open(bytes);
+        viewer.ViewMode = PdfViewMode.Continuous;
+        viewer.ZoomLevel = zoom;
+        viewer.InteractionMode = InteractionMode.StickyNote;
+        try
+        {
+            var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            await Controls.ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+            viewer.ViewMode.Should().Be(PdfViewMode.Continuous, "sticky-note placement must not force single-page");
+
+            var page = viewer.Document.GetPage(1);
+            var box = page.CropBox.Normalize();
+            // Distinct x and y offsets, so swapped axes or a missed Y-flip cannot pass.
+            double pdfX = box.Left + 173, pdfY = box.Top - 211;
+
+            (int Page, double X, double Y)? placed = null;
+            viewer.StickyNotePlacementRequested += (_, e) => placed = (e.PageNumber, e.PdfX, e.PdfY);
+
+            async Task<(int Page, double X, double Y)> ClickAsync(Point pointInWindow, string view)
+            {
+                placed = null;
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    window.MouseDown(pointInWindow, MouseButton.Left);
+                    window.MouseUp(pointInWindow, MouseButton.Left);
+                });
+                for (int i = 0; i < 20 && placed == null; i++) { await Task.Delay(25); window.UpdateLayout(); }
+                placed.Should().NotBeNull($"a click on the page in {view} view must reach the placement funnel");
+                return placed!.Value;
+            }
+
+            // Continuous: page points → page-local DIPs at PointsToDip × zoom → window.
+            var border = PageBorderOf(items.ContainerFromIndex(0)!);
+            border.Should().NotBeNull("fixture: page 1's slot border is realized");
+            double contScale = PdfViewerControl.PointsToDip * zoom;
+            var contWindow = border!.TranslatePoint(
+                new Point((pdfX - box.Left) * contScale, (box.Top - pdfY) * contScale), window);
+            contWindow.Should().NotBeNull();
+            var continuous = await ClickAsync(contWindow!.Value, "continuous");
+
+            // Single-page: page points → overlay DIPs at the logical render DPI → window.
+            viewer.ViewMode = PdfViewMode.SinglePage;
+            await SinglePageViewerWaits.WaitForSinglePageLaidOutAsync(window, viewer);
+            viewer.ZoomLevel.Should().Be(zoom, "fixture: the switch keeps the zoom");
+            double singleScale = PdfViewerControl.EffectiveSinglePageRenderDpi(page) / 72.0;
+            var overlay = viewer.FindControl<Canvas>("OverlayCanvas")!;
+            var singleWindow = overlay.TranslatePoint(
+                new Point((pdfX - box.Left) * singleScale, (box.Top - pdfY) * singleScale), window);
+            singleWindow.Should().NotBeNull();
+            var single = await ClickAsync(singleWindow!.Value, "single-page");
+
+            _out.WriteLine($"probe=({pdfX:F2},{pdfY:F2}) continuous=({continuous.X:F2},{continuous.Y:F2}) " +
+                           $"single=({single.X:F2},{single.Y:F2}) zoom={viewer.ZoomLevel:F2}");
+            continuous.Page.Should().Be(1);
+            single.Page.Should().Be(1);
+            continuous.X.Should().BeApproximately(pdfX, 0.75, "continuous view maps the page point to where it is drawn");
+            continuous.Y.Should().BeApproximately(pdfY, 0.75);
+            single.X.Should().BeApproximately(pdfX, 0.75, "single-page view maps the page point to where it is drawn");
+            single.Y.Should().BeApproximately(pdfY, 0.75);
+            single.X.Should().BeApproximately(continuous.X, 0.75, "one page point, one content point, whichever view");
+            single.Y.Should().BeApproximately(continuous.Y, 0.75);
+        }
+        finally
+        {
+            window.Close();
+            Dispatcher.UIThread.RunJobs();
+            viewer.Document?.Dispose();
+        }
     }
 }
