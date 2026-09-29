@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -98,6 +99,85 @@ public class SinglePagePlaceholderTests
                 "the page is still sized so the overlay has its real geometry");
 
             await PumpUntilAsync(window, () => image.Source != null && !viewer.IsLoading);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    /// <summary>
+    /// #1842 Phase B, for #1926: the preview source can write the placeholder's pixels into
+    /// memory the caller owns instead of a new WriteableBitmap. They must be the bitmap
+    /// copy's pixels exactly, at the caller's stride, in the top-left of a larger
+    /// destination, and nothing may be written when the destination is too small.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task CompositeCopyIntoCallerMemory_MatchesTheBitmapCopy_PixelForPixel()
+    {
+        var (window, viewer, items) = ShowContinuousBeforeOpen(pageCount: 3);
+        try
+        {
+            await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+            var page = viewer.Document!.GetPage(1);
+            IPagePreviewSource preview = viewer.ContinuousPart;
+
+            using var expected = preview.TryCopyCompositeForPage(1, page.VisualWidth, page.VisualHeight);
+            expected.Should().NotBeNull("a matching continuous composite exists for page 1");
+            CountNonWhite(expected!).Should().BeGreaterThan(0, "a blank copy would make the comparison vacuous");
+            var size = preview.CompositeCopySize(1, page.VisualWidth, page.VisualHeight);
+            size.Should().Be(expected!.PixelSize);
+            int width = size!.Value.Width, height = size.Value.Height;
+
+            // A padded stride and a destination larger both ways than the copy.
+            const byte Untouched = 0x5A;
+            var destinationSize = new PixelSize(width + 16, height + 3);
+            int rowBytes = destinationSize.Width * 4;
+            var buffer = new byte[rowBytes * destinationSize.Height];
+            Array.Fill(buffer, Untouched);
+            var pin = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            try
+            {
+                preview.TryCopyCompositeInto(1, page.VisualWidth, page.VisualHeight,
+                    pin.AddrOfPinnedObject(), rowBytes, destinationSize).Should().BeTrue();
+            }
+            finally
+            {
+                pin.Free();
+            }
+
+            using (var fb = expected.Lock())
+            {
+                var expectedRow = new byte[width * 4];
+                for (var y = 0; y < height; y++)
+                {
+                    Marshal.Copy(fb.Address + y * fb.RowBytes, expectedRow, 0, expectedRow.Length);
+                    buffer.AsSpan(y * rowBytes, expectedRow.Length).SequenceEqual(expectedRow)
+                        .Should().BeTrue($"row {y} must hold the bitmap copy's pixels");
+                    buffer.AsSpan(y * rowBytes + expectedRow.Length, rowBytes - expectedRow.Length).ToArray()
+                        .Should().OnlyContain(b => b == 0xFF, $"the rest of row {y} is written white, as documented");
+                }
+            }
+            buffer.AsSpan(height * rowBytes).ToArray().Should().OnlyContain(b => b == Untouched,
+                "rows below the copy belong to the caller");
+
+            // Too small by one pixel: refused, and not one byte written.
+            var small = new byte[width * 4 * height];
+            Array.Fill(small, Untouched);
+            var smallPin = GCHandle.Alloc(small, GCHandleType.Pinned);
+            try
+            {
+                preview.TryCopyCompositeInto(1, page.VisualWidth, page.VisualHeight,
+                    smallPin.AddrOfPinnedObject(), width * 4, new PixelSize(width - 1, height)).Should().BeFalse();
+                preview.TryCopyCompositeInto(99, page.VisualWidth, page.VisualHeight,
+                    smallPin.AddrOfPinnedObject(), width * 4, new PixelSize(width, height)).Should().BeFalse("there is no page 99");
+            }
+            finally
+            {
+                smallPin.Free();
+            }
+            small.Should().OnlyContain(b => b == Untouched);
+            preview.CompositeCopySize(99, page.VisualWidth, page.VisualHeight).Should().BeNull();
         }
         finally
         {

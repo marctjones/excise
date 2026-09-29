@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "1886bf029234b61b37dd3b16d3f5e6ca9cf6fe06",
+  "sourceRevision": "09b3e9846eeacfd985b3aa3f0bf6580a5d4b3f71",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -22,8 +22,8 @@
     "commitsRequested": 200,
     "commitsObserved": 199,
     "broadCommitsExcluded": 1,
-    "newestProductionCommit": "1886bf029234b61b37dd3b16d3f5e6ca9cf6fe06",
-    "oldestProductionCommit": "f92e2111cff6c8beea27d72c267f79cef56d0a70"
+    "newestProductionCommit": "09b3e9846eeacfd985b3aa3f0bf6580a5d4b3f71",
+    "oldestProductionCommit": "1ceab7c3f6e19a775f04efd7c20cb1ff033853ec"
   },
   "files": [
     {
@@ -131,10 +131,6 @@
       "commits": 7
     },
     {
-      "path": "Excise.Core/Redaction/MarkedContentCarrierScrubber.cs",
-      "commits": 7
-    },
-    {
       "path": "Excise.App/Services/AnnotationWorkflowService.cs",
       "commits": 6
     },
@@ -156,6 +152,10 @@
     },
     {
       "path": "Excise.Core/Redaction/CarrierTextRecovery.cs",
+      "commits": 6
+    },
+    {
+      "path": "Excise.Core/Redaction/MarkedContentCarrierScrubber.cs",
       "commits": 6
     },
     {
@@ -479,11 +479,19 @@
       "commits": 2
     },
     {
+      "path": "Excise.Avalonia/Controls/Viewer/ContinuousPageView.Preview.cs",
+      "commits": 2
+    },
+    {
       "path": "Excise.Avalonia/Controls/Viewer/ContinuousPageView.axaml",
       "commits": 2
     },
     {
       "path": "Excise.Avalonia/Controls/Viewer/IFormFieldEditSink.cs",
+      "commits": 2
+    },
+    {
+      "path": "Excise.Avalonia/Controls/Viewer/IPagePreviewSource.cs",
       "commits": 2
     },
     {
@@ -943,10 +951,6 @@
       "commits": 1
     },
     {
-      "path": "Excise.Avalonia/Controls/Viewer/ContinuousPageView.Preview.cs",
-      "commits": 1
-    },
-    {
       "path": "Excise.Avalonia/Controls/Viewer/ContinuousPageView.Selection.cs",
       "commits": 1
     },
@@ -960,10 +964,6 @@
     },
     {
       "path": "Excise.Avalonia/Controls/Viewer/IPageHitSurface.cs",
-      "commits": 1
-    },
-    {
-      "path": "Excise.Avalonia/Controls/Viewer/IPagePreviewSource.cs",
       "commits": 1
     },
     {
@@ -1933,6 +1933,12 @@
       "jaccard": 0.5714
     },
     {
+      "source": "Excise.Core/Redaction/MarkedContentCarrierScrubber.cs",
+      "target": "Excise.Core/Redaction/StructureTreeRedactionScrubber.cs",
+      "cochanges": 4,
+      "jaccard": 0.5714
+    },
+    {
       "source": "Excise.Core/Redaction/CarrierTextRecovery.cs",
       "target": "Excise.Core/Redaction/RedactionCarrierAudit.cs",
       "cochanges": 4,
@@ -1940,7 +1946,7 @@
     },
     {
       "source": "Excise.Core/Redaction/MarkedContentCarrierScrubber.cs",
-      "target": "Excise.Core/Redaction/StructureTreeRedactionScrubber.cs",
+      "target": "Excise.Core/Redaction/Recovery/MarkedContentTextRecovery.cs",
       "cochanges": 4,
       "jaccard": 0.5
     },
@@ -1949,12 +1955,6 @@
       "target": "Excise.Core/Redaction/RedactionCarriers.cs",
       "cochanges": 4,
       "jaccard": 0.5
-    },
-    {
-      "source": "Excise.Core/Redaction/MarkedContentCarrierScrubber.cs",
-      "target": "Excise.Core/Redaction/Recovery/MarkedContentTextRecovery.cs",
-      "cochanges": 4,
-      "jaccard": 0.4444
     },
     {
       "source": "Excise.Avalonia/Controls/PdfViewerControl.CacheLimits.cs",
@@ -2485,6 +2485,12 @@
       "jaccard": 0.2727
     },
     {
+      "source": "Excise.Core/Redaction/MarkedContentCarrierScrubber.cs",
+      "target": "Excise.Core/Redaction/RedactedCopySafetyPolicy.cs",
+      "cochanges": 3,
+      "jaccard": 0.2727
+    },
+    {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Forms.cs",
       "target": "Excise.App/Views/AnnotationPaletteWindow.axaml",
       "cochanges": 3,
@@ -2493,12 +2499,6 @@
     {
       "source": "Excise.Avalonia/Controls/PdfViewerControl.Continuous.cs",
       "target": "Excise.Avalonia/Controls/PdfViewerControl.Typewriter.cs",
-      "cochanges": 3,
-      "jaccard": 0.25
-    },
-    {
-      "source": "Excise.Core/Redaction/MarkedContentCarrierScrubber.cs",
-      "target": "Excise.Core/Redaction/RedactedCopySafetyPolicy.cs",
       "cochanges": 3,
       "jaccard": 0.25
     },
@@ -2787,6 +2787,12 @@
     {
       "source": "Excise.Avalonia/Controls/Viewer/ContinuousPageView.LookAhead.cs",
       "target": "Excise.Avalonia/Controls/Viewer/ContinuousPageView.Pipeline.cs",
+      "cochanges": 2,
+      "jaccard": 1.0
+    },
+    {
+      "source": "Excise.Avalonia/Controls/Viewer/ContinuousPageView.Preview.cs",
+      "target": "Excise.Avalonia/Controls/Viewer/IPagePreviewSource.cs",
       "cochanges": 2,
       "jaccard": 1.0
     },
@@ -4286,6 +4292,12 @@
     },
     {
       "source": "Excise.Core/Content/ContentOperator.cs",
+      "target": "Excise.Core/Redaction/MarkedContentCarrierScrubber.cs",
+      "cochanges": 2,
+      "jaccard": 0.2222
+    },
+    {
+      "source": "Excise.Core/Content/ContentOperator.cs",
       "target": "Excise.Core/Redaction/Recovery/MarkedContentTextRecovery.cs",
       "cochanges": 2,
       "jaccard": 0.2222
@@ -4405,12 +4417,6 @@
       "jaccard": 0.2
     },
     {
-      "source": "Excise.Core/Content/ContentOperator.cs",
-      "target": "Excise.Core/Redaction/MarkedContentCarrierScrubber.cs",
-      "cochanges": 2,
-      "jaccard": 0.2
-    },
-    {
       "source": "Excise.Core/Redaction/FormXObjectFlattener.cs",
       "target": "Excise.Core/Redaction/HiddenTextDetector.cs",
       "cochanges": 2,
@@ -4425,6 +4431,12 @@
     {
       "source": "Excise.Core/Redaction/GlyphRemover.cs",
       "target": "Excise.Core/Redaction/TextSegmenter.cs",
+      "cochanges": 2,
+      "jaccard": 0.2
+    },
+    {
+      "source": "Excise.Core/Redaction/MarkedContentCarrierScrubber.cs",
+      "target": "Excise.Core/Redaction/RedactionCarriers.cs",
       "cochanges": 2,
       "jaccard": 0.2
     },
@@ -4491,12 +4503,6 @@
     {
       "source": "Excise.Core/Redaction/HiddenTextDetector.cs",
       "target": "Excise.Core/Redaction/RedactedCopySafetyPolicy.cs",
-      "cochanges": 2,
-      "jaccard": 0.1818
-    },
-    {
-      "source": "Excise.Core/Redaction/MarkedContentCarrierScrubber.cs",
-      "target": "Excise.Core/Redaction/RedactionCarriers.cs",
       "cochanges": 2,
       "jaccard": 0.1818
     },
