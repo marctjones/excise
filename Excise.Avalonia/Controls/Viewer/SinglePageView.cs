@@ -189,14 +189,19 @@ internal sealed partial class SinglePageView : TemplatedControl, IPageHitSurface
 
     /// <summary>
     /// The viewer left the visual tree. A detached single-page viewer must not publish an
-    /// in-flight result into controls that are no longer attached. Keep cached bitmaps
-    /// alive: the control may be reattached and its Image still owns that binding.
+    /// in-flight result into controls that are no longer attached. Release every cached
+    /// bitmap except the one the Image is bound to (#1928): the viewer has no end-of-life
+    /// hook, so a window closed with a document open would otherwise leave the whole LRU's
+    /// native pixel memory to the finalizer. The bound bitmap stays: the control may be
+    /// reattached and its Image still owns that binding. The lifetime itself is not
+    /// disposed here, because a reattached viewer renders through it again.
     /// </summary>
     internal void Detach()
     {
         _singlePageRenderLifetime.CancelRender();
         CancelSinglePageLookAhead();
         IsLoading = false;
+        TrimCache();
     }
 
     /// <summary>
@@ -364,6 +369,18 @@ internal sealed partial class SinglePageView : TemplatedControl, IPageHitSurface
 
     /// <summary>Cancel the render in flight, if any; the viewer's document change calls this.</summary>
     internal void CancelRender() => _singlePageRenderLifetime.CancelRender();
+
+    /// <summary>
+    /// Hand a finished render to the cache. Eviction never drops the bitmap still bound to the
+    /// Image: at a small capacity it is the LRU tail this insert would otherwise dispose before
+    /// the Image moves off it.
+    /// </summary>
+    internal void AddToCache(int pageNumber, int dpi, WriteableBitmap bitmap, Size dipSize)
+    {
+        var shown = PdfImage?.Source as WriteableBitmap;
+        _singlePageRenderLifetime.Add(pageNumber, dpi, bitmap, dipSize,
+            keep: b => ReferenceEquals(b, shown));
+    }
 
     /// <summary>Drop the cached bitmaps and the render-ahead plan.</summary>
     internal void InvalidateCache()
