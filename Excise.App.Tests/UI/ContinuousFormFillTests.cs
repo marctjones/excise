@@ -198,7 +198,7 @@ public class ContinuousFormFillTests
             var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
 
             var box = await WaitForFieldOnPageAsync<TextBox>(window, viewer, "name1");
-            var centre = box.TranslatePoint(new Point(box.Bounds.Width / 2, box.Bounds.Height / 2), window)!.Value;
+            var centre = box!.TranslatePoint(new Point(box.Bounds.Width / 2, box.Bounds.Height / 2), window)!.Value;
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 window.MouseDown(centre, MouseButton.Left);
@@ -412,6 +412,64 @@ public class ContinuousFormFillTests
             window.Close();
             try { File.Delete(path); } catch { }
             try { File.Delete(saved); } catch { }
+        }
+    }
+
+    /// <summary>
+    /// #1842 step 5: a press on a continuous-view field belongs to the field. The root
+    /// pointer handlers listen with handledEventsToo, so they must recognise the event as
+    /// the continuous view's own overlay's (<c>IsOwnOverlayEvent</c>) and leave it alone;
+    /// otherwise, in text-selection mode, the click would also begin a page text
+    /// selection, which throws away the selection the reader already has.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 120000)]
+    public async Task ClickingIntoAField_KeepsTheTextSelection_TheReaderAlreadyHas()
+    {
+        var document = PdfDocument.Open(Excise.App.Tests.Utilities.TestPdfGenerator.CreateSimplePdf("Selectable text above a field"));
+        document.AddTextField(1, new PdfRectangle(72, 500, 300, 524), "below");
+
+        var viewer = new PdfViewerControl();
+        var window = new Window { Content = viewer, Width = 1000, Height = 900 };
+        window.Show();
+        viewer.Document = document;
+        viewer.PageFormFieldsProvider = page => document.GetPage(page).GetFormFields();
+        viewer.ViewMode = PdfViewMode.Continuous;
+        viewer.InteractionMode = InteractionMode.TextSelection;
+        try
+        {
+            var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            await Controls.ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+            TextBox? box = null;
+            for (int i = 0; i < 150 && box == null; i++)
+            {
+                window.UpdateLayout();
+                box = ContinuousFieldInputs<TextBox>(viewer).FirstOrDefault(t => t.Bounds.Height > 0);
+                if (box == null) await Task.Delay(100);
+            }
+            box.Should().NotBeNull("fixture: the continuous view shows the field's input");
+
+            viewer.SelectAllText(1).Should().BeTrue("fixture: page 1 has text to select");
+            var slot = items.ItemsSource!.Cast<PdfPageSlot>().Single(s => s.PageNumber == 1);
+            int highlighted = slot.SelectionRects.Count;
+            highlighted.Should().BeGreaterThan(0, "fixture: the selection is drawn on the page");
+
+            var centre = box!.TranslatePoint(new Point(box.Bounds.Width / 2, box.Bounds.Height / 2), window)!.Value;
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                window.MouseDown(centre, MouseButton.Left);
+                window.MouseUp(centre, MouseButton.Left);
+            });
+            for (int i = 0; i < 4; i++) { await Task.Delay(25); window.UpdateLayout(); }
+
+            box.IsFocused.Should().BeTrue("the click goes to the field");
+            slot.SelectionRects.Count.Should().Be(highlighted,
+                "a click into a field is not a text-selection gesture: the reader's selection stays");
+        }
+        finally
+        {
+            window.Close();
+            Dispatcher.UIThread.RunJobs();
+            document.Dispose();
         }
     }
 }

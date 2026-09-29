@@ -119,22 +119,4 @@ public partial class PdfViewerControl
             SyncContinuousSlotFormFields(slot);
         }
     }
-
-    /// <summary>
-    /// True when the pointer event came from a continuous-view field input. The root handlers
-    /// listen with handledEventsToo, so without this a press in a field would also start a
-    /// text-selection drag and the field would never take focus.
-    /// </summary>
-    private bool IsFormFieldOverlayEvent(PointerEventArgs e)
-    {
-        if (InteractionMode is not (InteractionMode.None or InteractionMode.TextSelection))
-            return false;
-
-        for (var current = e.Source as StyledElement; current != null; current = current.Parent)
-        {
-            if (current is Control control && control.Classes.Contains(ContinuousFormFieldClass))
-                return true;
-        }
-        return false;
-    }
 }

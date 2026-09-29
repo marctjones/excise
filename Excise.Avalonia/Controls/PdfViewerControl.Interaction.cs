@@ -18,7 +18,7 @@ public partial class PdfViewerControl
 
     private void OnInteractionLayerPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (IsTypewriterOverlayEvent(e) || IsFormFieldOverlayEvent(e))
+        if (IsOwnOverlayEvent(e))
             return;
 
         // Middle-button is reserved for pan (#827, handled in the dedicated pan
@@ -186,7 +186,7 @@ public partial class PdfViewerControl
 
     private void OnInteractionLayerPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (IsTypewriterOverlayEvent(e) || IsFormFieldOverlayEvent(e))
+        if (IsOwnOverlayEvent(e))
             return;
 
         // #1794: a sticky-note click/drag candidate is staged on the press
@@ -286,7 +286,7 @@ public partial class PdfViewerControl
 
     private void OnInteractionLayerPointerReleased(object? sender, PointerReleasedEventArgs e)
     {
-        if (IsTypewriterOverlayEvent(e) || IsFormFieldOverlayEvent(e))
+        if (IsOwnOverlayEvent(e))
             return;
 
         // #1794: resolve the click-vs-drag candidate staged on press. This is
@@ -504,41 +504,23 @@ public partial class PdfViewerControl
     /// already here, moved, not changed.</para>
     /// </summary>
     private bool TryMapPointerToContent(
-        PointerEventArgs e, out int pageNumber, out double pdfX, out double pdfY)
+        PointerEventArgs e, out int pageNumber, out double pdfX, out double pdfY) =>
+        TryMapPointerToContent(ActiveHitSurface, e, out pageNumber, out pdfX, out pdfY);
+
+    /// <summary>
+    /// The funnel for one view's surface (#1842): the surface says which page is under
+    /// the pointer and where, tagged with its own DIP space and scale, and this performs
+    /// the one conversion to content points.
+    /// </summary>
+    private bool TryMapPointerToContent(
+        IPageHitSurface surface, PointerEventArgs e, out int pageNumber, out double pdfX, out double pdfY)
     {
         pageNumber = 0; pdfX = 0; pdfY = 0;
         var doc = Document;
         if (doc == null) return false;
+        if (!surface.TryMapPointToPage(e, out pageNumber, out var pagePoint)) return false;
 
-        if (ViewMode == PdfViewMode.Continuous)
-        {
-            if (ContinuousItems == null || _continuousSlots == null) return false;
-            var zoom = ZoomLevel;
-            if (zoom <= 0) return false;
-
-            var itemsPoint = e.GetPosition(ContinuousItems);
-            if (!TryMapContinuousPointToPage(
-                    _continuousSlots, ContinuousItems.Bounds.Width, itemsPoint,
-                    out pageNumber, out var pagePointDip))
-                return false;
-            if (pageNumber < 1 || pageNumber > doc.PageCount) return false;
-
-            var cPoint = PdfCoordinateMapper.ToContentPoints(
-                doc.GetPage(pageNumber),
-                new PdfPageRect(pageNumber, pagePointDip.X, pagePointDip.Y, 0, 0,
-                    PdfCoordinateSpace.ContinuousDips, PointsToDip * zoom));
-            pdfX = cPoint.X; pdfY = cPoint.Y;
-            return true;
-        }
-
-        pageNumber = CurrentPage;
-        if (pageNumber < 1 || pageNumber > doc.PageCount) return false;
-
-        var dipPoint = GetPressPoint(e);
-        var point = PdfCoordinateMapper.ToContentPoints(
-            doc.GetPage(pageNumber),
-            PdfPageRect.ViewerDips(pageNumber, dipPoint.X, dipPoint.Y, 0, 0,
-                _currentSinglePageRenderDpi));
+        var point = PdfCoordinateMapper.ToContentPoints(doc.GetPage(pageNumber), pagePoint);
         pdfX = point.X; pdfY = point.Y;
         return true;
     }

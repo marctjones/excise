@@ -180,20 +180,6 @@ public partial class PdfViewerControl
         _tempTypewriterRect.IsVisible = true;
     }
 
-    private bool IsTypewriterOverlayEvent(PointerEventArgs e)
-    {
-        if (TypewriterLayer == null || e.Source is not Control source)
-            return false;
-
-        for (Control? current = source; current != null; current = current.Parent as Control)
-        {
-            if (ReferenceEquals(current, TypewriterLayer))
-                return true;
-        }
-
-        return false;
-    }
-
     /// <summary>
     /// Places a pending type-over box from a pointer gesture and raises
     /// <see cref="TypewriterTextCreated"/>. A plain click (start == end, or a

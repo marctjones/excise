@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -328,6 +329,59 @@ public class PdfViewerControlTypewriterTests
             handle, pointer, layer, end, 0,
             new PointerPointProperties(RawInputModifiers.None, PointerUpdateKind.LeftButtonReleased),
             KeyModifiers.None, MouseButton.Left));
+    }
+
+    /// <summary>
+    /// #1842 step 5: a press inside an existing typewriter box belongs to that box. The
+    /// root pointer handlers listen with handledEventsToo, so they must recognise the
+    /// event as the single-page view's own overlay's (<c>IsOwnOverlayEvent</c>) and leave
+    /// it alone; otherwise, in typewriter mode, the click would also run the page's
+    /// click-to-place gesture and drop a second box on top of the one being clicked.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task ClickingIntoAnExistingBox_DoesNotPlaceASecondBox()
+    {
+        var doc = NewSinglePage();
+        var control = new PdfViewerControl { RenderAheadEnabled = false };
+        var window = new Window { Content = control, Width = 900, Height = 900 };
+        window.Show();
+        try
+        {
+            control.Document = doc;
+            control.CurrentPage = 1;
+            control.InteractionMode = InteractionMode.Typewriter;
+            control.TypewriterTextOperations = new[]
+            {
+                PdfTypewriterTextOperation.Create(1, new PdfRectangle(40, 600, 300, 660), "already typed"),
+            };
+            var image = control.FindControl<Image>("PdfImage")!;
+            for (int i = 0; i < 200 && (control.IsLoading || image.Source == null); i++)
+            {
+                await Task.Delay(25);
+                window.UpdateLayout();
+            }
+            var layer = control.FindControl<Canvas>("TypewriterLayer")!;
+            var editor = layer.GetVisualDescendants().OfType<TextBox>().Single();
+            window.UpdateLayout();
+            var centre = editor.TranslatePoint(new Point(editor.Bounds.Width / 2, editor.Bounds.Height / 2), window);
+            centre.Should().NotBeNull("fixture: the box is laid out in the window");
+
+            int created = 0;
+            control.TypewriterTextCreated += (_, _) => created++;
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                window.MouseDown(centre!.Value, MouseButton.Left);
+                window.MouseUp(centre.Value, MouseButton.Left);
+            });
+            for (int i = 0; i < 4; i++) { await Task.Delay(25); window.UpdateLayout(); }
+
+            created.Should().Be(0, "a click inside an existing box edits that box; it must not place another one");
+        }
+        finally
+        {
+            window.Close();
+            doc.Dispose();
+        }
     }
 
     private static async Task RunEscapeCase(string initialText, bool expectDeleted)
