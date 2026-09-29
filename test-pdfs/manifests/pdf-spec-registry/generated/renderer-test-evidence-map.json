@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "202f1ca7aaf6791feab0ae983e61d074e22d5172a178c95271e514308d6a8d1c",
+  "sourceFingerprint": "6a173cc0f76e0b169ca2ce3d5752918775dbb0d90f62c77a01bb9795d8a631af",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -49592,6 +49592,63 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/Visual/DeviceCmykOverprintMaskSizeTests.cs::DeviceCmykOverprintMaskSizeTests.OverprintStroke_MaskStaysBoundedToTheStrokeWindow_NotThePage",
+      "path": "Excise.Rendering.Tests/Visual/DeviceCmykOverprintMaskSizeTests.cs",
+      "class": "DeviceCmykOverprintMaskSizeTests",
+      "method": "OverprintStroke_MaskStaysBoundedToTheStrokeWindow_NotThePage",
+      "line": 30,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "images",
+        "graphics-state-and-paths",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.paths-painting",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.state",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/Visual/IccBasedCmykOverprintTests.cs::IccBasedCmykOverprintTests.Fixture_ColorSpaceResolvesToIccBasedN4",
       "path": "Excise.Rendering.Tests/Visual/IccBasedCmykOverprintTests.cs",
       "class": "IccBasedCmykOverprintTests",
@@ -52170,15 +52227,15 @@
     }
   ],
   "summary": {
-    "testMethods": 1434,
+    "testMethods": 1435,
     "facets": {
       "content-streams": 411,
       "content-strings-and-text": 9,
-      "differential-rendering": 840,
+      "differential-rendering": 841,
       "fonts": 263,
       "functions-and-shadings": 53,
-      "graphics-state-and-paths": 318,
-      "images": 239,
+      "graphics-state-and-paths": 319,
+      "images": 240,
       "page-group-backdrop": 3,
       "renderer-integration-general": 40,
       "renderer-performance-and-lifetime": 12,
@@ -52187,7 +52244,7 @@
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 9,
       "pdf.17.content.streams:parse": 418,
-      "pdf.17.content.streams:render": 993,
+      "pdf.17.content.streams:render": 994,
       "pdf.17.content.text-state:extract": 9,
       "pdf.17.content.text-state:parse": 9,
       "pdf.17.content.text-state:render": 9,
@@ -52195,18 +52252,18 @@
       "pdf.17.graphics.color:render": 53,
       "pdf.17.graphics.fonts:extract": 263,
       "pdf.17.graphics.fonts:parse": 263,
-      "pdf.17.graphics.fonts:render": 987,
-      "pdf.17.graphics.images:extract": 239,
-      "pdf.17.graphics.images:parse": 239,
-      "pdf.17.graphics.images:render": 992,
-      "pdf.17.graphics.paths-painting:parse": 318,
-      "pdf.17.graphics.paths-painting:render": 318,
+      "pdf.17.graphics.fonts:render": 988,
+      "pdf.17.graphics.images:extract": 240,
+      "pdf.17.graphics.images:parse": 240,
+      "pdf.17.graphics.images:render": 993,
+      "pdf.17.graphics.paths-painting:parse": 319,
+      "pdf.17.graphics.paths-painting:render": 319,
       "pdf.17.graphics.patterns-shadings:parse": 53,
       "pdf.17.graphics.patterns-shadings:render": 53,
-      "pdf.17.graphics.state:parse": 318,
-      "pdf.17.graphics.state:render": 318,
+      "pdf.17.graphics.state:parse": 319,
+      "pdf.17.graphics.state:render": 319,
       "pdf.17.transparency.model:parse": 85,
-      "pdf.17.transparency.model:render": 875
+      "pdf.17.transparency.model:render": 876
     },
     "unclassified": 40,
     "allTestsMapped": true

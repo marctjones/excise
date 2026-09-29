@@ -515,6 +515,16 @@ internal partial class RenderContext
     internal static long ImageBitmapCacheHits;
     [ThreadStatic]
     internal static long ImageBitmapCacheMisses;
+    // Largest DeviceCMYK overprint coverage mask (width * height, in pixels)
+    // requested by RasterizeDeviceCmykCoverageMask on the current thread.
+    // #1924: a stroke (or a dashed fill) used to always request a
+    // _rootBitmap-sized mask regardless of the painted geometry's actual
+    // extent; this tracks what's actually requested so a test can assert the
+    // request stays bounded to the geometry instead of the whole page.
+    // Thread-static for the same reason as the counters above; reset by
+    // whoever begins measuring (see DeviceCmykOverprintMaskSizeTests).
+    [ThreadStatic]
+    internal static long RasterizedMaskPeakPixels;
     // Per-page native assets are owned outside the context so every nested
     // context can borrow them without participating in disposal policy.
     private readonly RenderResourceScope _resourceScope;
