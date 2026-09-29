@@ -100,7 +100,7 @@ public class ContinuousTileEvictionCompositeTests
         window.Show();
         viewer.Document = PdfCoreDocument.Open(bytes);
         viewer.ViewMode = PdfViewMode.Continuous;
-        var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+        var items = viewer.ContinuousItems!;
         return (window, viewer, items);
     }
 

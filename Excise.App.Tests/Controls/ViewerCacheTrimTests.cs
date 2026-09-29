@@ -184,7 +184,7 @@ public class ViewerCacheTrimTests
         try
         {
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
-            var scroll = viewer.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
+            var scroll = viewer.ContinuousScrollViewer!;
             var slots = items.ItemsSource!.Cast<PdfPageSlot>().ToList();
             var (page1, page2) = (slots[0], slots[1]);
 

@@ -600,7 +600,7 @@ public class StickyNotePopupWorkflowTests
         viewer.ViewMode = PdfViewMode.Continuous;
         try
         {
-            var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            var items = viewer.ContinuousItems!;
             await Controls.ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
 
             var border = (items.ContainerFromIndex(0) as global::Avalonia.Controls.Presenters.ContentPresenter)?.Child as Border;
@@ -692,7 +692,7 @@ public class StickyNotePopupWorkflowTests
         viewer.ViewMode = PdfViewMode.Continuous;
         try
         {
-            var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            var items = viewer.ContinuousItems!;
             string? hovered = null;
             viewer.AnnotationHovered += (_, e) => hovered = e.DisplayText;
 

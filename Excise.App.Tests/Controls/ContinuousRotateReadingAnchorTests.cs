@@ -60,8 +60,8 @@ public class ContinuousRotateReadingAnchorTests
             {
                 window.UpdateLayout();
                 viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
-                items = viewer?.FindControl<ItemsControl>("ContinuousItems")!;
-                sv = viewer?.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
+                items = viewer?.ContinuousItems!;
+                sv = viewer?.ContinuousScrollViewer!;
                 ready = sv != null && items?.ItemsSource != null
                         && items.ItemsSource.Cast<PdfPageSlot>().Count() == 8
                         && sv.Extent.Height > sv.Viewport.Height * 1.5;
@@ -153,8 +153,8 @@ public class ContinuousRotateReadingAnchorTests
             {
                 window.UpdateLayout();
                 viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
-                items = viewer?.FindControl<ItemsControl>("ContinuousItems")!;
-                sv = viewer?.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
+                items = viewer?.ContinuousItems!;
+                sv = viewer?.ContinuousScrollViewer!;
                 ready = sv != null && items?.ItemsSource != null
                         && items.ItemsSource.Cast<PdfPageSlot>().Count() == 8
                         && sv.Extent.Height > sv.Viewport.Height * 1.5;

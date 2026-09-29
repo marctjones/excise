@@ -69,7 +69,7 @@ public class GuiFullResponsivenessCoverageTests
                 phase: "gui.input.continuous-view-toggle");
             await WaitForIdleLayout(window);
 
-            var scroll = viewer!.FindControl<ScrollViewer>("ContinuousScrollViewer");
+            var scroll = viewer!.ContinuousScrollViewer;
             scroll.Should().NotBeNull("continuous mode should expose a scroll viewer for long-document testing");
 
             var scrollElapsedMs = Measure(() =>
@@ -151,9 +151,9 @@ public class GuiFullResponsivenessCoverageTests
             AddResult(results, "generated-continuous-view-toggle", toggleElapsedMs, 150, 500, "gui.input.generated-continuous-view-toggle");
             await WaitForIdleLayout(window);
 
-            var scroll = viewer!.FindControl<ScrollViewer>("ContinuousScrollViewer");
+            var scroll = viewer!.ContinuousScrollViewer;
             scroll.Should().NotBeNull("continuous mode should expose a scroll viewer for generated-document timing");
-            var items = viewer.FindControl<ItemsControl>("ContinuousItems");
+            var items = viewer.ContinuousItems;
             items.Should().NotBeNull("continuous mode should expose page slots for generated-document timing");
             var slots = items!.ItemsSource!.Cast<PdfPageSlot>().ToArray();
             slots.Should().HaveCount(24);

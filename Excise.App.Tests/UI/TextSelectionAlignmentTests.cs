@@ -348,7 +348,7 @@ public class TextSelectionAlignmentTests
 
             // 1) only the single-page scroller may be visible in an editing mode
             var single = viewer.FindControl<ScrollViewer>("PdfScrollViewer")!;
-            var continuous = viewer.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
+            var continuous = viewer.ContinuousScrollViewer!;
             single.IsVisible.Should().BeTrue("select-text mode displays the single-page scroller");
             continuous.IsVisible.Should().BeFalse(
                 "the continuous scroller must be hidden in an editing mode — a visible one paints stale tiles over/under the page");

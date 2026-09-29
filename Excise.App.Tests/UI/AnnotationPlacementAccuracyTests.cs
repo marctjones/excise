@@ -273,7 +273,7 @@ public class AnnotationPlacementAccuracyTests
     /// </summary>
     internal static async Task WaitForContinuousPageRendered(Window window, PdfViewerControl viewer, int pageNumber)
     {
-        var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+        var items = viewer.ContinuousItems!;
         var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
         while (items.ItemsSource?.Cast<PdfPageSlot>().FirstOrDefault(s => s.PageNumber == pageNumber)?.Bitmap == null
                || viewer.ContinuousInFlightCount > 0)

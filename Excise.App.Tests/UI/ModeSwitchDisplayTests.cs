@@ -261,7 +261,7 @@ public class ModeSwitchDisplayTests
         var (vm, window, viewer, path) = await OpenTestDocumentAsync();
         try
         {
-            var cont = viewer.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
+            var cont = viewer.ContinuousScrollViewer!;
             await PumpUntilAsync(window, () => cont.Extent.Height > cont.Viewport.Height + 100);
 
             // Scroll mid-document, then nudge to land mid-page (see the
@@ -345,7 +345,7 @@ public class ModeSwitchDisplayTests
         try
         {
             viewer.RenderScalingOverride = dpr;
-            var cont = viewer.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
+            var cont = viewer.ContinuousScrollViewer!;
             await PumpUntilAsync(window, () => cont.Extent.Height > cont.Viewport.Height + 100);
 
             // Scroll mid-document. A page-crossing scroll can settle snapped
@@ -418,8 +418,8 @@ public class ModeSwitchDisplayTests
         var (vm, window, viewer, path) = await OpenTestDocumentAsync();
         try
         {
-            var cont = viewer.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
-            var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            var cont = viewer.ContinuousScrollViewer!;
+            var items = viewer.ContinuousItems!;
             await PumpUntilAsync(window, () => cont.Extent.Height > cont.Viewport.Height + 100);
 
             PdfPageSlot Page2() => items.ItemsSource!.Cast<PdfPageSlot>().Single(s => s.PageNumber == 2);

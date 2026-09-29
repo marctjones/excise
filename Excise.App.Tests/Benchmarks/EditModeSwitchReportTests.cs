@@ -323,7 +323,7 @@ public sealed class EditModeSwitchReportTests
         if (page > 1)
             vm.CurrentPageIndex = page - 1;
 
-        var items = viewer.FindControl<ItemsControl>("ContinuousItems")
+        var items = viewer.ContinuousItems
             ?? throw new InvalidOperationException("viewer has no ContinuousItems");
         await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, page);
         var quiet = 0;

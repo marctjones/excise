@@ -681,7 +681,7 @@ public class PdfViewerControlTests
     {
         var control = new PdfViewerControl();
         var single = control.FindControl<ScrollViewer>("PdfScrollViewer")!;
-        var continuous = control.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
+        var continuous = control.ContinuousScrollViewer!;
 
         single.IsVisible.Should().BeTrue("single-page is the default view");
         continuous.IsVisible.Should().BeFalse();
@@ -719,7 +719,7 @@ public class PdfViewerControlTests
         try
         {
             viewer.Document = PdfCoreDocument.Open(bytes);
-            var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            var items = viewer.ContinuousItems!;
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
 
             SinglePageRenderAttempts(viewer).Should().Be(0,
@@ -909,7 +909,7 @@ public class PdfViewerControlTests
         var control = new PdfViewerControl { Document = PdfCoreDocument.Open(bytes) };
         control.ViewMode = PdfViewMode.Continuous;
 
-        var items = control.FindControl<ItemsControl>("ContinuousItems")!;
+        var items = control.ContinuousItems!;
         items.ItemsSource.Should().NotBeNull();
         items.ItemsSource!.Cast<PdfPageSlot>().Select(s => s.PageNumber)
             .Should().Equal(1, 2, 3);
@@ -921,7 +921,7 @@ public class PdfViewerControlTests
         var control = new PdfViewerControl { Document = PdfCoreDocument.Open(TestPdfGenerator.CreateSimplePdf("zoom")) };
         control.ViewMode = PdfViewMode.Continuous;
 
-        var slot = control.FindControl<ItemsControl>("ContinuousItems")!
+        var slot = control.ContinuousItems!
             .ItemsSource!.Cast<PdfPageSlot>().First();
         var widthAt1x = slot.DisplayWidth;
         widthAt1x.Should().BeGreaterThan(0);
@@ -944,7 +944,7 @@ public class PdfViewerControlTests
         var control = new PdfViewerControl { Document = PdfCoreDocument.Open(bytes) };
         control.ViewMode = PdfViewMode.Continuous;
 
-        var slots = control.FindControl<ItemsControl>("ContinuousItems")!
+        var slots = control.ContinuousItems!
             .ItemsSource!.Cast<PdfPageSlot>().ToArray();
 
         slots[0].TopDip.Should().Be(0);

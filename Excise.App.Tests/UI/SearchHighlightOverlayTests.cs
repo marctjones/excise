@@ -154,10 +154,10 @@ public class SearchHighlightOverlayTests : IDisposable
         viewer.ViewMode = PdfViewMode.Continuous;
         try
         {
-            var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+            var items = viewer.ContinuousItems!;
             await Controls.ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
             var searchLayer = viewer.FindControl<Canvas>("SearchHighlightsLayer")!;
-            var continuousScroller = viewer.FindControl<ScrollViewer>("ContinuousScrollViewer")!;
+            var continuousScroller = viewer.ContinuousScrollViewer!;
             int continuousRectangles = continuousScroller.GetVisualDescendants().OfType<Rectangle>().Count();
             int layerRectangles = searchLayer.Children.OfType<Rectangle>().Count();
 

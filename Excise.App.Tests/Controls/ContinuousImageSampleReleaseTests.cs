@@ -210,7 +210,7 @@ public class ContinuousImageSampleReleaseTests
         var window = new Window { Content = viewer, Width = 900, Height = 700 };
         window.Show();
         viewer.Document = PdfCoreDocument.Open(pdfBytes);
-        var items = viewer.FindControl<ItemsControl>("ContinuousItems")!;
+        var items = viewer.ContinuousItems!;
         return (window, viewer, items);
     }
 
