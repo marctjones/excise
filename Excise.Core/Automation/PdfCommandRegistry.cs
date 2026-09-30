@@ -59,6 +59,9 @@ internal static class PdfCommandRegistry
         Edit(PdfCommandIds.SelectTextMode, "Text Selection Mode", "Toggle text selection mode.", "T"),
         Edit(PdfCommandIds.CopyText, "Copy Selected Text", "Copy selected text to the clipboard.", "Ctrl+C"),
         Edit(PdfCommandIds.SelectAll, "Select All Text", "Select all text on the current page.", "Ctrl+A"),
+        // Not document-gated, unlike other Edit commands: Cut acts on whatever text box
+        // is focused (e.g. Find), which works with no PDF open.
+        New(PdfCommandIds.Cut, "Cut", "Cut the focused text field's selection to the clipboard.", "Edit", "Ctrl+X"),
         Edit(PdfCommandIds.TypewriterMode, "Typewriter Mode", "Place editable text that saves as page content."),
         Annotate(PdfCommandIds.AddHighlight, "Add Highlight From Selection", "Create a PDF highlight annotation from the current text selection."),
         Annotate(PdfCommandIds.AddUnderline, "Add Underline From Selection", "Create a PDF underline annotation from the current text selection."),

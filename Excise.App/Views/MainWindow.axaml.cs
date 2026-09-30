@@ -191,6 +191,10 @@ internal partial class MainWindow : Window
         // Add keyboard handler for Ctrl+C
         this.KeyDown += MainWindow_KeyDown;
 
+        // #1888: reads DataContext fresh on every focus change rather than being wired
+        // per-ViewModel, so Cut keeps tracking the focused control across tab switches.
+        AddHandler(GotFocusEvent, OnAnyControlGotFocus);
+
         // #1554: the tab strip binds to the window's tabs, never to the
         // session the window shows; a local null stops it inheriting one.
         DocumentTabStripHost.DataContext = null;
@@ -231,13 +235,19 @@ internal partial class MainWindow : Window
     /// to <see cref="MainWindowViewModel.ConfirmDiscardUnsavedChangesAsync"/>
     /// and is tested there.
     /// </remarks>
-    // #1173: Edit > Cut acts on the focused text box; page body text has nothing to cut.
-    private void OnCutMenuClick(object? sender, RoutedEventArgs e) => CutFocusedText(FocusManager?.GetFocusedElement());
-
+    // #1173/#1888: Edit > Cut acts on the focused text box; page body text has nothing to cut.
     internal static void CutFocusedText(IInputElement? focused)
     {
         if (focused is TextBox { IsReadOnly: false } box)
             box.Cut();
+    }
+
+    // #1888: whatever gains focus tells the current tab's ViewModel whether Cut has
+    // something to act on; nothing here decides what Cut does, only whether it can run.
+    private void OnAnyControlGotFocus(object? sender, FocusChangedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm)
+            vm.CanCutFocusedText = e.NewFocusedElement is TextBox { IsReadOnly: false };
     }
 
     private void OnWindowClosing(object? sender, WindowClosingEventArgs e)
@@ -679,6 +689,12 @@ internal partial class MainWindow : Window
         EventHandler selectAllRequested = (_, _) => _pdfViewerControl?.SelectAllText();
         viewModel.SelectAllTextRequested += selectAllRequested;
         _viewModelUnsubscribers.Add(() => viewModel.SelectAllTextRequested -= selectAllRequested);
+
+        // #1888: Cut is a request to whatever text box has focus; the ViewModel owns
+        // no reference to it, only whether CanCutFocusedText makes the menu item live.
+        EventHandler cutFocusedTextRequested = (_, _) => CutFocusedText(FocusManager?.GetFocusedElement());
+        viewModel.CutFocusedTextRequested += cutFocusedTextRequested;
+        _viewModelUnsubscribers.Add(() => viewModel.CutFocusedTextRequested -= cutFocusedTextRequested);
 
         // Subscribe to page changes to update redaction overlays
         System.ComponentModel.PropertyChangedEventHandler pageChanged = (_, args) =>

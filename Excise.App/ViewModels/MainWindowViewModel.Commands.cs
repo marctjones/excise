@@ -167,6 +167,9 @@ internal partial class MainWindowViewModel
     /// <summary>Select all text on the current or right-clicked page (#1814).</summary>
     public ReactiveCommand<Unit, Unit> SelectAllTextCommand { get; private set; } = null!;
 
+    /// <summary>Cut the focused text box's selection (#1888).</summary>
+    public ReactiveCommand<Unit, Unit> CutFocusedTextCommand { get; private set; } = null!;
+
     /// <summary>Mark the selected text as a pending redaction (the right-click menu's Redact, #1659).</summary>
     public ReactiveCommand<Unit, Unit> RedactSelectionCommand { get; private set; } = null!;
 
@@ -333,6 +336,7 @@ internal partial class MainWindowViewModel
         ToggleRevealRasterizedHiddenCommand = ReactiveCommand.Create(() => { RevealRasterizedHidden = !RevealRasterizedHidden; });
         CopyTextCommand = ReactiveCommand.CreateFromTask(CopyTextAsync);
         SelectAllTextCommand = ReactiveCommand.Create(SelectAllText);
+        CutFocusedTextCommand = ReactiveCommand.Create(CutFocusedText);
         RedactSelectionCommand = ReactiveCommand.CreateFromTask(RedactSelectionAsync);
         DeleteContextAnnotationCommand = ReactiveCommand.CreateFromTask(DeleteContextAnnotationAsync);
         EditContextStickyNoteCommand = ReactiveCommand.Create(EditContextStickyNote);

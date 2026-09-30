@@ -26,6 +26,9 @@ internal static class PdfCommandIds
 
     /// <summary>Select all text on the current page (or the right-clicked page), #1814.</summary>
     public const string SelectAll = "edit.selectAll";
+
+    /// <summary>Cut the focused text box's selection to the clipboard, #1888.</summary>
+    public const string Cut = "edit.cut";
     public const string TypewriterMode = "edit.typewriterMode";
     public const string AddHighlight = "annotation.addHighlight";
     public const string AddUnderline = "annotation.addUnderline";

@@ -90,6 +90,9 @@ internal partial class MainWindowViewModel : ViewModelBase
     // like every PDF reader, a drag selects text by default — no mode toggle
     // needed. Editing modes turn it off on entry and restore it on exit.
     private bool _isTextSelectionMode = true;
+    // Tracked by MainWindow's window-level GotFocus handler (#1888): the ViewModel
+    // owns no reference to the focused control, only whether cutting from it is possible.
+    private bool _canCutFocusedText;
     private PdfPageRect? _currentTextSelectionPageArea;
     private string _selectedText = string.Empty;
     private ObservableCollection<string> _recentFiles = new();
@@ -2055,6 +2058,24 @@ internal partial class MainWindowViewModel : ViewModelBase
 
     /// <summary>Asks the viewer to select all text on the target page (#1814).</summary>
     public event EventHandler? SelectAllTextRequested;
+
+    /// <summary>
+    /// Whether the currently focused control is an editable text box that Cut can
+    /// act on. Set by MainWindow's window-level GotFocus handler; the ViewModel
+    /// never holds a reference to the control itself (#1888).
+    /// </summary>
+    public bool CanCutFocusedText
+    {
+        get => _canCutFocusedText;
+        set => this.RaiseAndSetIfChanged(ref _canCutFocusedText, value);
+    }
+
+    /// <summary>Asks the view to cut the focused text box's selection (#1888). Always
+    /// invocable, like Undo/Redo: it no-ops if nothing is focused to cut from, and
+    /// the Edit menu binds IsEnabled to <see cref="CanCutFocusedText"/> separately.</summary>
+    public event EventHandler? CutFocusedTextRequested;
+
+    private void CutFocusedText() => CutFocusedTextRequested?.Invoke(this, EventArgs.Empty);
 
     /// <summary>
     /// Select All Text. Leaves the app in text-selection mode when nothing else is active, so the

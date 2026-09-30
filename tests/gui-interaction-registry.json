@@ -4,18 +4,18 @@
   "description": "Every interaction a person can perform on the excise GUI: menu items, keyboard shortcuts, toolbar buttons and viewer mouse gestures, joined to the command id each invokes. Generated from Excise.App/Views/MainWindow.axaml and the viewer control; regenerate with scripts/check-gui-interaction-registry.sh.",
   "whyThisExists": "A command with no menu item, shortcut or button is unreachable, and a control with no command id cannot be driven by automation. Both have shipped — #1308's Sign Document was implemented, tested, and reachable from no production code. This is also the input to the AppleScript terminology (#1281) and the GUI workflow suite, so a control added to the XAML joins the scriptable surface and the test matrix automatically.",
   "generatedBy": "scripts/build-gui-interaction-registry.py",
-  "sourceRevision": "508ba1275f9b0c17bab0ade4557ea1141743d40f",
+  "sourceRevision": "14ba61cd26f4b97aee85d57022371631eb25849c",
   "summary": {
     "interactions": 214,
     "menuItems": 128,
     "buttons": 77,
     "mouseGestures": 9,
     "keyboardShortcuts": 30,
-    "declaredCommandIds": 129,
-    "commandIdsReachableFromTheGui": 115,
+    "declaredCommandIds": 130,
+    "commandIdsReachableFromTheGui": 116,
     "commandIdsWithNoGuiPath": 5,
     "cliOnlyCommandIds": 9,
-    "controlsWithNoCommandId": 1,
+    "controlsWithNoCommandId": 0,
     "duplicateShortcuts": 0,
     "parameterisedCommandIds": 12
   },
@@ -1266,10 +1266,10 @@
       "kind": "menu",
       "path": "Edit > Cut",
       "label": "Cut",
-      "command": null,
+      "command": "CutFocusedTextCommand",
       "commandParameter": null,
       "shortcut": "Ctrl+X",
-      "commandId": null
+      "commandId": "edit.cut"
     },
     {
       "kind": "menu",
@@ -2056,7 +2056,7 @@
     {
       "shortcut": "Ctrl+X",
       "path": "Edit > Cut",
-      "commandId": null
+      "commandId": "edit.cut"
     },
     {
       "shortcut": "Ctrl+Y",
@@ -2170,12 +2170,5 @@
     "text.extract",
     "text.letters"
   ],
-  "controlsWithNoCommandId": [
-    {
-      "kind": "menu",
-      "path": "Edit > Cut",
-      "label": "Cut",
-      "command": null
-    }
-  ]
+  "controlsWithNoCommandId": []
 }

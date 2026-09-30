@@ -93,6 +93,7 @@ internal static class MacNativeMenuBuilder
         private readonly NativeMenuItem _redoItem;
         private readonly NativeMenuItem _recentFilesItem;
         private readonly NativeMenuItem _selectTextItem;
+        private readonly NativeMenuItem _cutItem;
         private readonly NativeMenuItem _typewriterItem;
         private readonly NativeMenuItem _typewriterNextEditItem;
         private readonly NativeMenuItem _typewriterDiscardItem;
@@ -125,6 +126,9 @@ internal static class MacNativeMenuBuilder
             _redoItem = CommandItem("Redo", _viewModel.RedoCommand, PdfCommandIds.Redo);
             _recentFilesItem = Submenu("Open Recent");
             _selectTextItem = CommandItem("Select Text Mode", _viewModel.ToggleTextSelectionModeCommand, PdfCommandIds.SelectTextMode);
+            // #1888: Cut belongs to the focused text box only; IsEnabled tracks
+            // CanCutFocusedText the same way the in-window Edit menu does.
+            _cutItem = CommandItem("Cut", _viewModel.CutFocusedTextCommand, PdfCommandIds.Cut);
             _typewriterItem = CommandItem("Typewriter Mode", _viewModel.ToggleTypewriterModeCommand);
             // #780: keep the discard / next-pending-edit affordances reachable on
             // macOS's native menu, not just the in-window AXAML menu.
@@ -224,7 +228,7 @@ internal static class MacNativeMenuBuilder
                     _typewriterDiscardItem,
                     TrackDocumentItem(CommandItem("Select All Text", _viewModel.SelectAllTextCommand, PdfCommandIds.SelectAll)),
                     TrackTextSelectionItem(CommandItem("Copy Selected Text", _viewModel.CopyTextCommand, PdfCommandIds.CopyText)),
-                    CutItem()));
+                    _cutItem));
 
             Add(menu,
                 Submenu("Annotate",
@@ -355,6 +359,7 @@ internal static class MacNativeMenuBuilder
             or nameof(MainWindowViewModel.CanMoveSelectedPagesEarlier)
             or nameof(MainWindowViewModel.CanMoveSelectedPagesLater)
             or nameof(MainWindowViewModel.IsTextSelectionMode)
+            or nameof(MainWindowViewModel.CanCutFocusedText)
             or nameof(MainWindowViewModel.IsTypewriterMode)
             or nameof(MainWindowViewModel.IsFormAuthoringMode)
             or nameof(MainWindowViewModel.HasPendingTypewriterEdits)
@@ -396,6 +401,7 @@ internal static class MacNativeMenuBuilder
                 item.IsEnabled = isDocumentLoaded && _viewModel.CanMoveSelectedPagesLater;
             foreach (var item in _textSelectionItems)
                 item.IsEnabled = isDocumentLoaded && _viewModel.IsTextSelectionMode;
+            _cutItem.IsEnabled = _viewModel.CanCutFocusedText;
             foreach (var item in _annotationSelectionItems)
                 item.IsEnabled = isDocumentLoaded && _viewModel.HasTextSelection;
             foreach (var item in _redactionItems)
@@ -622,16 +628,6 @@ internal static class MacNativeMenuBuilder
             if (shortcut is [.., '+', >= '0' and <= '9'])
                 shortcut = shortcut.Insert(shortcut.Length - 1, "D");
             return shortcut is null ? null : KeyGesture.Parse(shortcut);
-        }
-
-        // #1173: Cut belongs to the focused text box only; page body text has nothing to cut, so it is a no-op there.
-        private static NativeMenuItem CutItem()
-        {
-            var item = new NativeMenuItem("Cut") { Gesture = KeyGesture.Parse("Cmd+X") };
-            item.Click += (_, _) => MainWindow.CutFocusedText(
-                (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Windows
-                    .FirstOrDefault(w => w.IsActive)?.FocusManager?.GetFocusedElement());
-            return item;
         }
 
         private static NativeMenuItem CommandItem(string header, ICommand? command, string? commandId = null) =>

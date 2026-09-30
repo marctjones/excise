@@ -87,10 +87,6 @@ public class CommandBindingSweepTests
             }
             leafCount++;
 
-            // #1173: Cut acts on the focused text box through a Click handler; it has no ViewModel command.
-            if (cmd == null && host is MenuItem { Header: "Cu_t" })
-                continue;
-
             if (cmd == null)
             {
                 nullLeafCommands.Add(label);
@@ -331,10 +327,6 @@ public class CommandBindingSweepTests
                 continue;
 
             if (item.Command == null && item.ToggleType != MenuItemToggleType.None)
-                continue;
-
-            // #1173: Cut acts on the focused text box through a Click handler; it has no ViewModel command.
-            if (item.Header?.ToString() == "Cut")
                 continue;
 
             yield return item;
