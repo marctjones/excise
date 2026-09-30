@@ -226,6 +226,7 @@ internal sealed record PerfStepRecord(
         Num(builder, "continuousResidentBytes", Sample.ContinuousResidentBytes).Append(',');
         Num(builder, "continuousByteBudget", Sample.ContinuousByteBudget).Append(',');
         Num(builder, "singlePageEntries", Sample.SinglePageEntries).Append(',');
+        Num(builder, "singlePageCacheResidentBytes", Sample.SinglePageCacheResidentBytes).Append(',');
         Dbl(builder, "zoomLevel", Sample.ZoomLevel).Append(',');
         Num(builder, "currentPageIndex", Sample.CurrentPageIndex).Append(',');
         Num(builder, "totalPages", Sample.TotalPages).Append(',');

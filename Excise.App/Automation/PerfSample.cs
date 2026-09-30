@@ -41,6 +41,7 @@ internal readonly record struct PerfSample(
     long ContinuousResidentBytes,
     long ContinuousByteBudget,
     int SinglePageEntries,
+    long SinglePageCacheResidentBytes,
     double ZoomLevel,
     int CurrentPageIndex,
     int TotalPages,
@@ -73,6 +74,7 @@ internal readonly record struct PerfSample(
             ContinuousResidentBytes: 0,
             ContinuousByteBudget: 0,
             SinglePageEntries: 0,
+            SinglePageCacheResidentBytes: 0,
             ZoomLevel: 0,
             CurrentPageIndex: -1,
             TotalPages: 0);

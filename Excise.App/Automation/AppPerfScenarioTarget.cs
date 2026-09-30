@@ -575,6 +575,7 @@ internal sealed class AppPerfScenarioTarget : IPerfScenarioTarget
             ContinuousResidentBytes = render.ContinuousResidentBytes,
             ContinuousByteBudget = render.ContinuousByteBudget,
             SinglePageEntries = render.SinglePageEntryCount,
+            SinglePageCacheResidentBytes = render.SinglePageCacheResidentBytes,
             ZoomLevel = ViewModel.ZoomLevel,
             CurrentPageIndex = ViewModel.CurrentPageIndex,
             TotalPages = ViewModel.TotalPages,

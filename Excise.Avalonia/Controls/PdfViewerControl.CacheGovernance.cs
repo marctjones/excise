@@ -289,6 +289,7 @@ public partial class PdfViewerControl
             single.Capacity,
             single.Hits,
             single.Misses,
+            SinglePagePart.SinglePageCacheResidentBytes(),
             ContinuousPart.ContinuousCacheCount,
             ContinuousPart.ContinuousCacheResidentBytes(),
             ContinuousPart.ContinuousCacheByteBudgetSetting,

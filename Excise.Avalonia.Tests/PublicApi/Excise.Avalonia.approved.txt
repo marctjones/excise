@@ -214,12 +214,13 @@ namespace Excise.Avalonia.Controls
     }
     public readonly struct PdfViewerRenderDiagnostics
     {
-        public PdfViewerRenderDiagnostics(Excise.Avalonia.Controls.PdfViewMode viewMode, int singlePageEntryCount, int singlePageCapacity, long singlePageHits, long singlePageMisses, int continuousEntryCount, long continuousResidentBytes, long continuousByteBudget, int continuousHits, int continuousInFlightCount) { }
+        public PdfViewerRenderDiagnostics(Excise.Avalonia.Controls.PdfViewMode viewMode, int singlePageEntryCount, int singlePageCapacity, long singlePageHits, long singlePageMisses, long singlePageCacheResidentBytes, int continuousEntryCount, long continuousResidentBytes, long continuousByteBudget, int continuousHits, int continuousInFlightCount) { }
         public long ContinuousByteBudget { get; }
         public int ContinuousEntryCount { get; }
         public int ContinuousHits { get; }
         public int ContinuousInFlightCount { get; }
         public long ContinuousResidentBytes { get; }
+        public long SinglePageCacheResidentBytes { get; }
         public int SinglePageCapacity { get; }
         public int SinglePageEntryCount { get; }
         public long SinglePageHits { get; }

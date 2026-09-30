@@ -279,6 +279,9 @@ public class ViewerCacheTrimTests
             viewer.CurrentPage = 2;
             await WaitUntilAsync(window, () => ReferenceEquals(image.Source, shown[1]), "page 2 from the cache");
             viewer.GetRenderDiagnostics().SinglePageEntryCount.Should().Be(3, "fixture: three pages cached");
+            var residentWithThreePages = viewer.GetRenderDiagnostics().SinglePageCacheResidentBytes;
+            residentWithThreePages.Should().BeGreaterThan(0,
+                "#1925: the resident-bytes diagnostic must reflect the cached bitmaps, not read as unmeasured");
 
             foreach (var level in Enum.GetValues<PdfViewerCacheTrimLevel>())
             {
@@ -290,6 +293,8 @@ public class ViewerCacheTrimTests
             IsDisposed(shown[0]).Should().BeTrue("#1478: a trimmed page bitmap is disposed");
             IsDisposed(shown[2]).Should().BeTrue();
             viewer.GetRenderDiagnostics().SinglePageEntryCount.Should().Be(1);
+            viewer.GetRenderDiagnostics().SinglePageCacheResidentBytes.Should().BeLessThan(residentWithThreePages,
+                "#1925: trimming two of three cached pages must shrink the reported resident bytes");
 
             // The kept entry is the current page at its current device DPI: a
             // render elsewhere and a return to page 2 hits the cache.

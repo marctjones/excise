@@ -523,6 +523,7 @@ public readonly struct PdfViewerRenderDiagnostics
         int singlePageCapacity,
         long singlePageHits,
         long singlePageMisses,
+        long singlePageCacheResidentBytes,
         int continuousEntryCount,
         long continuousResidentBytes,
         long continuousByteBudget,
@@ -534,6 +535,7 @@ public readonly struct PdfViewerRenderDiagnostics
         SinglePageCapacity = singlePageCapacity;
         SinglePageHits = singlePageHits;
         SinglePageMisses = singlePageMisses;
+        SinglePageCacheResidentBytes = singlePageCacheResidentBytes;
         ContinuousEntryCount = continuousEntryCount;
         ContinuousResidentBytes = continuousResidentBytes;
         ContinuousByteBudget = continuousByteBudget;
@@ -555,6 +557,13 @@ public readonly struct PdfViewerRenderDiagnostics
 
     /// <summary>Single-page LRU misses since this viewer was constructed.</summary>
     public long SinglePageMisses { get; }
+
+    /// <summary>
+    /// Estimated resident bytes retained by the single-page LRU (#1925). Added because a
+    /// reader that only tracked <see cref="ContinuousResidentBytes"/> materially undercounted
+    /// memory in single-page view, where this cache is the dominant live holder.
+    /// </summary>
+    public long SinglePageCacheResidentBytes { get; }
 
     /// <summary>Continuous-view tiles currently retained by its LRU.</summary>
     public int ContinuousEntryCount { get; }

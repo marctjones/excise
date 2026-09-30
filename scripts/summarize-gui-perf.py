@@ -33,6 +33,12 @@ from pathlib import Path
 
 MB = 1024.0 * 1024.0
 
+# #1927: a noise-spread floor from fewer repeats than this is a min-max of too
+# few points to trust — the docs/#1497 noise measurement itself uses 5 runs.
+# Below this, IMPROVED/REGRESSED against that floor is flagged, not withheld:
+# the floor is still the best number in hand, but it is provisional.
+MIN_NOISE_REPEATS_FOR_CONFIDENT_FLOOR = 5
+
 # Metrics whose deltas the summary reports, with the unit they print in.
 TRACKED = [
     ("footprintMB", "MB", "physical footprint (outer; the #1461/#1496 number)"),
@@ -145,13 +151,16 @@ def read_metrics(path):
 
     out = {"bandRenders": len(band), "singleRenders": len(single),
            "cacheTrimRequests": trims, "heapReclaims": len(reclaims)}
-    if band:
+    # #1927: a single sample is a point, not a distribution — P50 and P99 of one
+    # value are both just that value, which reads as a real measurement when it
+    # is not evidence of anything. Omit rather than report a fake percentile.
+    if len(band) >= 2:
         out["bandRenderP50Ms"] = percentile(band, 50)
         out["bandRenderP99Ms"] = percentile(band, 99)
-    if single:
+    if len(single) >= 2:
         out["singleRenderP50Ms"] = percentile(single, 50)
         out["singleRenderP99Ms"] = percentile(single, 99)
-    if reclaims:
+    if len(reclaims) >= 2:
         out["heapReclaimP50Ms"] = percentile(reclaims, 50)
     return out
 
@@ -240,6 +249,10 @@ def collect_run(directory):
             "continuousResidentMB": mb(step, "continuousResidentBytes"),
             "continuousEntries": step.get("continuousEntries"),
             "singlePageEntries": step.get("singlePageEntries"),
+            # #1925: the single-page view's own render cache, missed entirely by
+            # continuousResidentMB (the continuous-view tile cache only) — the
+            # dominant live memory holder in single-page view per the #1804 investigation.
+            "singlePageCacheResidentMB": mb(step, "singlePageCacheResidentBytes"),
             # #1551-#1554: absent in journals written before the multi-document
             # set existed, which is None (not measured), never 0.
             "openDocuments": step.get("openDocuments"),
@@ -340,6 +353,7 @@ def evaluate_checks(group, checks, calibration, noise, scenario):
             "from": median([a for a, _ in pairs if a is not None]),
             "to": median([b for _, b in pairs if b is not None]),
             "floor": (floor_entry or {}).get("value"), "verdict": outcome,
+            "floorLowConfidenceN": (floor_entry or {}).get("lowConfidenceN"),
         })
     return results
 
@@ -470,6 +484,7 @@ def derive_floor(calibration, noise, scenario=None):
     floor = {}
     for metric, unit, _ in TRACKED:
         candidates = []
+        scenario_noise_n = None
         if scenario is None:
             # No scenario in hand (the run-wide summary): be conservative.
             spreads = [n[metric]["spread"] for n in noise.values()
@@ -477,6 +492,7 @@ def derive_floor(calibration, noise, scenario=None):
         else:
             entry = (noise.get(scenario) or {}).get(metric)
             spreads = [entry["spread"]] if entry and entry.get("spread") is not None else []
+            scenario_noise_n = entry.get("n") if entry else None
         if spreads:
             candidates.append(("noiseSpread", max(spreads)))
 
@@ -499,6 +515,15 @@ def derive_floor(calibration, noise, scenario=None):
         source, value = max(candidates, key=lambda c: c[1])
         entry = {"unit": unit, "value": value, "from": source,
                  "candidates": {name: v for name, v in candidates}}
+
+        if (source == "noiseSpread" and scenario_noise_n is not None
+                and scenario_noise_n < MIN_NOISE_REPEATS_FOR_CONFIDENT_FLOOR):
+            entry["lowConfidenceN"] = scenario_noise_n
+            entry["note"] = (
+                f"this floor's noise spread came from only {scenario_noise_n} repeat(s) "
+                f"(<{MIN_NOISE_REPEATS_FOR_CONFIDENT_FLOOR}); an IMPROVED/REGRESSED verdict against it "
+                f"is provisional, not evidence — rerun at --repeats {MIN_NOISE_REPEATS_FOR_CONFIDENT_FLOOR}+ "
+                "before trusting it (#1927)")
 
         # A floor of exactly zero is almost never "this metric is noise-free".
         # It means the metric did not move at all across repeats, which in
@@ -641,6 +666,7 @@ def main():
                         "baseline": was_peak, "measured": now_peak, "delta": delta,
                         "floor": scenario_floor.get(metric, {}).get("value"),
                         "floorFrom": scenario_floor.get(metric, {}).get("from"),
+                        "floorLowConfidenceN": scenario_floor.get(metric, {}).get("lowConfidenceN"),
                         "verdict": verdict(delta, scenario_floor.get(metric)),
                     })
             manifest["baseline"] = args.baseline
@@ -662,7 +688,7 @@ def main():
     tsv = ["\t".join([
         "scenario", "repeat", "seq", "step", "op", "ok", "wallMs",
         "rssMB", "footprintMB", "committedMB", "liveHeapMB", "fragmentedMB",
-        "continuousResidentMB", "cpuTotalMs", "gen2", "load1", "outerSampled",
+        "continuousResidentMB", "singlePageCacheResidentMB", "cpuTotalMs", "gen2", "load1", "outerSampled",
         "openDocuments", "documentWindows", "note"])]
     for run in sorted(measured_runs, key=lambda r: (r["scenario"] or "", r["repeat"])):
         for step in run["steps"]:
@@ -671,7 +697,8 @@ def main():
                 step["ok"], fmt(step["wallMs"]),
                 fmt(step["rssMB"]), fmt(step["footprintMB"]), fmt(step["committedMB"]),
                 fmt(step["liveHeapMB"]), fmt(step["fragmentedMB"]),
-                fmt(step["continuousResidentMB"]), fmt(step["cpuTotalMs"]),
+                fmt(step["continuousResidentMB"]), fmt(step["singlePageCacheResidentMB"]),
+                fmt(step["cpuTotalMs"]),
                 step["gen2Collections"], fmt(step["load1"], 2),
                 step["outerSampled"], step.get("openDocuments"), step.get("documentWindows"),
                 step["note"] or ""]))
@@ -845,8 +872,8 @@ def main():
         multi = any((s.get("openDocuments") or 0) > 1 for s in representative["steps"])
         docs_head, docs_rule = (" docs/windows |", "---|") if multi else ("", "")
         lines += ["| step | op | wall ms | footprint MB | rss MB | committed MB | "
-                  "live MB | frag MB | tiles MB | gen2 |" + docs_head + " ok |",
-                  "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|" + docs_rule + "---|"]
+                  "live MB | frag MB | tiles MB | sp cache MB | gen2 |" + docs_head + " ok |",
+                  "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|" + docs_rule + "---|"]
         for step in representative["steps"]:
             docs_cell = (f" {step.get('openDocuments')}/{step.get('documentWindows')} |" if multi else "")
             lines.append(
@@ -854,6 +881,7 @@ def main():
                 f"{fmt(step['footprintMB'])} | {fmt(step['rssMB'])} | "
                 f"{fmt(step['committedMB'])} | {fmt(step['liveHeapMB'])} | "
                 f"{fmt(step['fragmentedMB'])} | {fmt(step['continuousResidentMB'])} | "
+                f"{fmt(step['singlePageCacheResidentMB'])} | "
                 f"{step['gen2Collections']} |{docs_cell} {'yes' if step['ok'] else 'NO'} |")
         lines.append("")
 
@@ -863,11 +891,13 @@ def main():
                 lines += [f"> ⚠️ Unknown check kind `{check.get('kind')}`; nothing was evaluated.", ""]
                 continue
             flag = "" if result["verdict"].startswith("DROPPED") and "(" not in result["verdict"] else "⚠️ "
+            floor_low_n = result.get("floorLowConfidenceN")
+            floor_caveat = f" (n={floor_low_n}, LOW-CONFIDENCE, #1927)" if floor_low_n else ""
             lines += [
                 f"{flag}**Check `{check['kind']}` {check['metric']}**: `{check['from']}` "
                 f"{fmt(result['from'])} -> `{check['to']}` {fmt(result['to'])} "
                 f"(median delta {fmt(result['delta'])} over {result['runs']} run(s), floor "
-                f"{'UNKNOWN' if result['floor'] is None else fmt(result['floor'])}): "
+                f"{'UNKNOWN' if result['floor'] is None else fmt(result['floor'])}{floor_caveat}): "
                 f"**{result['verdict']}**. _{check.get('why', '')}_", ""]
 
         for step in representative["steps"]:
@@ -907,14 +937,19 @@ def main():
                   f"Baseline: `{args.baseline}`", "",
                   "| scenario | metric | baseline | now | delta | floor | verdict |",
                   "|---|---|---:|---:|---:|---:|---|"]
+        low_confidence_seen = False
         for row in comparison:
             if "metric" not in row:
                 lines.append(f"| `{row['scenario']}` | - | - | - | - | - | {row['verdict']} |")
                 continue
+            floor_cell = 'UNKNOWN' if row['floor'] is None else fmt(row['floor'])
+            if row.get('floorLowConfidenceN'):
+                floor_cell += f" ⚠️(n={row['floorLowConfidenceN']})"
+                low_confidence_seen = True
             lines.append(
                 f"| `{row['scenario']}` | {row['metric']} | {fmt(row['baseline'])} | "
                 f"{fmt(row['measured'])} | {fmt(row['delta'])} | "
-                f"{'UNKNOWN' if row['floor'] is None else fmt(row['floor'])} | "
+                f"{floor_cell} | "
                 f"{row['verdict']} |")
         lines += ["",
                   "`BELOW-FLOOR` means the change is smaller than this machine's",
@@ -922,6 +957,14 @@ def main():
                   "stopping rule says that when the best remaining candidate in an",
                   "area lands here, stop optimising that area and say so on its issue.",
                   ""]
+        if low_confidence_seen:
+            lines += [
+                f"⚠️ A floor marked `(n=k)` above came from fewer than "
+                f"{MIN_NOISE_REPEATS_FOR_CONFIDENT_FLOOR} repeats of that scenario's noise "
+                "measurement — its IMPROVED/REGRESSED verdict is provisional. Rerun at "
+                f"--repeats {MIN_NOISE_REPEATS_FOR_CONFIDENT_FLOOR}+ before treating it as "
+                "evidence (#1927).",
+                ""]
 
     (root / "summary.md").write_text("\n".join(lines) + "\n")
 
