@@ -124,11 +124,18 @@ public class ViewerCacheTrimTests
     /// any REALIZED page's samples. A stream a band page also reads stays. The
     /// record for the out-of-band page is placed directly, so the trim is
     /// measured before any render pass could release it for being unrealized.
+    ///
+    /// Opens via <see cref="ContinuousTileEvictionCompositeTests.ShowContinuousViewerWithoutSinglePageRender"/>,
+    /// not plain <c>ShowContinuousViewer</c> (#1776, #1934): this test's
+    /// own1.IsDecoded precondition is the same assertion #1776 saw fail once
+    /// alongside a competing single-page render of page 1 — an unconfirmed
+    /// candidate cause, not a proven one (see that helper's doc comment). This
+    /// still removes the competing render as a source of nondeterminism.
     /// </summary>
     [FixedAvaloniaFact]
     public async Task EveryLevel_ReleasesTheDecodedSamplesOfPagesOutsideTheBands_AndKeepsTheBandPagesAndSharedOnes()
     {
-        var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(
+        var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewerWithoutSinglePageRender(
             ContinuousImageSampleReleaseTests.ImageDocument(pageCount: 4));
         // Render-ahead (#1564) would pin page 2's samples too, and the trim
         // would release them as well; RenderAheadTests covers that. This test
@@ -137,6 +144,8 @@ public class ViewerCacheTrimTests
         try
         {
             await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+            viewer.SinglePagePart.SinglePagePublishCount.Should().Be(0,
+                "fixture: no single-page render competes with the continuous one (#1776)");
             var doc = viewer.Document!;
             var own1 = ContinuousImageSampleReleaseTests.XObject(doc, 1, "Own");
             var logo = ContinuousImageSampleReleaseTests.XObject(doc, 1, "Logo");

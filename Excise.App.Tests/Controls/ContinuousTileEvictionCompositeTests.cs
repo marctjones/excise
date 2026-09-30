@@ -105,6 +105,41 @@ public class ContinuousTileEvictionCompositeTests
     }
 
     /// <summary>
+    /// A continuous-view viewer that never starts a single-page render. Plain
+    /// <see cref="ShowContinuousViewer(byte[])"/> assigns the document while the
+    /// viewer is still in single-page view, so a single-page render of page 1
+    /// runs (and publishes) alongside the continuous one. That render's
+    /// resource scope releases what it decoded when it ends
+    /// (<see cref="Excise.Rendering.RenderOptions.ReleaseDecodedImageSamples"/>
+    /// defaults true for single-page, false for continuous band renders), and a
+    /// release landing after the continuous band render has decoded the same
+    /// image can leave a page's own image undecoded although its composite
+    /// already shows it. #1776 found this candidate but could not confirm it
+    /// (a forced 400 ms delay before the resource scope's dispose did not
+    /// reproduce the failure) and fixed
+    /// <c>ContinuousImageSampleReleaseTests</c> by removing the competitor
+    /// rather than waiting for a "single-page render is done" signal that does
+    /// not exist. #1934 hit the identical precondition in a second test, also
+    /// could not reproduce it (neither via the reported failing command nor a
+    /// forced-interleaving probe — which instead consistently showed the
+    /// CONTINUOUS render decoding first, the opposite of what this hypothesis
+    /// needs), and applied the same mitigation without being able to confirm
+    /// it addresses the actual cause. Use this whenever a test asserts a
+    /// specific page's <see cref="Excise.Core.Primitives.PdfStream.IsDecoded"/>
+    /// right after the composite settles — it removes a real source of
+    /// nondeterminism either way.
+    /// </summary>
+    internal static (Window Window, PdfViewerControl Viewer, ItemsControl Items) ShowContinuousViewerWithoutSinglePageRender(byte[] pdfBytes)
+    {
+        var viewer = new PdfViewerControl { ViewMode = PdfViewMode.Continuous };
+        var window = new Window { Content = viewer, Width = 900, Height = 700 };
+        window.Show();
+        viewer.Document = PdfCoreDocument.Open(pdfBytes);
+        var items = viewer.ContinuousPart.ContinuousItems!;
+        return (window, viewer, items);
+    }
+
+    /// <summary>
     /// Waits until page <paramref name="pageNumber"/> has a composite, no cell
     /// render is in flight, and the composite instance has stayed the same across
     /// a few pumps (initial layout can recomposite more than once). With
