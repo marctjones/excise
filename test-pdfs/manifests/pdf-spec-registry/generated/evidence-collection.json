@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1491,
-  "indexedContentSha256": "962b6afea51df399c7cfcb13b9cebd21685b7ddf0d9af30bf58eab606a1d0cf3",
+  "indexedFileCount": 1492,
+  "indexedContentSha256": "a868975f0d23e7bcd4a7075717b010bdfd3cac2c470b2c2a63febf6ac8538cb3",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -68825,7 +68825,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 419
+      "candidateReferenceCount": 420
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
