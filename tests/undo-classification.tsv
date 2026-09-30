@@ -55,6 +55,7 @@ search.close	NotMutating	-
 edit.selectTextMode	NotMutating	-
 edit.copyText	NotMutating	-
 edit.selectAll	NotMutating	-
+edit.cut	NotMutating	-
 edit.typewriterMode	NotMutating	-
 annotation.addHighlight	Recorded	UI/UndoRedoWorkflowTests.cs
 annotation.addUnderline	Recorded	UI/UndoRedoWorkflowTests.cs
