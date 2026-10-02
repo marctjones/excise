@@ -468,6 +468,8 @@ internal partial class RenderContext
     private readonly Stack<bool> _optionalContentVisibilityStack = new();
     private int _hiddenOptionalContentDepth;
     private readonly DeviceCmykExecutionState _deviceCmyk;
+    private ImageColorConverter? _cmykPreviewConverter;
+    private bool _cmykPreviewConverterResolved;
 
     // Per-fontDict cache for CFF CID→glyph maps, keyed the same way as
     // _embeddedTypefaces so two different /Font dicts with the same
@@ -1067,7 +1069,15 @@ internal partial class RenderContext
     /// </summary>
     private (double R, double G, double B) DeviceCmykToRgb(DeviceCmykColor color)
     {
-        var converter = ImageColorConverter.For(_deviceCmyk.PreviewColorSpace);
+        // The preview space never changes for a context, so resolve its converter once
+        // instead of a ConditionalWeakTable lookup for every pixel of every group sync.
+        if (!_cmykPreviewConverterResolved)
+        {
+            _cmykPreviewConverter = ImageColorConverter.For(_deviceCmyk.PreviewColorSpace);
+            _cmykPreviewConverterResolved = true;
+        }
+
+        var converter = _cmykPreviewConverter;
         if (converter != null)
         {
             Span<double> values = stackalloc double[4] { color.C, color.M, color.Y, color.K };
