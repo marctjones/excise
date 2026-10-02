@@ -1079,15 +1079,6 @@ internal partial class RenderContext
         PdfSeparableBlendMode blend = default;
         if (!isNormalBlend && !TryMapSkiaBlendToPdfBlend(invocationBlendMode, out blend))
             return;
-        var useDirectBlendFunctions =
-            // Match the path-painting fast path: isolated CMYK groups keep direct
-            // handling for these retained-backdrop modes, but knockout compositing
-            // uses the subtractive DeviceCMYK blend path.
-            _deviceCmyk.IsInIsolatedGroup &&
-            !isNormalBlend &&
-            blend is PdfSeparableBlendMode.Lighten or
-                PdfSeparableBlendMode.Screen or
-                PdfSeparableBlendMode.ColorDodge;
 
         // #1402: this used to be groupBitmap.GetPixel/_rootBitmap.GetPixel/SetPixel
         // per pixel — each call marshals through SKBitmap.Info — over a region that
@@ -1211,8 +1202,7 @@ internal partial class RenderContext
                         backdrop,
                         source,
                         blend,
-                        _deviceCmyk.Backdrop.GetAlpha(parentX, parentY),
-                        useDirectBlendFunctions);
+                        _deviceCmyk.Backdrop.GetAlpha(parentX, parentY));
                 _deviceCmyk.Backdrop.CompositeSourceOver(parentX, parentY, blended, alpha);
                 var output = _deviceCmyk.Backdrop.Get(parentX, parentY);
                 var (r, g, b) = DeviceCmykToRgb(output);

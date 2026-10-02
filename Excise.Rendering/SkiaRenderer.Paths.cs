@@ -555,16 +555,6 @@ internal partial class RenderContext
                     continue;
                 }
 
-                var useDirectBlendFunctions =
-                    // Isolated Ghent CMYK groups rely on direct component blending
-                    // for these retained-backdrop blend modes, while knockout groups
-                    // must use the subtractive DeviceCMYK path so neutral nested
-                    // forms do not leave a visible X.
-                    _deviceCmyk.IsInIsolatedGroup &&
-                    !isNormalBlend &&
-                    blend is PdfSeparableBlendMode.Lighten or
-                        PdfSeparableBlendMode.Screen or
-                        PdfSeparableBlendMode.ColorDodge;
                 if (IsZeroInk(source) &&
                     // #1395: "zero ink under a retained-backdrop blend changes
                     // nothing" holds when the destination IS the backdrop — the
@@ -577,7 +567,6 @@ internal partial class RenderContext
                     // square both oracles draw was missing entirely.
                     !_isContainedGroupChild &&
                     !_deviceCmyk.IsInKnockoutGroup &&
-                    !useDirectBlendFunctions &&
                     !isNormalBlend &&
                     blend is not PdfSeparableBlendMode.Difference and
                         not PdfSeparableBlendMode.Exclusion and
@@ -592,7 +581,6 @@ internal partial class RenderContext
                 var backdrop = _deviceCmyk.Backdrop!.Get(x, y);
                 if (IsFullBlackInk(source) &&
                     IsZeroInk(backdrop) &&
-                    !useDirectBlendFunctions &&
                     !isNormalBlend &&
                     blend is PdfSeparableBlendMode.Overlay or PdfSeparableBlendMode.SoftLight)
                 {
@@ -617,8 +605,7 @@ internal partial class RenderContext
                         backdrop,
                         source,
                         blend,
-                        _deviceCmyk.Backdrop!.GetAlpha(x, y),
-                        useDirectBlendFunctions);
+                        _deviceCmyk.Backdrop!.GetAlpha(x, y));
                 _deviceCmyk.Backdrop!.CompositeSourceOver(x, y, blended, effectiveAlpha);
                 var output = _deviceCmyk.Backdrop.Get(x, y);
                 var (r, g, b) = DeviceCmykToRgb(output);
@@ -1061,7 +1048,7 @@ internal partial class RenderContext
             PdfSeparableBlendMode.Color or
             PdfSeparableBlendMode.Luminosity)
         {
-            return BlendNonseparableDeviceCmykForScreen(backdrop, source, blend);
+            return BlendNonseparableDeviceCmyk(backdrop, source, blend);
         }
 
         return new DeviceCmykColor(
@@ -1071,36 +1058,13 @@ internal partial class RenderContext
             1 - BlendAdditiveComponent(1 - backdrop.K, 1 - source.K, blend));
     }
 
-    private static DeviceCmykColor BlendDeviceCmykDirect(
-        DeviceCmykColor backdrop,
-        DeviceCmykColor source,
-        PdfSeparableBlendMode blend)
-    {
-        if (blend is PdfSeparableBlendMode.Hue or
-            PdfSeparableBlendMode.Saturation or
-            PdfSeparableBlendMode.Color or
-            PdfSeparableBlendMode.Luminosity)
-        {
-            return BlendNonseparableDeviceCmykForScreen(backdrop, source, blend);
-        }
-
-        return new DeviceCmykColor(
-            BlendAdditiveComponent(backdrop.C, source.C, blend),
-            BlendAdditiveComponent(backdrop.M, source.M, blend),
-            BlendAdditiveComponent(backdrop.Y, source.Y, blend),
-            BlendAdditiveComponent(backdrop.K, source.K, blend));
-    }
-
     private static DeviceCmykColor BlendDeviceCmykWithBackdropAlpha(
         DeviceCmykColor backdrop,
         DeviceCmykColor source,
         PdfSeparableBlendMode blend,
-        double backdropAlpha,
-        bool direct)
+        double backdropAlpha)
     {
-        var blended = direct
-            ? BlendDeviceCmykDirect(backdrop, source, blend)
-            : BlendDeviceCmyk(backdrop, source, blend);
+        var blended = BlendDeviceCmyk(backdrop, source, blend);
 
         if (backdropAlpha <= 1e-9)
             return source;
@@ -1153,23 +1117,25 @@ internal partial class RenderContext
         };
     }
 
-    private static DeviceCmykColor BlendNonseparableDeviceCmykForScreen(
+    /// <summary>
+    /// The non-separable blend modes in a DeviceCMYK space, as ISO 32000-2 §11.3.5 closes that
+    /// clause: C, M and Y are complemented to R, G and B (<c>1 - c</c>), the RGB formulae run on
+    /// those, and the result is complemented back. K is not blended at all: it is the BACKDROP's K
+    /// for Hue, Saturation and Color and the SOURCE's K for Luminosity.
+    ///
+    /// <para>This used to convert all four channels to RGB through the colour-managed preview
+    /// conversion and back. That cannot return the backdrop's own ink: a grey Hue-blended over pure
+    /// black <c>(0 0 0 1)</c> came back as <c>(0 .11 .09 .86)</c>, a lighter, tinted patch where
+    /// Ghostscript and mutool leave the black untouched, which painted the "X" Ghent GWG160 and
+    /// GWG161 exist to forbid in eight cells (#1528).</para>
+    /// </summary>
+    private static DeviceCmykColor BlendNonseparableDeviceCmyk(
         DeviceCmykColor backdrop,
         DeviceCmykColor source,
         PdfSeparableBlendMode blend)
     {
-        var backdropRgb = Excise.Core.ColorSpaces.PdfColorSpace.ConvertDeviceCmykToRgb(
-            backdrop.C,
-            backdrop.M,
-            backdrop.Y,
-            backdrop.K);
-        var sourceRgb = Excise.Core.ColorSpaces.PdfColorSpace.ConvertDeviceCmykToRgb(
-            source.C,
-            source.M,
-            source.Y,
-            source.K);
-        var backdropColor = new RgbColor(backdropRgb.R, backdropRgb.G, backdropRgb.B);
-        var sourceColor = new RgbColor(sourceRgb.R, sourceRgb.G, sourceRgb.B);
+        var backdropColor = new RgbColor(1 - backdrop.C, 1 - backdrop.M, 1 - backdrop.Y);
+        var sourceColor = new RgbColor(1 - source.C, 1 - source.M, 1 - source.Y);
         var rgb = blend switch
         {
             PdfSeparableBlendMode.Hue => SetLum(SetSat(sourceColor, Sat(backdropColor)), Lum(backdropColor)),
@@ -1178,7 +1144,11 @@ internal partial class RenderContext
             PdfSeparableBlendMode.Luminosity => SetLum(backdropColor, Lum(sourceColor)),
             _ => sourceColor
         };
-        return RgbToDeviceCmyk(rgb.R, rgb.G, rgb.B);
+        return new DeviceCmykColor(
+            Math.Clamp(1 - rgb.R, 0, 1),
+            Math.Clamp(1 - rgb.G, 0, 1),
+            Math.Clamp(1 - rgb.B, 0, 1),
+            blend == PdfSeparableBlendMode.Luminosity ? source.K : backdrop.K);
     }
 
     private readonly record struct RgbColor(double R, double G, double B);

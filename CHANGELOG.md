@@ -57,6 +57,13 @@ semantic versioning.
   case.
 - **Re-attaching the viewer restores its scrolling and viewport tracking.** Both were disposed on detach and never
   resubscribed.
+- **DeviceCMYK pages: Hue, Saturation, Color and Luminosity blends follow ISO 32000-2 §11.3.5 (#1528).** In a CMYK space
+  the spec complements C, M and Y to RGB, blends, complements back, and takes K from the backdrop (the source for
+  Luminosity). Excise ran all four channels through the colour-managed preview conversion instead, which cannot give
+  back the backdrop's own ink: a grey Hue-blended over pure black came out lighter and tinted. That drew the "X" the Ghent
+  GWG160 and GWG161 pages exist to forbid, in eight cells. Lighten, Screen and Color Dodge inside an isolated group no
+  longer take a separate path that applied them to ink values without complementing (GWG162). All ten cells now match
+  mutool and Ghostscript and are gated again.
 
 ## [3.14.0] - 2026-09-27
 

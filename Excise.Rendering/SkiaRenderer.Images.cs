@@ -1003,8 +1003,7 @@ internal partial class RenderContext
                         backdrop,
                         source,
                         blend,
-                        _deviceCmyk.Backdrop!.GetAlpha(x, y),
-                        direct: false);
+                        _deviceCmyk.Backdrop!.GetAlpha(x, y));
                 _deviceCmyk.Backdrop!.CompositeSourceOver(x, y, blended, alpha);
             }
         }
