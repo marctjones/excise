@@ -25,6 +25,16 @@ semantic versioning.
   with the values stored in the file and none of its scripts run. Saved in window.json; applies to documents opened
   after saving.
 
+- **XFA forms look and paginate more like pdf.js's.** A dynamic XFA form now draws the unfocused-field tint, the red
+  outline on required fields, round radio buttons and a drop-down arrow on closed choice lists. Text outside
+  WinAnsi (Cyrillic, Greek, CJK) uses the first installed wide-coverage Unicode font instead of drawing `?`; no font
+  is bundled, so a machine with none still shows `?`. JPEG images in draws and image fields are drawn. Layout now
+  resolves `$template` style prototypes and picks paginated page areas by `pagePosition`, and a container's design-time
+  minimum height no longer pushes content onto an extra page (#1824). The "clipped" note appears only beyond
+  pdf.js's 2 pt fit tolerance.
+- **The Keyboard Shortcuts panel writes every chord with macOS glyphs on macOS.** Shift and Control now use glyphs
+  like Cmd and Option do; Windows and Linux text is unchanged.
+
 ### Fixed
 
 - **FormCalc hardening (#1570).** A `resolveNode` call with a very deep path overflowed the stack and ended the
@@ -32,6 +42,21 @@ semantic versioning.
   trillion characters; `resolveNode` and `Eval` no longer get a fresh step budget per call; and all strings a script
   builds now count against one total. Found by the new deterministic fuzz tests; the threat model is in
   docs/architecture/xfa-rendering.md.
+- **Text drawn with `PdfFont.FromTrueType` is found by search and text redaction before the document is saved.** Its
+  ToUnicode map stayed an empty placeholder until save, so `RedactText` found 0 matches on the live document and
+  reported success; only a save and reopen made the text readable. The app lays out XFA forms in memory and the user
+  redacts that live document.
+- **A multi-line form field's text is sized in the overlay's own units.** It drew at about 6 pt on the IRS W-9's
+  `f1_09` in single-page view and did not follow zoom in continuous view.
+- **Edit > Cut is a real command**, reachable from automation and AppleScript like Copy and Select All Text.
+- **Lower peak memory when rendering.** Images are drawn without Skia copying every decoded bitmap first (about
+  17 MB less on the IRS 1040 instructions' cover page, #1804); a DeviceCMYK overprint stroke or dashed fill no longer
+  allocates a page-sized mask (#1924); the XFA fallback font (about 23 MB) can be reclaimed instead of staying
+  resident for the whole process; and a viewer that leaves the window with a document still open releases its cached
+  pages. Pixel output is unchanged except for about 0.001% of pixels on anti-aliased stroke edges in the overprint
+  case.
+- **Re-attaching the viewer restores its scrolling and viewport tracking.** Both were disposed on detach and never
+  resubscribed.
 
 ## [3.14.0] - 2026-09-27
 
