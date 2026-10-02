@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "ea57ef9a511f360c70ba18cb8452317649d302f0",
+  "sourceRevision": "a21a5e80dfe8865e9e5dba0c374648567d8594ad",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -22,8 +22,8 @@
     "commitsRequested": 200,
     "commitsObserved": 199,
     "broadCommitsExcluded": 1,
-    "newestProductionCommit": "328a42b0790c57e4bfd4775ed6a65ed3e739aa07",
-    "oldestProductionCommit": "068769285bc61ac70b42c2c8cb566e1cb287350e"
+    "newestProductionCommit": "a21a5e80dfe8865e9e5dba0c374648567d8594ad",
+    "oldestProductionCommit": "b079522bb249761dd16779fe51f6ecea5198bc02"
   },
   "files": [
     {
@@ -427,6 +427,10 @@
       "commits": 3
     },
     {
+      "path": "Excise.Rendering/SkiaRenderer.Annotations.cs",
+      "commits": 3
+    },
+    {
       "path": "Excise.Rendering/SkiaRenderer.Images.cs",
       "commits": 3
     },
@@ -767,10 +771,6 @@
       "commits": 2
     },
     {
-      "path": "Excise.Rendering/SkiaRenderer.Annotations.cs",
-      "commits": 2
-    },
-    {
       "path": "Excise.Rendering/SkiaRenderer.Paths.cs",
       "commits": 2
     },
@@ -820,10 +820,6 @@
     },
     {
       "path": "Excise.App/Services/FilenameSuggestionService.cs",
-      "commits": 1
-    },
-    {
-      "path": "Excise.App/Services/Host/AvaloniaFilePicker.cs",
       "commits": 1
     },
     {
@@ -2641,12 +2637,6 @@
       "jaccard": 1.0
     },
     {
-      "source": "Excise.App/ViewModels/StickyNotePopupViewModel.cs",
-      "target": "Excise.Rendering/SkiaRenderer.Annotations.cs",
-      "cochanges": 2,
-      "jaccard": 1.0
-    },
-    {
       "source": "Excise.Avalonia/Controls/Viewer/ContinuousPageView.Preview.cs",
       "target": "Excise.Avalonia/Controls/Viewer/IPagePreviewSource.cs",
       "cochanges": 2,
@@ -3237,6 +3227,12 @@
     {
       "source": "Excise.App/Services/Printing/DocumentPrintWorkflowService.cs",
       "target": "Excise.App/Services/RedactionWorkflowService.cs",
+      "cochanges": 2,
+      "jaccard": 0.6667
+    },
+    {
+      "source": "Excise.App/ViewModels/StickyNotePopupViewModel.cs",
+      "target": "Excise.Rendering/SkiaRenderer.Annotations.cs",
       "cochanges": 2,
       "jaccard": 0.6667
     },
