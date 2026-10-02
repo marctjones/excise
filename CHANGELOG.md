@@ -64,6 +64,13 @@ semantic versioning.
   GWG160 and GWG161 pages exist to forbid, in eight cells. Lighten, Screen and Color Dodge inside an isolated group no
   longer take a separate path that applied them to ink values without complementing (GWG162). All ten cells now match
   mutool and Ghostscript and are gated again.
+- **A `/Text` note with no appearance and no popup is no longer drawn as a card the size of its `/Rect`.** Since the
+  post-it card rework a foreign file's note was drawn at its own `/Rect`, so veraPDF `6-3-3-t01-fail-a`, whose note
+  covers the whole page, rendered as a pale-yellow page where mutool, Ghostscript and pdftocairo draw nothing. The
+  fallback card is now capped at the largest card excise authors (220 x 150 pt), anchored at the Rect's top-left.
+  Notes with a popup, and every note of normal size, are unchanged.
+- **ZapfDingbats suit glyphs (club, heart) are no longer drawn horizontally compressed (#1502).** pdf.js
+  `issue15716` now agrees with all three references.
 
 ## [3.14.0] - 2026-09-27
 

@@ -241,6 +241,21 @@ internal partial class RenderContext
                 rx2 = rx1 + noteSize;
                 ry1 = ry2 - noteSize;
             }
+
+            // The other end: a note with no /Popup draws its card at its own /Rect, which for a note
+            // excise authored is at most one card (MainWindowViewModel's 200x150 and 220x90 defaults).
+            // A foreign producer's /Rect is the ICON's position and can be anything: veraPDF
+            // 6-3-3-t01-fail-a.pdf gives a /Text with no /AP the whole page, /Rect [0 0 612 792], and
+            // the card filled the page yellow where mutool, Ghostscript and pdftocairo draw nothing.
+            // Cap the fallback card at the largest card excise authors, anchored at the Rect's top-left
+            // like the icon would be. A note WITH a popup keeps the popup's own rect, as before.
+            if (annot.PopupRect is null)
+            {
+                if (rx2 - rx1 > MaxFallbackStickyNoteCardWidth)
+                    rx2 = rx1 + MaxFallbackStickyNoteCardWidth;
+                if (ry2 - ry1 > MaxFallbackStickyNoteCardHeight)
+                    ry1 = ry2 - MaxFallbackStickyNoteCardHeight;
+            }
         }
 
         if (rx2 - rx1 < 0.5f || ry2 - ry1 < 0.5f) return;
@@ -1277,6 +1292,10 @@ internal partial class RenderContext
     /// <c>rect.Top</c> is the visually LOW edge — which is why v is subtracted
     /// from <c>rect.Bottom</c>.</para>
     /// </remarks>
+    /// <summary>Largest card a /Text note with no /Popup is drawn at, in PDF points: the biggest card the app authors (200x150, 220x90).</summary>
+    private const float MaxFallbackStickyNoteCardWidth = 220f;
+    private const float MaxFallbackStickyNoteCardHeight = 150f;
+
     /// <summary>
     /// A real post-it-sized card with <c>/Contents</c> wrapped and drawn
     /// directly on it (#1794), replacing the old ~17pt icon-with-glyph

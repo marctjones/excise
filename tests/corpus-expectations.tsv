@@ -270,7 +270,7 @@ bug1200096.pdf	1	PASS
 bug1245391_reduced.pdf	1	PASS
 bug1250079.pdf	1	PASS
 bug1252420.pdf	1	PASS
-bug1308536.pdf	1	PASS
+bug1308536.pdf	1	PASS_ONE		#1937 embedded Type1C font: excise draws different glyphs from mutool and pdftocairo (small capitals); moved from PASS by 4ab13f45's fallback-glyph width fit, which exposed it
 bug1337429.pdf	1	PASS
 bug1365930.pdf	1	PASS
 bug1392647.pdf	1	PASS
@@ -1066,7 +1066,7 @@ issue15594_reduced.pdf	1	PASS
 issue15597.pdf	1	PASS
 issue15629.pdf	1	PASS
 issue15690.pdf	1	PASS
-issue15716.pdf	1	DIFF		#1502 ZapfDingbats club/heart glyphs compressed; DIFF vs all 5 oracles, excise pixels unchanged since before the #1370 re-pin (the June PASS pin was stale)
+issue15716.pdf	1	PASS
 issue15753.pdf	1	PASS
 issue15759.pdf	1	PASS
 issue15789.pdf	1	PASS
