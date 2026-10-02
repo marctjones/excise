@@ -470,6 +470,9 @@ internal partial class RenderContext
     private readonly DeviceCmykExecutionState _deviceCmyk;
     private ImageColorConverter? _cmykPreviewConverter;
     private bool _cmykPreviewConverterResolved;
+    private long _lastCmykC, _lastCmykM, _lastCmykY, _lastCmykK;
+    private (double R, double G, double B) _lastCmykRgb;
+    private bool _lastCmykMemoValid;
 
     // Per-fontDict cache for CFF CID→glyph maps, keyed the same way as
     // _embeddedTypefaces so two different /Font dicts with the same
@@ -1080,9 +1083,29 @@ internal partial class RenderContext
         var converter = _cmykPreviewConverter;
         if (converter != null)
         {
+            // A group sync converts the retained backdrop pixel by pixel, and most
+            // neighbours are the same ink (paper, a flat fill). Reuse the last result
+            // when all four components are bit-identical, so the answer is exactly what
+            // the lattice would return, never an approximation of it.
+            var cBits = BitConverter.DoubleToInt64Bits(color.C);
+            var mBits = BitConverter.DoubleToInt64Bits(color.M);
+            var yBits = BitConverter.DoubleToInt64Bits(color.Y);
+            var kBits = BitConverter.DoubleToInt64Bits(color.K);
+            if (_lastCmykMemoValid &&
+                cBits == _lastCmykC && mBits == _lastCmykM && yBits == _lastCmykY && kBits == _lastCmykK)
+            {
+                return _lastCmykRgb;
+            }
+
             Span<double> values = stackalloc double[4] { color.C, color.M, color.Y, color.K };
             var (r, g, b) = converter.ToRgb(values);
-            return (r / 255.0, g / 255.0, b / 255.0);
+            _lastCmykRgb = (r / 255.0, g / 255.0, b / 255.0);
+            _lastCmykC = cBits;
+            _lastCmykM = mBits;
+            _lastCmykY = yBits;
+            _lastCmykK = kBits;
+            _lastCmykMemoValid = true;
+            return _lastCmykRgb;
         }
 
         return _deviceCmyk.PreviewColorSpace.ToRgb(new[] { color.C, color.M, color.Y, color.K });
