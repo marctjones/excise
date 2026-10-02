@@ -11,7 +11,7 @@ A cross-platform PDF editor for macOS, Windows and Linux, written in C# on .NET 
 
 ## What it does
 
-- **Redaction that removes content.** Text, images and vector graphics are cut out of the PDF's content streams. Metadata, attachments, JavaScript, thumbnails and hidden layers are scrubbed by default, and every removal is reported. Results are checked with independent tools (mutool, pdftotext), never with excise itself.
+- **Redaction that removes content.** Text, images and vector graphics are cut out of the PDF's content streams. Metadata, attachments, JavaScript, thumbnails and hidden layers are scrubbed by default, and every removal is reported. Results are checked with independent tools (mutool, pdftotext), never with excise itself; how the checks work is in [LOCAL_GATES.md](LOCAL_GATES.md).
 - **Read and navigate.** Skia rendering, search, text selection and copy, thumbnails, outlines, and several documents at once.
 - **Fill forms.** Fill and flatten AcroForm fields, create new fields, and view dynamic XFA forms. FormCalc calculations run in excise's own interpreter; JavaScript never runs.
 - **Annotate.** Highlight, underline, strike-out and squiggly markup, sticky notes, shapes, stamps (including image stamps for signatures), ink, lines and polygons. Typewriter text can be placed on flat PDFs.
@@ -89,6 +89,8 @@ You need the .NET 10 SDK from Microsoft's installer (not Homebrew's `dotnet`, wh
 - [docs/RENDERER_COVERAGE.md](docs/RENDERER_COVERAGE.md): rendering validation and PDF 2.0 conformance
 - [docs/architecture/README.md](docs/architecture/README.md): system design and decisions
 - [GitHub Wiki](https://github.com/marctjones/excise/wiki): redaction internals and PDF specification notes
+- [docs/CONFORMANCE.md](docs/CONFORMANCE.md): how PDF 2.0 conformance is tested
+- [SECURITY.md](SECURITY.md): reporting a vulnerability, including redacted content that survives
 - [CLAUDE.md](CLAUDE.md) and [REDACTION_AI_GUIDELINES.md](REDACTION_AI_GUIDELINES.md): contributor guidelines, including for AI-assisted changes
 
 ## Contributing
