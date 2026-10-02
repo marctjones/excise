@@ -8,6 +8,12 @@ CONFIG="${CONFIG:-Release}"
 OUT="${EXCISE_REFERENCE_PERF_OUTPUT_DIR:-logs/reference-performance/latest}"
 RUNS="${EXCISE_REFERENCE_PERF_RUNS:-3}"
 dotnet build tools/Excise.RenderTools/Excise.RenderTools.csproj -c "$CONFIG" --nologo -v quiet
+# The binary this gate MEASURES is excise-cli, which RenderTools launches as a subprocess and does not
+# reference. Build it in the SAME configuration here: the full tier builds only the tier's configuration
+# (Debug), so a Release run measured whatever Release CLI was last built by hand, and reported its number.
+# The 3.15.0 full run read nested-forms-dct at 1.893x from a CLI built on 2026-09-27, five days before the
+# fix that brings it to 0.918x.
+dotnet build Excise.Cli/Excise.Cli.csproj -c "$CONFIG" --nologo -v quiet
 # #1386/#1387 — compare against the committed baseline when one exists, so a run answers
 # "is this faster than the last recorded state" rather than only "how fast is it".
 # By default the gate REPORTS; pass --fail-on-regression to enforce it. tests/gates.tsv
