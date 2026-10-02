@@ -6,6 +6,8 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.15.0] - 2026-10-02
+
 ### Added
 
 - **`Excise.Core` authoring: shapes, clipping and images (#1908, #1909, #1910).** `PdfGraphics` gains `DrawEllipse`,
