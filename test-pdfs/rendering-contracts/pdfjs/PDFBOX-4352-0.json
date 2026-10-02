@@ -1,27 +1,27 @@
 {
   "Path": "pdfjs/PDFBOX-4352-0.pdf",
   "Source": "pdf.js corpus",
-  "Owner": "rendering:quality",
-  "RootCause": "FULL_CORPUS_BASELINE",
+  "Owner": "rendering:input-policy",
+  "RootCause": "DEGENERATE_INPUT",
   "ImprovementPriority": "NONE",
-  "Confidence": "MEDIUM",
-  "Notes": "Baseline contract inferred from full all-pages raw corpus report exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json.",
+  "Confidence": "HIGH",
+  "Notes": "The /Encrypt dictionary (object 6) is corrupt: mutool needs a repair pass and still reports a syntax error in it. Since #1828 an unreadable /Encrypt refuses to open instead of reading the file as plaintext; the June 2026 baseline pinned the earlier lenient PASS.",
   "Pages": {
-    "1": {
-      "ExpectedRawStatus": "PASS",
+    "0": {
+      "ExpectedRawStatus": "UNSUPPORTED_ENCRYPTED",
       "ReleaseStatus": "PASS",
-      "QualityStatus": "PIXEL_EXACT",
-      "PixelAgreement": "MATCHES_ALL_REQUIRED",
-      "ReferenceSituation": "REFS_AGREE",
-      "RootCause": "RAW_PIXEL_MATCH",
+      "QualityStatus": "NON_RENDERABLE_ACCEPTED",
+      "PixelAgreement": "NOT_COMPARABLE",
+      "ReferenceSituation": "NOT_APPLICABLE",
+      "RootCause": "DEGENERATE_INPUT",
       "Target": {
-        "Mode": "REFERENCE_CONSENSUS",
-        "Reason": "Baseline full-corpus contract inferred from raw all-pages scan."
+        "Mode": "MALFORMED_INPUT_POLICY",
+        "Reason": "Correct behavior is bounded refusal or documented non-renderable handling."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "Baseline classification inferred from full all-pages raw corpus scan; promote to a reviewed contract when triaged.",
-      "Notes": "Auto-classified from exploratory-report-test-pdfs-all-20260622-passone-sharded-coverage.json."
+      "QualityReason": "Failing closed is acceptable: treating a file whose /Encrypt cannot be read as plaintext would show, or save, encrypted content as if it were clear (#1828).",
+      "Notes": "Unreadable /Encrypt refuses to open (78874b86)."
     }
   }
 }
