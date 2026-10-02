@@ -20,7 +20,7 @@ Console.WriteLine("=== GUI Test: veraPDF Corpus Sample ===");
 // Configuration
 // Find repository root
 var repoRoot = Directory.GetCurrentDirectory();
-while (repoRoot != null && !Directory.Exists(Path.Combine(repoRoot, ".git")))
+while (repoRoot != null && !Directory.Exists(Path.Combine(repoRoot, ".git")) && !File.Exists(Path.Combine(repoRoot, ".git")))
 {
     repoRoot = Directory.GetParent(repoRoot)?.FullName;
 }

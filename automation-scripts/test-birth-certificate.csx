@@ -16,7 +16,7 @@ Console.WriteLine("=== GUI Test: Birth Certificate Redaction (v1.3.0 Milestone) 
 // Configuration
 // Find repository root by walking up from current directory
 var repoRoot = Directory.GetCurrentDirectory();
-while (repoRoot != null && !Directory.Exists(Path.Combine(repoRoot, ".git")))
+while (repoRoot != null && !Directory.Exists(Path.Combine(repoRoot, ".git")) && !File.Exists(Path.Combine(repoRoot, ".git")))
 {
     repoRoot = Directory.GetParent(repoRoot)?.FullName;
 }

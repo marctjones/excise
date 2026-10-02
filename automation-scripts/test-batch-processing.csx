@@ -19,7 +19,7 @@ Console.WriteLine("=== GUI Test: Batch Processing Workflow ===");
 // Configuration
 // Find repository root
 var repoRoot = Directory.GetCurrentDirectory();
-while (repoRoot != null && !Directory.Exists(Path.Combine(repoRoot, ".git")))
+while (repoRoot != null && !Directory.Exists(Path.Combine(repoRoot, ".git")) && !File.Exists(Path.Combine(repoRoot, ".git")) && !File.Exists(Path.Combine(repoRoot, ".git")))
 {
     repoRoot = Directory.GetParent(repoRoot)?.FullName;
 }
@@ -30,7 +30,7 @@ if (repoRoot == null)
     return 1;
 }
 
-var inputDir = Path.Combine(repoRoot, "test-pdfs", "verapdf-corpus", "veraPDF-corpus-master", "PDF-A");
+var inputDir = Path.Combine(repoRoot, "test-pdfs", "verapdf-corpus", "veraPDF-corpus-master", "PDF_A-1b");
 // #1768: unique per run, not a fixed path every invocation clobbers.
 var outputDir = Path.Combine(Path.GetTempPath(), $"excise-batch-output-{Guid.NewGuid():N}");
 var maxFiles = 10;
