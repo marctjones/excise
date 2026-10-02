@@ -233,7 +233,7 @@ public class RedactionCollateralHarness
             {
                 try
                 {
-                    using var doc = PdfDocument.Open(File.ReadAllBytes(path!));
+                    using var doc = CorpusPasswords.Open(path!);
                     reported = doc.RedactText(term, RedactionOptions.Default).VerifiedRemovals;
                     doc.Save(output);
                 }
@@ -258,7 +258,7 @@ public class RedactionCollateralHarness
                     continue;
                 }
 
-                var after = ExtractAll(output);
+                var after = ExtractAll(output, CorpusPasswords.For(path!));
                 if (after == null)
                 {
                     failures.Add($"'{term}': mutool read the original but cannot read excise's redacted output");
@@ -512,10 +512,16 @@ public class RedactionCollateralHarness
     /// All pages' text as mutool reads them, or null when mutool fails. Throws
     /// when excise cannot open the document.
     /// </summary>
-    internal static string? ExtractAll(string pdfPath)
+    internal static string? ExtractAll(string pdfPath, string? password = null)
     {
-        using var doc = PdfDocument.Open(File.ReadAllBytes(pdfPath));
-        var pages = MutoolTextExtractor.ExtractAllPages(pdfPath, doc.PageCount);
+        // The password of a corpus fixture is on file (tests/corpus-passwords.tsv), so a caller reading
+        // the fixture itself passes nothing; one reading a temp OUTPUT, whose name is not on file,
+        // passes the original's password (an encrypted document saves encrypted under its own key).
+        password ??= CorpusPasswords.For(pdfPath);
+        using var doc = PdfDocument.Open(
+            File.ReadAllBytes(pdfPath),
+            password == null ? new PdfOpenOptions() : new PdfOpenOptions { UserPassword = password });
+        var pages = MutoolTextExtractor.ExtractAllPages(pdfPath, doc.PageCount, password);
         return pages == null ? null : string.Join("\n", pages);
     }
 

@@ -1078,6 +1078,8 @@ public class SkiaRendererTests
         Assert.SkipWhen(firstFixture == null,
             "No generated regression fixtures found at test-pdfs/generated-regressions. Run scripts/generate-rendering-regression-fixtures.py.");
 
+        // corpus-passwords: this sweep enumerates only test-pdfs/generated-regressions, which holds no password-protected fixture; the pdfjs and poppler
+        //   fixtures this file opens are each named individually and none of them is in tests/corpus-passwords.tsv.
         var fixtureDir = Path.GetDirectoryName(firstFixture)!;
         var fixtures = Directory.EnumerateFiles(fixtureDir, "*.pdf")
             .OrderBy(static path => path, StringComparer.Ordinal)

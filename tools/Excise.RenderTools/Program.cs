@@ -1213,6 +1213,8 @@ partial class Program
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.Ordinal);
     }
 
+    // corpus-passwords: the corpus scan takes tests/corpus-passwords.tsv through --password-manifest (scripts/run-exploratory-corpus.sh passes it by default) and
+    //   hands each fixture's password to excise and every oracle; it does not go through the test helper because it is a separate process.
     /// <summary>
     /// Excise.RenderTools corpus-scan &lt;corpus-dir&gt; --output out.json
     ///                  [--chunk N] [--total M] [--dpi 150]

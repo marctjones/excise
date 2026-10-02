@@ -165,7 +165,8 @@ partial class Program
         foreach (var corpus in corpora)
         {
             if (!Directory.Exists(corpus)) { Console.Error.WriteLine($"skip: {corpus} not found"); continue; }
-
+            // corpus-passwords: a password-protected fixture in pdfium/ or pdfjs/ is dropped by the 'cannot open' continue below, and its oracles take no password.
+            //   Whether to add the keys or make the omission a row is the decision recorded in #1936.
             foreach (var path in Directory.EnumerateFiles(corpus, "*.pdf", SearchOption.AllDirectories)
                                           .OrderBy(x => x, StringComparer.Ordinal))
             {

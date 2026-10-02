@@ -140,6 +140,12 @@ There is no CI gate on `develop`; running the tier is on you. Rules that keep th
   `download-pdfium-corpus.sh`. Never pin a corpus-scan result without
   `scripts/triage-corpus-nonpass.sh` first: the manifests record what excise did, including
   its bugs.
+- **Encrypted corpus fixtures: the key is on file or the gap is.** Every password lives in
+  `tests/corpus-passwords.tsv`; a test gets it from `Excise.TestSupport.CorpusPasswords`, never
+  inline. `EncryptedCorpusPasswordCoverageTests` sweeps all of `test-pdfs/` and fails an encrypted
+  file with no key and no recorded reason; `CorpusPasswordUsageGateTests` fails a test that
+  enumerates such a corpus and neither uses the helper nor declares `// corpus-passwords: <why>`.
+  A harness that opens without the key reads a fixture as unopenable and baselines it as such.
 
 ## Build and run
 

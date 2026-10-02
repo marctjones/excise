@@ -397,6 +397,9 @@ public sealed class RedactionBenchmarkRunner
     /// handles strangeness rather than how it handles the insurance
     /// certificate someone actually needs redacted (#1038's document).
     /// </summary>
+    // corpus-passwords: the first 15 itext fixtures include five password-protected ones (PdfEncryptingTest__cmp_encryptWithPassword*, user password 'user')
+    //   that this runner records as 'open:' error rows, because its opens, ExtractAllPages and the competitor adapters take no password.
+    //   Supplying keys changes the population of a history-tracked grade and needs password plumbing per adapter: #1936.
     private static readonly (string Name, int Take)[] Corpora =
     {
         ("smoke", 20), ("federal", 20), ("local-real-world", 10),

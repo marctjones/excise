@@ -916,6 +916,8 @@ partial class Program
         });
     }
 
+    // corpus-passwords: a PERFORMANCE suite over whatever directory it is pointed at, first pageLimit files in ordinal order; a file it cannot open is dropped from
+    //   the timing population, and timing a decryption is not what it measures. Not a correctness gate, so it does not need the keys.
     private static IReadOnlyList<BenchmarkInput> ResolveBenchmarkInputs(string outputDir, string? corpusDir, int pageLimit)
     {
         if (!string.IsNullOrWhiteSpace(corpusDir) && Directory.Exists(corpusDir))

@@ -80,7 +80,7 @@ public class CorpusConformanceTests
             GC.Collect();
             GC.WaitForPendingFinalizers();
             long before = GC.GetTotalMemory(forceFullCollection: true);
-            using (var doc = PdfDocument.Open(path))
+            using (var doc = CorpusPasswords.Open(path))
             {
                 for (int p = 1; p <= Math.Min(doc.PageCount, 5); p++)
                 {
@@ -158,7 +158,7 @@ public class CorpusConformanceTests
             long memBefore = GC.GetTotalMemory(forceFullCollection: forceThisFile);
             var task = Task.Run(() =>
             {
-                using var doc = PdfDocument.Open(f);
+                using var doc = CorpusPasswords.Open(f);
                 for (int p = 1; p <= Math.Min(doc.PageCount, 5); p++)
                 {
                     var page = doc.GetPage(p);
@@ -264,7 +264,7 @@ public class CorpusConformanceTests
         {
             try
             {
-                using var doc = PdfDocument.Open(f);
+                using var doc = CorpusPasswords.Open(f);
                 for (int p = 1; p <= doc.PageCount; p++)
                 {
                     var page = doc.GetPage(p);

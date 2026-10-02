@@ -97,7 +97,7 @@ public class ReferenceRedactorComparisonTests
                     continue;
                 }
 
-                using (var doc = PdfDocument.Open(File.ReadAllBytes(path!)))
+                using (var doc = CorpusPasswords.Open(path!))
                 {
                     doc.RedactText(term, RedactionOptions.Default);
                     doc.Save(exOut);
@@ -105,8 +105,8 @@ public class ReferenceRedactorComparisonTests
 
                 compared++;
 
-                var refAfter = RedactionCollateralHarness.ExtractAll(refOut);
-                var exAfter = RedactionCollateralHarness.ExtractAll(exOut);
+                var refAfter = RedactionCollateralHarness.ExtractAll(refOut, CorpusPasswords.For(path!));
+                var exAfter = RedactionCollateralHarness.ExtractAll(exOut, CorpusPasswords.For(path!));
                 if (refAfter == null || exAfter == null)
                 {
                     failures.Add($"'{term}': mutool read the original but cannot read the " +

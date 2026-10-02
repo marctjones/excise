@@ -305,12 +305,12 @@ public sealed class ExtractionParityTests
             string? exciseText = null;
             try
             {
-                using var doc = PdfDocument.Open(pdfPath);
+                using var doc = CorpusPasswords.Open(pdfPath);
                 if (doc.PageCount >= 1) exciseText = doc.GetPage(1).Text;
             }
             catch { /* excise refusing a malformed file is an acceptable outcome — not a disagreement. */ }
 
-            var mutoolText = MutoolTextExtractor.ExtractPage(pdfPath, 1);
+            var mutoolText = MutoolTextExtractor.ExtractPage(pdfPath, 1, CorpusPasswords.For(pdfPath));
 
             if (exciseText == null || mutoolText == null)
             {

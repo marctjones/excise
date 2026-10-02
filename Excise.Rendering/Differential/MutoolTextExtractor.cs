@@ -42,10 +42,17 @@ internal static class MutoolTextExtractor
     /// mutool emitted warnings for individual pages along the way.
     /// </summary>
     public static string[]? ExtractAllPages(string pdfPath, int pageCount, int timeoutMs = 120_000)
+        => ExtractAllPages(pdfPath, pageCount, password: null, timeoutMs);
+
+    /// <summary>
+    /// <see cref="ExtractAllPages(string, int, int)"/> for a password-protected PDF, using mutool's own
+    /// independent decryption (<c>-p</c>). Returns null when mutool refuses, including a wrong password.
+    /// </summary>
+    public static string[]? ExtractAllPages(string pdfPath, int pageCount, string? password, int timeoutMs = 120_000)
     {
         if (pageCount <= 0) return Array.Empty<string>();
 
-        var combined = ExtractRange(pdfPath, $"1-{pageCount.ToString(CultureInfo.InvariantCulture)}", timeoutMs, password: null);
+        var combined = ExtractRange(pdfPath, $"1-{pageCount.ToString(CultureInfo.InvariantCulture)}", timeoutMs, password);
         if (combined == null) return null;
 
         // mutool separates pages with a form-feed (0x0c); splitting yields

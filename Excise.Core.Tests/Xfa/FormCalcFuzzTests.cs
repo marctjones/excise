@@ -358,6 +358,8 @@ public class FormCalcFuzzTests
     /// <summary>Every &lt;script&gt; text of the corpus's XFA forms, FormCalc or not: JavaScript is fine lexer input.</summary>
     private static List<string> CorpusScripts(out string[] searched)
     {
+        // corpus-passwords: reads only xfa-real, pdfium/xfa and the XFA files of verapdf-corpus; the registry has no password-protected fixture in any of them
+        //   (the two encrypted xfa-real forms open with an empty user password, which EncryptedCorpusPasswordCoverageTests proves).
         searched = ["test-pdfs/xfa-real", "test-pdfs/pdfium/xfa", "test-pdfs/verapdf-corpus"];
         var files = new List<string>();
         foreach (var rel in searched)

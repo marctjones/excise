@@ -51,16 +51,8 @@ public class EncryptedRedactionOutputIntegrityTests
     public static TheoryData<string, string> EncryptedFixtures()
     {
         var data = new TheoryData<string, string>();
-        var manifest = TestRepoLayout.FindFile("tests/corpus-passwords.tsv");
-        if (manifest == null) return data;
-
-        foreach (var line in File.ReadAllLines(manifest))
-        {
-            if (line.StartsWith("#", StringComparison.Ordinal) || line.Trim().Length == 0) continue;
-            var parts = line.Split('\t', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 2) continue;
-            data.Add(parts[0].Trim(), parts[1].Trim());
-        }
+        foreach (var entry in CorpusPasswords.Entries)
+            data.Add(entry.Path, entry.Password);
         return data;
     }
 

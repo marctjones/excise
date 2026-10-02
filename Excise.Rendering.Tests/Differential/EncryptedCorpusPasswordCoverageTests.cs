@@ -69,23 +69,30 @@ public class EncryptedCorpusPasswordCoverageTests
     };
 
     /// <summary>
-    /// Corpus directories to sweep, relative to the repo root.
+    /// Directories under <c>test-pdfs/</c> that hold no corpus PDFs a test could open: downloaded archives,
+    /// manifests, contracts, baselines. Everything else under <c>test-pdfs/</c> is swept.
     ///
-    /// Must list EVERY corpus the rendering scan covers. When pdfium and
-    /// verapdf-corpus were added to the scan but not here, the scan pinned 6
-    /// password-blocked pdfium pages as expected outcomes while the test whose
-    /// whole job is to notice missing credentials was not looking at that
-    /// directory — the exact silence this class was written to end, recreated
-    /// one corpus over.
+    /// <para>This used to be a hand-kept list of five corpora, and its own comment recorded it drifting
+    /// once already (pdfium and verapdf-corpus added to the scan but not here). It had drifted again:
+    /// <c>itext</c>, <c>xfa-real</c>, <c>pdfua</c> and the generated <c>encrypted</c> directory all hold
+    /// encrypted files and none was looked at. A new corpus is now covered the day it appears; only a
+    /// directory that is provably not a corpus is listed, and only here.</para>
     /// </summary>
-    private static readonly string[] CorpusDirs =
+    private static readonly HashSet<string> NotCorpusDirs = new(StringComparer.OrdinalIgnoreCase)
     {
-        "test-pdfs/pdfjs",
-        "test-pdfs/poppler",
-        "test-pdfs/isartor",
-        "test-pdfs/pdfium",
-        "test-pdfs/verapdf-corpus",
+        "archives", "manifests", "rendering-contracts", "baselines",
     };
+
+    private static List<string> CorpusRoots(string root)
+    {
+        var testPdfs = Path.Combine(root, "test-pdfs");
+        return Directory.Exists(testPdfs)
+            ? Directory.EnumerateDirectories(testPdfs)
+                .Where(d => !NotCorpusDirs.Contains(Path.GetFileName(d)))
+                .OrderBy(d => d, StringComparer.Ordinal)
+                .ToList()
+            : new List<string>();
+    }
 
     [Fact]
     public void EveryEncryptedFixture_EitherOpensFreely_OrHasAKnownPassword()
@@ -97,14 +104,11 @@ public class EncryptedCorpusPasswordCoverageTests
         var root = TestRepoLayout.MainCheckoutRoot;
         Assert.SkipWhen(root == null, "could not locate repo root");
 
-        var present = CorpusDirs
-            .Select(d => Path.Combine(root!, d))
-            .Where(Directory.Exists)
-            .ToList();
+        var present = CorpusRoots(root!);
         Assert.SkipWhen(present.Count == 0,
             "no corpora present (scripts/download-pdfjs-corpus.sh, download-poppler-corpus.sh, download-test-pdfs.sh)");
 
-        var known = LoadPasswordManifest(Path.Combine(root!, "tests", "corpus-passwords.tsv"));
+        var known = ManifestByFileName();
         known.Should().NotBeEmpty("tests/corpus-passwords.tsv should carry the credentials we do have");
 
         var uncovered = new List<string>();
@@ -146,7 +150,7 @@ public class EncryptedCorpusPasswordCoverageTests
         var root = TestRepoLayout.MainCheckoutRoot;
         Assert.SkipWhen(root == null, "could not locate repo root");
 
-        var known = LoadPasswordManifest(Path.Combine(root!, "tests", "corpus-passwords.tsv"));
+        var known = ManifestByFileName();
         Assert.SkipWhen(known.Count == 0, "no password manifest entries");
 
         var checkedAny = false;
@@ -154,9 +158,7 @@ public class EncryptedCorpusPasswordCoverageTests
 
         foreach (var (name, password) in known)
         {
-            var path = CorpusDirs
-                .Select(d => Path.Combine(root!, d))
-                .Where(Directory.Exists)
+            var path = CorpusRoots(root!)
                 .SelectMany(d => Directory.EnumerateFiles(d, name, SearchOption.AllDirectories))
                 .FirstOrDefault();
             if (path == null)
@@ -197,13 +199,10 @@ public class EncryptedCorpusPasswordCoverageTests
         var root = TestRepoLayout.MainCheckoutRoot;
         Assert.SkipWhen(root == null, "could not locate repo root");
 
-        var known = LoadPasswordManifest(Path.Combine(root!, "tests", "corpus-passwords.tsv"));
+        var known = ManifestByFileName();
         Assert.SkipWhen(known.Count == 0, "no password manifest entries");
 
-        var present = CorpusDirs
-            .Select(d => Path.Combine(root!, d))
-            .Where(Directory.Exists)
-            .ToList();
+        var present = CorpusRoots(root!);
         Assert.SkipWhen(present.Count == 0, "no corpora present");
 
         var ambiguous = new List<string>();
@@ -259,20 +258,12 @@ public class EncryptedCorpusPasswordCoverageTests
         }
     }
 
-    private static Dictionary<string, string> LoadPasswordManifest(string path)
+    /// <summary>The shared reader's rows by file name, which is how this test matches a manifest entry to a fixture.</summary>
+    private static Dictionary<string, string> ManifestByFileName()
     {
         var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        if (!File.Exists(path)) return map;
-
-        foreach (var raw in File.ReadLines(path))
-        {
-            var line = raw.TrimEnd();
-            if (line.Length == 0 || line.TrimStart().StartsWith('#')) continue;
-            var cols = line.Split('\t');
-            if (cols.Length < 2) continue;
-            var name = Path.GetFileName(cols[0].Trim());
-            if (name.Length > 0) map[name] = cols[1];
-        }
+        foreach (var entry in CorpusPasswords.Entries)
+            map[entry.FileName] = entry.Password;
         return map;
     }
 
