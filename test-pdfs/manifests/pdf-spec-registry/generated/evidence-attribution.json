@@ -81354,6 +81354,13 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/CorpusPasswordUsageGateTests.cs::CorpusPasswordUsageGateTests.EveryCorpusEnumerator_UsesTheRegistry_OrSaysWhyNot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/CorpusRowFloorGateTests.cs::defects.ACorpusGatedRedactionGate_CollectsItsRows_WheneverItsCorpusIsReachable",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -81533,6 +81540,20 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykNonSeparableBlendOracleTests.cs::DeviceCmykNonSeparableBlendOracleTests.GreyOverBlack_HueSaturationColor_LeaveTheBackdropUntouched",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeviceCmykNonSeparableBlendOracleTests.cs::DeviceCmykNonSeparableBlendOracleTests.GreyOverBlack_Luminosity_AgreesWithBothOracles",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.SoftMaskedGroup_IsMasked_AsIndependentRenderersMaskIt",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -81566,33 +81587,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/DifferentialMetricsTests.cs::DifferentialMetricsTests.Compare_ComputesExpectedMetricsForPacked32Bitmaps",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/DifferentialMetricsTests.cs::DifferentialMetricsTests.Compare_PremultipliedAlphaMatchesGetPixelSemantics",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/DifferentialRenderingTests.cs::DifferentialRenderingTests.RendersSimilarlyToMutool",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -112714,8 +112708,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 8205,
-    "testMethodsWithCapabilityCandidate": 5328,
+    "testMethods": 8208,
+    "testMethodsWithCapabilityCandidate": 5331,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

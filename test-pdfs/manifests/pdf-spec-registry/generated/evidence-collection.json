@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1492,
-  "indexedContentSha256": "34b00c0ae1d50091059ef4841175b2ff203ffff6c703916769225ddd04ad0d46",
+  "indexedFileCount": 1495,
+  "indexedContentSha256": "4b4cfed9aa3dc09df123ad2f4bd743f17966150f0c9f0d96eeb1e6dae3ae9a08",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -3123,6 +3123,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Xfa/FormCalcFuzzTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "crypt",
+            "syntax"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ConservationGateTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -3158,19 +3166,9 @@
             "permissions",
             "pdfdocumentwriter"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/EncryptionPreservationInteropTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "crypt",
-            "encryption",
-            "permissions",
-            "pdfdocumentwriter"
-          ]
         }
       ],
-      "candidateReferenceCount": 120
+      "candidateReferenceCount": 121
     },
     {
       "id": "pdf.17.document.catalog-pages",
@@ -3842,8 +3840,7 @@
           "matchedTerms": [
             "catalog",
             "tree",
-            "catalog",
-            "pdfdocument"
+            "catalog"
           ]
         },
         {
@@ -5021,7 +5018,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 165
+      "candidateReferenceCount": 166
     },
     {
       "id": "pdf.17.document.metadata",
@@ -8125,7 +8122,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 693
+      "candidateReferenceCount": 695
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8944,7 +8941,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 331
+      "candidateReferenceCount": 332
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -11510,7 +11507,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 190
+      "candidateReferenceCount": 191
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -23124,6 +23121,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykNonSeparableBlendOracleTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "color",
+            "colour",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -23186,18 +23192,9 @@
             "requirement-006",
             "skiarenderer"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/ImageStampTransparencyTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "colour",
-            "skiarenderer"
-          ]
         }
       ],
-      "candidateReferenceCount": 128
+      "candidateReferenceCount": 129
     },
     {
       "id": "pdf.20.renderer.requirement-007",
@@ -35882,6 +35879,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "crypt",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/ImageFilterRenderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -36014,7 +36020,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 52
+      "candidateReferenceCount": 53
     },
     {
       "id": "pdf.20.image.requirement-018",
@@ -59076,11 +59082,11 @@
             "alpha",
             "blend",
             "compositing",
-            "groups",
             "model",
             "modes",
             "soft",
-            "transparency"
+            "transparency",
+            "blendmode"
           ]
         },
         {
@@ -59527,7 +59533,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 236
+      "candidateReferenceCount": 237
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -60131,6 +60137,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/DeviceCmykNonSeparableBlendOracleTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "preview",
+            "transparency",
+            "blendmode",
+            "transparency"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -60258,17 +60274,9 @@
             "flattening",
             "output"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/BatesNumberingWorkflowTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "output",
-            "preview"
-          ]
         }
       ],
-      "candidateReferenceCount": 104
+      "candidateReferenceCount": 105
     },
     {
       "id": "pdf.17.interactive.annotations",
@@ -68825,7 +68833,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 420
+      "candidateReferenceCount": 421
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -71137,7 +71145,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 759
+      "candidateReferenceCount": 760
     },
     {
       "id": "pdf.20.extension.developer",
@@ -74210,7 +74218,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 155
+      "candidateReferenceCount": 156
     },
     {
       "id": "pdfe.product.redaction.review-panel",
@@ -75970,6 +75978,17 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "safe",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/DocumentPrintingTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -76079,7 +76098,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 20
+      "candidateReferenceCount": 21
     },
     {
       "id": "pdfe.product.security.attachments",
@@ -77252,6 +77271,7 @@
           "kind": "test",
           "matchedTerms": [
             "override",
+            "pdfe",
             "signature",
             "ocr",
             "redaction",
@@ -78036,6 +78056,7 @@
           "matchedTerms": [
             "documents",
             "ocr",
+            "pdfe",
             "scanned",
             "ocr",
             "redaction",
@@ -79641,14 +79662,6 @@
           ]
         },
         {
-          "path": "Excise.Rendering/SkiaRenderer.Paths.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "forms",
-            "subset"
-          ]
-        },
-        {
           "path": "Excise.Rendering/SkiaRenderer.Text.cs",
           "kind": "source",
           "matchedTerms": [
@@ -79744,6 +79757,17 @@
           "matchedTerms": [
             "forms",
             "pdfe",
+            "redaction",
+            "security"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "javascript",
+            "pdfe",
+            "ocr",
             "redaction",
             "security"
           ]
