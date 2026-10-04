@@ -25,8 +25,8 @@ internal sealed class PdfPermissionDeniedException(string message) : InvalidOper
 /// explicit <c>--ignore-permissions</c> override (mirroring the
 /// <c>--allow-decrypt</c> precedent, #638): the legitimate owner may only
 /// hold the user password, because owner-password opening is #324 and not
-/// yet supported. Text extraction additionally honours the /P bit 10
-/// accessibility carve-out via <c>--for-accessibility</c>.
+/// yet supported. Explicit assistive extraction via <c>--for-accessibility</c>
+/// ignores bit 10 and treats bit 5 as set, per ISO 32000-2 (#1952).
 /// </summary>
 internal static class CliPermissionOptions
 {
@@ -41,8 +41,8 @@ internal static class CliPermissionOptions
     internal static Option<bool> CreateForAccessibilityOption() => new("--for-accessibility")
     {
         Description = "Extract text in support of accessibility (screen readers, assistive " +
-            "technology). Honoured when the document denies general copy/extraction (/P bit 5) " +
-            "but grants extraction for accessibility (/P bit 10).",
+            "technology). Per ISO 32000-2, ignores /P bit 10 and treats the general " +
+            "copy/extraction permission (/P bit 5) as set for this purpose.",
         DefaultValueFactory = _ => false,
     };
 }
@@ -63,7 +63,7 @@ internal static class DocumentPermissionGuard
     /// <param name="action">What the caller is about to do.</param>
     /// <param name="actionDescription">Human phrase for messages, e.g. "text extraction".</param>
     /// <param name="ignorePermissions">The explicit override flag value.</param>
-    /// <param name="forAccessibility">For <see cref="DocumentAction.Extract"/>: the caller invoked the /P bit 10 accessibility carve-out.</param>
+    /// <param name="forAccessibility">For <see cref="DocumentAction.Extract"/>: the caller declared an assistive extraction purpose under ISO 32000-2.</param>
     /// <param name="accessibilityHint">How this surface spells the accessibility carve-out (e.g. "--for-accessibility"), or null when the surface has none.</param>
     /// <param name="overrideHint">How this surface spells the override (CLI flag vs batch-step property).</param>
     internal static void Require(
@@ -76,8 +76,11 @@ internal static class DocumentPermissionGuard
         string overrideHint = "--ignore-permissions")
     {
         var perms = doc.EffectivePermissions;
+        // ISO 32000-2 Table 22: assistive technology ignores bit 10 and behaves
+        // as if bit 5 were set. This purpose declaration applies only to extraction
+        // at the action layer; it does not bypass password authentication (#1952).
         var allowed = perms.Allows(action)
-            || (action == DocumentAction.Extract && forAccessibility && perms.Allows(DocumentAction.ExtractForAccessibility));
+            || (action == DocumentAction.Extract && forAccessibility);
 
         if (allowed)
         {
@@ -85,7 +88,7 @@ internal static class DocumentPermissionGuard
             {
                 Console.Error.WriteLine(
                     "Note: this document denies general copy/extraction (/P bit 5); proceeding " +
-                    "under the extract-for-accessibility permission (/P bit 10).");
+                    "for assistive technology under ISO 32000-2 (ignoring /P bit 10 and treating bit 5 as set).");
             }
             return;
         }
@@ -101,10 +104,9 @@ internal static class DocumentPermissionGuard
         var message =
             $"Blocked by document permissions: {actionDescription} requires {action.Requirement()}, " +
             $"which this document denies ({perms}).";
-        if (action == DocumentAction.Extract && !forAccessibility
-            && perms.Allows(DocumentAction.ExtractForAccessibility) && accessibilityHint != null)
+        if (action == DocumentAction.Extract && !forAccessibility && accessibilityHint != null)
         {
-            message += $" Extraction in support of accessibility is permitted (/P bit 10): pass {accessibilityHint}.";
+            message += $" Extraction for assistive technology is permitted under ISO 32000-2 regardless of /P bit 10: pass {accessibilityHint}.";
         }
         message +=
             $" If you are the document owner, pass {overrideHint} to override — permissions bind " +

@@ -14,7 +14,7 @@ namespace Excise.Cli.Tests;
 /// are generated with excise's own encryption writer (#641) using masks whose
 /// bit meanings were confirmed against qpdf 12's <c>--show-encryption</c>:
 ///   -20  → "extract for any purpose: not allowed", accessibility allowed
-///   -532 → extraction denied for any purpose INCLUDING accessibility
+///   -532 → bits 5 and 10 both cleared (assistive extraction still allowed by ISO 32000-2)
 ///   -8   → only printing denied (everything gated here still allowed)
 /// All fixtures use an empty USER password (open without prompting) plus an
 /// owner password — the classic "restricted but openable" document, and the
@@ -54,10 +54,12 @@ public class PermissionEnforcementTests : IDisposable
 
     // ---- text ------------------------------------------------------------
 
-    [Fact]
-    public async Task Text_CopyForbidden_FailsClosed()
+    [Theory]
+    [InlineData(DenyCopyMask)]
+    [InlineData(DenyCopyAndAccessibilityMask)]
+    public async Task Text_CopyForbidden_FailsClosed(long permissions)
     {
-        var pdf = RestrictedFixture(DenyCopyMask);
+        var pdf = RestrictedFixture(permissions);
 
         var result = await RunCliCaptureAsync(["text", pdf]);
 
@@ -66,35 +68,36 @@ public class PermissionEnforcementTests : IDisposable
         result.StdErr.Should().Contain("Blocked by document permissions");
         result.StdErr.Should().Contain("bit 5");
         result.StdErr.Should().Contain("--for-accessibility",
-            "bit 10 is granted, so the carve-out must be advertised");
+            "assistive extraction is available regardless of bit 10");
         result.StdErr.Should().Contain("--ignore-permissions");
     }
 
-    [Fact]
-    public async Task Text_CopyForbidden_ForAccessibility_HonoursBit10CarveOut()
+    [Theory]
+    [InlineData(DenyCopyMask)]
+    [InlineData(DenyCopyAndAccessibilityMask)]
+    public async Task Text_CopyForbidden_ForAccessibility_IgnoresBit10(long permissions)
     {
-        var pdf = RestrictedFixture(DenyCopyMask);
+        var pdf = RestrictedFixture(permissions);
 
         var result = await RunCliCaptureAsync(["text", pdf, "--for-accessibility"]);
 
         result.ExitCode.Should().Be(0);
         result.StdOut.Should().Contain("PERM FIXTURE TEXT");
-        result.StdErr.Should().Contain("accessibility",
-            "proceeding under bit 10 while bit 5 is denied should be noted");
+        result.StdErr.Should().Contain("assistive technology",
+            "assistive extraction while bit 5 is denied should be noted");
+        result.StdErr.Should().Contain("ISO 32000-2");
+        result.StdErr.Should().NotContain("overriding document permissions");
     }
 
     [Fact]
-    public async Task Text_CopyAndAccessibilityForbidden_ForAccessibilityDoesNotBypass()
+    public async Task Text_CopyAllowedAndBit10Cleared_OrdinaryExtractionStillWorks()
     {
-        var pdf = RestrictedFixture(DenyCopyAndAccessibilityMask);
+        var pdf = RestrictedFixture(AllAllowedMask & ~512);
 
-        var result = await RunCliCaptureAsync(["text", pdf, "--for-accessibility"]);
+        var result = await RunCliCaptureAsync(["text", pdf]);
 
-        result.ExitCode.Should().NotBe(0,
-            "--for-accessibility is the bit 10 carve-out, not an override; with bit 10 " +
-            "denied too, only --ignore-permissions proceeds");
-        result.StdOut.Should().NotContain("PERM FIXTURE TEXT");
-        result.StdErr.Should().Contain("Blocked by document permissions");
+        result.ExitCode.Should().Be(0, "ordinary extraction depends on bit 5, not bit 10");
+        result.StdOut.Should().Contain("PERM FIXTURE TEXT");
     }
 
     [Fact]
@@ -362,10 +365,12 @@ public class PermissionEnforcementTests : IDisposable
 
     // ---- batch automation surface ---------------------------------------
 
-    [Fact]
-    public async Task Batch_TextStep_CopyForbidden_FailsWithPermissionDenied_AndStepOverridesWork()
+    [Theory]
+    [InlineData(DenyCopyMask)]
+    [InlineData(DenyCopyAndAccessibilityMask)]
+    public async Task Batch_TextStep_CopyForbidden_FailsWithPermissionDenied_AndStepOverridesWork(long permissions)
     {
-        var pdf = RestrictedFixture(DenyCopyMask);
+        var pdf = RestrictedFixture(permissions);
         var directory = Path.Combine(Path.GetTempPath(), $"excise-perm-batch-{Guid.NewGuid():N}");
         Directory.CreateDirectory(directory);
         _tempFiles.Add(Path.Combine(directory, "workflow.json")); // best-effort cleanup
@@ -401,7 +406,7 @@ public class PermissionEnforcementTests : IDisposable
                 },
             }));
             var accessible = await RunCliCaptureAsync(["batch", workflow, "--json"]);
-            accessible.ExitCode.Should().Be(0, "the bit 10 carve-out applies to the automation surface too");
+            accessible.ExitCode.Should().Be(0, "assistive extraction ignores bit 10 on the automation surface too");
             accessible.StdOut.Should().Contain("PERM FIXTURE TEXT");
 
             File.WriteAllText(workflow, System.Text.Json.JsonSerializer.Serialize(new
