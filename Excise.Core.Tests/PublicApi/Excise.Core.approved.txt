@@ -1252,6 +1252,7 @@ namespace Excise.Core.Operations
     }
     public static class PdfDocumentSplitter
     {
+        public static Excise.Core.Document.PdfDocument ExtractPages(Excise.Core.Document.PdfDocument source, System.Collections.Generic.IReadOnlyList<int> pageIndices) { }
         public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfDocument> SplitAtBookmarks(Excise.Core.Document.PdfDocument source) { }
         public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfDocument> SplitAtPageBoundaries(Excise.Core.Document.PdfDocument source, System.Collections.Generic.IReadOnlyList<int> startIndices) { }
         public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfDocument> SplitEveryNPages(Excise.Core.Document.PdfDocument source, int pagesPerChunk) { }

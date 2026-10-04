@@ -18,6 +18,26 @@ namespace Excise.Core.Operations;
 /// </remarks>
 public static class PdfDocumentSplitter
 {
+    /// <summary>
+    /// Extract a single subset in caller-provided order. Indices are 0-based.
+    /// Catalog identity follows the same allowlist as split: page-independent
+    /// /Metadata and /OutputIntents are conserved; page-dependent structures
+    /// such as /PageLabels and /StructTreeRoot require remapping and are omitted.
+    /// Descriptive XMP is copied verbatim and may describe the original document.
+    /// See issue #1948 and <see cref="PdfDocumentMerger.CatalogEntriesNotConserved"/>.
+    /// </summary>
+    public static PdfDocument ExtractPages(PdfDocument source, IReadOnlyList<int> pageIndices)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(pageIndices);
+        if (pageIndices.Count == 0)
+            throw new ArgumentException("At least one page is required.", nameof(pageIndices));
+        if (pageIndices.Any(index => index < 0 || index >= source.PageCount))
+            throw new ArgumentOutOfRangeException(nameof(pageIndices));
+
+        return BuildFragments(source, [pageIndices])[0];
+    }
+
     /// <summary>Split into fixed-size chunks of <paramref name="pagesPerChunk"/> pages each; the last chunk may be smaller.</summary>
     public static IReadOnlyList<PdfDocument> SplitEveryNPages(PdfDocument source, int pagesPerChunk)
     {

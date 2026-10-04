@@ -370,10 +370,8 @@ internal class PdfDocumentService
         if (indices.Count == 0)
             throw new ArgumentException("At least one valid page index is required", nameof(pageIndices));
 
-        using var extracted = PdfDocument.CreateNew(document.Version);
-        foreach (var index in indices)
-            extracted.Pages.Add(document.GetPage(index + 1));
-
+        // Reuse split's catalog allowlist and batch page-reference remapping (#1948).
+        using var extracted = PdfDocumentSplitter.ExtractPages(document, indices);
         extracted.Save(outputPath, GetReEncryptionOptions());
         _logger.LogInformation(
             "Extracted {Count} page(s) to {OutputPath}", indices.Count, outputPath);
