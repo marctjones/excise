@@ -63,6 +63,12 @@ internal sealed class XfaBudget
     {
         if ((++_ticks & 0x3F) != 0)
             return;
+        CheckTimeAndCancellation();
+    }
+
+    // Script work must share this deadline without the layout tick throttle (#1923).
+    public void CheckTimeAndCancellation()
+    {
         _cancellationToken.ThrowIfCancellationRequested();
         if (_clock.Elapsed > _timeLimit)
             throw new XfaLayoutException($"XFA layout exceeded its time limit of {_timeLimit.TotalSeconds:0.#} s.");

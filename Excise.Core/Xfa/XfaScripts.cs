@@ -30,6 +30,13 @@ internal static class XfaScripts
         var clock = System.Diagnostics.Stopwatch.StartNew();
         var runs = 0;
 
+        void CheckDeadline()
+        {
+            budget.CheckTimeAndCancellation();
+            if (clock.Elapsed > TotalTimeLimit)
+                throw new FormCalcRuntimeException("The form's scripts exceeded their shared time limit.");
+        }
+
         bool CanRun()
         {
             budget.Tick();
@@ -47,7 +54,7 @@ internal static class XfaScripts
                     continue;
                 if (!CanRun()) return;
                 runs++;
-                RunOne(model, node, source, "initialize", cancellation, report, store: false, out _);
+                RunOne(model, node, source, "initialize", cancellation, report, CheckDeadline, store: false, out _);
             }
         }
 
@@ -64,7 +71,7 @@ internal static class XfaScripts
                     continue;
                 if (!CanRun()) return;
                 runs++;
-                if (RunOne(model, node, source, "calculate", cancellation, report, store: node.Form!.Kind == XfaNodeKind.Field, out var ok))
+                if (RunOne(model, node, source, "calculate", cancellation, report, CheckDeadline, store: node.Form!.Kind == XfaNodeKind.Field, out var ok))
                     changed = true;
                 if (!ok) failed.Add(node);
             }
@@ -86,14 +93,14 @@ internal static class XfaScripts
 
     /// <summary>Run one script; true when it changed the form. Failure undoes the script's writes.</summary>
     private static bool RunOne(ScriptModel model, ScriptNode node, string source, string activity,
-        CancellationToken cancellation, XfaReport report, bool store, out bool ok)
+        CancellationToken cancellation, XfaReport report, Action checkDeadline, bool store, out bool ok)
     {
         ok = true;
         model.BeginScript();
         try
         {
             var host = new Host(model, node);
-            var result = FormCalcInterpreter.Evaluate(source, host, new FcLimits(), cancellation);
+            var result = FormCalcInterpreter.Evaluate(source, host, new FcLimits(), cancellation, checkDeadline);
             if (store && FormCalcValue.Scalar(result) is { } scalar)
             {
                 var text = scalar is double d ? FormCalcValue.NumberToText(d) : (string)scalar;
@@ -109,6 +116,11 @@ internal static class XfaScripts
             ok = false;
             report.ScriptFailed($"{activity} on '{node.Name}': {ex.Message}");
             return false;
+        }
+        catch (Exception ex) when (ex is OperationCanceledException or XfaLayoutException)
+        {
+            model.AbortScript();
+            throw;
         }
     }
 
