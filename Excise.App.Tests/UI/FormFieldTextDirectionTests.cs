@@ -1,7 +1,14 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Threading;
+using Avalonia.VisualTree;
 using AwesomeAssertions;
 using Excise.Avalonia.Controls;
 using Excise.Core.Document;
@@ -95,6 +102,71 @@ public class FormFieldTextDirectionTests
         box.Text = "x";
         box.FlowDirection.Should().Be(FlowDirection.LeftToRight);
         box.TextAlignment.Should().Be(TextAlignment.Center);
+    }
+
+    [FixedAvaloniaTheory(Timeout = 120000)]
+    [InlineData(PdfViewMode.SinglePage)]
+    [InlineData(PdfViewMode.Continuous)]
+    public async Task VisibleOverlay_KeyboardEditingAndEscapeFollowDirection(PdfViewMode mode)
+    {
+        using var doc = Document();
+        var field = doc.AddTextField(1, new PdfRectangle(72, 600, 300, 624), "value", defaultValue: "start");
+        field.RawDictionary.SetString("V", "שלום");
+        var viewer = new PdfViewerControl();
+        var window = new Window { Content = viewer, Width = 1000, Height = 900 };
+        var edits = 0;
+        viewer.FormFieldEdited += (_, _) => edits++;
+        window.Show();
+        try
+        {
+            viewer.Document = doc;
+            viewer.FormFields = new[] { field };
+            viewer.PageFormFieldsProvider = page => doc.GetPage(page).GetFormFields();
+            viewer.ViewMode = mode;
+
+            TextBox? box = null;
+            for (var i = 0; i < 150 && box == null; i++)
+            {
+                window.UpdateLayout();
+                box = viewer.GetVisualDescendants().OfType<TextBox>()
+                    .FirstOrDefault(t => t.IsEffectivelyVisible && t.Bounds.Width > 0
+                        && t.Text == "שלום");
+                if (box == null) await Task.Delay(100);
+            }
+            box.Should().NotBeNull("the active overlay must expose a visible RTL input");
+            box!.FlowDirection.Should().Be(FlowDirection.RightToLeft);
+            box.TextAlignment.Should().Be(TextAlignment.Start);
+            var center = box.TranslatePoint(new Point(box.Bounds.Width / 2, box.Bounds.Height / 2), window);
+            center.Should().NotBeNull();
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                window.MouseDown(center!.Value, MouseButton.Left);
+                window.MouseUp(center.Value, MouseButton.Left);
+                box.SelectAll();
+                window.KeyTextInput("Latin edit");
+            });
+            box.IsFocused.Should().BeTrue("the real click must reach the active overlay");
+            box.Text.Should().Be("Latin edit");
+            box.FlowDirection.Should().Be(FlowDirection.LeftToRight);
+
+            window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+            box.Text.Should().Be("שלום");
+            box.FlowDirection.Should().Be(FlowDirection.RightToLeft);
+            field.Value.Should().Be("שלום");
+            edits.Should().Be(0, "Escape must not commit a field edit");
+
+            box.SelectAll();
+            window.KeyTextInput("Committed");
+            window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+            field.Value.Should().Be("Committed");
+            box.FlowDirection.Should().Be(FlowDirection.LeftToRight);
+            edits.Should().Be(1, "Enter commits exactly once through the active overlay");
+        }
+        finally
+        {
+            window.Close();
+            Dispatcher.UIThread.RunJobs();
+        }
     }
 
     private static PdfDocument Document()
