@@ -1319,11 +1319,9 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, IViewer
             PageChanged?.Invoke(this, new PageChangedEventArgs(CurrentPage));
             UpdateViewerAutomationProperties();
 
-            // In continuous mode, a CurrentPage change that did NOT originate
-            // from the user scrolling (e.g. a "go to page" command or a clicked
-            // link) should scroll the reading view to that page.
-            if (ViewMode == PdfViewMode.Continuous && !_syncingPageFromScroll)
-                ContinuousPart.ScrollToPageContinuous(CurrentPage);
+            // A switch to continuous view that happened while this render awaited
+            // already carried the reading fraction through OnViewModeChanged.
+            // Do not replace it with a late page-top scroll (#1931).
         }
     }
 
