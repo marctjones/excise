@@ -160,21 +160,17 @@ public class ContinuousNavigationRegressionTests
     }
 
     /// <summary>
-    /// #1842 step 0 (f), the "dead branch" of <c>OnCurrentPageChanged</c>
-    /// (<c>PdfViewerControl.axaml.cs</c>, the trailing
-    /// <c>if (ViewMode == Continuous &amp;&amp; !_syncingPageFromScroll) ScrollToPageContinuous(CurrentPage)</c>).
-    /// It is NOT unreachable: the single-page branch awaits the page render and then
-    /// reads <c>ViewMode</c> again, so a switch to continuous view during that await
-    /// runs it. Pinned as it behaves today (#1930 decides whether to keep it): the
-    /// late scroll drops the reading fraction the mode switch carried and leaves the
-    /// reader at the page's top.
+    /// #1960 contract-only integration step: the switch carries the reading
+    /// fraction before the held page turn completes. Landing at the page top
+    /// afterward is an obsolete behavior pin, not the intended contract (#1931).
+    /// The implementation integration adds the post-completion preservation check.
     ///
     /// <para>Deterministic, not a race: the page-2 render-ahead is held on its render
     /// thread, so the page turn joins it and stays inside the await while the view
     /// switches and settles; releasing the hold lets the turn finish.</para>
     /// </summary>
     [FixedAvaloniaFact(Timeout = 60000)]
-    public async Task PageTurnStillRenderingWhenTheViewSwitchesToContinuous_EndsAtThePageTop()
+    public async Task PageTurnStillRenderingWhenTheViewSwitchesToContinuous_CarriesFractionBeforeTurnCompletes()
     {
         var path = TempPdf("continuous-late-turn.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 4);
@@ -219,8 +215,6 @@ public class ContinuousNavigationRegressionTests
             for (int i = 0; i < 5; i++) await PumpOnceAsync(window);
 
             viewer.CurrentPage.Should().Be(2);
-            cont.Offset.Y.Should().BeApproximately(Page2().TopDip, 1.0,
-                "today the finishing turn scrolls continuous view to the page top, dropping the carried fraction");
         }
         finally
         {
