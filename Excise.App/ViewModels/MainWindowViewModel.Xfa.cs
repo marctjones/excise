@@ -25,7 +25,10 @@ internal partial class MainWindowViewModel
         "excise can't display this kind of form yet. Open it in Adobe Acrobat Reader or Firefox to see and fill it.";
     internal const string LaidOutXfaNoticeTitle = "This PDF is a dynamic XFA form.";
     internal const string LaidOutXfaNoticeMessage =
-        "excise shows the form's layout and runs its FormCalc calculations. JavaScript and button scripts don't run and its fields can't be filled here yet, so open it in Adobe Acrobat Reader or Firefox to fill it in.";
+        "excise shows the form's layout and runs its FormCalc calculations. Layout is experimental: content may be missing or moved between pages. JavaScript and button scripts don't run and its fields can't be filled here yet. Verify the complete form and fill it in using Adobe Acrobat Reader or Firefox.";
+    internal const string IncompleteXfaNoticeTitle = "This XFA form may be incomplete.";
+    internal const string IncompleteXfaNoticeMessage =
+        "excise detected layout omissions or failed calculations. Content may be missing, clipped, or moved between pages. Do not rely on this view as the complete form; verify it in Adobe Acrobat Reader or Firefox. JavaScript and button scripts don't run and its fields can't be filled here yet.";
     internal const string StaticXfaNoticeTitle = "This form also contains XFA data.";
     internal const string StaticXfaNoticeMessage =
         "excise fills the standard form fields. Adobe Acrobat may show the XFA copy of the values instead.";
@@ -33,6 +36,7 @@ internal partial class MainWindowViewModel
     private PdfXfaFormKind _xfaFormKind;
     private bool _isXfaFormLaidOut;
     private bool _isXfaNoticeOpen;
+    private bool _hasXfaLayoutWarnings;
 
     /// <summary>The open document's XFA classification.</summary>
     public PdfXfaFormKind XfaFormKind
@@ -70,8 +74,22 @@ internal partial class MainWindowViewModel
         set => this.RaiseAndSetIfChanged(ref _isXfaNoticeOpen, value);
     }
 
+    /// <summary>#1824: layout success does not mean all form content is shown.</summary>
+    public bool HasXfaLayoutWarnings
+    {
+        get => _hasXfaLayoutWarnings;
+        private set
+        {
+            this.RaiseAndSetIfChanged(ref _hasXfaLayoutWarnings, value);
+            this.RaisePropertyChanged(nameof(XfaNoticeTitle));
+            this.RaisePropertyChanged(nameof(XfaNoticeMessage));
+            this.RaisePropertyChanged(nameof(XfaNoticeSeverity));
+        }
+    }
+
     public string XfaNoticeTitle => _xfaFormKind switch
     {
+        PdfXfaFormKind.Dynamic when _isXfaFormLaidOut && _hasXfaLayoutWarnings => IncompleteXfaNoticeTitle,
         PdfXfaFormKind.Dynamic when _isXfaFormLaidOut => LaidOutXfaNoticeTitle,
         PdfXfaFormKind.Dynamic => DynamicXfaNoticeTitle,
         PdfXfaFormKind.Static => StaticXfaNoticeTitle,
@@ -80,13 +98,15 @@ internal partial class MainWindowViewModel
 
     public string XfaNoticeMessage => _xfaFormKind switch
     {
+        PdfXfaFormKind.Dynamic when _isXfaFormLaidOut && _hasXfaLayoutWarnings => IncompleteXfaNoticeMessage,
         PdfXfaFormKind.Dynamic when _isXfaFormLaidOut => LaidOutXfaNoticeMessage,
         PdfXfaFormKind.Dynamic => DynamicXfaNoticeMessage,
         PdfXfaFormKind.Static => StaticXfaNoticeMessage,
         _ => string.Empty,
     };
 
-    public FAInfoBarSeverity XfaNoticeSeverity => _xfaFormKind == PdfXfaFormKind.Dynamic && !_isXfaFormLaidOut
+    public FAInfoBarSeverity XfaNoticeSeverity => _xfaFormKind == PdfXfaFormKind.Dynamic
+        && (!_isXfaFormLaidOut || _hasXfaLayoutWarnings)
         ? FAInfoBarSeverity.Warning
         : FAInfoBarSeverity.Informational;
 
@@ -109,6 +129,8 @@ internal partial class MainWindowViewModel
 
         IsXfaFormLaidOut = kind == PdfXfaFormKind.Dynamic
             && _documentService.XfaLayout is { ShowsForm: true };
+        HasXfaLayoutWarnings = IsXfaFormLaidOut && _documentService.XfaLayout is { } layout
+            && (layout.Omissions.Count > 0 || layout.ScriptFailures.Count > 0);
         XfaFormKind = kind;
         IsXfaNoticeOpen = kind != PdfXfaFormKind.None;
         if (kind != PdfXfaFormKind.None)
@@ -118,6 +140,7 @@ internal partial class MainWindowViewModel
     private void ClearXfaNotice()
     {
         IsXfaFormLaidOut = false;
+        HasXfaLayoutWarnings = false;
         XfaFormKind = PdfXfaFormKind.None;
         IsXfaNoticeOpen = false;
     }
