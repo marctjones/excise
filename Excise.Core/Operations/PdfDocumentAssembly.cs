@@ -48,7 +48,18 @@ public static class PdfDocumentAssembly
         string outputPath,
         Action<PdfDocument, string> requireAssemble,
         CancellationToken cancellationToken = default)
+        => Merge(inputPaths, outputPath, requireAssemble, static _ => null, cancellationToken);
+
+    /// <summary>Merge with passwords acquired by the caller for each source (#1947).
+    /// The first source's password is preserved on encrypted output.</summary>
+    public static MergeDocumentsResult Merge(
+        IReadOnlyList<string> inputPaths,
+        string outputPath,
+        Action<PdfDocument, string> requireAssemble,
+        Func<string, string?> userPasswordForSource,
+        CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(userPasswordForSource);
         if (inputPaths.Count == 0)
             throw new ArgumentException("At least one input PDF is required.", nameof(inputPaths));
         ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
@@ -56,6 +67,7 @@ public static class PdfDocumentAssembly
 
         outputPath = Path.GetFullPath(outputPath);
         var opened = new List<PdfDocument>();
+        var passwords = new List<string?>();
         try
         {
             var sources = new List<(PdfDocument Document, IReadOnlyList<int> PageIndices)>();
@@ -64,13 +76,15 @@ public static class PdfDocumentAssembly
                 cancellationToken.ThrowIfCancellationRequested();
                 // If the output aliases a source, detach that source before the
                 // final save so Windows does not retain a read handle over it.
-                var document = PdfDocumentLifetime.OpenInputForOutput(inputPath, outputPath);
+                var password = userPasswordForSource(inputPath);
+                var document = PdfDocumentLifetime.OpenInputForOutput(inputPath, outputPath, password);
                 opened.Add(document);
+                passwords.Add(password);
                 requireAssemble(document, $"merging pages from '{Path.GetFileName(inputPath)}'");
                 sources.Add((document, Enumerable.Range(0, document.PageCount).ToArray()));
             }
 
-            var encryption = ResolveMergeOutputEncryption(opened);
+            var encryption = ResolveMergeOutputEncryption(opened, passwords);
             var droppedCatalogEntries = PdfDocumentMerger.CatalogEntriesNotConserved(opened[0]);
             cancellationToken.ThrowIfCancellationRequested();
             using var merged = PdfDocumentMerger.Merge(sources);
@@ -135,12 +149,13 @@ public static class PdfDocumentAssembly
         return new SplitDocumentResult(paths, droppedCatalogEntries, encryption != null);
     }
 
-    private static PdfEncryptionOptions? ResolveMergeOutputEncryption(IReadOnlyList<PdfDocument> sources)
+    private static PdfEncryptionOptions? ResolveMergeOutputEncryption(
+        IReadOnlyList<PdfDocument> sources, IReadOnlyList<string?> passwords)
     {
-        var first = sources[0].GetReEncryptionOptions(userPassword: null);
-        foreach (var source in sources.Skip(1))
+        var first = sources[0].GetReEncryptionOptions(passwords[0]);
+        for (var index = 1; index < sources.Count; index++)
         {
-            if (!Equivalent(first, source.GetReEncryptionOptions(userPassword: null)))
+            if (!Equivalent(first, sources[index].GetReEncryptionOptions(passwords[index])))
             {
                 throw new InvalidOperationException(
                     "Cannot merge inputs with conflicting encryption policies. " +

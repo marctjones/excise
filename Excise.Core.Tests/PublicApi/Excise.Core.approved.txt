@@ -1234,6 +1234,7 @@ namespace Excise.Core.Operations
     public static class PdfDocumentAssembly
     {
         public static Excise.Core.Operations.MergeDocumentsResult Merge(System.Collections.Generic.IReadOnlyList<string> inputPaths, string outputPath, System.Action<Excise.Core.Document.PdfDocument, string> requireAssemble, System.Threading.CancellationToken cancellationToken = default) { }
+        public static Excise.Core.Operations.MergeDocumentsResult Merge(System.Collections.Generic.IReadOnlyList<string> inputPaths, string outputPath, System.Action<Excise.Core.Document.PdfDocument, string> requireAssemble, System.Func<string, string?> userPasswordForSource, System.Threading.CancellationToken cancellationToken = default) { }
         public static Excise.Core.Operations.SplitDocumentResult Split(Excise.Core.Document.PdfDocument source, string? userPassword, Excise.Core.Operations.SplitDocumentSpecification specification, string outputFolder, string baseName, System.Action<Excise.Core.Document.PdfDocument, string> requireAssemble, System.Threading.CancellationToken cancellationToken = default) { }
     }
     public static class PdfDocumentMerger

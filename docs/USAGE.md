@@ -20,6 +20,14 @@ Multiple areas across multiple pages can be marked and applied as a single batch
 3. Type, move, resize, or delete the pending box before saving.
 4. Save to flatten the text into the PDF page content. When the open file is still the original, excise routes the save through **Save a Copy** so the original is preserved.
 
+## Combine documents
+
+Choose **Document → Combine Documents…**, select the source PDFs, and choose an output file.
+If a source needs a user password, enter it in the password dialog naming that file.
+Cancelling the prompt or entering an incorrect password leaves the existing output and
+your open document's edits intact. Encrypted sources must have compatible protection
+settings; the combined PDF keeps the first source's user password.
+
 ## Form fill (existing AcroForm)
 
 1. Open a PDF with form fields. Each field becomes an inline editor on the page: text fields use text boxes, choice/radio fields use selectors, and checkboxes use checkboxes.

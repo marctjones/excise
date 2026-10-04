@@ -1423,7 +1423,11 @@ internal partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            await _pageOrganizationWorkflow.MergeDocumentsAsync(sourcePaths, outputPath, IgnoreDocumentPermissions);
+            if (!await _pageOrganizationWorkflow.MergeDocumentsAsync(sourcePaths, outputPath, IgnoreDocumentPermissions))
+            {
+                _toastService.ShowInfo("Combine cancelled", "No combined PDF was saved.");
+                return;
+            }
             _toastService.ShowSuccess($"Combined {sourcePaths.Count} document(s) into {Path.GetFileName(outputPath)}");
         }
         catch (Exception ex)

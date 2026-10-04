@@ -611,8 +611,7 @@ public class PdfDocumentServiceTests : IDisposable
     }
 
     /// <summary>
-    /// Merge opens its sources without a password (the GUI does not prompt for one), so the
-    /// sources carry an empty user password and an owner password: the copy must stay encrypted.
+    /// Sources with an empty user password need no prompt: the copy must stay encrypted.
     /// </summary>
     [Fact]
     public void MergeDocumentsToPdf_EncryptedSources_WritesAnEncryptedCopy()
