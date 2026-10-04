@@ -168,10 +168,9 @@ public sealed class RedactionRoundTripTests
                 $"{relativePath}: RedactText('{target}') threw {ex.GetType().Name}: {ex.Message}");
         }
 
-        Assert.SkipWhen(matchCount == 0,
-            $"{relativePath}: target word '{target}' wasn't matched by RedactText — " +
-            "extraction and matching are using different glyph paths; " +
-            "this is a separate bug class than 'redaction left text behind'");
+        matchCount.Should().BeGreaterThan(0,
+            $"{relativePath}: target word '{target}' was present in excise's extracted text " +
+            "but RedactText matched nothing — extraction and matching are using different glyph paths.");
 
         // ── Phase 3: excise can reopen its own output — a sanity check, NOT
         // the leak assertion. Whether the term is still readable is answered
