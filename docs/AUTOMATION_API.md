@@ -213,8 +213,10 @@ Rules enforced by the batch contract:
   (category `SECURITY`). Overrides are per step and explicit:
   `ignorePermissions: true` proceeds anyway (for document owners — excise cannot
   yet verify owner passwords, #324), and `forAccessibility: true` on
-  `text.extract` invokes the ISO 32000-2 bit 10 extract-for-accessibility
-  carve-out. `redaction.apply` is deliberately not permission-gated.
+  `text.extract` declares an assistive extraction purpose: per ISO 32000-2,
+  permission bit 10 is ignored and bit 5 is treated as set for this purpose
+  (#1952). Ordinary extraction still requires bit 5. `redaction.apply` is
+  deliberately not permission-gated.
 - Hidden-text audit fails the workflow when findings are present unless
   `allowFindings: true` is supplied.
 
