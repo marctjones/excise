@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Excise.Core.Text;
 
@@ -372,6 +373,20 @@ internal static class BidiReorderer
         if (c >= '\uFB1D' && c <= '\uFB4F') return true;  // Hebrew presentation forms
         if (c >= '\uFB50' && c <= '\uFDFF') return true;  // Arabic presentation forms A
         if (c >= '\uFE70' && c <= '\uFEFF') return true;  // Arabic presentation forms B
+        return false;
+    }
+
+    /// <summary>
+    /// Shared Arabic/Hebrew editor paragraph direction (#1959). Skip digits,
+    /// marks and punctuation before the first letter; do not infer direction
+    /// from an RTL word appearing later in an otherwise LTR paragraph.
+    /// </summary>
+    internal static bool FirstStrongLetterIsRtl(string? text)
+    {
+        if (string.IsNullOrEmpty(text)) return false;
+        foreach (var rune in text.EnumerateRunes())
+            if (Rune.IsLetter(rune))
+                return rune.Value <= char.MaxValue && IsStrongRtlChar((char)rune.Value);
         return false;
     }
 

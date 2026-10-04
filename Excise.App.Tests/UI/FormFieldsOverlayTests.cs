@@ -588,7 +588,8 @@ public class FormFieldsOverlayTests
             wideField.HorizontalContentAlignment.Should().Be(
                 global::Avalonia.Layout.HorizontalAlignment.Left,
                 "an ordinary wide text field must keep its existing left alignment");
-            wideField.TextAlignment.Should().Be(global::Avalonia.Media.TextAlignment.Left);
+            wideField.TextAlignment.Should().Be(global::Avalonia.Media.TextAlignment.Start,
+                "start is left-aligned for this Latin value and follows RTL values when edited (#1959)");
         }
         finally
         {

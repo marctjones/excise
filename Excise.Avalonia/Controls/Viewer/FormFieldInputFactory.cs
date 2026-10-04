@@ -108,8 +108,19 @@ internal static class FormFieldInputFactory
             HorizontalContentAlignment = looksLikeCheckbox
                 ? global::Avalonia.Layout.HorizontalAlignment.Center
                 : global::Avalonia.Layout.HorizontalAlignment.Left,
-            TextAlignment = looksLikeCheckbox ? TextAlignment.Center : TextAlignment.Left,
+            TextAlignment = looksLikeCheckbox ? TextAlignment.Center : TextAlignment.Start,
         };
+
+        // #1959: initial text, typing and rollback use the same paragraph policy
+        // as note editing. This factory serves both single and continuous views.
+        UpdateTextDirection();
+        box.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == TextBox.TextProperty) UpdateTextDirection();
+        };
+
+        void UpdateTextDirection() => box.FlowDirection = BidiReorderer.FirstStrongLetterIsRtl(box.Text)
+            ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
 
         // Commit on Enter (single-line), Ctrl+Enter (multiline), or focus loss.
         // Escape restores the last committed value.

@@ -61,6 +61,20 @@ public class StickyNotePopupTextDirectionTests
         textBox.FlowDirection.Should().Be(FlowDirection.LeftToRight);
     }
 
+    [FixedAvaloniaTheory]
+    [InlineData("، Latin", false)]
+    [InlineData("١٢٣ مرحبا", true)]
+    [InlineData("\U00010400 שלום", false)]
+    public void NeutralPrefixesAndUnicodeLetters_UseTheSharedEditorPolicy(string text, bool rtl)
+    {
+        var (textBox, window) = OpenNoteTextBox(MakeViewModel(text));
+        try
+        {
+            textBox.FlowDirection.Should().Be(rtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight);
+        }
+        finally { window.Close(); }
+    }
+
     [FixedAvaloniaFact]
     public void HebrewText_IsRightToLeft()
     {
