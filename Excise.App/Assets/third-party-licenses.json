@@ -304,8 +304,8 @@
       "description": "Portable Class Library and platform specific support libraries for decoding and encoding JPEG2000 images. Works with Universal Windows (8.1 and 10), \n\t\t.NET Core for .NET Standard 1.0 and higher, .NET 3.5 (WPF and Windows Forms), Windows Phone 8 Silverlight, Silverlight 5, Xamarin iOS and Xamarin Android applications.",
       "id": "CSJ2K",
       "licenseKind": null,
-      "licenseName": "BSD License (CSJ2K / JJ2000)",
-      "licenseSpdxUrl": "https://spdx.org/licenses/BSD-2-Clause.html",
+      "licenseName": "CSJ2K BSD / JJ2000 restricted-use notice",
+      "licenseSpdxUrl": "https://github.com/cureos/csj2k/blob/master/COPYRIGHT-JJ2000-5.1",
       "licenseText": "CSJ2K is licensed under the BSD License.\n\nCopyright (c) 1999-2000 JJ2000 Partners; original C# port (c) 2007-2012\nJason S. Clary; C# encoding and adaptation to Portable Class Library with\nplatform specific support (c) 2013-2018 Anders Gustafsson, Cureos AB.\n\nLicensed and distributable under the terms of the BSD license:\nhttp://www.opensource.org/licenses/bsd-license.php\n\n----------------------------------------------------------------------\nThe JPEG 2000 core (JJ2000) carries the following copyright notice, which\nmust be included in all copies or derivative works of this software module:\n\nCOPYRIGHT:\n\nThis software module was originally developed by Rapha\u00ebl Grosbois and\nDiego Santa Cruz (Swiss Federal Institute of Technology-EPFL); Joel\nAskel\u00f6f (Ericsson Radio Systems AB); and Bertrand Berthelot, David\nBouchard, F\u00e9lix Henry, Gerard Mozelle and Patrice Onno (Canon Research\nCentre France S.A) in the course of development of the JPEG2000 standard\nas specified by ISO/IEC 15444 (JPEG 2000 Standard). This software module\nis an implementation of a part of the JPEG 2000 Standard. Swiss Federal\nInstitute of Technology-EPFL, Ericsson Radio Systems AB and Canon Research\nCentre France S.A (collectively JJ2000 Partners) agree not to assert\nagainst ISO/IEC and users of the JPEG 2000 Standard (Users) any of their\nrights under the copyright, not including other intellectual property\nrights, for this software module with respect to the usage by ISO/IEC and\nUsers of this software module or modifications thereof for use in hardware\nor software products claiming conformance to the JPEG 2000 Standard. Those\nintending to use this software module in hardware or software products are\nadvised that their use may infringe existing patents. The original\ndevelopers of this software module, JJ2000 Partners and ISO/IEC assume no\nliability for use of this software module or modifications thereof. No\nlicense or right to this software module is granted for non JPEG 2000\nStandard conforming products. JJ2000 Partners have full right to use this\nsoftware module for his/her own purpose, assign or donate this software\nmodule to any third party and to inhibit third parties from using this\nsoftware module for non JPEG 2000 Standard conforming products. This\ncopyright notice must be included in all copies or derivative works of\nthis software module.\n\nCopyright (c) 1999/2000 JJ2000 Partners.",
       "licenseUrl": "http://www.opensource.org/licenses/bsd-license.php",
       "licenseValue": null,
@@ -313,7 +313,7 @@
       "nugetVersion": "3.0.0",
       "projectUrl": "https://github.com/cureos/csj2k",
       "repositoryUrl": null,
-      "spdx": "BSD-2-Clause",
+      "spdx": "LicenseRef-CSJ2K-JJ2000",
       "version": "3.0.0"
     },
     {
