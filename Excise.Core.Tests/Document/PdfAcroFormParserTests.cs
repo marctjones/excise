@@ -870,6 +870,46 @@ public class PdfAcroFormParserTests
         return Encoding.Latin1.GetBytes(sb.ToString());
     }
 
+    [Theory]
+    [InlineData(null, null, "/Helv 9 Tf 0 g", 9d)]
+    [InlineData(null, "/Helv 11 Tf 0 g", "/Helv 9 Tf 0 g", 11d)]
+    [InlineData("/Helv 7 Tf 0 g", "/Helv 11 Tf 0 g", "/Helv 9 Tf 0 g", 7d)]
+    [InlineData("/Helv 0 Tf 0 g", "/Helv 11 Tf 0 g", "/Helv 9 Tf 0 g", null)]
+    [InlineData("invalid", "/Helv 11 Tf 0 g", "/Helv 9 Tf 0 g", null)]
+    [InlineData(null, null, null, null)]
+    public void DefaultAppearanceFontSize_InheritsNearestAppearance(string? own, string? parent, string? root, double? expected)
+    {
+        using var doc = PdfDocument.Open(FormPdf("[4 0 R]",
+            "<< /T (parent) /FT /Tx /Kids [5 0 R] >>",
+            "<< /T (leaf) /Parent 4 0 R /Subtype /Widget /Rect [0 0 100 50] >>"));
+        var acroForm = (PdfDictionary)doc.Resolve(doc.Catalog.GetOptional("AcroForm")!);
+        if (root != null) acroForm.SetString("DA", root);
+        // Exercise indirect AcroForm resolution as well as indirect parent fields.
+        doc.Catalog.Set("AcroForm", doc.AddIndirectObject(acroForm));
+        var parentDictionary = (PdfDictionary)doc.GetObject(new PdfReference(4, 0));
+        if (parent != null) parentDictionary.SetString("DA", parent);
+        var field = doc.GetAcroForm()!.FindField("parent.leaf")!;
+        if (own != null) field.RawDictionary.SetString("DA", own);
+        field.DefaultAppearanceFontSize.Should().Be(expected, "the nearest /DA wins, even when it requests automatic sizing (#1922)");
+    }
+
+    [Fact]
+    public void DefaultAppearanceFontSize_ReReadsEditsAndStopsAtParentCycle()
+    {
+        using var doc = PdfDocument.Open(FormPdf("[4 0 R]", "<< /T (leaf) /FT /Tx >>"));
+        var field = doc.GetAcroForm()!.FindField("leaf")!;
+        var root = (PdfDictionary)doc.Resolve(doc.Catalog.GetOptional("AcroForm")!);
+        root.SetString("DA", "/Helv 9 Tf");
+        field.RawDictionary.Set("Parent", new PdfReference(4, 0));
+        field.DefaultAppearanceFontSize.Should().Be(9);
+        root.SetString("DA", "/Helv 12 Tf");
+        field.DefaultAppearanceFontSize.Should().Be(12);
+        field.RawDictionary.SetString("DA", "/Helv 8 Tf");
+        field.DefaultAppearanceFontSize.Should().Be(8);
+        field.RawDictionary.Remove("DA");
+        field.DefaultAppearanceFontSize.Should().Be(12);
+    }
+
     /// <summary>
     /// ISO 32000-1 makes <c>/T</c> optional (Table 220), and the fully qualified name is
     /// built from the partial names the field and its ancestors have (§12.7.3.2), so a

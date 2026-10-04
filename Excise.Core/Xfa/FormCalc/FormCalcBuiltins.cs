@@ -33,7 +33,9 @@ internal static partial class FormCalcBuiltins
             if (args.Count < min || args.Count > max)
                 throw new FormCalcRuntimeException($"{name} takes {(min == max ? min.ToString(Inv) : $"{min} to {(max == int.MaxValue ? "many" : max.ToString(Inv))}")} argument(s), not {args.Count}.");
             interp.Tick();
+            interp.CheckTimeAndCancellation();
             var result = body(interp, args);
+            interp.CheckTimeAndCancellation();
             if (result is string text) interp.ChargeString(text);
             return result;
         };
@@ -64,6 +66,60 @@ internal static partial class FormCalcBuiltins
     private static bool IsNumeric(object v) => v is double || (v is string s && FormCalcValue.LooksNumeric(s));
 
     private static int ToInt(double d) => double.IsNaN(d) ? 0 : (int)Math.Clamp(d, int.MinValue, int.MaxValue);
+
+    /// <summary>Linear ordinal UTF-16 search with bounded work between deadline checks (#1923).</summary>
+    private sealed class OrdinalSearch
+    {
+        private readonly FormCalcInterpreter _interpreter;
+        private readonly string _text;
+        private readonly string _needle;
+        private readonly int[] _prefix;
+        private int _work;
+
+        public OrdinalSearch(FormCalcInterpreter interpreter, string text, string needle)
+        {
+            _interpreter = interpreter;
+            _text = text;
+            _needle = needle;
+            interpreter.CheckTimeAndCancellation();
+            _prefix = new int[needle.Length];
+            for (int position = 1, matched = 0; position < needle.Length; position++)
+            {
+                Checkpoint();
+                while (matched > 0 && needle[position] != needle[matched])
+                {
+                    matched = _prefix[matched - 1];
+                    Checkpoint();
+                }
+                if (needle[position] == needle[matched]) matched++;
+                _prefix[position] = matched;
+            }
+        }
+
+        public int Find(int start)
+        {
+            _interpreter.CheckTimeAndCancellation();
+            if (start > _text.Length - _needle.Length) return -1;
+            for (int position = start, matched = 0; position < _text.Length; position++)
+            {
+                Checkpoint();
+                while (matched > 0 && _text[position] != _needle[matched])
+                {
+                    matched = _prefix[matched - 1];
+                    Checkpoint();
+                }
+                if (_text[position] == _needle[matched]) matched++;
+                if (matched == _needle.Length) return position - matched + 1;
+            }
+            return -1;
+        }
+
+        private void Checkpoint()
+        {
+            if ((++_work & 0x3FF) == 0)
+                _interpreter.CheckTimeAndCancellation();
+        }
+    }
 
     private static void RegisterCore()
     {
@@ -140,16 +196,18 @@ internal static partial class FormCalcBuiltins
         Add("Eval", 1, 1, (i, a) => i.RunNested(S(a, 0)));
 
         // String
-        Add("At", 2, 2, (_, a) =>
+        Add("At", 2, 2, (i, a) =>
         {
+            var text = S(a, 0);
             var sub = S(a, 1);
-            return sub.Length == 0 ? 0d : S(a, 0).IndexOf(sub, StringComparison.Ordinal) + 1;
+            return sub.Length == 0 || sub.Length > text.Length ? 0d : new OrdinalSearch(i, text, sub).Find(0) + 1d;
         });
         Add("Concat", 0, int.MaxValue, (i, a) =>
         {
             var sb = new StringBuilder();
             foreach (var arg in a)
             {
+                i.CheckTimeAndCancellation();
                 sb.Append(FormCalcValue.ToText(arg));
                 i.CheckLength(sb.Length);
             }
@@ -168,17 +226,25 @@ internal static partial class FormCalcBuiltins
             var old = S(a, 1);
             if (old.Length == 0) return s;
             var replacement = S(a, 2);
-            // Check the result's length before building it: a million one-character matches each
-            // replaced by a million characters would otherwise be allocated first.
-            if (replacement.Length > old.Length)
+            if (old.Length > s.Length) return s;
+            var search = new OrdinalSearch(i, s, old);
+            long matches = 0;
+            for (var at = search.Find(0); at >= 0; at = search.Find(at + old.Length))
+                matches++;
+            if (matches == 0) return s;
+            // Preflight before allocating output; scans are cancellable and linear (#1923).
+            var length = s.Length + matches * (replacement.Length - old.Length);
+            if (length > i.Limits.MaxStringLength)
+                throw new FormCalcRuntimeException($"A string grew past {i.Limits.MaxStringLength} characters.");
+            var output = new StringBuilder((int)length);
+            var position = 0;
+            for (var at = search.Find(0); at >= 0; at = search.Find(position))
             {
-                long matches = 0;
-                for (var at = s.IndexOf(old, StringComparison.Ordinal); at >= 0; at = s.IndexOf(old, at + old.Length, StringComparison.Ordinal))
-                    matches++;
-                if (s.Length + matches * (replacement.Length - old.Length) > i.Limits.MaxStringLength)
-                    throw new FormCalcRuntimeException($"A string grew past {i.Limits.MaxStringLength} characters.");
+                i.CheckTimeAndCancellation();
+                output.Append(s, position, at - position).Append(replacement);
+                position = at + old.Length;
             }
-            return s.Replace(old, replacement, StringComparison.Ordinal);
+            return output.Append(s, position, s.Length - position).ToString();
         });
         Add("Space", 1, 1, (i, a) =>
         {

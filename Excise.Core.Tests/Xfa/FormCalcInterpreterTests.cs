@@ -300,6 +300,169 @@ public class FormCalcInterpreterTests
         act.Should().Throw<OperationCanceledException>();
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("1")]
+    [InlineData("At(\"x\", \"x\")")]
+    [InlineData("Eval(\"1\")")]
+    public void ShortScripts_ObserveCancellationAndExpiredTime(string source)
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        var canceled = () => FormCalcInterpreter.Evaluate(source, Sample().Host, cancellation: cancellation.Token);
+        canceled.Should().Throw<OperationCanceledException>();
+        var expired = () => Run(source, limits: new FcLimits { TimeLimit = TimeSpan.FromTicks(-1) });
+        expired.Should().Throw<FormCalcRuntimeException>().WithMessage("*longer*");
+    }
+
+    [Theory]
+    [InlineData("At", true)]
+    [InlineData("At", false)]
+    [InlineData("Replace", true)]
+    [InlineData("Replace", false)]
+    public void Search_ChecksDeadlineInsidePrefixAndScan_WithoutSpendingSteps(string name, bool prefix)
+    {
+        FormCalcBuiltins.TryGet(name, out var builtin).Should().BeTrue();
+        var checks = 0;
+        var interpreter = new FormCalcInterpreter(Sample().Host, checkDeadline: () =>
+        {
+            if (++checks == 4) throw new FormCalcRuntimeException("shared deadline");
+        });
+        var needle = prefix ? new string('z', 5_000) : "z";
+        object?[] arguments = name == "At"
+            ? [new string('a', 10_000), needle]
+            : [new string('a', 10_000), needle, ""];
+        var act = () => builtin(interpreter, arguments);
+        act.Should().Throw<FormCalcRuntimeException>().WithMessage("shared deadline");
+        checks.Should().Be(4);
+        interpreter.StepsUsedForTests.Should().Be(1, "search work checks must not change the interpreter step budget");
+    }
+
+    [Theory]
+    [InlineData("At")]
+    [InlineData("Replace")]
+    public void Search_ObservesCancellationInsideOneCall(string name)
+    {
+        using var cancellation = new CancellationTokenSource();
+        var checks = 0;
+        var interpreter = new FormCalcInterpreter(Sample().Host, cancellation: cancellation.Token, checkDeadline: () =>
+        {
+            if (++checks == 4) cancellation.Cancel();
+        });
+        FormCalcBuiltins.TryGet(name, out var builtin).Should().BeTrue();
+        object?[] arguments = name == "At"
+            ? [new string('a', 10_000), "z"]
+            : [new string('a', 10_000), "z", ""];
+        var act = () => builtin(interpreter, arguments);
+        act.Should().Throw<OperationCanceledException>();
+    }
+
+    [Fact]
+    public void OrdinalSearchAndReplacement_MatchUtf16ReferenceSemantics()
+    {
+        FormCalcBuiltins.TryGet("At", out var at).Should().BeTrue();
+        FormCalcBuiltins.TryGet("Replace", out var replace).Should().BeTrue();
+        var random = new Random(1923);
+        const string alphabet = "ab\0Ωß\uD800\uDC00 ";
+        string Text(int maximum) => new(Enumerable.Range(0, random.Next(maximum + 1))
+            .Select(_ => alphabet[random.Next(alphabet.Length)]).ToArray());
+        for (var sample = 0; sample < 300; sample++)
+        {
+            var text = Text(64);
+            var needle = Text(8);
+            var replacement = Text(8);
+            var interpreter = new FormCalcInterpreter(Sample().Host);
+            at(interpreter, [text, needle]).Should().Be(needle.Length == 0 ? 0d : text.IndexOf(needle, StringComparison.Ordinal) + 1d);
+            replace(interpreter, [text, needle, replacement]).Should().Be(needle.Length == 0
+                ? text : text.Replace(needle, replacement, StringComparison.Ordinal));
+        }
+        Str("Replace(\"aaaaa\", \"aa\", \"b\")").Should().Be("bba");
+        Str("Replace(\"ababa\", \"aba\")").Should().Be("ba");
+    }
+
+    [Fact]
+    public void Search_DoesNotCapHostInputOrSpendStepsPerCharacter()
+    {
+        var interpreter = new FormCalcInterpreter(Sample().Host,
+            new FcLimits { MaxSteps = 5, MaxStringLength = 8 });
+        FormCalcBuiltins.TryGet("At", out var at).Should().BeTrue();
+        FormCalcBuiltins.TryGet("Replace", out var replace).Should().BeTrue();
+        var text = new string('a', 2_000_000);
+        at(interpreter, [text, "z"]).Should().Be(0d);
+        replace(interpreter, [text, new string('a', 1_000), ""]).Should().Be("");
+        interpreter.StepsUsedForTests.Should().Be(2);
+    }
+
+    [Fact]
+    public void NestedEval_ObservesSharedDeadlineBeforeItsWrite()
+    {
+        var (host, total, _) = Sample();
+        var checks = 0;
+        // The sixth check is the nested interpreter's entry, before execution.
+        var act = () => FormCalcInterpreter.Evaluate("Eval(\"$.rawValue = 123\")", host,
+            checkDeadline: () => { if (++checks == 6) throw new FormCalcRuntimeException("shared deadline"); });
+        act.Should().Throw<FormCalcRuntimeException>().WithMessage("shared deadline");
+        total.Raw.Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData("Num2Date", false)]
+    [InlineData("Num2Date", true)]
+    [InlineData("Num2Time", false)]
+    [InlineData("Num2Time", true)]
+    [InlineData("Num2GMTime", false)]
+    [InlineData("Format", false)]
+    [InlineData("Date2Num", true)]
+    [InlineData("Time2Num", true)]
+    [InlineData("Parse", true)]
+    public void DateTimePictures_CheckSharedDeadlineInsideOneCall(string name, bool singleRun)
+    {
+        var checks = 0;
+        var interpreter = new FormCalcInterpreter(Sample().Host, checkDeadline: () =>
+        {
+            if (++checks == 4) throw new FormCalcRuntimeException("shared deadline");
+        });
+        var picture = singleRun ? new string('q', 10_000) : string.Concat(Enumerable.Repeat("M/", 5_000));
+        FormCalcBuiltins.TryGet(name, out var builtin).Should().BeTrue();
+        object?[] arguments = name switch
+        {
+            "Format" => [$"date{{{picture}}}", 1d],
+            "Parse" => [$"time{{{picture}}}", picture],
+            "Date2Num" or "Time2Num" => [picture, picture],
+            _ => [1d, picture],
+        };
+        var act = () => builtin(interpreter, arguments);
+        act.Should().Throw<FormCalcRuntimeException>().WithMessage("shared deadline");
+        checks.Should().Be(4);
+        interpreter.StepsUsedForTests.Should().Be(1);
+    }
+
+    [Theory]
+    [InlineData("Num2Date(1, \"YYYY-MM-DD\")", "1900-01-01")]
+    [InlineData("Num2Time(3723000, \"HH:MM:SS\")", "01:02:03")]
+    [InlineData("Format(\"date{YYYY-MM-DD}\", 1)", "1900-01-01")]
+    [InlineData("Format(\"time{HH:MM:SS}\", 3723000)", "01:02:03")]
+    public void DateTimePictures_PreserveFormatting(string script, string expected) => Str(script).Should().Be(expected);
+
+    [Theory]
+    [InlineData("text", false)]
+    [InlineData("num", false)]
+    [InlineData("num", true)]
+    public void OtherPictureLoops_CheckSharedDeadline(string category, bool parse)
+    {
+        var checks = 0;
+        var interpreter = new FormCalcInterpreter(Sample().Host, checkDeadline: () =>
+        {
+            if (++checks == 4) throw new FormCalcRuntimeException("shared deadline");
+        });
+        FormCalcBuiltins.TryGet(parse ? "Parse" : "Format", out var builtin).Should().BeTrue();
+        var picture = new string('q', 10_000);
+        object?[] arguments = parse ? ["num{9}", new string('1', 10_000)] : [$"{category}{{{picture}}}", 1d];
+        var act = () => builtin(interpreter, arguments);
+        act.Should().Throw<FormCalcRuntimeException>().WithMessage("shared deadline");
+        interpreter.StepsUsedForTests.Should().Be(1);
+    }
+
     [Fact]
     public void StringsHeldAcrossTheRun_AreBoundedInTotal()
     {

@@ -40,27 +40,40 @@ internal static partial class FormCalcBuiltins
         Add("LocalDateFmt", 0, 2, (_, a) => DateStyles[Math.Clamp(ToInt(N(a, 0, 0)), 0, 4)]);
         Add("TimeFmt", 0, 2, (_, a) => TimeStyles[Math.Clamp(ToInt(N(a, 0, 0)), 0, 4)]);
         Add("LocalTimeFmt", 0, 2, (_, a) => TimeStyles[Math.Clamp(ToInt(N(a, 0, 0)), 0, 4)]);
-        Add("Num2Date", 1, 3, (_, a) => FormatDate(NumToDate(N(a, 0)), a.Count > 1 ? S(a, 1) : DateStyles[0]));
-        Add("Date2Num", 1, 3, (_, a) =>
-            ParseDate(S(a, 0), a.Count > 1 ? S(a, 1) : DateStyles[0]) is { } d ? DateToNum(d) : throw new FormCalcRuntimeException("Date2Num: not a date in that picture."));
-        Add("IsoDate2Num", 1, 1, (_, a) =>
-            ParseDate(S(a, 0), S(a, 0).Contains('-', StringComparison.Ordinal) ? "YYYY-MM-DD" : "YYYYMMDD") is { } d
+        Add("Num2Date", 1, 3, (interpreter, a) => FormatDate(interpreter, NumToDate(N(a, 0)), a.Count > 1 ? S(a, 1) : DateStyles[0]));
+        Add("Date2Num", 1, 3, (interpreter, a) =>
+            ParseDate(interpreter, S(a, 0), a.Count > 1 ? S(a, 1) : DateStyles[0]) is { } d ? DateToNum(d) : throw new FormCalcRuntimeException("Date2Num: not a date in that picture."));
+        Add("IsoDate2Num", 1, 1, (interpreter, a) =>
+            ParseDate(interpreter, S(a, 0), S(a, 0).Contains('-', StringComparison.Ordinal) ? "YYYY-MM-DD" : "YYYYMMDD") is { } d
                 ? DateToNum(d) : throw new FormCalcRuntimeException("IsoDate2Num: not an ISO date."));
-        Add("Num2Time", 1, 3, (_, a) => FormatTime(NumToTime(N(a, 0)), a.Count > 1 ? S(a, 1) : TimeStyles[0]));
-        Add("Num2GMTime", 1, 3, (_, a) => FormatTime(NumToTime(N(a, 0)), a.Count > 1 ? S(a, 1) : TimeStyles[0]));
-        Add("Time2Num", 1, 3, (_, a) =>
-            ParseTime(S(a, 0), a.Count > 1 ? S(a, 1) : TimeStyles[0]) is { } t ? t.TotalMilliseconds : throw new FormCalcRuntimeException("Time2Num: not a time in that picture."));
-        Add("IsoTime2Num", 1, 1, (_, a) =>
-            ParseTime(S(a, 0).TrimEnd('Z'), S(a, 0).Contains(':', StringComparison.Ordinal) ? "HH:MM:SS" : "HHMMSS") is { } t
+        Add("Num2Time", 1, 3, (interpreter, a) => FormatTime(interpreter, NumToTime(N(a, 0)), a.Count > 1 ? S(a, 1) : TimeStyles[0]));
+        Add("Num2GMTime", 1, 3, (interpreter, a) => FormatTime(interpreter, NumToTime(N(a, 0)), a.Count > 1 ? S(a, 1) : TimeStyles[0]));
+        Add("Time2Num", 1, 3, (interpreter, a) =>
+            ParseTime(interpreter, S(a, 0), a.Count > 1 ? S(a, 1) : TimeStyles[0]) is { } t ? t.TotalMilliseconds : throw new FormCalcRuntimeException("Time2Num: not a time in that picture."));
+        Add("IsoTime2Num", 1, 1, (interpreter, a) =>
+            ParseTime(interpreter, S(a, 0).TrimEnd('Z'), S(a, 0).Contains(':', StringComparison.Ordinal) ? "HH:MM:SS" : "HHMMSS") is { } t
                 ? t.TotalMilliseconds : throw new FormCalcRuntimeException("IsoTime2Num: not an ISO time."));
     }
 
     /// <summary>Date picture: D DD DDD DDDD, M MM MMM MMMM, YY YYYY, E EEE EEEE (weekday), quoted text is literal.</summary>
-    private static string FormatDate(DateTime d, string picture)
+    // See #1923: host-supplied pictures share the script and form deadline, not a per-call budget.
+    private static int PictureRun(FormCalcInterpreter interpreter, string picture, int start)
+    {
+        var run = 1;
+        while (start + run < picture.Length && picture[start + run] == picture[start])
+        {
+            if ((run & 1023) == 0) interpreter.CheckTimeAndCancellation();
+            run++;
+        }
+        return run;
+    }
+
+    private static string FormatDate(FormCalcInterpreter interpreter, DateTime d, string picture)
     {
         var sb = new StringBuilder();
         for (var i = 0; i < picture.Length;)
         {
+            interpreter.CheckTimeAndCancellation();
             var c = picture[i];
             if (c == '\'')
             {
@@ -70,8 +83,7 @@ internal static partial class FormCalcBuiltins
                 i = end + 1;
                 continue;
             }
-            var run = 1;
-            while (i + run < picture.Length && picture[i + run] == c) run++;
+            var run = PictureRun(interpreter, picture, i);
             switch (c)
             {
                 case 'D':
@@ -116,11 +128,12 @@ internal static partial class FormCalcBuiltins
     }
 
     /// <summary>Time picture: h hh (1-12), H HH (0-23), M MM, S SS, FFF, A (AM/PM), Z (GMT).</summary>
-    private static string FormatTime(TimeSpan t, string picture)
+    private static string FormatTime(FormCalcInterpreter interpreter, TimeSpan t, string picture)
     {
         var sb = new StringBuilder();
         for (var i = 0; i < picture.Length;)
         {
+            interpreter.CheckTimeAndCancellation();
             var c = picture[i];
             if (c == '\'')
             {
@@ -130,8 +143,7 @@ internal static partial class FormCalcBuiltins
                 i = end + 1;
                 continue;
             }
-            var run = 1;
-            while (i + run < picture.Length && picture[i + run] == c) run++;
+            var run = PictureRun(interpreter, picture, i);
             var hour12 = t.Hours % 12 == 0 ? 12 : t.Hours % 12;
             switch (c)
             {
@@ -149,16 +161,16 @@ internal static partial class FormCalcBuiltins
         return sb.ToString();
     }
 
-    private static DateTime? ParseDate(string text, string picture)
+    private static DateTime? ParseDate(FormCalcInterpreter interpreter, string text, string picture)
     {
         int year = 1900, month = 1, day = 1, pos = 0;
         try
         {
             for (var i = 0; i < picture.Length;)
             {
+                interpreter.CheckTimeAndCancellation();
                 var c = picture[i];
-                var run = 1;
-                while (i + run < picture.Length && picture[i + run] == c) run++;
+                var run = PictureRun(interpreter, picture, i);
                 switch (c)
                 {
                     case 'D' when run <= 2: day = ReadInt(text, ref pos, run == 2 ? 2 : 2, run == 2); break;
@@ -179,6 +191,7 @@ internal static partial class FormCalcBuiltins
                     default:
                         for (var k = 0; k < run; k++)
                         {
+                            if ((k & 1023) == 0) interpreter.CheckTimeAndCancellation();
                             if (pos >= text.Length || text[pos] != c) return null;
                             pos++;
                         }
@@ -194,7 +207,7 @@ internal static partial class FormCalcBuiltins
         }
     }
 
-    private static TimeSpan? ParseTime(string text, string picture)
+    private static TimeSpan? ParseTime(FormCalcInterpreter interpreter, string text, string picture)
     {
         int hour = 0, minute = 0, second = 0, ms = 0, pos = 0;
         bool? pm = null;
@@ -202,9 +215,9 @@ internal static partial class FormCalcBuiltins
         {
             for (var i = 0; i < picture.Length;)
             {
+                interpreter.CheckTimeAndCancellation();
                 var c = picture[i];
-                var run = 1;
-                while (i + run < picture.Length && picture[i + run] == c) run++;
+                var run = PictureRun(interpreter, picture, i);
                 switch (c)
                 {
                     case 'h': case 'H': hour = ReadInt(text, ref pos, 2, run == 2); break;
@@ -222,6 +235,7 @@ internal static partial class FormCalcBuiltins
                     default:
                         for (var k = 0; k < run; k++)
                         {
+                            if ((k & 1023) == 0) interpreter.CheckTimeAndCancellation();
                             if (pos >= text.Length || text[pos] != c) return null;
                             pos++;
                         }
@@ -339,8 +353,8 @@ internal static partial class FormCalcBuiltins
 
     private static void RegisterPictures()
     {
-        Add("Format", 2, int.MaxValue, (_, a) => FormatPicture(S(a, 0), a[1]));
-        Add("Parse", 2, 2, (_, a) => ParsePicture(S(a, 0), S(a, 1)));
+        Add("Format", 2, int.MaxValue, (interpreter, a) => FormatPicture(interpreter, S(a, 0), a[1]));
+        Add("Parse", 2, 2, (interpreter, a) => ParsePicture(interpreter, S(a, 0), S(a, 1)));
     }
 
     private static (string Category, string Body) SplitPicture(string picture)
@@ -351,27 +365,29 @@ internal static partial class FormCalcBuiltins
         return ("", picture);
     }
 
-    private static object FormatPicture(string picture, object? value)
+    private static object FormatPicture(FormCalcInterpreter interpreter, string picture, object? value)
     {
         var (category, body) = SplitPicture(picture);
         switch (category)
         {
-            case "date": return FormatDate(NumToDate(FormCalcValue.ToNumber(value)), body);
-            case "time": return FormatTime(NumToTime(FormCalcValue.ToNumber(value)), body);
-            case "text": return FormatText(body, FormCalcValue.ToText(value));
-            case "num": return FormatNumber(body, FormCalcValue.ToNumber(value));
+            case "date": return FormatDate(interpreter, NumToDate(FormCalcValue.ToNumber(value)), body);
+            case "time": return FormatTime(interpreter, NumToTime(FormCalcValue.ToNumber(value)), body);
+            case "text": return FormatText(interpreter, body, FormCalcValue.ToText(value));
+            case "num": return FormatNumber(interpreter, body, FormCalcValue.ToNumber(value));
             default:
-                return FormCalcValue.Scalar(value) is double d ? FormatNumber(body, d) : FormatText(body, FormCalcValue.ToText(value));
+                return FormCalcValue.Scalar(value) is double d ? FormatNumber(interpreter, body, d) : FormatText(interpreter, body, FormCalcValue.ToText(value));
         }
     }
 
     /// <summary>Text picture: 9 a digit, A a letter, X any character, anything else literal.</summary>
-    private static string FormatText(string picture, string text)
+    private static string FormatText(FormCalcInterpreter interpreter, string picture, string text)
     {
         var sb = new StringBuilder();
         var t = 0;
+        var work = 0;
         foreach (var c in picture)
         {
+            if ((work++ & 1023) == 0) interpreter.CheckTimeAndCancellation();
             if (c is '9' or 'A' or 'X' or 'a' or 'x' or '0' or 'O' or '?')
             {
                 if (t >= text.Length) break;
@@ -386,12 +402,17 @@ internal static partial class FormCalcBuiltins
     /// Number picture: 9 a required digit, z or 8 a digit that is blank when it would be a leading zero,
     /// '.' the decimal point, ',' grouping (shown only next to digits), other characters literal.
     /// </summary>
-    private static string FormatNumber(string picture, double value)
+    private static string FormatNumber(FormCalcInterpreter interpreter, string picture, double value)
     {
         var point = picture.IndexOf('.', StringComparison.Ordinal);
         var intPart = point < 0 ? picture : picture[..point];
         var fracPart = point < 0 ? "" : picture[(point + 1)..];
-        var decimals = fracPart.Count(c => c is '9' or 'z' or '8' or 'Z');
+        var decimals = 0;
+        for (var k = 0; k < fracPart.Length; k++)
+        {
+            if ((k & 1023) == 0) interpreter.CheckTimeAndCancellation();
+            if (fracPart[k] is '9' or 'z' or '8' or 'Z') decimals++;
+        }
         var rounded = Math.Round(Math.Abs(value), Math.Min(decimals, 15), MidpointRounding.AwayFromZero);
         var digits = rounded.ToString("F" + Math.Min(decimals, 15).ToString(Inv), Inv);
         var dot = digits.IndexOf('.', StringComparison.Ordinal);
@@ -403,6 +424,7 @@ internal static partial class FormCalcBuiltins
         var leadingSuppressed = false;
         for (var k = intPart.Length - 1; k >= 0; k--)
         {
+            if ((k & 1023) == 0) interpreter.CheckTimeAndCancellation();
             var c = intPart[k];
             if (c is '9' or 'z' or 'Z' or '8')
             {
@@ -413,15 +435,22 @@ internal static partial class FormCalcBuiltins
             else if (c == ',' && (idx >= 0 || !leadingSuppressed && k > 0 && idx >= 0)) right.Append(',');
             else if (c != ',' && (idx >= 0 || !leadingSuppressed)) right.Append(c);
         }
-        var chars = right.ToString().Reverse().ToArray();
+        var chars = new char[right.Length];
+        for (var k = 0; k < chars.Length; k++)
+        {
+            if ((k & 1023) == 0) interpreter.CheckTimeAndCancellation();
+            chars[k] = right[right.Length - k - 1];
+        }
         var whole = new string(chars).TrimStart();
         var result = whole;
         if (decimals > 0)
         {
             var fracOut = new StringBuilder();
             var fi = 0;
+            var work = 0;
             foreach (var c in fracPart)
             {
+                if ((work++ & 1023) == 0) interpreter.CheckTimeAndCancellation();
                 if (c is '9' or 'z' or 'Z' or '8') fracOut.Append(fi < fracDigits.Length ? fracDigits[fi++] : '0');
                 else fracOut.Append(c);
             }
@@ -431,18 +460,24 @@ internal static partial class FormCalcBuiltins
         return value < 0 ? "-" + result : result;
     }
 
-    private static object ParsePicture(string picture, string text)
+    private static object ParsePicture(FormCalcInterpreter interpreter, string picture, string text)
     {
         var (category, body) = SplitPicture(picture);
         switch (category)
         {
             case "date":
-                return ParseDate(text, body) is { } d ? DateToNum(d) : throw new FormCalcRuntimeException("Parse: not a date in that picture.");
+                return ParseDate(interpreter, text, body) is { } d ? DateToNum(d) : throw new FormCalcRuntimeException("Parse: not a date in that picture.");
             case "time":
-                return ParseTime(text, body) is { } t ? t.TotalMilliseconds : throw new FormCalcRuntimeException("Parse: not a time in that picture.");
+                return ParseTime(interpreter, text, body) is { } t ? t.TotalMilliseconds : throw new FormCalcRuntimeException("Parse: not a time in that picture.");
             default:
-                var cleaned = new string(text.Where(c => char.IsAsciiDigit(c) || c is '.' or '-').ToArray());
-                return category == "num" && double.TryParse(cleaned, NumberStyles.Float, Inv, out var n) ? n : (object)text;
+                var cleaned = new StringBuilder();
+                for (var k = 0; k < text.Length; k++)
+                {
+                    if ((k & 1023) == 0) interpreter.CheckTimeAndCancellation();
+                    var c = text[k];
+                    if (char.IsAsciiDigit(c) || c is '.' or '-') cleaned.Append(c);
+                }
+                return category == "num" && double.TryParse(cleaned.ToString(), NumberStyles.Float, Inv, out var n) ? n : (object)text;
         }
     }
 }

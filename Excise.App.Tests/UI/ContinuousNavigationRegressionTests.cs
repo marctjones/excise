@@ -160,17 +160,16 @@ public class ContinuousNavigationRegressionTests
     }
 
     /// <summary>
-    /// #1960 contract-only integration step: the switch carries the reading
-    /// fraction before the held page turn completes. Landing at the page top
-    /// afterward is an obsolete behavior pin, not the intended contract (#1931).
-    /// The implementation integration adds the post-completion preservation check.
+    /// #1931: a page turn can still be awaiting its single-page render when the
+    /// reader switches to continuous view. The switch carries the reading fraction;
+    /// completing the turn must not replace it with a late page-top scroll.
     ///
     /// <para>Deterministic, not a race: the page-2 render-ahead is held on its render
     /// thread, so the page turn joins it and stays inside the await while the view
     /// switches and settles; releasing the hold lets the turn finish.</para>
     /// </summary>
     [FixedAvaloniaFact(Timeout = 60000)]
-    public async Task PageTurnStillRenderingWhenTheViewSwitchesToContinuous_CarriesFractionBeforeTurnCompletes()
+    public async Task PageTurnStillRenderingWhenTheViewSwitchesToContinuous_PreservesReadingFraction()
     {
         var path = TempPdf("continuous-late-turn.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 4);
@@ -215,6 +214,8 @@ public class ContinuousNavigationRegressionTests
             for (int i = 0; i < 5; i++) await PumpOnceAsync(window);
 
             viewer.CurrentPage.Should().Be(2);
+            cont.Offset.Y.Should().BeApproximately(Page2().TopDip + fraction * Page2().DisplayHeight, 1.0,
+                "the finishing turn must preserve the fraction carried by the mode switch");
         }
         finally
         {

@@ -434,7 +434,8 @@ run_one() {
     cmdline="$(runner_step_cmdline "$name" "$kind" "$target" "$filter")"
     hash="$(runner_target_hash "$kind" "$target" "$filter")"
 
-    if ! runner_step_should_run "$name" "$hash"; then
+    if ! runner_step_should_run "$name" "$hash" \
+        && runner_checkpoint_test_evidence "$name" "$kind" "$LOG_DIR"; then
         local skip_status="SKIP_CHECKPOINTED" skip_label="checkpointed"
         if [ "$(runner_marker_value "$name" status)" = "KNOWN" ]; then
             skip_status="SKIP_CHECKPOINTED_KNOWN"
@@ -450,10 +451,12 @@ run_one() {
             "evidenceFrom=$(runner_marker_path "$name")" \
             "evidenceFinished=$(runner_marker_value "$name" finished)" \
             "evidenceLog=$(runner_marker_value "$name" log)" \
-            "evidenceSha=$(runner_marker_value "$name" sha)"
+            "evidenceSha=$(runner_marker_value "$name" sha)" \
+            "trx=$LOG_DIR/$name.trx"
         return 0
     fi
 
+    runner_prepare_test_evidence "$name" "$kind" "$LOG_DIR"
     # Never start a step when the machine is already in trouble.
     runner_mem_guard "$name"
     start="$(date +%s)"

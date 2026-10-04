@@ -316,7 +316,9 @@ public partial class PdfDocument : IDisposable
 
     /// <summary>Open a PDF document from a file.</summary>
     public static PdfDocument Open(string path, PdfOpenOptions? options = null)
-        => OpenCore(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read), ownsStream: true, options);
+        // #1955: atomic replacement needs delete sharing on Windows. Keep write
+        // sharing disabled so in-place writers cannot mutate this reader's bytes.
+        => OpenCore(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete), ownsStream: true, options);
 
     /// <summary>Open a PDF document from a stream; <see cref="PdfOpenOptions.OwnsStream"/> defaults to false.</summary>
     public static PdfDocument Open(Stream stream, PdfOpenOptions? options = null)

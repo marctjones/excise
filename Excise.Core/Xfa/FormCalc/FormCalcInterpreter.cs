@@ -22,6 +22,7 @@ internal sealed class FormCalcInterpreter
 
     private readonly IFcHost _host;
     private readonly CancellationToken _cancellation;
+    private readonly Action? _checkDeadline;
     private readonly Stopwatch _clock = Stopwatch.StartNew();
     private readonly Dictionary<string, FcFunc> _functions = new(StringComparer.Ordinal);
     private readonly int _evalDepth;
@@ -31,12 +32,14 @@ internal sealed class FormCalcInterpreter
     private object? _last;
     private object? _returnValue;
 
-    public FormCalcInterpreter(IFcHost host, FcLimits? limits = null, CancellationToken cancellation = default, int evalDepth = 0)
+    public FormCalcInterpreter(IFcHost host, FcLimits? limits = null, CancellationToken cancellation = default, int evalDepth = 0,
+        Action? checkDeadline = null)
     {
         _host = host;
         Limits = limits ?? new FcLimits();
         _cancellation = cancellation;
         _evalDepth = evalDepth;
+        _checkDeadline = checkDeadline;
     }
 
     public FcLimits Limits { get; }
@@ -52,14 +55,18 @@ internal sealed class FormCalcInterpreter
     internal long StringCharsUsedForTests => _stringChars;
 
     /// <summary>Parse and run <paramref name="source"/>; the result is the value of its last expression.</summary>
-    public static object? Evaluate(string source, IFcHost host, FcLimits? limits = null, CancellationToken cancellation = default)
+    public static object? Evaluate(string source, IFcHost host, FcLimits? limits = null, CancellationToken cancellation = default,
+        Action? checkDeadline = null)
     {
+        var interpreter = new FormCalcInterpreter(host, limits, cancellation, checkDeadline: checkDeadline);
+        interpreter.CheckTimeAndCancellation();
         var script = FormCalcParser.Parse(source);
-        return new FormCalcInterpreter(host, limits, cancellation).Run(script);
+        return interpreter.Run(script);
     }
 
     public object? Run(FcScript script)
     {
+        CheckTimeAndCancellation();
         foreach (var s in script.Statements)
             if (s is FcFunc f) _functions[f.Name] = f;
 
@@ -67,6 +74,7 @@ internal sealed class FormCalcInterpreter
         try
         {
             var flow = ExecBlock(script.Statements, frame);
+            CheckTimeAndCancellation();
             return flow == Flow.Return ? _returnValue : _last;
         }
         catch (InsufficientExecutionStackException)
@@ -75,6 +83,7 @@ internal sealed class FormCalcInterpreter
         }
         catch (ScriptExit)
         {
+            CheckTimeAndCancellation();
             return _last;
         }
     }
@@ -86,11 +95,16 @@ internal sealed class FormCalcInterpreter
         if (++_steps > Limits.MaxSteps)
             throw new FormCalcRuntimeException($"The script ran more than {Limits.MaxSteps} steps.");
         if ((_steps & 0xFF) == 0)
-        {
-            _cancellation.ThrowIfCancellationRequested();
-            if (_clock.Elapsed > Limits.TimeLimit)
-                throw new FormCalcRuntimeException($"The script ran longer than {Limits.TimeLimit.TotalSeconds:0.#} s.");
-        }
+            CheckTimeAndCancellation();
+    }
+
+    // Work inside a built-in spends time, not interpreter steps (#1923).
+    internal void CheckTimeAndCancellation()
+    {
+        _cancellation.ThrowIfCancellationRequested();
+        _checkDeadline?.Invoke();
+        if (_clock.Elapsed > Limits.TimeLimit)
+            throw new FormCalcRuntimeException($"The script ran longer than {Limits.TimeLimit.TotalSeconds:0.#} s.");
     }
 
     internal void CheckLength(int length)
@@ -493,17 +507,21 @@ internal sealed class FormCalcInterpreter
 
     private object? ResolveSom(string expression, IFcObject start, bool single)
     {
+        CheckTimeAndCancellation();
         FcScript script;
         try { script = FormCalcParser.Parse(expression); }
         catch (FormCalcSyntaxException) { return new FcNodeList(); }
         if (script.Statements is not [FcExprStmt { Expr: var expr }] || !IsAccessor(expr))
             return new FcNodeList();
 
-        var sub = new FormCalcInterpreter(new ScopedHost(_host, start), Remaining(), _cancellation, _evalDepth);
+        CheckTimeAndCancellation();
+        var sub = new FormCalcInterpreter(new ScopedHost(_host, start), Remaining(), _cancellation, _evalDepth,
+            CheckTimeAndCancellation);
         object? result;
         try { result = sub.Eval(expr, new Frame()); }
         finally { Absorb(sub); }
         var list = new FcNodeList(Objects(result));
+        CheckTimeAndCancellation();
         return single ? (list.Count > 0 ? list[0] : null) : list;
     }
 
@@ -531,13 +549,16 @@ internal sealed class FormCalcInterpreter
     // Used by Eval() in the built-ins.
     internal object? RunNested(string source)
     {
+        CheckTimeAndCancellation();
         if (_evalDepth >= Limits.MaxEvalDepth)
             throw new FormCalcRuntimeException("Eval nests too deeply.");
         FcScript script;
         try { script = FormCalcParser.Parse(source); }
         catch (FormCalcSyntaxException ex) { throw new FormCalcRuntimeException("Eval: " + ex.Message); }
         // The nested script spends what is left of this one's budget, so nesting cannot multiply it.
-        var nested = new FormCalcInterpreter(_host, Remaining(), _cancellation, _evalDepth + 1);
+        CheckTimeAndCancellation();
+        var nested = new FormCalcInterpreter(_host, Remaining(), _cancellation, _evalDepth + 1,
+            CheckTimeAndCancellation);
         try { return nested.Run(script); }
         finally { Absorb(nested); }
     }

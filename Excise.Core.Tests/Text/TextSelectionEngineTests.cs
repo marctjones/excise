@@ -91,6 +91,36 @@ public class TextSelectionEngineTests
     }
 
     [Fact]
+    public void SortReadingOrder_StackedHorizontalDigits_DoesNotGuessVerticalWriting()
+    {
+        // #1915: four one-glyph horizontal lines, painted bottom-to-top.
+        var letters = new[]
+        {
+            L("1", 10, 60, 8, 12), L("2", 10, 80, 8, 12),
+            L("3", 10, 100, 8, 12), L("4", 10, 120, 8, 12),
+        };
+
+        string.Concat(TextSelectionEngine.SortReadingOrder(letters).Select(l => l.Value))
+            .Should().Be("4321", "horizontal writing is not a vertical run merely because X stays constant");
+    }
+
+    [Fact]
+    public void SortReadingOrder_ShortVerticalColumns_KeepsProducerOrder()
+    {
+        // #1915: two glyphs per column cannot satisfy the old three-pair guess.
+        var letters = new[]
+        {
+            new Letter("日", new PdfRectangle(388, 276, 412, 300), 24, "F", 400, 300, 24, 1) { IsVerticalWriting = true },
+            new Letter("本", new PdfRectangle(388, 252, 412, 276), 24, "F", 400, 276, 24, 2) { IsVerticalWriting = true },
+            new Letter("語", new PdfRectangle(338, 276, 362, 300), 24, "F", 350, 300, 24, 3) { IsVerticalWriting = true },
+            new Letter("文", new PdfRectangle(338, 252, 362, 276), 24, "F", 350, 276, 24, 4) { IsVerticalWriting = true },
+        };
+
+        TextSelectionEngine.SortReadingOrder(letters).Should().Equal(letters,
+            "WMode, not run length or page geometry, defines vertical writing");
+    }
+
+    [Fact]
     public void RangeBetween_AcrossLines_FollowsReadingOrder()
     {
         var letters = new[]

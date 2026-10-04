@@ -157,13 +157,35 @@ public sealed class PdfField
     public bool IsMultiline { get; }
 
     /// <summary>
-    /// The font size named in this field's own appearance string
-    /// (<c>/DA</c>, the "<c>&lt;n&gt; Tf</c>" token — ISO 32000-2 §12.7.3.3),
-    /// or null when the field has no /DA or it doesn't parse. Doesn't walk
-    /// the AcroForm's inherited /DA or /DR: a caller with a fallback of its
-    /// own (a sane default, or the XFA font size) should use it instead.
+    /// The font size in the nearest default appearance string (<c>/DA</c>),
+    /// inherited through ancestor fields and then the AcroForm dictionary
+    /// (ISO 32000-2 §12.7.4.3). Null when that appearance requests automatic
+    /// sizing, is absent, or cannot be parsed; callers retain their own fallback.
     /// </summary>
-    public double? DefaultAppearanceFontSize => ParseDefaultAppearanceFontSize(RawDictionary.GetStringOrNull("DA"));
+    public double? DefaultAppearanceFontSize
+    {
+        get
+        {
+            // See #1922. Re-read mutable dictionaries and bound malformed parent cycles.
+            var visited = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+            PdfDictionary? current = RawDictionary;
+            while (current != null && visited.Add(current))
+            {
+                if (current.GetOptional("DA") is { } appearance)
+                {
+                    var resolved = _document.Resolve(appearance);
+                    if (resolved is not PdfNull)
+                        return ParseDefaultAppearanceFontSize((resolved as PdfString)?.Value);
+                }
+                current = current.GetOptional("Parent") is { } parent
+                    ? _document.Resolve(parent) as PdfDictionary : null;
+            }
+            var acroForm = _document.Catalog.GetOptional("AcroForm");
+            var root = acroForm == null ? null : _document.Resolve(acroForm) as PdfDictionary;
+            return ParseDefaultAppearanceFontSize(root?.GetOptional("DA") is { } rootAppearance
+                ? (_document.Resolve(rootAppearance) as PdfString)?.Value : null);
+        }
+    }
 
     /// <summary>
     /// Parse "(/Helv 10 Tf 0 g)" for the "&lt;n&gt; Tf" font-size token. Null

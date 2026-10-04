@@ -195,10 +195,10 @@ public class FormFieldsOverlayTests
         return Encoding.Latin1.GetBytes(sb.ToString());
     }
 
-    private static string WriteTempMultilineWithDaFormPdf()
+    private static string WriteTempMultilineWithDaFormPdf(bool inherited = false)
     {
         var path = Path.Combine(Path.GetTempPath(), $"excise-form-multiline-da-{Guid.NewGuid():N}.pdf");
-        File.WriteAllBytes(path, BuildMultilineWithDaFormPdf());
+        File.WriteAllBytes(path, BuildMultilineWithDaFormPdf(inherited));
         return path;
     }
 
@@ -206,13 +206,13 @@ public class FormFieldsOverlayTests
     // with its own 14pt /DA) whose /Ff bit-12 IS set, so this isolates part
     // (b) of the fix (FontSize/TextWrapping) from part (a) (the XFA signal,
     // covered in Excise.Core.Tests.Document.PdfFieldXfaMultilineTests).
-    private static byte[] BuildMultilineWithDaFormPdf()
+    private static byte[] BuildMultilineWithDaFormPdf(bool inherited = false)
     {
         var sb = new StringBuilder();
         sb.AppendLine("%PDF-1.7");
         long o1 = sb.Length;
         sb.AppendLine("1 0 obj");
-        sb.AppendLine("<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [5 0 R] >> >>");
+        sb.AppendLine($"<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [5 0 R] {(inherited ? "/DA (/Helv 14 Tf 0 g)" : "")} >> >>");
         sb.AppendLine("endobj");
         long o2 = sb.Length;
         sb.AppendLine("2 0 obj");
@@ -230,7 +230,7 @@ public class FormFieldsOverlayTests
         sb.AppendLine("endobj");
         long o5 = sb.Length;
         sb.AppendLine("5 0 obj");
-        sb.AppendLine("<< /Type /Annot /Subtype /Widget /FT /Tx /T (Address) /V (123 Main St) /Ff 4096 /DA (/Helv 14 Tf 0 g) /Rect [72 500 300 700] /P 3 0 R >>");
+        sb.AppendLine($"<< /Type /Annot /Subtype /Widget /FT /Tx /T (Address) /V (123 Main St) /Ff 4096 {(inherited ? "" : "/DA (/Helv 14 Tf 0 g)")} /Rect [72 500 300 700] /P 3 0 R >>");
         sb.AppendLine("endobj");
         long xref = sb.Length;
         sb.AppendLine("xref");
@@ -596,10 +596,12 @@ public class FormFieldsOverlayTests
         }
     }
 
-    [FixedAvaloniaFact]
-    public async Task MultilineTextField_WrapsAndUsesDaFontSize_NotBoxHeight()
+    [FixedAvaloniaTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task MultilineTextField_WrapsAndUsesDaFontSize_NotBoxHeight(bool inherited)
     {
-        var path = WriteTempMultilineWithDaFormPdf();
+        var path = WriteTempMultilineWithDaFormPdf(inherited);
         try
         {
             var vm = MainWindowViewModelTestFactory.Create();
@@ -625,7 +627,7 @@ public class FormFieldsOverlayTests
             // (dips at the page's logical DPI), so compare font to box in
             // the same units: 14pt of a 200pt-tall /Rect.
             (textBox.FontSize / textBox.Height).Should().BeApproximately(14.0 / 200.0, 0.001,
-                "the field's own /DA point size must be used, in the box's own units, not a fraction of the 200pt-tall box");
+                "the effective /DA point size, including AcroForm inheritance (#1922), must be used in the box's own units");
         }
         finally
         {
