@@ -157,7 +157,7 @@ public static class TextSelectionEngine
         // left-to-right page sort would undo that work. Vertical writing has
         // the same axis mismatch, so both stay in logical producer order.
         if (letters.Any(letter => ContainsStrongRtl(letter.Value)) ||
-            HasPredominantlyVerticalRuns(letters))
+            letters.Any(letter => letter.IsVerticalWriting))
         {
             return PageTextOrderStrategy.RawStream;
         }
@@ -221,30 +221,6 @@ public static class TextSelectionEngine
         run.AlphanumericCount >= 12 &&
         run.LetterCount >= 10 &&
         run.LetterCount >= 0.75 * run.AlphanumericCount;
-
-    private static bool HasPredominantlyVerticalRuns(IReadOnlyList<Letter> letters)
-    {
-        var horizontal = 0;
-        var vertical = 0;
-        for (var i = 1; i < letters.Count; i++)
-        {
-            var previous = letters[i - 1];
-            var current = letters[i];
-            if (IsSpaceGlyph(previous.Value) || IsSpaceGlyph(current.Value)) continue;
-
-            var dx = Math.Abs(current.StartX - previous.StartX);
-            var dy = Math.Abs(current.StartY - previous.StartY);
-            var scale = Math.Max(1, Math.Max(previous.FontSize, current.FontSize));
-
-            // Ignore jumps between independent runs; only neighbouring glyph
-            // advances tell us which writing axis the producer used.
-            if (Math.Max(dx, dy) > 2.5 * scale) continue;
-            if (dy > dx * 1.5) vertical++;
-            else if (dx > dy * 1.5) horizontal++;
-        }
-
-        return vertical >= 3 && vertical > horizontal;
-    }
 
     /// <summary>
     /// Column-order whole-page text without geometrically re-sorting individual
@@ -457,7 +433,8 @@ public static class TextSelectionEngine
     private static List<Letter> SortColumnAware(IEnumerable<Letter> letters)
     {
         var all = letters as IReadOnlyList<Letter> ?? letters.ToList();
-        if (HasPredominantlyVerticalRuns(all))
+        // #1915: WMode is authoritative; stacked horizontal glyphs are not vertical text.
+        if (all.Any(letter => letter.IsVerticalWriting))
             return all.ToList();
 
         var boundaries = DetectColumnBoundaries(all);

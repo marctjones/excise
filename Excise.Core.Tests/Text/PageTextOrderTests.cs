@@ -129,6 +129,20 @@ public class PageTextOrderTests
     }
 
     [Fact]
+    public void DeterminePageTextOrder_WithVerticalWritingFlag_KeepsProducerOrder()
+    {
+        // #1915: pin the page classifier independently from selection sorting.
+        var letters = CreateTwoColumnRows(proseRows: 8, tableRows: 0, rowMajor: true);
+        var first = letters[0];
+        letters[0] = new Letter(first.Value, first.GlyphRectangle, first.FontSize, first.FontName,
+            first.StartX, first.StartY, first.Width, first.CharacterCode) { IsVerticalWriting = true };
+
+        TextSelectionEngine.DeterminePageTextOrder(letters, out _)
+            .Should().Be(TextSelectionEngine.PageTextOrderStrategy.RawStream);
+        TextSelectionEngine.SortPageTextOrder(letters).Should().Equal(letters);
+    }
+
+    [Fact]
     public void DeterminePageTextOrder_PredominantlyVerticalText_KeepsProducerOrder()
     {
         var letters = new List<Letter>();
@@ -138,7 +152,9 @@ public class PageTextOrderTests
             {
                 var x = 100 + column * 300;
                 var y = 740 - index * 10;
-                letters.Add(CreateLetter("A", x, y));
+                var letter = CreateLetter("A", x, y);
+                letter.IsVerticalWriting = true;
+                letters.Add(letter);
             }
         }
 
