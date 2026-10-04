@@ -185,6 +185,20 @@ jobs:
       # their own declared Assert.Skip reason (#1172) and report as skipped,
       # which is why there is no hand-maintained exclusion list — #1527 is
       # what happens when a runner's test population is decided by a list.
+      # #1955: keep replacement and symlink behavior visible independently of
+      # the whole suite. Four passes are required; a skipped symlink is not proof.
+      - name: Windows save lifecycle regressions
+        run: |
+          dotnet test Excise.Core.Tests --no-build -c Debug `
+            --filter "FullyQualifiedName~SaveToPath_AfterAnotherProgramReplacedTheFile|FullyQualifiedName~SaveToPath_AfterTheFileWasTouchedOnDisk|FullyQualifiedName~SaveToPath_OntoASymlink" `
+            --results-directory "$env:TRX_DIR" `
+            --logger "trx;LogFileName=save-lifecycle.trx" `
+            --logger "console;verbosity=normal"
+
+      - name: Verify Windows save lifecycle actually ran
+        shell: bash
+        run: scripts/assert-trx-green.sh artifacts/trx/save-lifecycle.trx --min-passed 4
+
       - name: Excise.Core.Tests
         run: |
           dotnet test Excise.Core.Tests --no-build -c Debug `

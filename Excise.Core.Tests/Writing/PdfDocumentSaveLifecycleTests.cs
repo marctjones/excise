@@ -69,19 +69,28 @@ public class PdfDocumentSaveLifecycleTests
     /// old inode. A save back onto the path would put the stale document over
     /// the newer one; it must be refused and the newer file left alone.
     /// </summary>
-    [Fact]
-    public void SaveToPath_AfterAnotherProgramReplacedTheFile_RefusesAndKeepsTheNewerVersion()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void SaveToPath_AfterAnotherProgramReplacedTheFile_RefusesAndKeepsTheNewerVersion(bool ownedReader)
     {
         var dir = Directory.CreateTempSubdirectory("excise-stale-").FullName;
         try
         {
             var path = SeedFile(Path.Combine(dir, "doc.pdf"));
-            using var reader = OpenLikeTheGui(path);
-            using var document = PdfDocument.Open(reader);
+            using var reader = ownedReader ? null : OpenLikeTheGui(path);
+            using var document = ownedReader ? PdfDocument.Open(path) : PdfDocument.Open(reader!);
 
             var sibling = SeedFile(Path.Combine(dir, "sync-download.pdf"), pages: 3);
-            File.Move(sibling, path, overwrite: true);
+            // #1955: MoveFileEx cannot replace an open target on Windows even
+            // with delete sharing; use the platform's atomic replacement API.
+            if (OperatingSystem.IsWindows())
+                File.Replace(sibling, path, destinationBackupFileName: null);
+            else
+                File.Move(sibling, path, overwrite: true);
             var newer = File.ReadAllBytes(path);
+
+            document.PageCount.Should().Be(1, "the reader retains the original file after replacement");
 
             document.Pages.AddBlank(100, 100);
             var save = () => document.Save(path);
