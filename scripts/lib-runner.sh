@@ -1067,14 +1067,65 @@ runner_plan_expand_chunks() {
 # filtering and chunk expansion. {TRX:x} → $LOG_DIR/x.trx (x unchunked);
 # {TRXARGS:x} → "--trx $LOG_DIR/x.trx" or the chunk union; {TRXARGS?:x} →
 # the same, or nothing when x is not in this plan.
+# #1935: every consumer, including directory-based union gates, must see the
+# same checkpointed test evidence. Missing or cross-commit evidence re-runs.
+runner_checkpoint_test_evidence() {
+    local name="$1" kind="$2" directory="$3" source sha destination
+    case "$kind" in test|project|project-chunked) ;; *) return 0 ;; esac
+    sha="$(runner_marker_value "$name" sha)"
+    [ -n "$sha" ] && [ "$sha" = "$RUNNER_SHA" ] || return 1
+    source="$(runner_marker_value "$name" log)"
+    [ -n "$source" ] || return 1
+    source="${source%.log}.trx"
+    [ -s "$source" ] || return 1
+    destination="$directory/$name.trx"
+    python3 - "$source" "$destination" "$sha" <<'PY'
+import hashlib, json, os, sys, tempfile
+from pathlib import Path
+import xml.etree.ElementTree as ET
+source, destination, sha = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3]
+try:
+    data = source.read_bytes()
+    root = ET.fromstring(data)
+    if root.tag.rsplit('}', 1)[-1] != 'TestRun' or not any(
+            element.tag.rsplit('}', 1)[-1] == 'UnitTestResult' for element in root.iter()):
+        raise ValueError('checkpoint TRX has no test results')
+    digest = hashlib.sha256(data).hexdigest()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if source.resolve() != destination.resolve():
+        fd, temporary = tempfile.mkstemp(dir=destination.parent, prefix=destination.name + '.')
+        try:
+            with os.fdopen(fd, 'wb') as output:
+                output.write(data)
+                output.flush()
+                os.fsync(output.fileno())
+            os.replace(temporary, destination)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
+    provenance = dict(sourceRun=str(source.parent), sourceTrx=str(source),
+                      sourceCommit=sha, sha256=digest)
+    Path(str(destination) + '.provenance.json').write_text(
+        json.dumps(provenance, sort_keys=True) + '\n', encoding='utf-8')
+except (OSError, ValueError, ET.ParseError) as error:
+    print(f'checkpoint evidence unavailable: {error}', file=sys.stderr)
+    sys.exit(1)
+PY
+}
+
+# A plan-time copy cannot stand in for a producer that subsequently has to
+# re-run. Clear only this row's generated evidence, before prerequisite and
+# freshness checks, so an early failure cannot leave an old green TRX (#1935).
+runner_prepare_test_evidence() {
+    local name="$1" kind="$2" directory="$3"
+    case "$kind" in test|project|project-chunked) ;; *) return 0 ;; esac
+    rm -f "$directory/$name.trx" "$directory/$name.trx.provenance.json"
+}
+
 runner_plan_expand_trx() {
     local plan="$1" L="$2" tmp="$1.expand.$$" map="$1.trxmap.$$"
-    # Where each producer's trx WILL be: this run's LOG_DIR when the row runs;
-    # beside the evidence log in the earlier run directory when --resume takes
-    # the row from a checkpoint. The consumer used to assume LOG_DIR and read
-    # "no trx ... cannot tell which tests reported" on every resume whose
-    # producer was checkpointed (test-count-core/cli/avalonia, 2026-09-05).
-    # Rows whose evidence trx is gone fall back to LOG_DIR and fail loudly.
+    # #1935: all consumers use LOG_DIR. Eligible same-commit checkpoint TRX
+    # files are transported here; unavailable evidence causes runtime re-run.
     : > "$map"
     local name kind target filter rest hash evlog evtrx
     while IFS=$'\t' read -r name kind target filter rest; do
@@ -1083,8 +1134,7 @@ runner_plan_expand_trx() {
         evtrx="$L/$name.trx"
         hash="$(runner_target_hash "$kind" "$target" "$filter")"
         if ! runner_step_should_run "$name" "$hash"; then
-            evlog="$(runner_marker_value "$name" log)"
-            if [ -n "$evlog" ] && [ -f "${evlog%.log}.trx" ]; then evtrx="${evlog%.log}.trx"; fi
+            runner_checkpoint_test_evidence "$name" "$kind" "$L" || true
         fi
         printf '%s\t%s\n' "$name" "$evtrx" >> "$map"
     done < "$plan"

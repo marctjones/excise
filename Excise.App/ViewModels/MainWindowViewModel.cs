@@ -1279,6 +1279,9 @@ internal partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureDocumentPermission(DocumentAction.AssembleDocument, "Removing pages")) // #1946
+            return;
+
         try
         {
             RequestPreserveReadingPosition(); // #846: snapshot reading position before the page count/order changes
@@ -1323,6 +1326,9 @@ internal partial class MainWindowViewModel : ViewModelBase
             return;
         }
 
+        if (!EnsureDocumentPermission(DocumentAction.AssembleDocument, "Inserting pages"))
+            return;
+
         var files = await PickPdfFilesAsync("Select PDF to Add Pages From", allowMultiple: false);
         if (files.Count == 0)
         {
@@ -1340,6 +1346,8 @@ internal partial class MainWindowViewModel : ViewModelBase
     {
         if (!_documentService.IsDocumentLoaded)
             return;
+        if (!EnsureDocumentPermission(DocumentAction.AssembleDocument, "Inserting pages"))
+            return;
 
         var path = await PickPdfForPageInsertionAsync("Select PDF to Insert Before Current Page");
         if (!string.IsNullOrWhiteSpace(path))
@@ -1350,6 +1358,8 @@ internal partial class MainWindowViewModel : ViewModelBase
     {
         if (!_documentService.IsDocumentLoaded)
             return;
+        if (!EnsureDocumentPermission(DocumentAction.AssembleDocument, "Inserting pages"))
+            return;
 
         var path = await PickPdfForPageInsertionAsync("Select PDF to Insert After Current Page");
         if (!string.IsNullOrWhiteSpace(path))
@@ -1359,6 +1369,8 @@ internal partial class MainWindowViewModel : ViewModelBase
     public async Task InsertPagesFromFileAsync(string sourcePdfPath, int insertAtIndex)
     {
         if (!_documentService.IsDocumentLoaded)
+            return;
+        if (!EnsureDocumentPermission(DocumentAction.AssembleDocument, "Inserting pages"))
             return;
 
         try
@@ -1411,7 +1423,11 @@ internal partial class MainWindowViewModel : ViewModelBase
 
         try
         {
-            await _pageOrganizationWorkflow.MergeDocumentsAsync(sourcePaths, outputPath, IgnoreDocumentPermissions);
+            if (!await _pageOrganizationWorkflow.MergeDocumentsAsync(sourcePaths, outputPath, IgnoreDocumentPermissions))
+            {
+                _toastService.ShowInfo("Combine cancelled", "No combined PDF was saved.");
+                return;
+            }
             _toastService.ShowSuccess($"Combined {sourcePaths.Count} document(s) into {Path.GetFileName(outputPath)}");
         }
         catch (Exception ex)
@@ -1521,6 +1537,8 @@ internal partial class MainWindowViewModel : ViewModelBase
         var selected = GetSelectedPageIndices();
         if (!_documentService.IsDocumentLoaded || selected.Count == 0 || selected.Count >= TotalPages)
             return;
+        if (!EnsureDocumentPermission(DocumentAction.AssembleDocument, "Removing pages"))
+            return;
 
         try
         {
@@ -1582,6 +1600,8 @@ internal partial class MainWindowViewModel : ViewModelBase
             return;
         if (fromIndex < 0 || fromIndex >= TotalPages || toIndex < 0 || toIndex >= TotalPages || fromIndex == toIndex)
             return;
+        if (!EnsureDocumentPermission(DocumentAction.AssembleDocument, "Moving pages"))
+            return;
 
         try
         {
@@ -1620,6 +1640,8 @@ internal partial class MainWindowViewModel : ViewModelBase
     {
         var selected = GetSelectedPageIndices();
         if (!_documentService.IsDocumentLoaded || selected.Count == 0)
+            return;
+        if (!EnsureDocumentPermission(DocumentAction.AssembleDocument, "Moving pages"))
             return;
 
         try
@@ -2106,6 +2128,9 @@ internal partial class MainWindowViewModel : ViewModelBase
             _logger.LogWarning("Cannot rotate page: No document loaded");
             return;
         }
+
+        if (!EnsureDocumentPermission(DocumentAction.AssembleDocument, "Rotating pages"))
+            return;
 
         try
         {

@@ -11,6 +11,15 @@ portfolio workflows, or certificate-authority trust decisions.
 Current release-quality limitations are tracked in GitHub Issues and surfaced in
 release notes:
 
+- **Dynamic XFA forms** — layout is experimental and does not establish that
+  the complete form is visible (#1824). The Ohio expense report loses content
+  when an oversized section is clipped; IMM 5257e and IMM 1295e move part of
+  their first page onto an extra page. Layout omissions or failed calculations
+  trigger a persistent incomplete-content warning; other dynamic forms still
+  carry an experimental-layout notice. Verify the complete form in Adobe
+  Acrobat Reader or Firefox. XFA fields cannot be filled here, and JavaScript
+  and button scripts do not run. This warning bounds the release limitation;
+  it does not fix clipping or pagination.
 - **Printing — macOS, Windows and Linux** (#1545, superseding #621; #1546; #1710).
   File → Print… (⌘P / Ctrl+P) prints the document **as currently edited**:
   unsaved page changes, filled form fields, pending type-over text, and

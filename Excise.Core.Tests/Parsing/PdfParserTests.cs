@@ -72,6 +72,20 @@ public class PdfParserTests
     }
 
     [Fact]
+    public void ParseObject_DictionaryEncryptNull_IsAbsent()
+    {
+        // The parser retains standalone null objects, but dictionary assignment
+        // drops null entries before the document-open encryption check (#1949).
+        using var parser = new PdfParser(Encoding.ASCII.GetBytes("<< /Encrypt null /Size 7 >>"));
+
+        var dictionary = (PdfDictionary)parser.ParseObject();
+
+        dictionary.ContainsKey("Encrypt").Should().BeFalse();
+        dictionary.GetOptional("Encrypt").Should().BeNull();
+        dictionary.GetInt("Size").Should().Be(7);
+    }
+
+    [Fact]
     public void ParseObject_Name_ReturnsPdfName()
     {
         using var parser = new PdfParser(Encoding.ASCII.GetBytes("/Type"));

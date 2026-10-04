@@ -122,7 +122,7 @@ public class GroupBAnnotationMeaningTests
         var annots = page.GetAnnotations()
                          .Where(a => a.Subtype != PdfAnnotationSubtype.Popup)
                          .ToList();
-        Assert.SkipWhen(annots.Count == 0, "no annotations on page 1");
+        annots.Should().NotBeEmpty($"{fixture}: expected the fixture's page 1 annotations to be parsed");
 
         // Difference the annotation layer against the page WITHOUT it, so page
         // content is not mistaken for synthesized annotation ink.
@@ -318,7 +318,7 @@ public class GroupBAnnotationMeaningTests
         using var doc = PdfDocument.Open(File.ReadAllBytes(path!));
         var page = doc.GetPage(1);
         var annots = page.GetAnnotations().Where(a => a.Subtype != PdfAnnotationSubtype.Popup).ToList();
-        Assert.SkipWhen(annots.Count == 0, "no annotations on page 1");
+        annots.Should().NotBeEmpty($"{fixture}: expected the fixture's page 1 annotations to be parsed");
 
         try
         {

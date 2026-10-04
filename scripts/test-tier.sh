@@ -251,17 +251,20 @@ run_step() {
     # --resume: skip a row that already passed for this exact command and
     # tree. Rows declared checkpoint=never (the redaction family, build) are
     # never skipped — t1 accepts no flag that skips them.
-    if [ "$RESUME" = "1" ] && ! runner_step_should_run "$name" "$hash"; then
+    if [ "$RESUME" = "1" ] && ! runner_step_should_run "$name" "$hash" \
+        && runner_checkpoint_test_evidence "$name" "$kind" "$LOG_DIR"; then
         local skip_status="SKIP_CHECKPOINTED"
         [ "$(runner_marker_value "$name" status)" = "KNOWN" ] && skip_status="SKIP_CHECKPOINTED_KNOWN"
         say "${B}[$name]${N} ${G}SKIP${N} - checkpointed$([ "$skip_status" = "SKIP_CHECKPOINTED_KNOWN" ] && echo " (accepted failure)")"
         runner_ledger_record "$name" "$skip_status" 0 0 "kind=$kind" "target=$target" "filter=$filter" \
             "class=$class" "knownIssue=$known" "prereq=$prereq" \
             "evidenceFrom=$(runner_marker_path "$name")" "evidenceFinished=$(runner_marker_value "$name" finished)" \
-            "evidenceLog=$(runner_marker_value "$name" log)" "evidenceSha=$(runner_marker_value "$name" sha)"
+            "evidenceLog=$(runner_marker_value "$name" log)" "evidenceSha=$(runner_marker_value "$name" sha)" \
+            "trx=$LOG_DIR/$name.trx"
         say ""
         return
     fi
+    runner_prepare_test_evidence "$name" "$kind" "$LOG_DIR"
     [ "$RESUME" = "1" ] && runner_mem_guard "$name"
 
     say "${B}[$name]${N} $cmdline"

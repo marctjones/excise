@@ -370,10 +370,8 @@ internal class PdfDocumentService
         if (indices.Count == 0)
             throw new ArgumentException("At least one valid page index is required", nameof(pageIndices));
 
-        using var extracted = PdfDocument.CreateNew(document.Version);
-        foreach (var index in indices)
-            extracted.Pages.Add(document.GetPage(index + 1));
-
+        // Reuse split's catalog allowlist and batch page-reference remapping (#1948).
+        using var extracted = PdfDocumentSplitter.ExtractPages(document, indices);
         extracted.Save(outputPath, GetReEncryptionOptions());
         _logger.LogInformation(
             "Extracted {Count} page(s) to {OutputPath}", indices.Count, outputPath);
@@ -384,9 +382,11 @@ internal class PdfDocumentService
     /// <see cref="PdfDocumentAssembly.Merge"/>). Does not touch the currently-loaded document.
     /// </summary>
     public MergeDocumentsResult MergeDocumentsToPdf(
-        IReadOnlyList<string> sourcePaths, string outputPath, bool ignorePermissions = false)
+        IReadOnlyList<string> sourcePaths, string outputPath, bool ignorePermissions = false,
+        Func<string, string?>? userPasswordForSource = null)
     {
-        var result = PdfDocumentAssembly.Merge(sourcePaths, outputPath, AssembleGate(ignorePermissions));
+        var result = PdfDocumentAssembly.Merge(
+            sourcePaths, outputPath, AssembleGate(ignorePermissions), userPasswordForSource ?? (static _ => null));
         _logger.LogInformation(
             "Merged {Count} source document(s) into {OutputPath}; catalog entries not conserved: [{Dropped}]",
             sourcePaths.Count, result.OutputPath, string.Join(", ", result.DroppedCatalogEntries));

@@ -1,7 +1,10 @@
 using Excise.Core.Operations;
+using Excise.Core.Document;
+using Excise.Core.Parsing;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -126,10 +129,36 @@ internal sealed class PageOrganizationWorkflowService
     /// document, so it does not report a <see cref="PageOrganizationResult"/>
     /// change (there is nothing on screen to refresh).
     /// </summary>
-    public Task MergeDocumentsAsync(IReadOnlyList<string> sourcePaths, string outputPath, bool ignorePermissions)
+    public async Task<bool> MergeDocumentsAsync(IReadOnlyList<string> sourcePaths, string outputPath, bool ignorePermissions)
     {
-        _documentService.MergeDocumentsToPdf(sourcePaths, outputPath, ignorePermissions);
-        return Task.CompletedTask;
+        // #1947: acquire all source passwords before any output is written. Never
+        // use LoadDocument here: it replaces the document the user is editing.
+        var passwords = new Dictionary<string, string?>();
+        foreach (var sourcePath in sourcePaths.Distinct())
+        {
+            string? password = null;
+            try
+            {
+                using var source = await Task.Run(() => PdfDocument.Open(sourcePath));
+            }
+            catch (PdfEncryptionNotSupportedException ex) when (
+                PdfPasswordPrompt.IsPasswordVerificationFailure(ex))
+            {
+                password = await _dialogService.PromptPasswordAsync(
+                    "Password Required", $"Enter the user password for {Path.GetFileName(sourcePath)}.");
+                if (password is null)
+                    return false;
+
+                // A rejected password propagates as an error, not a cancellation.
+                using var source = await Task.Run(() => PdfDocument.Open(
+                    sourcePath, new PdfOpenOptions { UserPassword = password }));
+            }
+            passwords.Add(sourcePath, password);
+        }
+
+        await Task.Run(() => _documentService.MergeDocumentsToPdf(
+            sourcePaths, outputPath, ignorePermissions, path => passwords[path]));
+        return true;
     }
 
     /// <summary>

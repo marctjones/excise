@@ -6,6 +6,10 @@
 #
 # state	spdx-id	note
 #
+# ── REVIEW ──────────────────────────────────────────────────────────────────
+# A review row documents the unresolved decision; it grants no permission.
+review	LicenseRef-CSJ2K-JJ2000	#1914: JJ2000 conformance/field-of-use notice requires a recorded distribution decision
+#
 # ── PERMITTED ───────────────────────────────────────────────────────────────
 # Ship freely. Permissive, no copyleft, no field-of-use restriction. All of
 # these still require the notice to travel with the redistribution, which is

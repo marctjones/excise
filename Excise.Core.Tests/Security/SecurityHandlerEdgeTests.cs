@@ -156,21 +156,65 @@ public class SecurityHandlerEdgeTests
     }
 
     /// <summary>
-    /// #1850: ISO 32000-2 §7.3.7 treats a dictionary entry whose value is null as absent, so a
-    /// trailer's <c>/Encrypt null</c> is an unencrypted file (qpdf: "File is not encrypted"). The
-    /// genuinely encrypted control is <see cref="Rc4V1R2_GenuinelyEncryptedContentAndStrings_DecryptEndToEnd"/>.
+    /// #1949: direct null entries are dropped by the parser's dictionary assignment;
+    /// an indirect object declared null is normalized by the document-open pipeline.
+    /// Both must expose the same document behavior as an absent /Encrypt entry.
     /// </summary>
-    [Fact]
-    public void Open_TrailerEncryptNull_IsAnUnencryptedDocument()
+    [Theory]
+    [InlineData("", false)]
+    [InlineData("/Encrypt null", false)]
+    [InlineData("/Encrypt 6 0 R", false)]
+    [InlineData("", true)]
+    [InlineData("/Encrypt null", true)]
+    [InlineData("/Encrypt 6 0 R", true)]
+    public void Open_AbsentOrNullEncrypt_HasEquivalentUnencryptedBehavior(string trailerEntry, bool allowEncrypted)
     {
-        var pdf = BuildPlaintextPdf("NULLENCRYPT", trailerEntry: "/Encrypt null");
+        var pdf = BuildPlaintextPdf("NULLENCRYPT", trailerEntry);
+        using var absent = PdfDocument.Open(BuildPlaintextPdf("NULLENCRYPT", ""));
+        using var doc = PdfDocument.Open(pdf, new PdfOpenOptions { AllowEncrypted = allowEncrypted });
 
-        using var doc = PdfDocument.Open(pdf);
+        doc.Trailer.ContainsKey("Encrypt").Should().BeFalse("null encryption entries must normalize to absence");
+        doc.IsEncrypted.Should().Be(absent.IsEncrypted).And.BeFalse();
+        doc.IsDecrypting.Should().Be(absent.IsDecrypting).And.BeFalse();
+        doc.Permissions.Should().Be(absent.Permissions);
+        doc.PageCount.Should().Be(absent.PageCount).And.Be(1);
+        doc.GetPage(1).Text.Should().Be(absent.GetPage(1).Text).And.Contain("NULLENCRYPT");
+        doc.GetReEncryptionOptions("unused").Should().BeNull();
 
-        doc.IsEncrypted.Should().BeFalse("a null /Encrypt is the same as no /Encrypt");
-        doc.GetPage(1).Text.Should().Contain("NULLENCRYPT");
+        using var saved = PdfDocument.Open(doc.SaveToBytes());
+        saved.IsEncrypted.Should().BeFalse();
+        saved.GetPage(1).Text.Should().Contain("NULLENCRYPT");
+    }
+
+    [Fact]
+    public void Open_TrailerEncryptNull_IndependentReaderExtractsPlaintext()
+    {
         Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        var pdf = BuildPlaintextPdf("NULLENCRYPT", "/Encrypt null");
         MutoolTextOracle.ExtractAllPages(pdf).Should().Contain("NULLENCRYPT", "MuPDF reads the same file as plaintext");
+    }
+
+    [Fact]
+    public void Open_RealEncryptDictionary_StillRequiresCorrectPassword()
+    {
+        using var plain = PdfDocument.Open(BuildPlaintextPdf("PROTECTEDCONTENT", ""));
+        var encrypted = plain.SaveToBytes(new PdfEncryptionOptions
+        {
+            UserPassword = "user-key",
+            OwnerPassword = "owner-key",
+            Algorithm = PdfEncryptionAlgorithm.Aes128,
+        });
+
+        var withoutPassword = () => PdfDocument.Open(encrypted);
+        withoutPassword.Should().Throw<PdfEncryptionNotSupportedException>();
+        var wrongPassword = () => PdfDocument.Open(encrypted, new PdfOpenOptions { UserPassword = "wrong" });
+        wrongPassword.Should().Throw<PdfEncryptionNotSupportedException>();
+
+        using var unlocked = PdfDocument.Open(encrypted, new PdfOpenOptions { UserPassword = "user-key" });
+        unlocked.IsEncrypted.Should().BeTrue();
+        unlocked.IsDecrypting.Should().BeTrue();
+        unlocked.GetPage(1).Text.Should().Contain("PROTECTEDCONTENT");
+        unlocked.GetReEncryptionOptions("user-key").Should().NotBeNull();
     }
 
     /// <summary>A one-page plaintext PDF whose trailer also carries <paramref name="trailerEntry"/>.</summary>
@@ -184,6 +228,7 @@ public class SecurityHandlerEdgeTests
             "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
             $"<< /Length {content.Length} >>\nstream\n{content}\nendstream",
             "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+            "null",
         };
         var pdf = new StringBuilder("%PDF-1.4\n");
         var offsets = new List<int>();

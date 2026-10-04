@@ -203,19 +203,17 @@ LICENSE_OVERRIDES = {
         "spdx": "BSD-3-Clause",
         "licenseSpdxUrl": "https://spdx.org/licenses/BSD-3-Clause.html",
     },
-    # CSJ2K ships no LICENSE file; embed the BSD notice + JJ2000 copyright.
-    #
-    # SPDX classified BSD-2-Clause by Marc (#1063). ⚠️ The evidence is WEAKER
-    # than every other entry here and that is recorded on purpose: no licence
-    # text ships in the package and none exists upstream. The .nuspec has no
-    # <license> element, only licenseUrl -> the opensource.org 2-clause page,
-    # and the upstream README says only "Licensed and distributable under the
-    # terms of the BSD license" linking that same page. The determination rests
-    # on two statements and no text.
+    # CSJ2K's generic BSD metadata does not describe the entire notice (#1914).
+    # Upstream COPYRIGHT-JJ2000-5.1 contains a conformance/field-of-use clause;
+    # its verbatim body is already embedded below the port's BSD attribution.
+    # Audit source blob: 61d89e7399179be27e682111bf9870656c78f3d3.
+    # The earlier BSD-2-Clause classification (#1063) relied on package/README
+    # links. Do not let it silently approve the additional JJ2000 terms:
+    # this custom identifier remains REVIEW until a distribution decision.
     "CSJ2K": {
-        "licenseName": "BSD License (CSJ2K / JJ2000)",
-        "spdx": "BSD-2-Clause",
-        "licenseSpdxUrl": "https://spdx.org/licenses/BSD-2-Clause.html",
+        "licenseName": "CSJ2K BSD / JJ2000 restricted-use notice",
+        "spdx": "LicenseRef-CSJ2K-JJ2000",
+        "licenseSpdxUrl": "https://github.com/cureos/csj2k/blob/master/COPYRIGHT-JJ2000-5.1",
         "licenseText": CSJ2K_LICENSE_TEXT,
     },
     # ANGLE ships its licence text in the package and it is the ANGLE Project

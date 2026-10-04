@@ -1,4 +1,7 @@
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using AwesomeAssertions;
@@ -35,6 +38,29 @@ public class AboutWindowTests
         var ids = vm.Packages.Select(p => p.Id).ToHashSet();
         ids.Should().Contain("Avalonia");
         ids.Should().Contain("SkiaSharp");
+    }
+
+    [Fact]
+    public void Manifest_Jj2000Terms_AreNotClassifiedAsUnconditionalBsd()
+    {
+        // #1914: a generic package BSD link must not silently approve the
+        // additional JJ2000 terms. This verifies attribution, not legal consent.
+        var package = new AboutWindowViewModel().Packages.Single(p => p.Id == "CSJ2K");
+        package.Spdx.Should().Be("LicenseRef-CSJ2K-JJ2000");
+        package.LicenseName.Should().Contain("restricted-use");
+        package.LicenseSpdxUrl.Should().Be(
+            "https://github.com/cureos/csj2k/blob/master/COPYRIGHT-JJ2000-5.1");
+
+        package.LicenseText.Should().NotBeNullOrWhiteSpace();
+        const string marker = "COPYRIGHT:";
+        var text = package.LicenseText!;
+        text.Should().Contain(marker);
+        var body = text[(text.IndexOf(marker, System.StringComparison.Ordinal) + marker.Length)..];
+        var normalized = Regex.Replace(body, @"\s+", " ").Trim();
+        // Whitespace-normalized upstream blob 61d89e7399179be27e682111bf9870656c78f3d3.
+        // Pin the complete body, not just the presence of a restriction sentence.
+        var hash = System.Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(normalized)));
+        hash.Should().Be("5a073c6ba83e6bc40ce9beb8dba7ffb7bcdc434d2dba89667bab72c15f58e7ff");
     }
 
     [Fact]

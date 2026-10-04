@@ -403,6 +403,5 @@ internal partial class MainWindowViewModel
     }
 
     private static bool IsPasswordVerificationFailure(Exception exception)
-        => exception.Message.Contains("password verification failed", StringComparison.OrdinalIgnoreCase)
-           || exception.Message.Contains("requires a non-empty user password", StringComparison.OrdinalIgnoreCase);
+        => PdfPasswordPrompt.IsPasswordVerificationFailure(exception);
 }

@@ -40,7 +40,7 @@ public class PageCollectionTests
         Assert.SkipWhen(string.IsNullOrEmpty(pdfPath), "No test PDF available");
 
         using var doc = PdfDocument.Open(pdfPath);
-        Assert.SkipWhen(doc.PageCount < 1, "PDF needs at least 1 page");
+        doc.PageCount.Should().BeGreaterThan(0, "the test PDF must contain at least one page");
 
         // Act
         var page = doc.Pages[0];

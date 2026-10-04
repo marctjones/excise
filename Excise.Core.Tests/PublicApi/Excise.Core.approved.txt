@@ -1234,6 +1234,7 @@ namespace Excise.Core.Operations
     public static class PdfDocumentAssembly
     {
         public static Excise.Core.Operations.MergeDocumentsResult Merge(System.Collections.Generic.IReadOnlyList<string> inputPaths, string outputPath, System.Action<Excise.Core.Document.PdfDocument, string> requireAssemble, System.Threading.CancellationToken cancellationToken = default) { }
+        public static Excise.Core.Operations.MergeDocumentsResult Merge(System.Collections.Generic.IReadOnlyList<string> inputPaths, string outputPath, System.Action<Excise.Core.Document.PdfDocument, string> requireAssemble, System.Func<string, string?> userPasswordForSource, System.Threading.CancellationToken cancellationToken = default) { }
         public static Excise.Core.Operations.SplitDocumentResult Split(Excise.Core.Document.PdfDocument source, string? userPassword, Excise.Core.Operations.SplitDocumentSpecification specification, string outputFolder, string baseName, System.Action<Excise.Core.Document.PdfDocument, string> requireAssemble, System.Threading.CancellationToken cancellationToken = default) { }
     }
     public static class PdfDocumentMerger
@@ -1251,6 +1252,7 @@ namespace Excise.Core.Operations
     }
     public static class PdfDocumentSplitter
     {
+        public static Excise.Core.Document.PdfDocument ExtractPages(Excise.Core.Document.PdfDocument source, System.Collections.Generic.IReadOnlyList<int> pageIndices) { }
         public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfDocument> SplitAtBookmarks(Excise.Core.Document.PdfDocument source) { }
         public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfDocument> SplitAtPageBoundaries(Excise.Core.Document.PdfDocument source, System.Collections.Generic.IReadOnlyList<int> startIndices) { }
         public static System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfDocument> SplitEveryNPages(Excise.Core.Document.PdfDocument source, int pagesPerChunk) { }

@@ -13,7 +13,7 @@ A cross-platform PDF editor for macOS, Windows and Linux, written in C# on .NET 
 
 - **Redaction that removes content.** Text, images and vector graphics are cut out of the PDF's content streams. Metadata, attachments, JavaScript, thumbnails and hidden layers are scrubbed by default, and every removal is reported. Results are checked with independent tools (mutool, pdftotext), never with excise itself; how the checks work is in [LOCAL_GATES.md](LOCAL_GATES.md).
 - **Read and navigate.** Skia rendering, search, text selection and copy, thumbnails, outlines, and several documents at once.
-- **Fill forms.** Fill and flatten AcroForm fields, create new fields, and view dynamic XFA forms. FormCalc calculations run in excise's own interpreter; JavaScript never runs.
+- **Fill forms.** Fill and flatten AcroForm fields and create new fields. Dynamic XFA layouts are experimental: they may omit or move content and cannot be filled here. FormCalc calculations run in excise's own interpreter; JavaScript never runs.
 - **Annotate.** Highlight, underline, strike-out and squiggly markup, sticky notes, shapes, stamps (including image stamps for signatures), ink, lines and polygons. Typewriter text can be placed on flat PDFs.
 - **Organize.** Reorder, rotate, extract, remove and merge pages; reduce file size; Bates numbering.
 - **Security.** Read and write AES-128 and AES-256 encryption; inspect digital signatures against the OS trust store.

@@ -104,20 +104,14 @@ internal sealed class StickyNotePopupViewModel : ReactiveObject
     /// unambiguously strong-RTL or strong-LTR, skipping neutrals (whitespace,
     /// digits, punctuation) — not "contains any RTL character", which would
     /// flip an otherwise-English note over one stray Hebrew word. Reuses
-    /// <see cref="Excise.Core.Text.BidiReorderer.IsStrongRtlChar"/> (internal,
+    /// <see cref="Excise.Core.Text.BidiReorderer.FirstStrongLetterIsRtl"/> (internal,
     /// reachable here via InternalsVisibleTo) rather than a second definition
     /// of which scripts are RTL.
     /// </summary>
     private void UpdateTextDirection()
     {
-        bool rtl = false;
-        foreach (var ch in _text)
-        {
-            if (Excise.Core.Text.BidiReorderer.IsStrongRtlChar(ch)) { rtl = true; break; }
-            if (char.IsLetter(ch)) break;
-        }
-
-        FlowDirection = rtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+        FlowDirection = Excise.Core.Text.BidiReorderer.FirstStrongLetterIsRtl(_text)
+            ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
     }
 
     /// <summary>

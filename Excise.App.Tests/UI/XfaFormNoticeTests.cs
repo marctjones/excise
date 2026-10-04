@@ -133,6 +133,74 @@ public class XfaFormNoticeTests : IDisposable
     }
 
     [FixedAvaloniaFact]
+    public async Task ClippedDynamicXfa_ShowsIncompleteContentWarning_AndClearsOnPlainPdf()
+    {
+        // #1824: a successful layout can still clip an indivisible oversized box.
+        var path = Path.Combine(_tempDir, "clipped.pdf");
+        File.WriteAllBytes(path, Excise.TestSupport.XfaTestForms.BuildPdf(
+            Excise.TestSupport.XfaTestForms.Template(
+                "<subform name=\"Oversized\" layout=\"position\" w=\"8in\" h=\"20in\">"
+                + "<draw name=\"LowerContent\" y=\"18in\" w=\"2in\" h=\"0.3in\">"
+                + "<value><text>Content below the page</text></value></draw></subform>")));
+        var vm = MainWindowViewModelTestFactory.Create();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        try
+        {
+            await vm.LoadDocumentAsync(path);
+            Dispatcher.UIThread.RunJobs();
+
+            vm.IsXfaFormLaidOut.Should().BeTrue("layout success must not hide an omission warning");
+            var banner = window.GetVisualDescendants().OfType<FAInfoBar>()
+                .Single(b => b.Name == "XfaFormInfoBar");
+            banner.IsOpen.Should().BeTrue();
+            banner.Severity.Should().Be(FAInfoBarSeverity.Warning);
+            banner.Title.Should().Contain("incomplete");
+            banner.Message.Should().Contain("missing").And.Contain("clipped")
+                .And.Contain("Adobe Acrobat Reader");
+            vm.HasUnsavedDocumentChanges.Should().BeFalse("a diagnostic is not an edit");
+
+            await vm.LoadDocumentAsync(Pdf(Shape.Plain));
+            Dispatcher.UIThread.RunJobs();
+            banner.IsOpen.Should().BeFalse("a previous form's warning must not describe a plain PDF");
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
+    [FixedAvaloniaTheory]
+    [InlineData("ohio-expense-report.pdf")]
+    [InlineData("imm5257e.pdf")]
+    [InlineData("imm1295e.pdf")]
+    [InlineData("hsbc-cloture-compte.pdf")]
+    public async Task RealDynamicXfa_DoesNotPresentExperimentalLayoutAsComplete(string fixture)
+    {
+        var path = Excise.TestSupport.TestRepoLayout.FindFile("test-pdfs", "xfa-real", fixture);
+        Assert.SkipUnless(path != null, "Run scripts/download-xfa-real-corpus.sh for the pinned real XFA corpus");
+        var vm = MainWindowViewModelTestFactory.Create();
+        try
+        {
+            await vm.LoadDocumentAsync(path!);
+            vm.IsXfaFormLaidOut.Should().BeTrue("these real forms must still open, not fall back to placeholders");
+            vm.IsXfaNoticeOpen.Should().BeTrue();
+            vm.XfaNoticeMessage.Should().Contain("missing").And.Contain("moved between pages")
+                .And.Contain("Adobe Acrobat Reader").And.Contain("fields can't be filled");
+            if (fixture == "ohio-expense-report.pdf")
+            {
+                vm.HasXfaLayoutWarnings.Should().BeTrue("Ohio has the known clipping report in #1824");
+                vm.XfaNoticeSeverity.Should().Be(FAInfoBarSeverity.Warning);
+                vm.XfaNoticeTitle.Should().Contain("incomplete");
+            }
+        }
+        finally
+        {
+            await vm.CloseDocumentCommand.Execute();
+        }
+    }
+
+    [FixedAvaloniaFact]
     public async Task PlainPdf_ShowsNoNotice_AndOpeningOneClearsAPreviousNotice()
     {
         var vm = MainWindowViewModelTestFactory.Create();

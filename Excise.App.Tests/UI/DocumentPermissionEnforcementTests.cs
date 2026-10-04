@@ -321,7 +321,8 @@ public class DocumentPermissionEnforcementTests : IDisposable
 
         vm.SaveDocumentForTests!.GetPage(1).Rotation.Should().Be(0, "the fixture denies /P bit 11 (assemble)");
         vm.CanUndo.Should().BeFalse("a refused rotation records no undo step");
-        toasts.Should().ContainSingle(t => t.Details != null && t.Details.Contains("Blocked by document permissions"),
+        toasts.Should().ContainSingle(t => t.Message.Contains("Blocked by document permissions")
+                && t.Details != null && t.Details.Contains("/P bit 11"),
             "the rotate command used to log a failure and show nothing");
     }
 

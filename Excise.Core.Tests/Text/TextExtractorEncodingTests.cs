@@ -450,14 +450,26 @@ public class TextExtractorEncodingTests
         """;
 
     public static TheoryData<int, string, int> AnnexDMacRomanHighCodes()
+        => ParseAnnexDMacRomanHighCodes(AnnexDMacRomanHigh);
+
+    private static TheoryData<int, string, int> ParseAnnexDMacRomanHighCodes(string table)
     {
         var data = new TheoryData<int, string, int>();
-        foreach (var line in AnnexDMacRomanHigh.Split('\n'))
+        foreach (var line in table.Split('\n', System.StringSplitOptions.RemoveEmptyEntries))
         {
-            var f = line.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            var f = line.Split((char[]?)null, System.StringSplitOptions.RemoveEmptyEntries);
             data.Add(System.Convert.ToInt32(f[0], 8), f[1], System.Convert.ToInt32(f[2], 16));
         }
         return data;
+    }
+
+    [Fact]
+    public void AnnexDMacRomanTable_IsIndependentOfCheckoutLineEndings()
+    {
+        // #1956: Windows CRLF must not prevent discovery of the high-code oracle.
+        var lf = AnnexDMacRomanHigh.Replace("\r\n", "\n");
+        ParseAnnexDMacRomanHighCodes(lf.Replace("\n", "\r\n"))
+            .Should().BeEquivalentTo(ParseAnnexDMacRomanHighCodes(lf), options => options.WithStrictOrdering());
     }
 
     [Theory]
