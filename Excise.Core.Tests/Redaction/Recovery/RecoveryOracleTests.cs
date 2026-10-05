@@ -159,24 +159,16 @@ public class RecoveryOracleTests
     }
 
     [Fact]
-    public void CarrierRecovery_IsReadBackByAnIndependentEngineOneExtractorCannotSee()
+    public void CarrierRecovery_IsReadBackByIndependentEngines()
     {
         Assert.SkipUnless(ToolAvailable("mutool"), "mutool is not on PATH");
         Assert.SkipUnless(ToolAvailable("pdftotext"), "pdftotext is not on PATH");
 
-        // MEASURED, and not what this test first asserted. The glyphs really
-        // were removed, so the obvious expectation is that no extractor reads
-        // HARPER off the page. That is true of MuPDF and FALSE of Poppler:
-        // pdftotext honours the inline /ActualText and prints the name, while
-        // mutool prints the two blank glyphs that are actually painted.
-        //
-        // The asymmetry is the finding, and it is the whole argument for
-        // reading this carrier. The leak is not dormant bytes waiting for a
-        // hex editor -- it is live text in a mainstream extractor, invisible to
-        // the other. An audit that consulted one engine would report this page
-        // clean or leaking depending purely on which engine it happened to
-        // pick, which is the #1372 lesson stated on the recovery side: a single
-        // extractor cannot report its own blind spot.
+        // The visible glyphs were removed, but /ActualText remains live carrier
+        // data. Extractor support changes over time (current MuPDF and Poppler
+        // both expose it), so this test pins the durable security property:
+        // independent readers can recover the value. Do not pin an accidental
+        // disagreement between tool versions as product behavior.
         var bytes = RecoveryFixtureBuilder.MarkedContentCarrierUnderBox("HARPER");
         using var doc = PdfDocument.Open(bytes);
         var finding = RecoveryScanner.Scan(doc).AllFindings
@@ -184,11 +176,10 @@ public class RecoveryOracleTests
 
         finding.Text.Should().Be("HARPER");
 
-        MutoolTextOracle.ExtractAllPages(bytes).Should().NotContain("HARPER",
-            "MuPDF reads the painted glyphs, which the redaction did remove");
+        MutoolTextOracle.ExtractAllPages(bytes).Should().Contain("HARPER",
+            "MuPDF exposes the inline /ActualText carrier");
         PdftotextExtract(bytes).Should().Contain("HARPER",
-            "Poppler honours the inline /ActualText -- an independent engine reads " +
-            "the recovered value straight out, so the finding is not an excise artefact");
+            "Poppler exposes the inline /ActualText carrier independently of excise");
 
         // And it is in the bytes, which is what makes the finding CERTAIN
         // rather than a guess.

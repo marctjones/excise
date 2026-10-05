@@ -3,25 +3,28 @@
   "Source": "pdf.js corpus",
   "Owner": "rendering:quality",
   "RootCause": "FONT_SUBSTITUTION_ORACLE_DISAGREEMENT",
+  "Issue": 1937,
   "ImprovementPriority": "NONE",
   "Confidence": "HIGH",
-  "Notes": "Excise draws a condensed FALLBACK font for this page's embedded Type1C font (#1937), so it does not agree with mutool and pdftocairo, which draw the font's own small-capital glyphs. The old PASS was the fallback selection landing inside the raw threshold; the #1502 fallback-glyph width fit (4ab13f45) moved it to one agreeing reference.",
+  "Notes": "Maintainer-deferred compatibility disagreement (#1937), not a confirmed product defect or an acceptance of current behavior. The macOS native backend rejects the malformed embedded Type1C program before the outline probe. Mutool and pdftocairo recover small-capital glyphs, while Ghostscript and Excise substitute differently. Renderer agreement alone does not settle specification correctness on this malformed input. Raw status and tolerances remain unchanged.",
   "Pages": {
     "1": {
       "ExpectedRawStatus": "PASS_ONE",
-      "ReleaseStatus": "PASS",
-      "QualityStatus": "MATCHES_ACCEPTED_REFERENCE",
+      "ReleaseStatus": "NEEDS_REVIEW",
+      "QualityStatus": "NEEDS_REVIEW",
       "PixelAgreement": "MATCHES_ONE_REFERENCE",
       "ReferenceSituation": "REFS_DISAGREE",
       "RootCause": "FONT_SUBSTITUTION_ORACLE_DISAGREEMENT",
       "Target": {
-        "Mode": "REFERENCE_CONSENSUS",
-        "Reason": "Use all configured reference renderers; when they disagree, matching an accepted renderer is sufficient."
+        "Mode": "REFERENCE_RENDERER",
+        "Primary": "mutool",
+        "AcceptableAlternates": [ "pdftocairo" ],
+        "Reason": "Mutool and pdftocairo independently agree on recovered small-capital glyphs (MAE 1.8 at 144 dpi). Keep these measurements for future review; neither their agreement nor Ghostscript's different substitution establishes correctness for the malformed program."
       },
       "ImprovementPriority": "NONE",
       "Confidence": "HIGH",
-      "QualityReason": "The references disagree (mutool and pdftocairo draw small capitals, Ghostscript spaced lowercase) and excise matches one of them. The underlying font defect is tracked by #1937.",
-      "Notes": "Pinned PASS_ONE rather than PASS after 4ab13f45 (#1502) changed the fallback glyph width fit; tracked by #1937."
+      "QualityReason": "Different malformed-font recovery remains visible: MAE 25.5 versus mutool and 25.4 versus pdftocairo at 144 dpi. Deferred by the maintainer for this release, without declaring a defect or accepting any renderer as ground truth.",
+      "Notes": "Raw PASS_ONE remains the observation after 4ab13f45 (#1502), and departures from it still fail. No font-byte repair, renderer behavior, or numerical tolerance change has been made."
     }
   }
 }

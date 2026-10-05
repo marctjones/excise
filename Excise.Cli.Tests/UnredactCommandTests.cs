@@ -412,7 +412,7 @@ public class UnredactCommandTests
             RunRedact(src, dst, "SECRETWORD", "--preserve-layout");
 
             var (exit, output) = Run(dst, "--mode", "residue", "--dictionary", dict);
-            exit.Should().Be(4, "residue-only recovery -> exit 4");
+            exit.Should().Be(4, "residue-only recovery -> exit 4; output: {0}", output);
             output.Should().Contain("RECOVERED \"SECRETWORD\"",
                 "the width gap admits exactly one dictionary word — excise recovers what it redacted");
             output.Should().Contain("1 RECOVERED", "the quantification headline counts the recovery");
@@ -448,7 +448,7 @@ public class UnredactCommandTests
 
             // Layout-preserving output leaks the width -> recoverable (exit 4).
             var (layoutExit, layoutOut) = Run(layout, "--mode", "residue", "--dictionary", dict);
-            layoutExit.Should().Be(4, "a width-preserving redaction leaves the width; residue recovers it");
+            layoutExit.Should().Be(4, "a width-preserving redaction leaves the width; residue recovers it; output: {0}", layoutOut);
             layoutOut.Should().Contain("RECOVERED \"SECRETWORD\"");
 
             // Width-closed output leaks nothing -> clean (exit 0).
@@ -478,7 +478,9 @@ public class UnredactCommandTests
             psi.ArgumentList.Add(a);
         foreach (var a in extra) psi.ArgumentList.Add(a);
         using var p = Process.Start(psi)!;
-        p.StandardOutput.ReadToEndAsync(); p.StandardError.ReadToEndAsync();
-        p.WaitForExit(120_000);
+        var output = p.StandardOutput.ReadToEndAsync();
+        var error = p.StandardError.ReadToEndAsync();
+        p.WaitForExit(120_000).Should().BeTrue("the redaction command must finish");
+        p.ExitCode.Should().Be(0, $"redaction must create the input for the residue check: {output.Result}{error.Result}");
     }
 }

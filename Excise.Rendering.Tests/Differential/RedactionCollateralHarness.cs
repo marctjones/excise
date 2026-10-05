@@ -59,6 +59,10 @@ namespace Excise.Rendering.Tests.Differential;
 /// </summary>
 public class RedactionCollateralHarness
 {
+    private readonly ITestOutputHelper _output;
+
+    public RedactionCollateralHarness(ITestOutputHelper output) => _output = output;
+
     private const string BaselinePath = "tests/redaction-collateral/baseline.json";
 
     /// <summary>
@@ -292,8 +296,16 @@ public class RedactionCollateralHarness
                 // CountDisagreesWithOracle above. A gate hardened on a
                 // measurement that could not fail is the same vacuity this file
                 // exists to catch, one level up.
-                if (reported != oracleRemoved) countMismatches++;
-                if (reported != oracleRemoved && !CountDisagreesWithOracle.Contains(fixtureName))
+                // #1954: plain and structured MuPDF output count coincident
+                // drawing differently on this pinned fixture. Corroborate with
+                // structured MuPDF AND independent Poppler; never excuse wrong
+                // reporting, missing references, or surviving terms.
+                var corroborated = reported != oracleRemoved && fixtureName == "issue1350.pdf"
+                    && CorroborateCoincidentCount(path!, output, term, reported);
+                if (corroborated)
+                    _output.WriteLine($"DEFERRED #1954: '{term}' reported={reported}, plain MuPDF={oracleRemoved}; structured MuPDF and Poppler both corroborate {reported} removals and no residual term.");
+                if (reported != oracleRemoved && !corroborated) countMismatches++;
+                if (reported != oracleRemoved && !corroborated && !CountDisagreesWithOracle.Contains(fixtureName))
                     failures.Add(
                         $"'{term}': excise reported {reported} removed, mutool says " +
                         $"{oracleRemoved} ({CountOccurrences(before, term)} before, " +
@@ -346,6 +358,33 @@ public class RedactionCollateralHarness
             "\n\nIf this is a deliberate behaviour change, re-run with " +
             "REDACTION_COLLATERAL_UPDATE=1 and review the baseline diff — the numbers are " +
             "how much untargeted text redaction destroys, so an increase is a defect until argued otherwise.");
+    }
+
+    private static bool CorroborateCoincidentCount(string original, string redacted, string term, int reported)
+    {
+        using var document = CorpusPasswords.Open(original);
+        string? Structured(string path)
+        {
+            var text = new StringBuilder();
+            for (var page = 1; page <= document.PageCount; page++)
+            {
+                var glyphs = MutoolGlyphPositions.ExtractPage(path, page);
+                if (glyphs == null || glyphs.Count == 0) return null;
+                foreach (var glyph in glyphs) text.Append(System.Net.WebUtility.HtmlDecode(glyph.Char));
+                text.Append('\n');
+            }
+            return text.ToString();
+        }
+        var structuredBefore = Structured(original);
+        var structuredAfter = Structured(redacted);
+        var popplerBefore = PdftotextTextExtractor.ExtractAllPages(original, document.PageCount);
+        var popplerAfter = PdftotextTextExtractor.ExtractAllPages(redacted, document.PageCount);
+        int? Count(string? text) => text == null ? null : CountOccurrences(text, term);
+        return DeferredOracleDisagreements.CountIsCorroborated(
+            DeferredOracleDisagreements.Hash(original), reported,
+            Count(structuredBefore), Count(structuredAfter),
+            Count(popplerBefore == null ? null : string.Join('\n', popplerBefore)),
+            Count(popplerAfter == null ? null : string.Join('\n', popplerAfter)));
     }
 
     /// <summary>

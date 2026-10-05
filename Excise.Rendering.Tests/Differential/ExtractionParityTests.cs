@@ -333,6 +333,21 @@ public sealed class ExtractionParityTests
 
             var relPath = Path.GetRelativePath(root!, pdfPath).Replace('\\', '/');
             var finding = $"{relPath}: excise={exciseChars} mutool={mutoolChars} chars (coverage={coverage:P0})";
+            // #1953: this exact symbolic-font fixture has no semantic Unicode
+            // mapping. Two independent extractors disagree on fallback codes.
+            // Preserve the observed product result; do not lower the global floor
+            // or exempt a changed fixture, lost product text, or missing oracle.
+            if (relPath == "test-pdfs/pdfjs/font_ascent_descent.pdf")
+            {
+                var poppler = PdftotextTextExtractor.ExtractPage(pdfPath, 1);
+                if (DeferredOracleDisagreements.IsUnresolvedMapping(
+                    DeferredOracleDisagreements.Hash(pdfPath), exciseChars, mutoolChars,
+                    poppler == null ? null : CountLetterOrDigit(poppler)))
+                {
+                    knownDisagreements.Add($"{finding} — DEFERRED #1953: pinned custom-font mapping disagreement; Poppler=1. Unicode truth unresolved.");
+                    continue;
+                }
+            }
             if (KnownAdversarialDisagreements.TryGetValue(relPath, out var reason))
                 knownDisagreements.Add($"{finding} — ⚑ KNOWN, not gating: {reason}");
             else
