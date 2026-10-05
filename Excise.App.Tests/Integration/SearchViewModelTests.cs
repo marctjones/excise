@@ -1,8 +1,10 @@
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Headless.XUnit;
+using Avalonia.Threading;
 using AwesomeAssertions;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
@@ -141,6 +143,66 @@ public class SearchViewModelTests : IDisposable
             "JumpToSearchMatch must navigate to that match's page");
         vm.CurrentSearchMatchIndex.Should().Be(vm.SearchMatches.IndexOf(laterMatch),
             "selected-match index updates so prev/next resume from here");
+    }
+
+    // See #1970: force user intent ahead of the queued Background navigation,
+    // then observe after that callback. No fixed sleep controls this ordering.
+    [FixedAvaloniaTheory]
+    [InlineData("none", 0, 0)]
+    [InlineData("selection", 1, 1)]
+    [InlineData("replacement", 2, null)]
+    [InlineData("cancellation", 2, -1)]
+    public async Task QueuedInitialSearchNavigation_RespectsNewerUiIntent(
+        string intent, int expectedPageIndex, int? expectedMatchIndex)
+    {
+        var vm = MainWindowViewModelTestFactory.Create();
+        await vm.LoadDocumentAsync(CreateDoc());
+        vm.CurrentPageIndex = 2;
+        var observation = new TaskCompletionSource<(int PageIndex, int MatchIndex)>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var queued = false;
+
+        void OnMatchSelected(object? sender, PropertyChangedEventArgs args)
+        {
+            if (queued || args.PropertyName != nameof(vm.CurrentSearchMatchIndex)
+                || vm.CurrentSearchMatchIndex != 0 || vm.SearchMatches.Count < 2)
+                return;
+            queued = true;
+            Dispatcher.UIThread.Post(() =>
+            {
+                switch (intent)
+                {
+                    case "selection":
+                        vm.JumpToSearchMatch(vm.SearchMatches[1]);
+                        break;
+                    case "replacement":
+                        vm.SearchText = "NoSuchSearchTerm";
+                        break;
+                    case "cancellation":
+                        vm.SearchText = string.Empty;
+                        break;
+                }
+                Dispatcher.UIThread.Post(() => observation.TrySetResult(
+                    (vm.CurrentPageIndex, vm.CurrentSearchMatchIndex)),
+                    DispatcherPriority.Background);
+            }, DispatcherPriority.Normal);
+        }
+
+        vm.PropertyChanged += OnMatchSelected;
+        try
+        {
+            vm.SearchText = "Secret";
+            var observed = await observation.Task.WaitAsync(TimeSpan.FromSeconds(20));
+            observed.PageIndex.Should().Be(expectedPageIndex,
+                "queued initial navigation must respect newer UI intent");
+            if (expectedMatchIndex.HasValue)
+                observed.MatchIndex.Should().Be(expectedMatchIndex.Value);
+        }
+        finally
+        {
+            vm.PropertyChanged -= OnMatchSelected;
+            vm.SearchText = string.Empty;
+        }
     }
 
     [FixedAvaloniaFact]

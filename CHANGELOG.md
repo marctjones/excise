@@ -15,6 +15,7 @@ semantic versioning.
 
 ### Fixed
 
+- Queued first-result search navigation cannot override a later result selection, a replacement search, or a cancelled search; deterministic dispatcher-order regressions preserve normal first-result navigation (#1970).
 - Reading-order classification uses the extracted writing-mode flag, preserving short vertical columns without misclassifying stacked horizontal digits (#1915).
 - Multiline form-field overlays inherit default-appearance font size through parent fields and AcroForm defaults, while respecting local auto-size overrides (#1922).
 - File-backed document readers permit atomic replacement on Windows without allowing in-place write sharing; the Windows advisory lane explicitly exercises stale-file protection and symlink saves (#1955).
@@ -38,6 +39,7 @@ semantic versioning.
 - Extraction from a symbolic font with custom glyph names and no Unicode mapping remains ambiguous in `font_ascent_descent.pdf`. The exact observed cross-tool disagreement is retained and classified, without changing extraction behavior or corpus-wide thresholds (#1953).
 - MuPDF plain and structured text disagree on coincident-draw counts in `issue1350.pdf`. Structured MuPDF and independent Poppler corroborate the existing removal report; residual-term and incorrect-count checks remain enforced (#1954).
 - GUI interaction coverage still has explicitly tracked gaps (#1484); the exact slow RECAP fixture remains unavailable because its original URL/full digest were not retained (#1670, #1808).
+- Workflow allocation/time budgets remain over their historical baselines in extraction and save paths; the measurements stay visible as accepted performance follow-up work, not a new correctness finding (#1626).
 - Resting-memory attribution and heap-soak targets remain optimization work, not evidence of a confirmed leak or release-blocking defect (#1804).
 
 ## [3.15.0] - 2026-10-02

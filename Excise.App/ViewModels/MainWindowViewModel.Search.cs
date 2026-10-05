@@ -397,7 +397,16 @@ internal partial class MainWindowViewModel
         {
             var firstMatch = SearchMatches[0];
             global::Avalonia.Threading.Dispatcher.UIThread.Post(
-                () => NavigateToSearchMatch(firstMatch),
+                () =>
+                {
+                    // See #1970: newer search/user intent can precede this
+                    // Background callback after the results are published.
+                    if (_searchSession.IsCurrent(request)
+                        && CurrentSearchMatchIndex == 0
+                        && SearchMatches.Count > 0
+                        && ReferenceEquals(SearchMatches[0], firstMatch))
+                        NavigateToSearchMatch(firstMatch);
+                },
                 global::Avalonia.Threading.DispatcherPriority.Background);
         }
     }
