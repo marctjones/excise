@@ -1605,6 +1605,14 @@
                     </Border>
                     <ScrollViewer Grid.Row="1">
                     <ItemsControl x:Name="ThumbnailsItemsControl" ItemsSource="{Binding PageThumbnails}">
+                        <!-- #1911: bitmap loading is lazy, but the default StackPanel
+                             still constructed every thumbnail's controls and bindings.
+                             Realize only the sidebar viewport, including on tab switches. -->
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel Orientation="Vertical" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="models:PageThumbnail">
                                     <!-- Drag-to-reorder pointer handlers are attached in

@@ -1,0 +1,76 @@
+{
+  "issue": 1911,
+  "measuredAt": "2026-10-03",
+  "baseRevision": "f5a12429658c68b287df862da049594be3f9d5cd",
+  "workingTree": "dirty; current Release build includes the stabilization batch",
+  "platform": "macOS arm64",
+  "build": "dotnet build Excise.App/Excise.App.csproj -c Release --no-restore",
+  "fixture": {
+    "pages": 20000,
+    "shape": "612x792 points; one shared Helvetica font; one unique content stream per page, BT /F1 12 Tf 72 720 Td (Page N) Tj ET",
+    "bytes": 5547050,
+    "sha256": "c3368a84719054995a2b790cf3dc4d62bcbc7eb159746030ee052cd2fb2a889a",
+    "localPath": "logs/issue1911-20000.pdf",
+    "localGenerator": "logs/issue1911/generate-fixture.py"
+  },
+  "harness": {
+    "runner": "scripts/run-gui-perf-scenarios.sh",
+    "scenario": "logs/issue1911/scenario.json",
+    "settings": { "DocumentOpenMode": "NewTab" },
+    "sampleMode": "none",
+    "isolation": "the existing runner creates fresh per-launch application settings and caches",
+    "secondDocument": "test-pdfs/smoke/irs-1040.pdf",
+    "responseMetric": "elapsed journal monotonic milliseconds from the open boundary to the next mark; includes the runner's polling/ack handshake",
+    "idleMetric": "waitIdle additionally waits for quiet CPU and render intervals; it does not measure UI dispatch latency"
+  },
+  "before": {
+    "evidenceDirectory": "logs/issue1911/before",
+    "openMs": 1279.379,
+    "postLoadBoundaryGapMs": 20588,
+    "waitIdleExecutionWithinGapMs": 1618.631,
+    "secondTabOpenMs": 12154.506,
+    "firstIdleWorkingSetBytes": 5004066816,
+    "sampling": "native sample and a managed stack snapshot were collected during this reproduction"
+  },
+  "profiling": {
+    "switchTrace": "/private/tmp/issue1911-before3/ui-stall.nettrace",
+    "layoutTrace": "/private/tmp/issue1911-before4/ui-stall.nettrace",
+    "provider": "Microsoft-DotNETCore-SampleProfiler",
+    "mainThreadInclusiveSampleEstimatesMs": {
+      "MainWindow.SwitchSession": 12269,
+      "PanelContainerGenerator.OnItemsChanged.Remove": 9615,
+      "ItemsControl.ClearContainerForItemOverride": 5318,
+      "ItemsControl.RemoveLogicalChild": 3266,
+      "StackPanel.ArrangeOverride_separateLoadTrace": 10520
+    },
+    "finding": "The thumbnail sidebar used the default nonvirtualizing StackPanel. It constructed and arranged 20000 thumbnail control trees, then detached them synchronously on a session DataContext change. The continuous PDF viewer already used a VirtualizingStackPanel.",
+    "change": "Use VirtualizingStackPanel for ThumbnailsItemsControl; keep existing thumbnail image loading, eviction, commands, bindings and continuous-page scheduling."
+  },
+  "after": {
+    "evidenceDirectory": "logs/issue1911/after",
+    "repeats": [
+      { "run": 1, "openMs": 732.564, "postLoadDispatcherMs": 125, "secondTabOpenMs": 151.090, "postSecondDispatcherMs": 222, "firstIdleWorkingSetBytes": 445431808 },
+      { "run": 2, "openMs": 641.682, "postLoadDispatcherMs": 221, "secondTabOpenMs": 138.386, "postSecondDispatcherMs": 220, "firstIdleWorkingSetBytes": 445087744 },
+      { "run": 3, "openMs": 668.592, "postLoadDispatcherMs": 229, "secondTabOpenMs": 144.039, "postSecondDispatcherMs": 225, "firstIdleWorkingSetBytes": 445284352 }
+    ],
+    "allScenarioStepsPassed": true,
+    "postLoadResponsivenessUnder2000Ms": true,
+    "secondTabOpenAndNextDispatcherUnder2000Ms": true
+  },
+  "headlessValidation": {
+    "command": "scripts/t.sh Excise.App.Tests --filter 'FullyQualifiedName~ThumbnailVirtualizationTests|FullyQualifiedName~ThumbnailWindowLifecycleTests|FullyQualifiedName~MultiDocumentTabTests|FullyQualifiedName~PageOrganizationCommandTests|FullyQualifiedName~PageOrganizationSavePersistenceTests'",
+    "passed": 59,
+    "failed": 0,
+    "skipped": 0,
+    "newRegressions": [
+      "20000 placeholders keep realized controls bounded while scrolling to the last page, editing its checkbox and rebinding between documents",
+      "Real sidebar recycling loads the newly visible thumbnail and still evicts distant thumbnail images"
+    ]
+  },
+  "limits": [
+    "Native tests drive the real view model/workspace in process, not physical mouse or keyboard input.",
+    "Working-set figures are immediate post-load observations, not post-trim resting memory.",
+    "Profiler overhead and machine load affect the before timing; the control-count regression and three response-marker repeats establish the structural fix.",
+    "Large binary fixtures and raw traces are local evidence, not versioned assets."
+  ]
+}
