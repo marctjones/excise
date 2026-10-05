@@ -1244,346 +1244,138 @@ internal partial class MainWindow : Window
         if (DataContext is not MainWindowViewModel viewModel)
             return;
 
-        // Sidebar toggles. These Ctrl+Shift combos are checked FIRST, before the
-        // plain Ctrl+O handler below (which doesn't exclude Shift and would
-        // otherwise swallow Ctrl+Shift+O). (#369)
-        // Ctrl+Shift+O: toggle the outline / bookmarks sidebar
-        if (e.Key == Key.O && e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-        {
-            viewModel.ToggleOutlineCommand?.Execute().Subscribe();
-            e.Handled = true;
+        var focused = FocusManager.GetFocusedElement();
+        var action = Excise.App.Services.Input.WindowShortcutResolver.Resolve(e.Key, e.KeyModifiers,
+            new(viewModel.IsSearchVisible, viewModel.IsRedactionMode, viewModel.IsTextSelectionMode,
+                focused is TextBox, focused is ComboBox));
+        if (action == Excise.App.Services.Input.WindowShortcut.None)
             return;
-        }
 
-        // Ctrl+Shift+T: toggle the page-previews / thumbnails sidebar
-        if (e.Key == Key.T && e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+        ExecuteWindowShortcut(viewModel, action);
+        e.Handled = true;
+    }
+
+    // UI command adapter only; modifier precedence/editor guards are independently testable (#1962).
+    private void ExecuteWindowShortcut(MainWindowViewModel viewModel, Excise.App.Services.Input.WindowShortcut action)
+    {
+        switch (action)
         {
-            viewModel.ToggleThumbnailsCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+O: Open file
-        if (e.Key == Key.O && e.KeyModifiers.HasFlag(KeyModifiers.Control))
-        {
-            viewModel.OpenFileCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+S: Save file
-        if (e.Key == Key.S && e.KeyModifiers.HasFlag(KeyModifiers.Control) && !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-        {
-            viewModel.SaveFileCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+Shift+S: Save As
-        if (e.Key == Key.S && e.KeyModifiers.HasFlag(KeyModifiers.Control) && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-        {
-            viewModel.SaveAsCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+W: Close document
-        if (e.Key == Key.W && e.KeyModifiers.HasFlag(KeyModifiers.Control))
-        {
-            viewModel.CloseDocumentCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+P: Print
-        if (e.Key == Key.P && e.KeyModifiers.HasFlag(KeyModifiers.Control))
-        {
-            viewModel.PrintCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+E: Export current page (menu advertises InputGesture="Ctrl+E"; the
-        // key was previously unwired — display-only — so it did nothing). (#827)
-        if (e.Key == Key.E && e.KeyModifiers.HasFlag(KeyModifiers.Control))
-        {
-            viewModel.ExportCurrentPageCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+, : Preferences (menu advertises InputGesture="Ctrl+,"; the key was
-        // previously unwired — display-only — so it did nothing). (#827)
-        if (e.Key == Key.OemComma && e.KeyModifiers.HasFlag(KeyModifiers.Control))
-        {
-            viewModel.ShowPreferencesCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // F1: Show keyboard shortcuts
-        if (e.Key == Key.F1)
-        {
-            viewModel.ShowShortcutsCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+F: Toggle search bar (and put focus in the input so the
-        // user can type immediately). Without the focus hop the search
-        // bar appears but keystrokes go to whatever was focused before
-        // — which looks like "search doesn't do anything".
-        if (e.Key == Key.F && e.KeyModifiers.HasFlag(KeyModifiers.Control))
-        {
-            viewModel.ToggleSearchCommand?.Execute().Subscribe();
-            if (viewModel.IsSearchVisible)
-            {
-                var searchBox = this.FindControl<TextBox>("SearchTextBox");
-                // The Border that hosts the TextBox just toggled
-                // IsVisible — wait for the layout pass to finish before
-                // we try to focus it.
-                Dispatcher.UIThread.Post(() =>
-                {
-                    searchBox?.Focus();
-                    searchBox?.SelectAll();
-                }, DispatcherPriority.Background);
-            }
-            e.Handled = true;
-            return;
-        }
-
-        // F3: Find next
-        if (e.Key == Key.F3 && !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-        {
-            viewModel.FindNextCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Shift+F3: Find previous
-        if (e.Key == Key.F3 && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-        {
-            viewModel.FindPreviousCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Escape: Close search if visible
-        if (e.Key == Key.Escape && viewModel.IsSearchVisible)
-        {
-            viewModel.CloseSearchCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Enter: Apply (mark) the current redaction (menu advertises
-        // InputGesture="Enter"; the key was previously unwired — ApplyRedaction
-        // only ever fired from a pointer draw). Guarded so it never steals Enter
-        // from text entry (search box, form fields set Handled first, but a
-        // focused editor here is a hard skip) and only acts in redaction mode,
-        // keeping Enter a no-op everywhere else. (#827)
-        if ((e.Key == Key.Enter || e.Key == Key.Return) &&
-            !e.KeyModifiers.HasFlag(KeyModifiers.Control) &&
-            !e.KeyModifiers.HasFlag(KeyModifiers.Shift) &&
-            !e.KeyModifiers.HasFlag(KeyModifiers.Alt) &&
-            viewModel.IsRedactionMode)
-        {
-            if (FocusManager.GetFocusedElement() is TextBox or ComboBox)
-                return;
-
-            viewModel.ApplyRedactionCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+L: Rotate page left
-        if (e.Key == Key.L && e.KeyModifiers.HasFlag(KeyModifiers.Control))
-        {
-            viewModel.RotatePageLeftCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // R (unmodified): Toggle redaction mode (B2 keyboard shortcut)
-        if (e.Key == Key.R && !e.KeyModifiers.HasFlag(KeyModifiers.Control) &&
-            !e.KeyModifiers.HasFlag(KeyModifiers.Shift) && !e.KeyModifiers.HasFlag(KeyModifiers.Alt))
-        {
-            viewModel.ToggleRedactionModeCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+R: Rotate page right
-        if (e.Key == Key.R && e.KeyModifiers.HasFlag(KeyModifiers.Control))
-        {
-            viewModel.RotatePageRightCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+0: Actual size (100%)
-        if (e.Key == Key.D0 && e.KeyModifiers.HasFlag(KeyModifiers.Control))
-        {
-            viewModel.ZoomActualSizeCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+1: Fit width
-        if (e.Key == Key.D1 && e.KeyModifiers.HasFlag(KeyModifiers.Control))
-        {
-            viewModel.ZoomFitWidthCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+2: Fit page
-        if (e.Key == Key.D2 && e.KeyModifiers.HasFlag(KeyModifiers.Control))
-        {
-            viewModel.ZoomFitPageCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl++: Zoom in
-        if ((e.Key == Key.OemPlus || e.Key == Key.Add) && e.KeyModifiers.HasFlag(KeyModifiers.Control))
-        {
-            viewModel.ZoomInCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+-: Zoom out
-        if ((e.Key == Key.OemMinus || e.Key == Key.Subtract) && e.KeyModifiers.HasFlag(KeyModifiers.Control))
-        {
-            viewModel.ZoomOutCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // T (unmodified): Toggle text selection mode
-        if (e.Key == Key.T && !e.KeyModifiers.HasFlag(KeyModifiers.Control) &&
-            !e.KeyModifiers.HasFlag(KeyModifiers.Shift) && !e.KeyModifiers.HasFlag(KeyModifiers.Alt))
-        {
-            // Skip if TextBox is focused (e.g., search box)
-            var focusedElement = FocusManager.GetFocusedElement();
-            if (focusedElement is TextBox)
-                return;
-
-            viewModel.ToggleTextSelectionModeCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Page Down / Down Arrow: Next page
-        if (e.Key == Key.PageDown || (e.Key == Key.Down && !e.KeyModifiers.HasFlag(KeyModifiers.Control)))
-        {
-            viewModel.NextPageCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Page Up / Up Arrow: Previous page
-        if (e.Key == Key.PageUp || (e.Key == Key.Up && !e.KeyModifiers.HasFlag(KeyModifiers.Control)))
-        {
-            viewModel.PreviousPageCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Home: First page
-        if (e.Key == Key.Home)
-        {
-            viewModel.GoToPageCommand?.Execute(0).Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // End: Last page
-        if (e.Key == Key.End)
-        {
-            var lastPage = viewModel.TotalPages - 1;
-            if (lastPage >= 0)
-            {
-                viewModel.GoToPageCommand?.Execute(lastPage).Subscribe();
-            }
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+Z: Undo. The Edit menu advertises InputGesture="Ctrl+Z", which in
-        // Avalonia is DISPLAY TEXT ONLY — every working shortcut in this window
-        // is duplicated here by hand, and these three never were, so the menu
-        // named a key that did nothing. Same defect class as #827's Ctrl+E /
-        // Ctrl+, / Enter. (#1170)
-        //
-        // Guarded on a focused text editor and deliberately NOT marked handled
-        // in that case: a window-level Ctrl+Z would otherwise swallow the
-        // TextBox's own native undo in the search box and every dialog field.
-        if (e.Key == Key.Z && e.KeyModifiers.HasFlag(KeyModifiers.Control) &&
-            !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-        {
-            if (FocusManager.GetFocusedElement() is TextBox)
-                return;
-
-            viewModel.UndoCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+Y: Redo (the gesture the Edit menu advertises on Windows/Linux;
-        // macOS uses Cmd+Shift+Z through the native menu). (#1170)
-        if (e.Key == Key.Y && e.KeyModifiers.HasFlag(KeyModifiers.Control))
-        {
-            if (FocusManager.GetFocusedElement() is TextBox)
-                return;
-
-            viewModel.RedoCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+A: select all text on the page (#1814). Not while a text box has focus, so the
-        // search box and every dialog field keep their own select-all.
-        if (e.Key == Key.A && e.KeyModifiers.HasFlag(KeyModifiers.Control) &&
-            !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-        {
-            if (FocusManager.GetFocusedElement() is TextBox)
-                return;
-
-            viewModel.SelectAllTextCommand.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+Shift+C: toggle continuous scroll. (#1170)
-        //
-        // MUST precede the plain Ctrl+C branch below, which does not exclude
-        // Shift — the same ordering hazard #369 documents at the top of this
-        // handler for Ctrl+Shift+O vs Ctrl+O. The Ctrl+C branch now excludes
-        // Shift explicitly as well, so the two cannot fight over the key even
-        // if one is later moved.
-        if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control) &&
-            e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-        {
-            if (FocusManager.GetFocusedElement() is TextBox)
-                return;
-
-            viewModel.ToggleContinuousViewCommand?.Execute().Subscribe();
-            e.Handled = true;
-            return;
-        }
-
-        // Ctrl+C: Copy text
-        if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control) &&
-            !e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-        {
-            if (viewModel.IsTextSelectionMode)
-            {
+            case Excise.App.Services.Input.WindowShortcut.ToggleOutline:
+                viewModel.ToggleOutlineCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.ToggleThumbnails:
+                viewModel.ToggleThumbnailsCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.OpenFile:
+                viewModel.OpenFileCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.SaveFile:
+                viewModel.SaveFileCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.SaveAs:
+                viewModel.SaveAsCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.CloseDocument:
+                viewModel.CloseDocumentCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.Print:
+                viewModel.PrintCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.ExportCurrentPage:
+                viewModel.ExportCurrentPageCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.ShowPreferences:
+                viewModel.ShowPreferencesCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.ShowShortcuts:
+                viewModel.ShowShortcutsCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.ToggleSearch:
+                viewModel.ToggleSearchCommand?.Execute().Subscribe();
+                FocusSearchAfterShortcut(viewModel);
+                break;
+            case Excise.App.Services.Input.WindowShortcut.FindNext:
+                viewModel.FindNextCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.FindPrevious:
+                viewModel.FindPreviousCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.CloseSearch:
+                viewModel.CloseSearchCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.ApplyRedaction:
+                viewModel.ApplyRedactionCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.RotatePageLeft:
+                viewModel.RotatePageLeftCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.ToggleRedactionMode:
+                viewModel.ToggleRedactionModeCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.RotatePageRight:
+                viewModel.RotatePageRightCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.ZoomActualSize:
+                viewModel.ZoomActualSizeCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.ZoomFitWidth:
+                viewModel.ZoomFitWidthCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.ZoomFitPage:
+                viewModel.ZoomFitPageCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.ZoomIn:
+                viewModel.ZoomInCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.ZoomOut:
+                viewModel.ZoomOutCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.ToggleTextSelectionMode:
+                viewModel.ToggleTextSelectionModeCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.NextPage:
+                viewModel.NextPageCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.PreviousPage:
+                viewModel.PreviousPageCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.FirstPage:
+                viewModel.GoToPageCommand?.Execute(0).Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.LastPage:
+                var lastPage = viewModel.TotalPages - 1;
+                if (lastPage >= 0)
+                    viewModel.GoToPageCommand?.Execute(lastPage).Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.Undo:
+                viewModel.UndoCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.Redo:
+                viewModel.RedoCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.SelectAllText:
+                viewModel.SelectAllTextCommand.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.ToggleContinuousView:
+                viewModel.ToggleContinuousViewCommand?.Execute().Subscribe();
+                break;
+            case Excise.App.Services.Input.WindowShortcut.CopyText:
                 viewModel.CopyTextCommand.Execute().Subscribe();
-                e.Handled = true;
-            }
+                break;
         }
+    }
+
+    private void FocusSearchAfterShortcut(MainWindowViewModel viewModel)
+    {
+        if (!viewModel.IsSearchVisible)
+            return;
+        var searchBox = this.FindControl<TextBox>("SearchTextBox");
+        // Visibility just changed: retain the original deferred focus/select-all after layout.
+        Dispatcher.UIThread.Post(() =>
+        {
+            searchBox?.Focus();
+            searchBox?.SelectAll();
+        }, DispatcherPriority.Background);
     }
 
     // ==================================================================================
