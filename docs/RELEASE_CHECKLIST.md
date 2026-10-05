@@ -29,8 +29,9 @@ a **draft** release with notes taken from `CHANGELOG.md`. Nothing is published:
 publishing is a manual click. The builds are unsigned by choice (#1597; #1698 is the
 open re-decision), and the release notes say so. `workflow_dispatch` is a dry run: it
 builds everything for the version in the tree and never touches a release, so run it
-before tagging. It has not run end to end yet, so treat the first real tag as its test
-and read the draft before publishing it.
+before tagging. The v3.15.0 tag workflow completed successfully on all four
+packaging legs (run 37044718840, 2026-10-02). That is historical packaging
+evidence, not a substitute for inspecting this candidate's dry run and draft.
 
 Beyond that there is no evidence-checking wrapper and no enforced trailer.
 
@@ -77,7 +78,11 @@ the decisions no row can make.
    scripts/test-tier.sh t1
    ```
 
-2. **The release-candidate run, on an otherwise idle machine.**
+2. **Fresh full-tier evidence, then the release-candidate run, on an otherwise idle machine.**
+
+   Run `scripts/test-tier.sh full` on the same clean candidate without resume.
+   Set `EXCISE_ACCESSIBILITY_ALLOW_PLATFORM_PROBE=1` and grant the terminal
+   macOS Accessibility permission for both full and release-smoke runs.
 
    ```bash
    scripts/release-smoke.sh --release-tests --visual --package --packaged-gui --aot --version <version>
@@ -147,14 +152,14 @@ The decisions no row can make:
   | RID | Status | Reason |
   |-----|--------|--------|
   | `osx-arm64` | **Shipped** | Validated by the `aot` row (`run-aot-smoke.sh` evidence); the per-PR Native AOT CI lane that used to corroborate it was removed with Actions on 2026-09-04. |
-  | `win-x64` | **Ships from the next tag; unproven until `release.yml` has run** | Native AOT GUI publish on a hosted `windows-latest` runner: 8 consecutive green `windows-aot` jobs (latest run 35562489812, 3-5 min each), producing a native `Excise.App.exe` beside `libSkiaSharp.dll`, `libHarfBuzzSharp.dll` and `av_libglesv2.dll` and no managed assembly. That job never launched the result, and the Windows AOT **CLI** has never been published. `release.yml` now builds the installer and portable zip from an AOT publish (`scripts/build-windows-installer.ps1`), runs `scripts/check-aot-payload.py` on the publish directory, the unpacked zip and the installed tree, then launches the installed CLI (render) and GUI (scenario runner, which reports `runtimeMode`). The single-file build it replaces was last built by the dry run 35555517990. |
+  | `win-x64` | **Shipped; v3.15.0 packaging verified** | Release run 37044718840 built the Native AOT installer and portable zip, checked unpacked/installed payloads, and passed installed CLI/GUI smoke. Re-run on every candidate. |
   | `linux-x64` | Shipped through v3.8.0; **re-verified 2026-09-20** | Native AOT GUI publish, launch and scenario on a hosted x64 runner, 0 managed `.dll` sidecars (run 35550350097, #1594). `release.yml` rebuilds the AOT `.deb` on every tag, installs it and smokes the CLI. Not verified before that workflow first runs: the `.deb` itself on a runner. |
-  | `linux-arm64` | **Ships from the next tag; unproven until `release.yml` has run** | Native AOT GUI publish, launch and scenario on a hosted arm64 runner (`ubuntu-24.04-arm`), 0 managed `.dll` sidecars (run 35550350097, #1594). The arm64 AOT **CLI** and the `.deb` had not been built anywhere before `release.yml`, which builds and smokes them natively on arm64. |
+  | `linux-arm64` | **Shipped; v3.15.0 packaging verified** | Release run 37044718840 built Native AOT GUI/CLI packages natively on arm64 and passed payload/install/CLI smoke. Re-run on every candidate. |
   | `osx-x64` | Deferred (#705) | Not yet probed; needs an Intel-mac (or Rosetta-verified) publish + smoke. |
-- **macOS only.** This release is validated on this machine; Linux and
-  Windows are untested this release. `t3` prints that reminder after `t2`;
-  restoring Actions for Linux/Windows packaging only is a separate issue
-  (`LOCAL_GATES.md`).
+- **Separate local-suite and hosted-package evidence.** Local full-suite and
+  interactive evidence on this machine cover macOS. Hosted Windows/Linux
+  package, payload, install and launch checks cover those packaging workflows,
+  not the complete test suite or physical-platform manual workflows.
 - **Coverage is an OBSERVATION, not a gate**, and deliberately not a release
   blocker: blocking a tag on a coverage number invites lowering the number to
   ship — the same asymmetry `check-gate-asymmetry.sh` exists to prevent for
@@ -215,9 +220,10 @@ limitation before tagging.
 | Benchmark speed, reference fidelity, redaction completeness, and renderer hotspot evidence | `BenchmarkSuiteTests`; `scripts/run-benchmarks.sh suite`; `Excise.RenderTools benchmark-suite`; `Excise.Rendering.Tests` performance/memory tests | Review `benchmark-report.md`, `benchmark-report.json`, `benchmark-pages.csv`, `benchmark-hotpaths.json`, `latest-performance-baseline.md`, and aggregate `corpus-hotspots`, `gui-display-hotspots`, and `gui-workflow-hotspots` reports before closing performance issues. |
 | Native AOT app packaging, warning budget, and symbol split | `scripts/run-aot-smoke.sh`; `scripts/release-smoke.sh --quick --only=aot`; optional `scripts/run-aot-smoke.sh --gui-smoke` on an interactive macOS runner | Review `aot-smoke.md`, `aot-smoke.json`, `aot-warnings.txt`, package size, symbol archive size, and any packaged GUI smoke evidence before shipping an AOT artifact. |
 
-These classes run inside the `t1` `app-tests-unchunked-evidence` row (the
-unfiltered `Excise.App.Tests` pass), so a green `t1` on the candidate commit
-is the repeatable gate for this table. Ad hoc:
+These classes run in `t1`'s chunked `Excise.App.Tests` row. The separate
+`app-tests-unchunked-evidence` row runs only in `full`, retaining serial
+cross-test-contamination evidence. Neither replaces the packaged-app review
+column. Ad hoc:
 
 ```bash
 scripts/t.sh Excise.App.Tests/Excise.App.Tests.csproj --filter "FullyQualifiedName~GuiWorkflowCoverageMatrix|FullyQualifiedName~GoldenPath|FullyQualifiedName~Workflow|FullyQualifiedName~RevealHiddenText|FullyQualifiedName~SignatureVerification"

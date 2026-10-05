@@ -75,12 +75,20 @@ release notes:
   revocation (CRL/OCSP) is deliberately not checked — it would require network
   access — and timestamp/LTV (long-term validation) material is not evaluated
   (#466).
-- **Rendering fidelity** — the current release dashboard classifies every
-  contracted page as release `PASS`. Remaining non-exact rows are issue-linked
+- **Rendering fidelity** — contracted pages retain their raw differential
+  observations; `bug1308536.pdf` remains `NEEDS_REVIEW` for deferred malformed
+  embedded-font recovery disagreement (#1937), not a confirmed defect or an
+  acceptance of current output. Remaining non-exact rows are issue-linked
   accepted-reference matches, malformed-input/refusal classifications, or named
   accepted limitations rather than unclassified `DIFF` blockers (#491).
   Niche color/shading residuals and deeper font-model work remain tracked for
   future releases (#512, #513, #514, #515, #532).
+- **Deferred extraction/counting disagreements** — symbolic custom-font
+  fallback mappings in `font_ascent_descent.pdf` remain semantically unresolved
+  (#1953). Plain MuPDF text disagrees with structured MuPDF and Poppler on
+  coincident-draw counts in `issue1350.pdf` (#1954). The exact observations
+  remain visible; changed fixtures, missing corroboration, wrong removal counts,
+  and residual terms are not excused by their deferred classification.
 - **Color-managed print preview** — excise renders DeviceCMYK through a
   deterministic screen-preview conversion, resolves `/DefaultCMYK` and ICCBased
   CMYK through managed ICC preview support, and uses document output-intent data
