@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "1a113cd8a3b65550e33bf6bdb2000f7d67397a0b",
+  "sourceRevision": "1906d3037014efe109bebf160b1433b7e920c6fa",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -22,8 +22,8 @@
     "commitsRequested": 200,
     "commitsObserved": 198,
     "broadCommitsExcluded": 1,
-    "newestProductionCommit": "628fe6bdbefb80fdf2d80b62c97566ec758c0dde",
-    "oldestProductionCommit": "bfee8d96a5da61d8cc71582bd3e242cbb627ff8d"
+    "newestProductionCommit": "1906d3037014efe109bebf160b1433b7e920c6fa",
+    "oldestProductionCommit": "7581a28ae59a9f81efcd0a71947d03d8758a68ae"
   },
   "files": [
     {
@@ -691,10 +691,6 @@
       "commits": 2
     },
     {
-      "path": "Excise.Core/Xfa/FormCalc/FormCalcParser.cs",
-      "commits": 2
-    },
-    {
       "path": "Excise.Core/Xfa/XfaFallbackFont.cs",
       "commits": 2
     },
@@ -884,6 +880,10 @@
     },
     {
       "path": "Excise.App/ViewModels/MainWindowViewModel.Permissions.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.App/ViewModels/MainWindowViewModel.Search.cs",
       "commits": 1
     },
     {
@@ -1363,11 +1363,7 @@
       "commits": 1
     },
     {
-      "path": "Excise.Core/Xfa/FormCalc/FormCalcAst.cs",
-      "commits": 1
-    },
-    {
-      "path": "Excise.Core/Xfa/FormCalc/FormCalcLexer.cs",
+      "path": "Excise.Core/Xfa/FormCalc/FormCalcParser.cs",
       "commits": 1
     },
     {
