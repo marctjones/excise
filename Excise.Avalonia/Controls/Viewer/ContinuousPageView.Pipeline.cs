@@ -1037,6 +1037,36 @@ internal sealed partial class ContinuousPageView
             MaybeScheduleContinuousLookAhead();
     }
 
+    // UI-thread ownership policy stays inside the caller's existing try/catch boundary (#1965).
+    private void ClaimContinuousRenderCells(
+        List<(GridCell Cell, ContinuousTileKey Key)> batch, ContinuousLookAheadBatch? lookAhead,
+        List<(GridCell Cell, ContinuousTileKey Key)> claimed)
+    {
+        foreach (var entry in batch)
+        {
+            if (lookAhead != null)
+            {
+                // The planner already skipped cached and in-flight cells on
+                // this dispatcher turn; peek so nothing is promoted.
+                if (PeekContinuousCached(entry.Key) != null || !_continuousInFlight.Add(entry.Key))
+                    continue;
+                claimed.Add(entry);
+                continue;
+            }
+            if (TryGetContinuousCached(entry.Key, out var cached) && cached != null)
+            {
+                ContinuousRenderCacheHitCount++;
+                continue;
+            }
+            if (!_continuousInFlight.Add(entry.Key))
+            {
+                ContinuousRenderCoalescedRequestCount++;
+                continue;
+            }
+            claimed.Add(entry);
+        }
+    }
+
     /// <summary>
     /// Renders every missing grid cell of one page in a SINGLE render pass and
     /// slices the result into the per-cell cache (#855).
@@ -1099,29 +1129,7 @@ internal sealed partial class ContinuousPageView
         double bandXDip, bandYDip;
         try
         {
-            foreach (var entry in batch)
-            {
-                if (lookAhead != null)
-                {
-                    // The planner already skipped cached and in-flight cells on
-                    // this dispatcher turn; peek so nothing is promoted.
-                    if (PeekContinuousCached(entry.Key) != null || !_continuousInFlight.Add(entry.Key))
-                        continue;
-                    claimed.Add(entry);
-                    continue;
-                }
-                if (TryGetContinuousCached(entry.Key, out var cached) && cached != null)
-                {
-                    ContinuousRenderCacheHitCount++;
-                    continue;
-                }
-                if (!_continuousInFlight.Add(entry.Key))
-                {
-                    ContinuousRenderCoalescedRequestCount++;
-                    continue;
-                }
-                claimed.Add(entry);
-            }
+            ClaimContinuousRenderCells(batch, lookAhead, claimed);
             if (claimed.Count == 0)
             {
                 if (lookAhead == null)
