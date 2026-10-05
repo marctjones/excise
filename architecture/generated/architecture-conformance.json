@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "a21a5e80dfe8865e9e5dba0c374648567d8594ad",
+  "sourceRevision": "1a113cd8a3b65550e33bf6bdb2000f7d67397a0b",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8379,
+    "retainedSymbols": 8431,
     "observedComponentDependencies": 83,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -24,22 +24,22 @@
     {
       "source": "app",
       "target": "app-main-window",
-      "references": 462,
+      "references": 465,
       "typeDependencyCount": 29,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.Views.MainWindow",
           "target": "Excise.App.ViewModels.MainWindowViewModel",
-          "references": 180
+          "references": 183
         }
       ]
     },
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 743,
-      "typeDependencyCount": 77,
+      "references": 746,
+      "typeDependencyCount": 78,
       "classification": "declared",
       "evidence": [
         {
@@ -94,8 +94,8 @@
     {
       "source": "avalonia",
       "target": "core-text",
-      "references": 59,
-      "typeDependencyCount": 18,
+      "references": 61,
+      "typeDependencyCount": 19,
       "classification": "declared",
       "evidence": [
         {
@@ -164,7 +164,7 @@
     {
       "source": "cli",
       "target": "core-encryption",
-      "references": 39,
+      "references": 38,
       "typeDependencyCount": 16,
       "classification": "declared",
       "evidence": [
@@ -276,8 +276,8 @@
     {
       "source": "core",
       "target": "core-document",
-      "references": 225,
-      "typeDependencyCount": 45,
+      "references": 229,
+      "typeDependencyCount": 46,
       "classification": "declared",
       "evidence": [
         {
@@ -318,7 +318,7 @@
     {
       "source": "core",
       "target": "core-primitives",
-      "references": 323,
+      "references": 322,
       "typeDependencyCount": 81,
       "classification": "declared",
       "evidence": [
@@ -477,8 +477,8 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1494,
-      "typeDependencyCount": 224,
+      "references": 1521,
+      "typeDependencyCount": 232,
       "classification": "declared",
       "evidence": [
         {
@@ -1189,7 +1189,7 @@
     {
       "source": "rendering",
       "target": "core-primitives",
-      "references": 634,
+      "references": 633,
       "typeDependencyCount": 41,
       "classification": "declared",
       "evidence": [

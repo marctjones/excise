@@ -4,7 +4,7 @@
   "generator": {
     "name": "scripts/check_architecture_registry.py",
     "version": 1,
-    "sourceRevision": "a21a5e80dfe8865e9e5dba0c374648567d8594ad"
+    "sourceRevision": "1a113cd8a3b65550e33bf6bdb2000f7d67397a0b"
   },
   "projects": [
     {
@@ -162,6 +162,18 @@
       ]
     },
     {
+      "path": "tools/Excise.CodeHealth/Excise.CodeHealth.csproj",
+      "classification": "tool",
+      "sourceRoot": "tools/Excise.CodeHealth",
+      "projectReferences": []
+    },
+    {
+      "path": "tools/Excise.DuplicateEvidence/Excise.DuplicateEvidence.csproj",
+      "classification": "tool",
+      "sourceRoot": "tools/Excise.DuplicateEvidence",
+      "projectReferences": []
+    },
+    {
       "path": "tools/Excise.ImageInspection/Excise.ImageInspection.csproj",
       "classification": "tool",
       "sourceRoot": "tools/Excise.ImageInspection",
@@ -190,6 +202,18 @@
         "Excise.Rendering/Excise.Rendering.csproj",
         "tools/Excise.ImageInspection/Excise.ImageInspection.csproj"
       ]
+    },
+    {
+      "path": "tools/Excise.StructuralEvidence/Excise.StructuralEvidence.csproj",
+      "classification": "tool",
+      "sourceRoot": "tools/Excise.StructuralEvidence",
+      "projectReferences": []
+    },
+    {
+      "path": "tools/Excise.TestEvidence/Excise.TestEvidence.csproj",
+      "classification": "tool",
+      "sourceRoot": "tools/Excise.TestEvidence",
+      "projectReferences": []
     }
   ]
 }
