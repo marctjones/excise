@@ -34,25 +34,8 @@ internal static class ImageStampDecoder
             return false;
 
         int width = bitmap.Width, height = bitmap.Height;
-        var rgb = new byte[(long)width * height * 3];
-        var alpha = new byte[(long)width * height];
-        var anyTransparent = false;
-
-        // SKBitmap.Pixels returns straight (unpremultiplied) colours, which is what a PDF
-        // image with a separate soft mask wants: colour and opacity are stored apart.
-        var pixels = bitmap.Pixels;
-        var r = 0;
-        for (var i = 0; i < pixels.Length; i++)
-        {
-            var c = pixels[i];
-            rgb[r++] = c.Red;
-            rgb[r++] = c.Green;
-            rgb[r++] = c.Blue;
-            alpha[i] = c.Alpha;
-            if (c.Alpha != 255) anyTransparent = true;
-        }
-
-        image = new DecodedStampImage(rgb, anyTransparent ? alpha : null, width, height);
+        var (rgb, alpha) = PdfImagePixelConverter.Extract(bitmap);
+        image = new DecodedStampImage(rgb, alpha, width, height);
         return true;
     }
 

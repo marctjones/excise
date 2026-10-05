@@ -39,24 +39,8 @@ internal sealed class XfaImageDecoder : IXfaImageDecoder
                 return null;
 
             int width = bitmap.Width, height = bitmap.Height;
-            var rgb = new byte[(long)width * height * 3];
-            var alpha = new byte[(long)width * height];
-            var anyTransparent = false;
-
-            // SKBitmap.Pixels is straight (unpremultiplied) colour, as a PDF image with a
-            // separate soft mask wants.
-            var pixels = bitmap.Pixels;
-            var r = 0;
-            for (var i = 0; i < pixels.Length; i++)
-            {
-                var c = pixels[i];
-                rgb[r++] = c.Red;
-                rgb[r++] = c.Green;
-                rgb[r++] = c.Blue;
-                alpha[i] = c.Alpha;
-                if (c.Alpha != 255) anyTransparent = true;
-            }
-            return new XfaDecodedImage(width, height, rgb, anyTransparent ? alpha : null);
+            var (rgb, alpha) = PdfImagePixelConverter.Extract(bitmap);
+            return new XfaDecodedImage(width, height, rgb, alpha);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
