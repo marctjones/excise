@@ -10465,6 +10465,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Parsing/PdfParserTests.cs::PdfParserTests.ParseObject_DictionaryEncryptNull_IsAbsent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Parsing/PdfParserTests.cs::PdfParserTests.PdfEncryptionNotSupportedException_WithMessage",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -10991,7 +10998,21 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_TrailerEncryptNull_IsAnUnencryptedDocument",
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_AbsentOrNullEncrypt_HasEquivalentUnencryptedBehavior",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_TrailerEncryptNull_IndependentReaderExtractsPlaintext",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_RealEncryptDictionary_StillRequiresCorrectPassword",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -11462,29 +11483,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs::RedactionProfileTests.Maximum_RemovesASignatureField_AndReportsIt",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/SignatureCarrierLeakTests.cs::SignatureCarrierLeakTests.Maximum_RemovesTheSignatureDictionaryAndTheDss_AndReportsBoth",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -11891,6 +11889,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Parsing/PdfParserTests.cs::PdfParserTests.ParseObject_DictionaryEncryptNull_IsAbsent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Parsing/PdfParserTests.cs::PdfParserTests.PdfEncryptionNotSupportedException_WithMessage",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -12417,7 +12422,21 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_TrailerEncryptNull_IsAnUnencryptedDocument",
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_AbsentOrNullEncrypt_HasEquivalentUnencryptedBehavior",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_TrailerEncryptNull_IndependentReaderExtractsPlaintext",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_RealEncryptDictionary_StillRequiresCorrectPassword",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -12888,29 +12907,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs::RedactionProfileTests.Maximum_RemovesASignatureField_AndReportsIt",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/SignatureCarrierLeakTests.cs::SignatureCarrierLeakTests.Maximum_RemovesTheSignatureDictionaryAndTheDss_AndReportsBoth",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -13310,6 +13306,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Parsing/PdfParserTests.cs::PdfParserTests.ParseObject_DictionaryEncryptNull_IsAbsent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Parsing/PdfParserTests.cs::PdfParserTests.PdfEncryptionNotSupportedException_WithMessage",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -13836,7 +13839,21 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_TrailerEncryptNull_IsAnUnencryptedDocument",
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_AbsentOrNullEncrypt_HasEquivalentUnencryptedBehavior",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_TrailerEncryptNull_IndependentReaderExtractsPlaintext",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_RealEncryptDictionary_StillRequiresCorrectPassword",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -14307,29 +14324,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs::RedactionProfileTests.Maximum_RemovesASignatureField_AndReportsIt",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/SignatureCarrierLeakTests.cs::SignatureCarrierLeakTests.Maximum_RemovesTheSignatureDictionaryAndTheDss_AndReportsBoth",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -14730,6 +14724,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Parsing/PdfParserTests.cs::PdfParserTests.ParseObject_DictionaryEncryptNull_IsAbsent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Parsing/PdfParserTests.cs::PdfParserTests.PdfEncryptionNotSupportedException_WithMessage",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -15256,7 +15257,21 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_TrailerEncryptNull_IsAnUnencryptedDocument",
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_AbsentOrNullEncrypt_HasEquivalentUnencryptedBehavior",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_TrailerEncryptNull_IndependentReaderExtractsPlaintext",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_RealEncryptDictionary_StillRequiresCorrectPassword",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -15727,29 +15742,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs::RedactionProfileTests.Maximum_RemovesASignatureField_AndReportsIt",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/SignatureCarrierLeakTests.cs::SignatureCarrierLeakTests.Maximum_RemovesTheSignatureDictionaryAndTheDss_AndReportsBoth",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -43756,6 +43748,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.DefaultAppearanceFontSize_InheritsNearestAppearance",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.DefaultAppearanceFontSize_ReReadsEditsAndStopsAtParentCycle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.Page_GetFont_ReturnsFont",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -44789,24 +44795,6 @@
         },
         {
           "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.Parse_DejaVu_ExposesMetricsAndCmap",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.Parse_AcceptsCffOpenType_ButRejectsBogusData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.Parse_CffFont_ExposesCffFlag",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -45211,6 +45199,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.DefaultAppearanceFontSize_InheritsNearestAppearance",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.DefaultAppearanceFontSize_ReReadsEditsAndStopsAtParentCycle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.Page_GetFont_ReturnsFont",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -46244,24 +46246,6 @@
         },
         {
           "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.Parse_DejaVu_ExposesMetricsAndCmap",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.Parse_AcceptsCffOpenType_ButRejectsBogusData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.Parse_CffFont_ExposesCffFlag",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -46648,6 +46632,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.DefaultAppearanceFontSize_InheritsNearestAppearance",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.DefaultAppearanceFontSize_ReReadsEditsAndStopsAtParentCycle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.Page_GetFont_ReturnsFont",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -47681,24 +47679,6 @@
         },
         {
           "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.Parse_DejaVu_ExposesMetricsAndCmap",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.Parse_AcceptsCffOpenType_ButRejectsBogusData",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Fonts/TrueTypeFontFileTests.cs::TrueTypeFontFileTests.Parse_CffFont_ExposesCffFlag",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -81414,6 +81394,20 @@
           ]
         },
         {
+          "test": "Excise.Rendering.Tests/Differential/DeferredOracleDisagreementTests.cs::DeferredOracleDisagreementTests.MappingClassification_RequiresPinnedFixtureAndAllObservedResults",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Rendering.Tests/Differential/DeferredOracleDisagreementTests.cs::DeferredOracleDisagreementTests.CountClassification_RejectsPlantedWrongCountMissingOracleAndResidualText",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Rendering.Tests/Differential/DeviceCmykExplicitGroupBackdropSyncTests.cs::DeviceCmykExplicitGroupBackdropSyncTests.SiteOne_NestedScreenGroupInsideExplicitCmykGroup_MatchesIndependentRenderers",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -81569,20 +81563,6 @@
         },
         {
           "test": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.SoftMask_UsesTheCtmAtGsTime_OnCmykPage",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.SoftMaskedGroup_OnCmykPage_ChangesNothingOutsideTheRevealedHalf",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Rendering.Tests/Differential/DeviceCmykSoftMaskedGroupTests.cs::DeviceCmykSoftMaskedGroupTests.ConstantAlphaGroup_OnCmykPage_ChangesNothingOutsideTheObject",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -99863,6 +99843,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.DefaultAppearanceFontSize_InheritsNearestAppearance",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.DefaultAppearanceFontSize_ReReadsEditsAndStopsAtParentCycle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithoutName_IsAFieldWithAnEmptyName",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -100300,22 +100294,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.RepeatedFields_ShareOneDefaultResourceFontEntry",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenWidget_KeepsTheField_ButScrubsItsContents",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -101325,6 +101303,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.DefaultAppearanceFontSize_InheritsNearestAppearance",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.DefaultAppearanceFontSize_ReReadsEditsAndStopsAtParentCycle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithoutName_IsAFieldWithAnEmptyName",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -101762,22 +101754,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.RepeatedFields_ShareOneDefaultResourceFontEntry",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenWidget_KeepsTheField_ButScrubsItsContents",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -102808,6 +102784,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.DefaultAppearanceFontSize_InheritsNearestAppearance",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.DefaultAppearanceFontSize_ReReadsEditsAndStopsAtParentCycle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithoutName_IsAFieldWithAnEmptyName",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -103245,22 +103235,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.RepeatedFields_ShareOneDefaultResourceFontEntry",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenWidget_KeepsTheField_ButScrubsItsContents",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -104231,6 +104205,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.DefaultAppearanceFontSize_InheritsNearestAppearance",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.DefaultAppearanceFontSize_ReReadsEditsAndStopsAtParentCycle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_FieldWithoutName_IsAFieldWithAnEmptyName",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -104668,22 +104656,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.RepeatedFields_ShareOneDefaultResourceFontEntry",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs::HiddenAnnotationLeakProbeTests.StandardProfile_HiddenWidget_KeepsTheField_ButScrubsItsContents",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -108789,6 +108761,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Parsing/PdfParserTests.cs::PdfParserTests.ParseObject_DictionaryEncryptNull_IsAbsent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Parsing/PdfParserTests.cs::PdfParserTests.PdfEncryptionNotSupportedException_WithMessage",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -109314,7 +109293,21 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_TrailerEncryptNull_IsAnUnencryptedDocument",
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_AbsentOrNullEncrypt_HasEquivalentUnencryptedBehavior",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_TrailerEncryptNull_IndependentReaderExtractsPlaintext",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_RealEncryptDictionary_StillRequiresCorrectPassword",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -109785,29 +109778,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs::RedactionProfileTests.Maximum_RemovesASignatureField_AndReportsIt",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/SignatureCarrierLeakTests.cs::SignatureCarrierLeakTests.Maximum_RemovesTheSignatureDictionaryAndTheDss_AndReportsBoth",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -110212,6 +110182,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Parsing/PdfParserTests.cs::PdfParserTests.ParseObject_DictionaryEncryptNull_IsAbsent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Parsing/PdfParserTests.cs::PdfParserTests.PdfEncryptionNotSupportedException_WithMessage",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -110737,7 +110714,21 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_TrailerEncryptNull_IsAnUnencryptedDocument",
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_AbsentOrNullEncrypt_HasEquivalentUnencryptedBehavior",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_TrailerEncryptNull_IndependentReaderExtractsPlaintext",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_RealEncryptDictionary_StillRequiresCorrectPassword",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -111208,29 +111199,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs::RedactionProfileTests.Maximum_RemovesASignatureField_AndReportsIt",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/SignatureCarrierLeakTests.cs::SignatureCarrierLeakTests.Maximum_RemovesTheSignatureDictionaryAndTheDss_AndReportsBoth",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -111623,6 +111591,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Parsing/PdfParserTests.cs::PdfParserTests.ParseObject_DictionaryEncryptNull_IsAbsent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Parsing/PdfParserTests.cs::PdfParserTests.PdfEncryptionNotSupportedException_WithMessage",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -112148,7 +112123,21 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_TrailerEncryptNull_IsAnUnencryptedDocument",
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_AbsentOrNullEncrypt_HasEquivalentUnencryptedBehavior",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_TrailerEncryptNull_IndependentReaderExtractsPlaintext",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Security/SecurityHandlerEdgeTests.cs::SecurityHandlerEdgeTests.Open_RealEncryptDictionary_StillRequiresCorrectPassword",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112619,29 +112608,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.OpenEncryptedPdf_WithoutDocumentedPassword_FailsClosed",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs::RedactionProfileTests.Maximum_RemovesASignatureField_AndReportsIt",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/SignatureCarrierLeakTests.cs::SignatureCarrierLeakTests.Maximum_RemovesTheSignatureDictionaryAndTheDss_AndReportsBoth",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [],
@@ -112708,8 +112674,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 8209,
-    "testMethodsWithCapabilityCandidate": 5332,
+    "testMethods": 8274,
+    "testMethodsWithCapabilityCandidate": 5374,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

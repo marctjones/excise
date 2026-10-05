@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "c3754670da3fd5733b220301469b04f9be0723e2c005f3c78171060bb086794e",
+  "sourceFingerprint": "1c579a91460d9a8cde8ca5a4c681fbc0dde1728bb98798282f8e75fea02a9a3a",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -7669,6 +7669,50 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering/SkiaRenderer.CidLayout.cs",
+      "path": "Excise.Rendering/SkiaRenderer.CidLayout.cs",
+      "kind": "source-file",
+      "facets": [
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering/SkiaRenderer.ImageTargetSize.cs",
+      "path": "Excise.Rendering/SkiaRenderer.ImageTargetSize.cs",
+      "kind": "source-file",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering/SkiaRenderer.Images.cs",
       "path": "Excise.Rendering/SkiaRenderer.Images.cs",
       "kind": "source-file",
@@ -7761,6 +7805,39 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering/SkiaRenderer.SoftMaskSampling.cs",
+      "path": "Excise.Rendering/SkiaRenderer.SoftMaskSampling.cs",
+      "kind": "source-file",
+      "facets": [
+        "images",
+        "transparency"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering/SkiaRenderer.State.cs",
       "path": "Excise.Rendering/SkiaRenderer.State.cs",
       "kind": "source-file",
@@ -7773,6 +7850,16 @@
     {
       "id": "Excise.Rendering/SkiaRenderer.Text.cs",
       "path": "Excise.Rendering/SkiaRenderer.Text.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering/SkiaRenderer.TextLayout.cs",
+      "path": "Excise.Rendering/SkiaRenderer.TextLayout.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -8564,6 +8651,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/Services/Input/WindowShortcutResolver.cs",
+      "path": "Excise.App/Services/Input/WindowShortcutResolver.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/Services/MacFilePanelAccessoryCleanup.cs",
       "path": "Excise.App/Services/MacFilePanelAccessoryCleanup.cs",
       "kind": "source-file",
@@ -8668,6 +8765,63 @@
         {
           "capability": "pdf.17.syntax.objects",
           "modes": [
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/PdfImagePixelConverter.cs",
+      "path": "Excise.App/Services/PdfImagePixelConverter.cs",
+      "kind": "source-file",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/PdfPasswordPrompt.cs",
+      "path": "Excise.App/Services/PdfPasswordPrompt.cs",
+      "kind": "source-file",
+      "facets": [
+        "security-and-encryption"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.syntax.encryption",
+          "modes": [
+            "mutate",
+            "parse",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.signature-and-permission-warning",
+          "modes": [
+            "mutate",
             "parse",
             "preserve",
             "write"
@@ -11479,19 +11633,19 @@
     }
   ],
   "summary": {
-    "records": 578,
+    "records": 585,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 20,
       "document-structure": 36,
-      "fonts": 33,
+      "fonts": 34,
       "forms": 11,
-      "images": 37,
-      "product-integration-general": 331,
+      "images": 40,
+      "product-integration-general": 333,
       "redaction": 82,
       "safe-save-and-metadata": 20,
-      "security-and-encryption": 23,
-      "transparency": 2
+      "security-and-encryption": 24,
+      "transparency": 3
     },
     "parentCapabilityModes": {
       "pdf.17.content.streams:mutate": 20,
@@ -11508,12 +11662,12 @@
       "pdf.17.graphics.color:preserve": 1,
       "pdf.17.graphics.color:render": 1,
       "pdf.17.graphics.color:write": 1,
-      "pdf.17.graphics.fonts:extract": 33,
-      "pdf.17.graphics.fonts:parse": 33,
-      "pdf.17.graphics.fonts:render": 33,
-      "pdf.17.graphics.images:extract": 37,
-      "pdf.17.graphics.images:parse": 37,
-      "pdf.17.graphics.images:render": 37,
+      "pdf.17.graphics.fonts:extract": 34,
+      "pdf.17.graphics.fonts:parse": 34,
+      "pdf.17.graphics.fonts:render": 34,
+      "pdf.17.graphics.images:extract": 40,
+      "pdf.17.graphics.images:parse": 40,
+      "pdf.17.graphics.images:render": 40,
       "pdf.17.graphics.paths-painting:author": 2,
       "pdf.17.graphics.paths-painting:mutate": 20,
       "pdf.17.graphics.paths-painting:parse": 20,
@@ -11541,10 +11695,10 @@
       "pdf.17.security.redaction-content-removal:mutate": 82,
       "pdf.17.security.redaction-content-removal:render": 82,
       "pdf.17.security.redaction-content-removal:write": 82,
-      "pdf.17.syntax.encryption:mutate": 23,
-      "pdf.17.syntax.encryption:parse": 23,
-      "pdf.17.syntax.encryption:preserve": 23,
-      "pdf.17.syntax.encryption:write": 23,
+      "pdf.17.syntax.encryption:mutate": 24,
+      "pdf.17.syntax.encryption:parse": 24,
+      "pdf.17.syntax.encryption:preserve": 24,
+      "pdf.17.syntax.encryption:write": 24,
       "pdf.17.syntax.file:parse": 36,
       "pdf.17.syntax.file:preserve": 36,
       "pdf.17.syntax.file:write": 36,
@@ -11552,8 +11706,8 @@
       "pdf.17.syntax.objects:parse": 36,
       "pdf.17.syntax.objects:preserve": 53,
       "pdf.17.syntax.objects:write": 53,
-      "pdf.17.transparency.model:parse": 2,
-      "pdf.17.transparency.model:render": 2,
+      "pdf.17.transparency.model:parse": 3,
+      "pdf.17.transparency.model:render": 3,
       "pdfe.product.security.attachments:extract": 4,
       "pdfe.product.security.attachments:mutate": 4,
       "pdfe.product.security.attachments:parse": 4,
@@ -11561,12 +11715,12 @@
       "pdfe.product.security.privacy-clean-copy:mutate": 20,
       "pdfe.product.security.privacy-clean-copy:preserve": 20,
       "pdfe.product.security.privacy-clean-copy:write": 20,
-      "pdfe.product.security.signature-and-permission-warning:mutate": 23,
-      "pdfe.product.security.signature-and-permission-warning:parse": 23,
-      "pdfe.product.security.signature-and-permission-warning:preserve": 23,
-      "pdfe.product.security.signature-and-permission-warning:write": 23
+      "pdfe.product.security.signature-and-permission-warning:mutate": 24,
+      "pdfe.product.security.signature-and-permission-warning:parse": 24,
+      "pdfe.product.security.signature-and-permission-warning:preserve": 24,
+      "pdfe.product.security.signature-and-permission-warning:write": 24
     },
-    "fallbackRecords": 331,
+    "fallbackRecords": 333,
     "allRecordsMapped": true
   }
 }
