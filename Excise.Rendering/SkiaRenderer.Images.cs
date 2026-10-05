@@ -1321,18 +1321,7 @@ internal partial class RenderContext
         int sourceHeight,
         int targetWidth,
         int targetHeight)
-    {
-        var width = Math.Clamp(targetWidth, 1, Math.Max(1, sourceWidth));
-        var height = Math.Clamp(targetHeight, 1, Math.Max(1, sourceHeight));
-        var pixels = (long)width * height;
-        if (pixels <= MaxExpandedSoftMaskPixels)
-            return (width, height);
-
-        var scale = Math.Sqrt(MaxExpandedSoftMaskPixels / (double)pixels);
-        return (
-            Math.Max(1, (int)Math.Floor(width * scale)),
-            Math.Max(1, (int)Math.Floor(height * scale)));
-    }
+        => ClampBudgetedImageTargetSize(sourceWidth, sourceHeight, targetWidth, targetHeight);
 
     private bool ApplySoftMask(SKBitmap bitmap, Excise.Core.Primitives.PdfStream imageStream)
     {
@@ -1546,18 +1535,7 @@ internal partial class RenderContext
         int sourceHeight,
         int targetWidth,
         int targetHeight)
-    {
-        var width = Math.Clamp(targetWidth, 1, Math.Max(1, sourceWidth));
-        var height = Math.Clamp(targetHeight, 1, Math.Max(1, sourceHeight));
-        var pixels = (long)width * height;
-        if (pixels <= MaxExpandedSoftMaskPixels)
-            return (width, height);
-
-        var scale = Math.Sqrt(MaxExpandedSoftMaskPixels / (double)pixels);
-        return (
-            Math.Max(1, (int)Math.Floor(width * scale)),
-            Math.Max(1, (int)Math.Floor(height * scale)));
-    }
+        => ClampBudgetedImageTargetSize(sourceWidth, sourceHeight, targetWidth, targetHeight);
 
     private static bool IsTerminalDctFilter(IReadOnlyList<string> filters)
         => filters.Count > 0 && IsDctFilter(filters[^1]);
