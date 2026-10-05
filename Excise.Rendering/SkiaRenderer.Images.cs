@@ -1494,7 +1494,7 @@ internal partial class RenderContext
                 var component = jpx.ComponentData[0];
                 if (component.Length >= width * height)
                 {
-                    var alpha = CreateSoftMaskAlphaFromSamples(component, width, height, targetWidth, targetHeight, maskStream);
+                    var alpha = CreateSoftMaskAlpha<int>(component, width, height, targetWidth, targetHeight, maskStream);
                     return new SoftMaskAlpha(alpha, targetWidth, targetHeight);
                 }
             }
@@ -1514,7 +1514,7 @@ internal partial class RenderContext
             if (data.LongLength < (long)width * height)
                 return null;
 
-            var alpha = CreateSoftMaskAlphaFrom8Bit(data, width, height, targetWidth, targetHeight, maskStream);
+            var alpha = CreateSoftMaskAlpha<byte>(data, width, height, targetWidth, targetHeight, maskStream);
             return new SoftMaskAlpha(alpha, targetWidth, targetHeight);
         }
 
@@ -1615,60 +1615,6 @@ internal partial class RenderContext
         {
             return null;
         }
-    }
-
-    private static byte[] CreateSoftMaskAlphaFrom8Bit(
-        byte[] data,
-        int sourceWidth,
-        int sourceHeight,
-        int targetWidth,
-        int targetHeight,
-        Excise.Core.Primitives.PdfStream maskStream)
-    {
-        var alpha = new byte[targetWidth * targetHeight];
-        var dst = 0;
-        for (int y = 0; y < targetHeight; y++)
-        {
-            var sourceY = MapTargetToSource(y, targetHeight, sourceHeight);
-            var sourceRow = sourceY * sourceWidth;
-            for (int x = 0; x < targetWidth; x++)
-            {
-                var sourceX = MapTargetToSource(x, targetWidth, sourceWidth);
-                var sourceIndex = sourceRow + sourceX;
-                alpha[dst++] = sourceIndex < data.Length
-                    ? DecodeSoftMaskSample(maskStream, data[sourceIndex], 8)
-                    : DecodeSoftMaskSample(maskStream, 0, 8);
-            }
-        }
-
-        return alpha;
-    }
-
-    private static byte[] CreateSoftMaskAlphaFromSamples(
-        int[] data,
-        int sourceWidth,
-        int sourceHeight,
-        int targetWidth,
-        int targetHeight,
-        Excise.Core.Primitives.PdfStream maskStream)
-    {
-        var alpha = new byte[targetWidth * targetHeight];
-        var dst = 0;
-        for (int y = 0; y < targetHeight; y++)
-        {
-            var sourceY = MapTargetToSource(y, targetHeight, sourceHeight);
-            var sourceRow = sourceY * sourceWidth;
-            for (int x = 0; x < targetWidth; x++)
-            {
-                var sourceX = MapTargetToSource(x, targetWidth, sourceWidth);
-                var sourceIndex = sourceRow + sourceX;
-                alpha[dst++] = sourceIndex < data.Length
-                    ? DecodeSoftMaskSample(maskStream, data[sourceIndex], 8)
-                    : DecodeSoftMaskSample(maskStream, 0, 8);
-            }
-        }
-
-        return alpha;
     }
 
     private static int ReadOneBitImageSample(byte[] data, int width, int x, int y)
