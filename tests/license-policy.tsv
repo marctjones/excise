@@ -8,12 +8,13 @@
 #
 # ── REVIEW ──────────────────────────────────────────────────────────────────
 # A review row documents the unresolved decision; it grants no permission.
-review	LicenseRef-CSJ2K-JJ2000	#1914: JJ2000 conformance/field-of-use notice requires a recorded distribution decision
 #
 # ── PERMITTED ───────────────────────────────────────────────────────────────
-# Ship freely. Permissive, no copyleft, no field-of-use restriction. All of
-# these still require the notice to travel with the redistribution, which is
-# what the verbatim-text half of the compliance check enforces.
+# Approved for Excise distribution. Standard permissive entries have no
+# copyleft or field-of-use restriction; custom entries retain their actual
+# terms and record an explicit owner decision. Approval does not relicense
+# a dependency. Required notices still travel with the redistribution.
+permitted	LicenseRef-CSJ2K-JJ2000	#1914: Marc approved shipping CSJ2K/JJ2000 under its existing terms on 2026-10-04; retain full notice and restricted-use description, not unconditional BSD
 permitted	MIT	the bulk of the closure
 permitted	Apache-2.0	patent grant, notice requirement
 permitted	BSD-2-Clause	approved 2026-08-19
