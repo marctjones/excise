@@ -19,7 +19,7 @@
     independently) and keeps it: a project-level property wins over this one.
   -->
   <PropertyGroup>
-    <VersionPrefix>3.15.0</VersionPrefix>
+    <VersionPrefix>3.16.0</VersionPrefix>
   </PropertyGroup>
 
 </Project>

@@ -6,6 +6,40 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.16.0] - 2026-10-05
+
+### Added
+
+- Deterministic, Git-tracked C# declaration inventory and JSON symbol baseline with source hashes, scope exclusions, and added/removed/changed comparison evidence; no code-quality score or release verdict is inferred (#1939).
+- Pinned IDE0051/IDE0052 and whitespace diagnostic baseline with symbol/file provenance and a verification-only ratchet; formatter and analyzer self-tests catch planted violations (#1944).
+
+### Fixed
+
+- Reading-order classification uses the extracted writing-mode flag, preserving short vertical columns without misclassifying stacked horizontal digits (#1915).
+- Multiline form-field overlays inherit default-appearance font size through parent fields and AcroForm defaults, while respecting local auto-size overrides (#1922).
+- File-backed document readers permit atomic replacement on Windows without allowing in-place write sharing; the Windows advisory lane explicitly exercises stale-file protection and symlink saves (#1955).
+- MacRoman high-code regression discovery accepts LF and CRLF checkouts without changing encoding expectations (#1956).
+- FormCalc ordinal searches and picture loops observe shared script/form/layout deadlines during a call; nested evaluation retains ancestor deadlines, and cancellation or layout-limit failures roll back the active script's value and presence writes (#1923).
+- Resumed tiers copy same-commit checkpoint test evidence into the new run directory with provenance; missing or cross-commit TRX evidence causes the test producer to rerun (#1935).
+- Large documents construct only visible thumbnail controls, keeping the UI responsive after load and when switching tabs (#1911).
+- Soft-masked images now compose at device-target resolution using native pixel spans, reducing image-render memory and latency while preserving reference-render fidelity (#1821).
+- Embedded CFF font rejection and empty-outline fallback now reach renderer diagnostics and CLI render warnings, naming the affected font (#1937).
+- DeviceCMYK overprint read windows now use the painted stroke outline, preventing wide dashed, capped, joined, or transformed strokes from being clipped (#1932).
+- GUI Combine prompts for each password-protected source, preserves the first source's password on encrypted output, and leaves existing output and unsaved edits intact when password entry is cancelled or rejected (#1947).
+- Explicit CLI assistive extraction (`--for-accessibility`, or batch `forAccessibility: true`) ignores PDF permission bit 10 and treats bit 5 as set per ISO 32000-2; ordinary extraction still enforces bit 5 (#1952).
+- Switching to continuous view while a page turn is still rendering preserves the carried reading position (#1931).
+- GUI remove, insert, move, and rotate actions check the shared PDF assemble permission before page captures or file pickers, with a visible bit-11 warning when denied (#1946).
+- GUI Extract preserves XMP metadata and output-intent ICC profiles using the same catalog selection policy as split (#1948).
+- Shared image and embedded-font resources are revalidated after edits, replacement, or removal before reuse, including soft masks and font programs (#1919).
+
+### Known limitations
+
+- Malformed embedded Type1C recovery differs among renderers, including macOS font substitution in pdf.js `bug1308536.pdf`. This remains a deferred compatibility disagreement, not a confirmed defect or an acceptance of current behavior; raw differential status remains pinned (#1937).
+- Extraction from a symbolic font with custom glyph names and no Unicode mapping remains ambiguous in `font_ascent_descent.pdf`. The exact observed cross-tool disagreement is retained and classified, without changing extraction behavior or corpus-wide thresholds (#1953).
+- MuPDF plain and structured text disagree on coincident-draw counts in `issue1350.pdf`. Structured MuPDF and independent Poppler corroborate the existing removal report; residual-term and incorrect-count checks remain enforced (#1954).
+- GUI interaction coverage still has explicitly tracked gaps (#1484); the exact slow RECAP fixture remains unavailable because its original URL/full digest were not retained (#1670, #1808).
+- Resting-memory attribution and heap-soak targets remain optimization work, not evidence of a confirmed leak or release-blocking defect (#1804).
+
 ## [3.15.0] - 2026-10-02
 
 ### Added
