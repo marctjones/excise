@@ -18,104 +18,104 @@
                               VerticalScrollBarVisibility="Auto"
                               HorizontalContentAlignment="Center">
                     <ItemsControl x:Name="ContinuousItems">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <VirtualizingStackPanel Orientation="Vertical" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="controls:PdfPageSlot">
-                                <!-- Border is sized to the (zoomed) page via bindings on
-                                     the PageSlot VM. The child Canvas is full page size;
-                                     the Tiles ItemsControl paints the content-addressed
-                                     grid of rendered cells (#848), each Image positioned
-                                     at its own page-local DIP rect. -->
-                                <Border Width="{Binding DisplayWidth}"
-                                        Height="{Binding DisplayHeight}"
-                                        Background="White"
-                                        Margin="0,0,0,12"
-                                        HorizontalAlignment="Center"
-                                        BorderBrush="#40000000"
-                                        BorderThickness="1">
-                                    <Panel ClipToBounds="True">
-                                        <!-- One composited bitmap per page (#848). The grid
-                                             of cells is rendered/cached per cell, but blitted
-                                             into this single band bitmap so there is exactly
-                                             ONE Image per page — no inter-tile seams. It sits
-                                             over the visible band (viewport + overscan),
-                                             positioned in page-local DIPs; the ScrollViewer
-                                             moves it with the page between recomposites. -->
-                                        <Canvas Width="{Binding DisplayWidth}"
-                                                Height="{Binding DisplayHeight}">
-                                            <Image Source="{Binding Bitmap}"
-                                                   Stretch="Fill"
-                                                   Width="{Binding TileDisplayWidth}"
-                                                   Height="{Binding TileDisplayHeight}"
-                                                   Canvas.Left="{Binding TileDisplayX}"
-                                                   Canvas.Top="{Binding TileDisplayY}" />
-                                        </Canvas>
-                                        <!-- Text-selection highlight overlay (#815): one
-                                             semi-transparent blue rect per selected glyph,
-                                             positioned in page-local DIPs on a Canvas
-                                             panel. Hit-test-transparent so it never eats
-                                             the selection/link pointer gestures. -->
-                                        <ItemsControl ItemsSource="{Binding SelectionRects}"
-                                                      IsHitTestVisible="False">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <Canvas />
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.Styles>
-                                                <!-- Position each item's container in
-                                                     page-local DIPs.
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel Orientation="Vertical" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="controls:PdfPageSlot">
+                            <!-- Border is sized to the (zoomed) page via bindings on
+                                 the PageSlot VM. The child Canvas is full page size;
+                                 the Tiles ItemsControl paints the content-addressed
+                                 grid of rendered cells (#848), each Image positioned
+                                 at its own page-local DIP rect. -->
+                            <Border Width="{Binding DisplayWidth}"
+                                    Height="{Binding DisplayHeight}"
+                                    Background="White"
+                                    Margin="0,0,0,12"
+                                    HorizontalAlignment="Center"
+                                    BorderBrush="#40000000"
+                                    BorderThickness="1">
+                                <Panel ClipToBounds="True">
+                                    <!-- One composited bitmap per page (#848). The grid
+                                         of cells is rendered/cached per cell, but blitted
+                                         into this single band bitmap so there is exactly
+                                         ONE Image per page — no inter-tile seams. It sits
+                                         over the visible band (viewport + overscan),
+                                         positioned in page-local DIPs; the ScrollViewer
+                                         moves it with the page between recomposites. -->
+                                    <Canvas Width="{Binding DisplayWidth}"
+                                            Height="{Binding DisplayHeight}">
+                                        <Image Source="{Binding Bitmap}"
+                                               Stretch="Fill"
+                                               Width="{Binding TileDisplayWidth}"
+                                               Height="{Binding TileDisplayHeight}"
+                                               Canvas.Left="{Binding TileDisplayX}"
+                                               Canvas.Top="{Binding TileDisplayY}" />
+                                    </Canvas>
+                                    <!-- Text-selection highlight overlay (#815): one
+                                         semi-transparent blue rect per selected glyph,
+                                         positioned in page-local DIPs on a Canvas
+                                         panel. Hit-test-transparent so it never eats
+                                         the selection/link pointer gestures. -->
+                                    <ItemsControl ItemsSource="{Binding SelectionRects}"
+                                                  IsHitTestVisible="False">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <Canvas />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.Styles>
+                                            <!-- Position each item's container in
+                                                 page-local DIPs.
 
-                                                     This Style sits inside the
-                                                     PdfPageSlot compiled-binding scope,
-                                                     but X/Y belong to the ITEM
-                                                     (PdfSelectionHighlight). That is why
-                                                     it used ReflectionBinding — which
-                                                     escapes the wrong scope, but at the
-                                                     cost of IL2026/IL3050 under Native
-                                                     AOT, now the shipping macOS and
-                                                     Linux build (#906).
+                                                 This Style sits inside the
+                                                 PdfPageSlot compiled-binding scope,
+                                                 but X/Y belong to the ITEM
+                                                 (PdfSelectionHighlight). That is why
+                                                 it used ReflectionBinding — which
+                                                 escapes the wrong scope, but at the
+                                                 cost of IL2026/IL3050 under Native
+                                                 AOT, now the shipping macOS and
+                                                 Linux build (#906).
 
-                                                     Naming the item type on the Style
-                                                     re-points the compiled scope instead
-                                                     of abandoning it: same resolution,
-                                                     checked at build time, no dynamic
-                                                     code. -->
-                                                <Style Selector="ItemsControl > ContentPresenter"
-                                                       x:DataType="controls:PdfSelectionHighlight">
-                                                    <Setter Property="Canvas.Left" Value="{Binding X}" />
-                                                    <Setter Property="Canvas.Top" Value="{Binding Y}" />
-                                                </Style>
-                                            </ItemsControl.Styles>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate x:DataType="controls:PdfSelectionHighlight">
-                                                    <Rectangle Width="{Binding Width}"
-                                                               Height="{Binding Height}"
-                                                               Fill="#603399FF" />
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                        <!-- Fillable AcroForm inputs (#1807), positioned in
-                                             page-local DIPs like the selection rects above but
-                                             hit-testable so a field can take focus. The items are
-                                             real controls, so each is its own container and
-                                             carries its Canvas.Left/Top. Empty except on realized
-                                             pages of a form. -->
-                                        <ItemsControl ItemsSource="{Binding FormFieldControls}">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <Canvas />
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                        </ItemsControl>
-                                    </Panel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
+                                                 Naming the item type on the Style
+                                                 re-points the compiled scope instead
+                                                 of abandoning it: same resolution,
+                                                 checked at build time, no dynamic
+                                                 code. -->
+                                            <Style Selector="ItemsControl > ContentPresenter"
+                                                   x:DataType="controls:PdfSelectionHighlight">
+                                                <Setter Property="Canvas.Left" Value="{Binding X}" />
+                                                <Setter Property="Canvas.Top" Value="{Binding Y}" />
+                                            </Style>
+                                        </ItemsControl.Styles>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="controls:PdfSelectionHighlight">
+                                                <Rectangle Width="{Binding Width}"
+                                                           Height="{Binding Height}"
+                                                           Fill="#603399FF" />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <!-- Fillable AcroForm inputs (#1807), positioned in
+                                         page-local DIPs like the selection rects above but
+                                         hit-testable so a field can take focus. The items are
+                                         real controls, so each is its own container and
+                                         carries its Canvas.Left/Top. Empty except on realized
+                                         pages of a form. -->
+                                    <ItemsControl ItemsSource="{Binding FormFieldControls}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <Canvas />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                    </ItemsControl>
+                                </Panel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
             </ControlTemplate>
