@@ -14,7 +14,7 @@ namespace Excise.Rendering.Tests.Visual;
 /// allocation for a few points of ink, and the same waste repeats for every
 /// such stroke on the page. Both callers (TryPaintDeviceCmykBlendPath,
 /// TryPaintDeviceCmykOverprintPath) only ever read mask pixels within their
-/// own path.Bounds-derived window, so the mask never needed to be larger
+/// own paint-bounds-derived window, so the mask never needed to be larger
 /// than that window for any paint style.
 /// </summary>
 public sealed class DeviceCmykOverprintMaskSizeTests

@@ -505,7 +505,7 @@ internal partial class RenderContext
         var overprintActive = IsOverprintActive(style);
 
         var matrix = _canvas.TotalMatrix;
-        var bounds = matrix.MapRect(path.Bounds);
+        var bounds = GetDeviceCmykPaintBounds(path, matrix, style, strokeWidth, lineCap, lineJoin, miterLimit, pathEffect);
         var left = Math.Clamp((int)Math.Floor(bounds.Left) - 1, 0, _rootBitmap.Width);
         var top = Math.Clamp((int)Math.Floor(bounds.Top) - 1, 0, _rootBitmap.Height);
         var right = Math.Clamp((int)Math.Ceiling(bounds.Right) + 1, 0, _rootBitmap.Width);
@@ -639,12 +639,8 @@ internal partial class RenderContext
     /// the canvas clip: the previous full-page mask ignored the clip too, and
     /// shrinking to the clip would change which pixels composite.
     ///
-    /// Strokes keep the full root-bitmap surface: Skia's dash path effect
-    /// consumes the surface cull rect while segmenting the dash, so a
-    /// smaller surface changes dash phase accumulation and thus coverage
-    /// (observed as pixel diffs on dashed DeviceCMYK strokes). They still
-    /// benefit from mask reuse, the window-only clear, and the bulk span
-    /// reads in the callers.
+    /// All paint styles use the caller's bounded read window (#1924),
+    /// including the complete stroke outline for strokes (#1932).
     /// </summary>
     private (SKBitmap Mask, int MaskOriginX, int MaskOriginY) RasterizeDeviceCmykCoverageMask(
         SKPath path,
@@ -705,7 +701,7 @@ internal partial class RenderContext
             // Clear only the pixels the paint loops read. The draw itself
             // stays unclipped: the mask canvas's own extent now equals the
             // read window, and the geometry passed in is already bounded to
-            // path.Bounds (+-1px) by the caller, so it is always strictly
+            // paint bounds (+-1px) by the caller, so it is always strictly
             // inside that window/cull rect -- a dash path effect's cull-line
             // optimisation only rewrites endpoints that fall OUTSIDE the
             // cull rect, which never happens here, so dash segmentation is
@@ -864,7 +860,7 @@ internal partial class RenderContext
             return false; // no zero component → overprint output == normal paint
 
         var matrix = _canvas.TotalMatrix;
-        var bounds = matrix.MapRect(path.Bounds);
+        var bounds = GetDeviceCmykPaintBounds(path, matrix, style, strokeWidth, lineCap, lineJoin, miterLimit, pathEffect);
         var left = Math.Clamp((int)Math.Floor(bounds.Left) - 1, 0, _rootBitmap.Width);
         var top = Math.Clamp((int)Math.Floor(bounds.Top) - 1, 0, _rootBitmap.Height);
         var right = Math.Clamp((int)Math.Ceiling(bounds.Right) + 1, 0, _rootBitmap.Width);
@@ -932,6 +928,47 @@ internal partial class RenderContext
 
         _rootBitmap.NotifyPixelsChanged();
         return true;
+    }
+
+    private static SKRect GetDeviceCmykPaintBounds(
+        SKPath path, SKMatrix matrix, SKPaintStyle style, float strokeWidth,
+        int lineCap, int lineJoin, float miterLimit, SKPathEffect? pathEffect)
+    {
+        if (style == SKPaintStyle.Fill || strokeWidth <= 0)
+            return matrix.MapRect(path.Bounds);
+
+        // #1932: raw path bounds omit stroke width, end caps and miter tips.
+        // Bound the painted stroke before transforming it, so nonuniform scale
+        // and shear also carry the complete outline into device space. Include
+        // the dash effect so caps at interior dash endpoints are included too.
+        using var paint = new SKPaint
+        {
+            Style = style,
+            StrokeWidth = strokeWidth,
+            StrokeCap = lineCap switch
+            {
+                1 => SKStrokeCap.Round,
+                2 => SKStrokeCap.Square,
+                _ => SKStrokeCap.Butt
+            },
+            StrokeJoin = lineJoin switch
+            {
+                1 => SKStrokeJoin.Round,
+                2 => SKStrokeJoin.Bevel,
+                _ => SKStrokeJoin.Miter
+            },
+            StrokeMiter = miterLimit,
+            PathEffect = pathEffect
+        };
+        using var outline = new SKPath();
+        if (paint.GetFillPath(path, outline))
+            return matrix.MapRect(SKRect.Union(path.Bounds, outline.Bounds));
+
+        // Degenerate stroke conversion: retain a conservative geometric bound.
+        var bounds = path.Bounds;
+        var outset = strokeWidth * Math.Max(2, miterLimit) / 2;
+        bounds.Inflate(outset, outset);
+        return matrix.MapRect(bounds);
     }
 
     private unsafe Span<byte> GetRootPixelSpan()

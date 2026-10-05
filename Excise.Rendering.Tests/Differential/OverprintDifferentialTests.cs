@@ -25,6 +25,71 @@ public class OverprintDifferentialTests
 {
     private const int Dpi = 72;
 
+    public static IEnumerable<object[]> WideStrokeCases()
+    {
+        foreach (var group in new[] { false, true })
+        {
+            yield return new object[] { group, "20 w 60 100 m 140 100 l S", 100, 108 };
+            yield return new object[] { group, "20 w 1 J 60 100 m 140 100 l S", 54, 100 };
+            yield return new object[] { group, "20 w 2 J 60 100 m 140 100 l S", 53, 107 };
+            yield return new object[] { group, "20 w 0 j 10 M 80 100 m 100 160 l 120 100 l S", 100, 180 };
+            yield return new object[] { group, "20 w [20 20] 0 d 60 100 m 180 100 l S", 110, 108 };
+            yield return new object[] { group, "q 1 0 0 2 20 20 cm 20 w 60 50 m 140 50 l S Q", 120, 136 };
+            yield return new object[] { group, "q 1 .4 .3 1 20 20 cm 20 w 60 100 m 140 100 l S Q", 152, 168 };
+        }
+    }
+
+    [Theory(Timeout = 60000)]
+    [MemberData(nameof(WideStrokeCases))]
+    public void WideOverprintStroke_PaintsOutsideRawPathBoundsLikeGhostscript(
+        bool deviceCmykGroup, string stroke, int pdfX, int pdfY)
+    {
+        // #1932: the read window must contain caps, joins, and transformed
+        // stroke width, not just the centerline's bounds. Probe solid interiors
+        // so independent rasterizer AA and CMYK preview differences are irrelevant.
+        Assert.SkipWhen(!GhostscriptReferenceRenderer.IsAvailable,
+            "Ghostscript is not installed; the overprint-simulate oracle is unavailable.");
+        const string background = "1 0 0 0 k 0 0 300 300 re f\n";
+        var overprintPdf = WriteTempPdf(background + "/GSop gs 0 0 1 0 K " + stroke, deviceCmykGroup);
+        var knockoutPdf = WriteTempPdf(background + "0 0 1 0 K " + stroke, deviceCmykGroup);
+        var backgroundPdf = WriteTempPdf(background, deviceCmykGroup);
+        try
+        {
+            using var reference = RenderWithSimulate(overprintPdf);
+            using var knockout = RenderWithSimulate(knockoutPdf);
+            using var backdrop = RenderWithSimulate(backgroundPdf);
+            reference.Should().NotBeNull("the installed Ghostscript must render this generated fixture");
+            knockout.Should().NotBeNull();
+            backdrop.Should().NotBeNull();
+            using var doc = PdfDocument.Open(File.ReadAllBytes(overprintPdf));
+            using var actual = new SkiaRenderer().RenderPage(doc.GetPage(1),
+                new RenderOptions { Dpi = Dpi, BackgroundColor = SKColors.White });
+            for (var y = 300 - pdfY - 1; y <= 300 - pdfY + 1; y++)
+            for (var x = pdfX - 1; x <= pdfX + 1; x++)
+            {
+                var expected = reference!.GetPixel(x, y);
+                var unpainted = backdrop!.GetPixel(x, y);
+                var knockedOut = knockout!.GetPixel(x, y);
+                ChannelDistance(expected, unpainted).Should().BeGreaterThan(100,
+                    "the independent oracle must paint the probed stroke interior");
+                ChannelDistance(expected, knockedOut).Should().BeGreaterThan(100,
+                    "the independent oracle must preserve the cyan colorant");
+                var painted = actual.GetPixel(x, y);
+                var toOverprint = ChannelDistance(painted, expected);
+                toOverprint.Should().BeLessThan(ChannelDistance(painted, unpainted) / 2,
+                    $"stroke coverage at ({x}, {y}) must not be clipped to the centerline (#1932)");
+                toOverprint.Should().BeLessThan(ChannelDistance(painted, knockedOut) / 2,
+                    "the stroke must retain overprint semantics across its full width");
+            }
+        }
+        finally
+        {
+            TryDelete(overprintPdf);
+            TryDelete(knockoutPdf);
+            TryDelete(backgroundPdf);
+        }
+    }
+
     [Fact(Timeout = 60000)]
     public void GeneratedOverprintFixture_LandsOnGhostscriptSimulateSideOfTheKnockout()
     {
@@ -146,10 +211,10 @@ public class OverprintDifferentialTests
     private const string Resources =
         "/ExtGState << /GSop << /Type /ExtGState /OP true /op true /OPM 1 >> >>";
 
-    private static string WriteTempPdf(string content)
+    private static string WriteTempPdf(string content, bool deviceCmykGroup = false)
     {
         var path = Path.Combine(Path.GetTempPath(), $"excise-overprint-{Guid.NewGuid():N}.pdf");
-        File.WriteAllBytes(path, OverprintRenderingTests.BuildSinglePagePdf(content, Resources, deviceCmykGroup: false));
+        File.WriteAllBytes(path, OverprintRenderingTests.BuildSinglePagePdf(content, Resources, deviceCmykGroup));
         return path;
     }
 
