@@ -48,12 +48,11 @@ tier, and **zero unique tests**: the five assemblies it spans each run
 unfiltered, or under filters that partition them, elsewhere in the same tier.
 `redaction-suites-union` reads those runs' trx instead (~3 s measured), and it
 refuses to be a weaker gate three ways: every trx must be under **this run's**
-log directory (so a producer `--resume` took from a checkpoint is stale
-evidence and FAILS, naming the row to re-run — this is what `checkpoint=never`
-means once the evidence is borrowed; ⚠️ markers are cleared only by `--fresh`,
-so that is **every `full` run after the first green one on a branch**, not
-merely one after a crash — the old row paid 435 s on each of those and stayed
-green, and the strict rule trades that away on purpose); every
+log directory. On resume, same-commit checkpoint TRX files are copied into
+that directory with a source-run, commit, and SHA-256 provenance sidecar
+(#1935). Missing, empty, malformed, or cross-commit test evidence causes the
+producer to execute again. The union gate itself still executes on every
+invocation; every
 `*.Tests.csproj` in `excise.sln`
 must be represented, which is the containment proof and needs no filter
 semantics at all; and `dotnet test excise.sln --list-tests --filter
@@ -416,8 +415,10 @@ itself when #1358 closes (STALE) or `origin/develop` moves (different token).
   marker and reported as a span. Markers are keyed on **content**: the row's
   command hash (kind, target, filter). A changed row re-runs. A marker written
   before 2026-09-05 carries no command hash and re-runs once.
-- A marker from a different commit is accepted and the span of commits is
-  reported. Anything torn, truncated or unsentinelled re-runs: checkpoints
+- Script markers from a different commit retain the existing span reporting.
+  Test producers require the current commit and an intact TRX before resume
+  can transport their evidence into the new run directory (#1935).
+  Anything torn, truncated or unsentinelled re-runs: checkpoints
   fail toward re-running, never toward skipping.
 - `checkpoint=never` rows re-run on every invocation, resumed or not — the
   seven listed under the `checkpoint` column above: the redaction family,

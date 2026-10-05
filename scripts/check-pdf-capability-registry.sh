@@ -2,7 +2,8 @@
 # The PDF-spec capability registry gate (#1357, #1366, #1457).
 #
 #   (default)               t0 BLOCK — STRUCTURE. Regenerates every derived file
-#                           from COMMITTED inputs and diffs against the tree. The
+#                           in a disposable snapshot and diffs against its inputs.
+#                           Never writes the caller's tree or index (#1765). The
 #                           test-outcomes snapshot is READ here, never regenerated:
 #                           until #1366 it was rebuilt from every trx under logs/,
 #                           so a full run's own results reddened the registry row
@@ -113,17 +114,16 @@ mode="${1:-}"
 dir="${2:-}"
 case "$mode" in
   "")
+    exec python3 scripts/check_pdf_registry_snapshot.py
+    ;;
+  --check-snapshot)
+    # Only the disposable clone made by the snapshot runner may generate here.
+    [ "${EXCISE_REGISTRY_SNAPSHOT:-}" = "$ROOT" ] && [ -f "$ROOT/.git/excise-registry-snapshot" ] || {
+      echo "Refusing registry generation outside a disposable snapshot" >&2
+      exit 2
+    }
     build_derived
-    rc=0
-    git diff --exit-code "${DIFF_IGNORE[@]}" -- "${GENERATED[@]}" || rc=$?
-    # On a PASS the only worktree change is the stamp this gate just wrote, so it
-    # is restored: otherwise the next runner_state_init keys the run "-dirty",
-    # every ledger row says treeDirty=yes and the clean-tree checkpoints become
-    # unreachable. On a FAIL the files stay put for review.
-    if [ "$rc" = 0 ]; then
-      git checkout -- "${GENERATED[@]}"
-    fi
-    exit "$rc"
+    git diff --exit-code "${DIFF_IGNORE[@]}" -- "${GENERATED[@]}"
     ;;
   --refresh-outcomes)
     [ -n "$dir" ] && [ -d "$dir" ] || { echo "usage: $0 --refresh-outcomes LOG_DIR" >&2; exit 2; }
