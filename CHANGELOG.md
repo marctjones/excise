@@ -10,8 +10,8 @@ semantic versioning.
 
 ### Added
 
-- Deterministic, Git-tracked C# declaration inventory and JSON symbol baseline with source hashes, scope exclusions, and added/removed/changed comparison evidence; no code-quality score or release verdict is inferred (#1939).
-- Pinned IDE0051/IDE0052 and whitespace diagnostic baseline with symbol/file provenance and a verification-only ratchet; formatter and analyzer self-tests catch planted violations (#1944).
+- Deterministic, Git-tracked C# declaration inventories with source hashes, scope exclusions, and added/removed/changed comparison evidence; generated captures require review before baseline adoption, and no code-quality score or release verdict is inferred (#1939).
+- Pinned IDE0051/IDE0052 and whitespace diagnostic capture with symbol/file provenance and verification-only ratchet support; formatter and analyzer self-tests catch planted violations. Noncanonical captures are not shipped as an adopted baseline (#1944).
 
 ### Fixed
 
