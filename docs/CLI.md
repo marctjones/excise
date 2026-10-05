@@ -30,6 +30,12 @@ automation contract, exit codes, batch workflow schema, security boundary, and
 platform examples. The public automation path is CLI-first; Release builds do
 not enable a background GUI automation listener.
 
+`render` reports embedded CFF font rejection or empty-outline fallback as notes
+on stderr, including with `--json`. A substituted font can have different glyph
+shapes even when export succeeds. This remains a known macOS limitation for some
+malformed Type1C fonts, including the small capitals in pdf.js `bug1308536.pdf`
+([#1937](https://github.com/marctjones/excise/issues/1937)).
+
 
 ## CLI examples
 

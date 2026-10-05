@@ -100,6 +100,10 @@ internal partial class RenderContext
         var embedded = TryLoadEmbeddedTypeface(
             fontDict, toUnicodeMap, codeToGlyphName, codeToUnicode, encodingName,
             fontWidths, firstChar, diagnostics);
+        // A font-local note must reach RenderOptions.Diagnostics, otherwise
+        // CLI render/export silently substitutes visibly different glyphs (#1937).
+        foreach (var diagnostic in diagnostics)
+            AddDiagnostic($"Font /{fontName} ({resolvedFont.BaseFont}): {diagnostic}");
         var hasEmbeddedProgram = embedded != null;
         var hasRawType1Program = embedded != null && fontDict != null
             && _embeddedRawType1FontDicts.Contains(fontDict);
@@ -413,7 +417,12 @@ internal partial class RenderContext
             }
             catch { typeface = null; }
 
-            if (typeface == null) return null;
+            if (typeface == null)
+            {
+                if (isCff)
+                    diagnostics.Add("Embedded CFF program was rejected by the native font backend; falling back to a system typeface. Glyph shapes may differ.");
+                return null;
+            }
 
             // Sanity-probe the wrapped font — for some CFF subsets (most commonly
             // dingbat fonts produced by the XEP toolchain) Skia loads our wrapper
