@@ -80,7 +80,8 @@ the decisions no row can make.
 
 2. **Fresh full-tier evidence, then the release-candidate run, on an otherwise idle machine.**
 
-   Run `scripts/test-tier.sh full` on the same clean candidate without resume.
+   Run `scripts/test-tier.sh full --fresh` on the same clean candidate; full
+   resumes by default, so `--fresh` is required for new release evidence.
    Set `EXCISE_ACCESSIBILITY_ALLOW_PLATFORM_PROBE=1` and grant the terminal
    macOS Accessibility permission for both full and release-smoke runs.
 
