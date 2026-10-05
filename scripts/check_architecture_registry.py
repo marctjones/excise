@@ -160,10 +160,23 @@ def current_revision() -> str:
     ).stdout.strip()
 
 
+def tracked_projects() -> list[Path]:
+    """Return project files that are part of the repository, not local scratch."""
+    result = subprocess.run(
+        ["git", "ls-files", "-z", "--", "*.csproj"], cwd=REPO_ROOT,
+        check=True, capture_output=True,
+    )
+    return sorted(
+        REPO_ROOT / raw.decode("utf-8")
+        for raw in result.stdout.split(b"\0")
+        if raw
+    )
+
+
 def generate_inventory(source_revision: str) -> dict:
     scope = load_repository_scope()
     projects = sorted(
-        path for path in REPO_ROOT.rglob("*.csproj")
+        path for path in tracked_projects()
         if not is_excluded_project(path, scope)
     )
     return {
