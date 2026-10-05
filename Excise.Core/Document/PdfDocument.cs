@@ -56,25 +56,47 @@ public partial class PdfDocument : IDisposable
     // #1445: embedded font objects already built into this document, keyed by
     // PdfFont.FontProgramIdentity (reference equality). A font is a document-wide
     // resource; building it per page wrote one FontFile2 per page.
-    private readonly Dictionary<object, PdfReference> _embeddedFontObjects =
+    private readonly Dictionary<object, AuthoringResourceCacheEntry> _embeddedFontObjects =
         new(ReferenceEqualityComparer.Instance);
 
     internal bool TryGetEmbeddedFontObject(
         object fontProgramIdentity,
         [System.Diagnostics.CodeAnalysis.MaybeNullWhen(false)] out PdfReference reference)
-        => _embeddedFontObjects.TryGetValue(fontProgramIdentity, out reference);
+    {
+        if (_embeddedFontObjects.TryGetValue(fontProgramIdentity, out var entry) && entry.IsValid(this))
+        {
+            reference = entry.Reference;
+            return true;
+        }
+        _embeddedFontObjects.Remove(fontProgramIdentity);
+        reference = null;
+        return false;
+    }
 
     internal void RememberEmbeddedFontObject(object fontProgramIdentity, PdfReference reference)
-        => _embeddedFontObjects[fontProgramIdentity] = reference;
+        => _embeddedFontObjects[fontProgramIdentity] = new(this, reference);
+
+    // The authoring font legitimately grows its ToUnicode map and finalizes its
+    // subset. Refresh only an unedited cache entry around that trusted update;
+    // an external edit must not acquire a new accepted snapshot (#1919).
+    internal void UpdateEmbeddedFontObject(object fontProgramIdentity, Action update)
+    {
+        var valid = TryGetEmbeddedFontObject(fontProgramIdentity, out var reference);
+        update();
+        if (valid)
+            RememberEmbeddedFontObject(fontProgramIdentity, reference!);
+    }
 
     // #1918: image XObjects PdfGraphics.DrawImage built in this document, keyed by
     // PdfImage.Identity: a logo drawn on N pages is stored once, not N times.
-    private readonly Dictionary<string, PdfReference> _drawnImages = new();
+    private readonly Dictionary<string, AuthoringResourceCacheEntry> _drawnImages = new();
 
     internal PdfReference GetOrAddDrawnImage(Graphics.PdfImage image)
     {
-        if (!_drawnImages.TryGetValue(image.Identity, out var reference))
-            _drawnImages[image.Identity] = reference = image.AddTo(this);
+        if (_drawnImages.TryGetValue(image.Identity, out var entry) && entry.IsValid(this))
+            return entry.Reference;
+        var reference = image.AddTo(this);
+        _drawnImages[image.Identity] = new(this, reference);
         return reference;
     }
 
@@ -108,7 +130,10 @@ public partial class PdfDocument : IDisposable
     /// call is left untouched; only the cached object changes.
     /// </remarks>
     internal void ReplaceIndirectObject(int objectNumber, PdfObject obj)
-        => _objectStore.ReplaceIndirectObject(objectNumber, obj);
+    {
+        ForgetAuthoringResourceCacheEntry(objectNumber);
+        _objectStore.ReplaceIndirectObject(objectNumber, obj);
+    }
 
     /// <summary>
     /// Mark an indirect object as free so it is no longer serialized.
@@ -120,7 +145,126 @@ public partial class PdfDocument : IDisposable
     /// unreachable before calling this.
     /// </summary>
     internal void RemoveObject(int objectNumber)
-        => _objectStore.RemoveObject(objectNumber);
+    {
+        ForgetAuthoringResourceCacheEntry(objectNumber);
+        _objectStore.RemoveObject(objectNumber);
+    }
+
+    // Document-wide authoring caches hold indirect references. A mutation can
+    // replace or free their target; retaining that reference would make the
+    // next equal DrawImage/AddFont point at unrelated or missing content (#1919).
+    private void ForgetAuthoringResourceCacheEntry(int objectNumber)
+    {
+        foreach (var key in _embeddedFontObjects
+                     .Where(pair => pair.Value.Reference.ObjectNum == objectNumber)
+                     .Select(pair => pair.Key)
+                     .ToArray())
+            _embeddedFontObjects.Remove(key);
+
+        foreach (var key in _drawnImages
+                     .Where(pair => pair.Value.Reference.ObjectNum == objectNumber)
+                     .Select(pair => pair.Key)
+                     .ToArray())
+            _drawnImages.Remove(key);
+    }
+
+    // #1919: removal/replacement hooks cannot see edits through the mutable PDF
+    // graph or exposed byte arrays. Keep a snapshot of the authored resource and
+    // its dependencies (SMask, FontFile2, ToUnicode, etc.), not just its root.
+    // Hash encoded bytes without decoding or copying large image/font buffers.
+    private sealed class AuthoringResourceCacheEntry
+    {
+        internal PdfReference Reference { get; }
+        private readonly List<(PdfReference Reference, PdfObject Target)> _references = new();
+        private readonly List<(PdfDictionary Dictionary, KeyValuePair<PdfName, PdfObject>[] Entries)> _dictionaries = new();
+        private readonly List<(PdfArray Array, PdfObject[] Items)> _arrays = new();
+        private readonly List<(PdfStream Stream, byte[] Encoded, byte[]? Decoded)> _streams = new();
+        private readonly List<(PdfString String, byte[] Bytes)> _strings = new();
+        private readonly Dictionary<byte[], byte[]> _bytes = new(ReferenceEqualityComparer.Instance);
+
+        internal AuthoringResourceCacheEntry(PdfDocument document, PdfReference reference)
+        {
+            Reference = reference;
+            var seen = new HashSet<PdfObject>(ReferenceEqualityComparer.Instance);
+            var pending = new Stack<PdfObject>();
+            pending.Push(reference);
+            while (pending.TryPop(out var obj))
+            {
+                if (!seen.Add(obj))
+                    continue;
+                switch (obj)
+                {
+                    case PdfReference indirect:
+                        var target = document.Resolve(indirect);
+                        _references.Add((indirect, target));
+                        pending.Push(target);
+                        break;
+                    case PdfDictionary dictionary:
+                        _dictionaries.Add((dictionary, dictionary.ToArray()));
+                        foreach (var value in dictionary.Values)
+                            pending.Push(value);
+                        if (dictionary is PdfStream stream)
+                        {
+                            var decoded = stream.IsDecoded ? stream.DecodedData : null;
+                            _streams.Add((stream, stream.EncodedData, decoded));
+                            RememberBytes(stream.EncodedData);
+                            if (decoded != null)
+                                RememberBytes(decoded);
+                        }
+                        break;
+                    case PdfArray array:
+                        _arrays.Add((array, array.ToArray()));
+                        foreach (var value in array)
+                            pending.Push(value);
+                        break;
+                    case PdfString str:
+                        _strings.Add((str, str.Bytes));
+                        RememberBytes(str.Bytes);
+                        break;
+                }
+            }
+        }
+
+        private void RememberBytes(byte[] bytes)
+        {
+            if (!_bytes.ContainsKey(bytes))
+                _bytes.Add(bytes, System.Security.Cryptography.SHA256.HashData(bytes));
+        }
+
+        internal bool IsValid(PdfDocument document)
+        {
+            foreach (var (reference, target) in _references)
+                if (!ReferenceEquals(document.Resolve(reference), target))
+                    return false;
+            foreach (var (dictionary, entries) in _dictionaries)
+            {
+                if (dictionary.Count != entries.Length)
+                    return false;
+                foreach (var entry in entries)
+                    if (!Equals(dictionary.GetOptional(entry.Key.Value), entry.Value))
+                        return false;
+            }
+            foreach (var (array, items) in _arrays)
+            {
+                if (array.Count != items.Length)
+                    return false;
+                for (var i = 0; i < items.Length; i++)
+                    if (!ReferenceEquals(array[i], items[i]))
+                        return false;
+            }
+            foreach (var (stream, encoded, decoded) in _streams)
+                if (!ReferenceEquals(stream.EncodedData, encoded)
+                    || (decoded == null ? stream.IsDecoded : !ReferenceEquals(stream.DecodedData, decoded)))
+                    return false;
+            foreach (var (str, bytes) in _strings)
+                if (!ReferenceEquals(str.Bytes, bytes))
+                    return false;
+            foreach (var (bytes, fingerprint) in _bytes)
+                if (!System.Security.Cryptography.SHA256.HashData(bytes).AsSpan().SequenceEqual(fingerprint))
+                    return false;
+            return true;
+        }
+    }
 
     /// <summary>See <see cref="PdfDocumentObjectStore.TryEvictFromCache"/> (F3).</summary>
     internal bool TryEvictFromCache(PdfObject obj)

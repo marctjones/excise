@@ -486,7 +486,7 @@ public partial class PdfPage
             if (existingFont != null)
             {
                 var existingBaseFont = existingFont.GetNameOrNull("BaseFont");
-                if (existingBaseFont == font.BaseFont
+                if (fontProgramIdentity == null && existingBaseFont == font.BaseFont
                     && (!font.IsStandard14 || existingFont.GetNameOrNull("Encoding") == wantedEncoding))
                 {
                     return kvp.Key.Value; // Return existing name

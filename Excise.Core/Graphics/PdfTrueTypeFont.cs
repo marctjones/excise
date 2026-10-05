@@ -145,7 +145,7 @@ internal sealed class PdfTrueTypeFont : PdfFont
     /// </summary>
     private sealed class ToUnicodeState
     {
-        public List<PdfStream> Streams { get; } = new();
+        public List<(WeakReference<PdfDocument> Document, PdfStream Stream)> Streams { get; } = new();
 
         public Dictionary<int, int>? GlyphToCodepoint { get; set; }
     }
@@ -163,8 +163,14 @@ internal sealed class PdfTrueTypeFont : PdfFont
             return;
         byte[] cmap = Encoding.ASCII.GetBytes(BuildToUnicodeCMap());
         byte[] comp = Deflate(cmap);
-        foreach (var stream in _toUnicode.Streams)
-            stream.ReplaceEncoding(comp, cmap, "FlateDecode");
+        foreach (var (owner, stream) in _toUnicode.Streams)
+        {
+            if (owner.TryGetTarget(out var document))
+                document.UpdateEmbeddedFontObject(_usedGids,
+                    () => stream.ReplaceEncoding(comp, cmap, "FlateDecode"));
+            else
+                stream.ReplaceEncoding(comp, cmap, "FlateDecode");
+        }
     }
 
     internal override PdfDictionary BuildFontDictionary(PdfDocument document)
@@ -262,7 +268,7 @@ internal sealed class PdfTrueTypeFont : PdfFont
         //    compressed, by the pre-save action).
         var tu = new PdfStream(new PdfDictionary(), Array.Empty<byte>());
         var tuRef = document.AddIndirectObject(tu);
-        _toUnicode.Streams.Add(tu);
+        _toUnicode.Streams.Add((new WeakReference<PdfDocument>(document), tu));
         RefreshToUnicode();
 
         // 6. Type0 root (returned; AddFont stores it inline in /Font).
@@ -277,7 +283,8 @@ internal sealed class PdfTrueTypeFont : PdfFont
         type0["ToUnicode"] = tuRef;
 
         // Defer subsetting to save time (when _usedGids is complete).
-        document.RegisterPreSaveAction(() => FinalizeSubset(fontFileStream, fd, cid, type0, tu, cidSetStream, toGlyphSpace));
+        document.RegisterPreSaveAction(() => document.UpdateEmbeddedFontObject(_usedGids,
+            () => FinalizeSubset(fontFileStream, fd, cid, type0, tu, cidSetStream, toGlyphSpace)));
         return type0;
     }
 

@@ -132,4 +132,79 @@ public class DocumentFontSharingTests
             fonts.Single().Value.Should().BeOfType<PdfDictionary>("a base-14 font dictionary stays inline");
         }
     }
+
+    [Theory]
+    [InlineData("remove", false)]
+    [InlineData("replace", false)]
+    [InlineData("dictionary", false)]
+    [InlineData("program-remove", false)]
+    [InlineData("program-replace", false)]
+    [InlineData("program-bytes", false)]
+    [InlineData("widths", false)]
+    [InlineData("unicode", false)]
+    [InlineData("program-bytes", true)]
+    public void EditedFontResource_IsRebuiltBeforeDrawingAgain(string mutation, bool samePage)
+    {
+        // #1919: dependent font objects are part of the shared resource identity.
+        var font = PdfFont.FromTrueType(TestFontFixtures.LoadDejaVuSansBytes(), 12);
+        using var doc = PdfDocument.CreateNew();
+        var first = doc.Pages.AddBlank(400, 200);
+        using (var graphics = first.GetGraphics())
+            graphics.DrawString("Alpha", font, PdfBrush.Black, 40, 120);
+        var oldReference = (PdfReference)first.Resources!.ResolveDictionary(doc, "Font")!.Single().Value;
+        var root = (PdfDictionary)doc.Resolve(oldReference);
+        var cid = (PdfDictionary)doc.Resolve(root.GetArray("DescendantFonts")[0]);
+        var descriptor = (PdfDictionary)doc.Resolve(cid["FontDescriptor"]);
+        var programReference = (PdfReference)descriptor["FontFile2"];
+        switch (mutation)
+        {
+            case "remove": doc.RemoveObject(oldReference.ObjectNum); break;
+            case "replace": doc.ReplaceIndirectObject(oldReference.ObjectNum, new PdfDictionary()); break;
+            case "dictionary": root.SetName("Encoding", "Identity-V"); break;
+            case "program-remove": doc.RemoveObject(programReference.ObjectNum); break;
+            case "program-replace": doc.ReplaceIndirectObject(programReference.ObjectNum, new PdfStream([0])); break;
+            case "program-bytes": ((PdfStream)doc.Resolve(programReference)).EncodedData[0] ^= 0xff; break;
+            case "widths": cid.GetArray("W").Get<PdfArray>(1)[0] = new PdfInteger(9999); break;
+            case "unicode": ((PdfStream)doc.Resolve(root["ToUnicode"])).DecodedData[0] ^= 0xff; break;
+        }
+
+        var second = samePage ? first : doc.Pages.AddBlank(400, 200);
+        string newName;
+        using (var graphics = second.GetGraphics())
+        {
+            // Identical text avoids a glyph-map refresh repairing the corruption.
+            graphics.DrawString("Alpha", font.WithSize(20), PdfBrush.Black, 40, 80);
+            newName = second.Resources!.ResolveDictionary(doc, "Font")!.Last().Key.Value;
+        }
+        var newReference = (PdfReference)second.Resources!.ResolveDictionary(doc, "Font")![newName];
+        newReference.ObjectNum.Should().NotBe(oldReference.ObjectNum);
+        var rebuilt = (PdfDictionary)doc.Resolve(newReference);
+        rebuilt.GetNameOrNull("Encoding").Should().Be("Identity-H");
+        var newCid = (PdfDictionary)doc.Resolve(rebuilt.GetArray("DescendantFonts")[0]);
+        var newDescriptor = (PdfDictionary)doc.Resolve(newCid["FontDescriptor"]);
+        var newProgram = (PdfStream)doc.Resolve(newDescriptor["FontFile2"]);
+        newProgram.EncodedData.Should().NotBeEmpty();
+        ((PdfStream)doc.Resolve(rebuilt["ToUnicode"])).DecodedData[0].Should().Be((byte)'/');
+    }
+
+    [Fact]
+    public void FontAuthoredGlyphMapAndSubsetUpdates_PreserveTheSharedResource()
+    {
+        var font = PdfFont.FromTrueType(TestFontFixtures.LoadDejaVuSansBytes(), 12);
+        using var doc = PdfDocument.CreateNew();
+        var references = new List<int>();
+        for (var i = 0; i < PageTexts.Length; i++)
+        {
+            var page = doc.Pages.AddBlank(400, 200);
+            using (var graphics = page.GetGraphics())
+                graphics.DrawString(PageTexts[i], font, PdfBrush.Black, 40, 120);
+            references.Add(((PdfReference)page.Resources!.ResolveDictionary(doc, "Font")!.Single().Value).ObjectNum);
+            doc.TryGetEmbeddedFontObject(font.FontProgramIdentity!, out _).Should().BeTrue("after drawing");
+            // Subsetting and new glyphs are authorized authoring updates, not cache corruption.
+            doc.SaveToBytes();
+            doc.TryGetEmbeddedFontObject(font.FontProgramIdentity!, out _).Should().BeTrue("after saving");
+        }
+        references.Distinct().Should().ContainSingle();
+        FontFile2Count(doc.SaveToBytes()).Should().Be(1);
+    }
 }

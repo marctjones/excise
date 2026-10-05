@@ -168,6 +168,71 @@ public class PdfGraphicsImageTests
     }
 
     [Fact]
+    public void DrawImage_AfterItsCachedXObjectIsRemoved_RebuildsTheImage()
+    {
+        using var doc = PdfDocument.CreateNew();
+        var image = Rgba();
+        var first = doc.Pages.AddBlank(200, 200);
+        using (var graphics = first.GetGraphics())
+            graphics.DrawImage(image, 0, 0, 10, 10);
+
+        var removed = first.Resources!.ResolveDictionary(doc, "XObject")!
+            .GetOptional("Im1").Should().BeOfType<PdfReference>().Subject;
+        doc.RemoveObject(removed.ObjectNum);
+
+        var second = doc.Pages.AddBlank(200, 200);
+        using (var graphics = second.GetGraphics())
+            graphics.DrawImage(image, 0, 0, 10, 10);
+
+        var rebuilt = second.Resources!.ResolveDictionary(doc, "XObject")!
+            .GetOptional("Im1").Should().BeOfType<PdfReference>().Subject;
+        rebuilt.ObjectNum.Should().NotBe(removed.ObjectNum);
+        doc.Resolve(rebuilt).Should().BeOfType<PdfStream>()
+            .Which.GetNameOrNull("Subtype").Should().Be("Image");
+    }
+
+    [Theory]
+    [InlineData("replace")]
+    [InlineData("dictionary")]
+    [InlineData("pixels")]
+    [InlineData("mask-remove")]
+    [InlineData("mask-replace")]
+    [InlineData("mask-pixels")]
+    public void DrawImage_AfterItsSharedImageOrMaskIsChanged_RebuildsOriginalContent(string mutation)
+    {
+        // #1919: the root reference and all dependent content must still match.
+        using var doc = PdfDocument.CreateNew();
+        var first = doc.Pages.AddBlank(200, 200);
+        using (var graphics = first.GetGraphics())
+            graphics.DrawImage(Rgba(), 0, 0, 10, 10);
+        var oldReference = (PdfReference)first.Resources!.ResolveDictionary(doc, "XObject")!["Im1"];
+        var oldImage = Image(first, "Im1");
+        var maskReference = (PdfReference)oldImage["SMask"];
+        switch (mutation)
+        {
+            case "replace": doc.ReplaceIndirectObject(oldReference.ObjectNum, new PdfDictionary()); break;
+            case "dictionary": oldImage.SetName("ColorSpace", "DeviceGray"); break;
+            case "pixels": oldImage.DecodedData[0] = 0; break;
+            case "mask-remove": doc.RemoveObject(maskReference.ObjectNum); break;
+            case "mask-replace": doc.ReplaceIndirectObject(maskReference.ObjectNum, new PdfStream([0, 0, 0, 0])); break;
+            case "mask-pixels": ((PdfStream)doc.Resolve(maskReference)).DecodedData[0] = 0; break;
+        }
+
+        var second = doc.Pages.AddBlank(200, 200);
+        using (var graphics = second.GetGraphics())
+            graphics.DrawImage(Rgba(), 0, 0, 10, 10);
+        var newReference = (PdfReference)second.Resources!.ResolveDictionary(doc, "XObject")!["Im1"];
+        newReference.ObjectNum.Should().NotBe(oldReference.ObjectNum);
+        var rebuilt = Image(second, "Im1");
+        rebuilt.GetNameOrNull("ColorSpace").Should().Be("DeviceRGB");
+        rebuilt.DecodedData.Should().Equal(255, 0, 0, 0, 255, 0, 0, 0, 255, 9, 9, 9);
+        ((PdfStream)doc.Resolve(rebuilt["SMask"])).DecodedData.Should().Equal(255, 128, 0, 255);
+
+        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+        Image(reopened.GetPage(2), "Im1").DecodedData.Should().Equal(rebuilt.DecodedData);
+    }
+
+    [Fact]
     public void DrawImage_SkipsXObjectNamesAlreadyOnThePage()
     {
         using var doc = PdfDocument.CreateNew();
