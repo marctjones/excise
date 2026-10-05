@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "_comment": [
+    "Optional #1804 resting-memory protocol; local book is not a required corpus.",
+    "Run with --scenarios-file tests/gui-perf-resting-memory.json --repeats 3 --vmmap.",
+    "Cold settings/cache per launch; single-page mode; 30 page changes at runner cadence.",
+    "The two idle steps request 45 seconds each after paging settles. Journal monotonicMs",
+    "must be used for actual elapsed time: settling and boundary sampling add overhead.",
+    "Do not force trim or collection: confirm natural cacheTrimRequests/heapReclaims in metrics.",
+    "Deactivation stops the idle timer. A run with no idle heap reclaim is not a post-reclaim",
+    "baseline and must be repeated or reported separately, even if a deactivation trim fired.",
+    "Compare footprint with live/committed managed heap, single-page/continuous cache bytes",
+    "and native vmmap categories. Unattributed bytes are not proof of a retained owner.",
+    "Three repeats bound observed spread; an improvement still needs calibrated noise floors.",
+    "W9 is the same-mode form floor, not a 30-page workload. Preview comparisons require a separate",
+    "same-machine same-timing reader benchmark. These scenarios cannot establish that ratio.",
+    "The book's final 45-second diagnostic window permits a dump after the timed samples.",
+    "A capture during that window must not be used to reinterpret the earlier timed readings."
+  ],
+  "scenarios": [
+    {
+      "id": "resting-w9",
+      "why": "#1804 same-mode small-form floor at approximately 45/90 seconds after settling; distinguishes fixed app cost from document/paging cost.",
+      "steps": [
+        { "op": "mark", "label": "pre-open" },
+        { "op": "open", "label": "open-w9", "document": "test-pdfs/smoke/irs-w9.pdf" },
+        { "op": "viewMode", "label": "view-single", "level": "single" },
+        { "op": "waitIdle", "label": "settled" },
+        { "op": "idle", "label": "post-settle-45s", "seconds": 45 },
+        { "op": "idle", "label": "post-settle-90s", "seconds": 45 }
+      ]
+    },
+    {
+      "id": "resting-irs-page30",
+      "why": "#1804 real 126-page IRS instructions, 30 page changes, then approximately 45/90 seconds after settling; replaces the invalid pre-trim idle20s resting reading.",
+      "steps": [
+        { "op": "mark", "label": "pre-open" },
+        { "op": "open", "label": "open-irs", "document": "test-pdfs/smoke/irs-1040-instructions.pdf" },
+        { "op": "viewMode", "label": "view-single", "level": "single" },
+        { "op": "waitIdle", "label": "idle-after-open" },
+        { "op": "pageBy", "label": "page-30", "count": 30 },
+        { "op": "waitIdle", "label": "settled" },
+        { "op": "idle", "label": "post-settle-45s", "seconds": 45 },
+        { "op": "idle", "label": "post-settle-90s", "seconds": 45 }
+      ]
+    },
+    {
+      "id": "resting-book-page30",
+      "why": "#1804 real 455-page Business Success with Open Source book, 30 page changes, then approximately 45/90 seconds after settling; optional local personal-copy corpus.",
+      "steps": [
+        { "op": "mark", "label": "pre-open" },
+        { "op": "open", "label": "open-book", "document": "test-pdfs/local-real-world/business-success-with-open-source_P1.0.pdf" },
+        { "op": "viewMode", "label": "view-single", "level": "single" },
+        { "op": "waitIdle", "label": "idle-after-open" },
+        { "op": "pageBy", "label": "page-30", "count": 30 },
+        { "op": "waitIdle", "label": "settled" },
+        { "op": "idle", "label": "post-settle-45s", "seconds": 45 },
+        { "op": "idle", "label": "post-settle-90s", "seconds": 45 },
+        { "op": "idle", "label": "diagnostic-window", "seconds": 45 }
+      ]
+    }
+  ]
+}

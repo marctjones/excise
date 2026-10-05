@@ -1,0 +1,123 @@
+{
+  "issue": 1804,
+  "measuredAtUtc": "2026-10-04T03:46:57Z",
+  "baseRevision": "f5a12429658c68b287df862da049594be3f9d5cd",
+  "workingTree": "dirty; current Release stabilization batch including thumbnail virtualization",
+  "platform": "macOS arm64",
+  "runtimeMode": "jit",
+  "runner": "scripts/run-gui-perf-scenarios.sh --scenarios-file tests/gui-perf-resting-memory.json --app /private/tmp/issue1911-bundle --repeats 1 --vmmap --out logs/issue1804-current",
+  "binary": {
+    "appDllSha256": "d914a2c0e1a17797e6d3db13bd0ecedc2f6687af58ab2a06a3deb6f617966561",
+    "avaloniaDllSha256": "52c2e9ff3f2bffd25dc1b0bbe12a0afb4a4c1d32a552ec22d3b7aa2659c8d5de",
+    "renderingDllSha256": "5a2e64b6f8e141e34a857c4e7d3f11d0bed6f234b6e49a9677182fa972381bed"
+  },
+  "protocol": {
+    "repeats": 1,
+    "isolation": "fresh settings and caches per launch; no concurrent Excise testhost",
+    "viewMode": "single after open; opening initially renders the default continuous mode",
+    "paging": "30 view-model page-index changes at the existing runner cadence, approximately 3.6 seconds; W9 is a small-form floor without paging",
+    "timedSamples": "two 45-second idle intervals after waitIdle; actual elapsed time comes from the monotonic journal",
+    "diagnostics": "boundary footprint/ps/vmmap, in-process managed heap and viewer cache bytes, metrics trim/reclaim events",
+    "forcedTrimOrCollection": false,
+    "bookDump": "dotnet-dump collect --type Heap after the 90-second sample; no gcdump or forced GC; final diagnostic window in this measured run was 30 seconds, extended to 45 seconds in the checked-in protocol",
+    "calibratedNoiseFloor": null
+  },
+  "fixtures": [
+    { "path": "test-pdfs/smoke/irs-w9.pdf", "pages": 6, "sha256": "2d420cbb4123dcf1fb82595b2359cfbb5d81f00b9df9d359fcc7af361d093f53" },
+    { "path": "test-pdfs/smoke/irs-1040-instructions.pdf", "pages": 126, "sha256": "482e9c487c608f1bbeaceef35bc3c0933e8b35443cfff447e4279d590468364a" },
+    { "path": "test-pdfs/local-real-world/business-success-with-open-source_P1.0.pdf", "pages": 455, "sha256": "470842edafa5717963978c69648c4eb4aa488e21fd7f3fd453079baeebbce8d4" }
+  ],
+  "samples": [
+    {
+      "scenario": "resting-w9",
+      "elapsedAfterSettledSeconds": [45.745, 91.632],
+      "footprintMB": [352, 312],
+      "rssMB": [376, 359],
+      "managedCommittedMiB": [37.90625, 37.90625],
+      "managedLiveEstimateMiB": [45.944023, 46.557938],
+      "singlePageCacheMiB": [10.307884, 10.307884],
+      "continuousCacheMiB": [10.289734, 10.289734],
+      "heapReclaims": 0,
+      "postReclaimBaselineValid": false,
+      "reason": "deactivated at approximately 27 seconds; SoftTrim intentionally stops the idle timer; one deactivation background trim occurred"
+    },
+    {
+      "scenario": "resting-irs-page30",
+      "elapsedAfterSettledSeconds": [45.818, 91.648],
+      "footprintMB": [440, 381],
+      "rssMB": [464, 424],
+      "managedCommittedMiB": [63.640625, 63.640625],
+      "managedLiveEstimateMiB": [87.837250, 88.466309],
+      "singlePageCacheMiB": [10.307884, 10.307884],
+      "continuousCacheMiB": [10.289734, 10.289734],
+      "heapReclaims": 1,
+      "idleHeapReclaimMs": 38,
+      "postReclaimBaselineValid": true,
+      "vmmapPhysicalFootprintPeakMiB": 530.8
+    },
+    {
+      "scenario": "resting-book-page30",
+      "elapsedAfterSettledSeconds": [45.840, 91.652],
+      "footprintMB": [438, 319],
+      "rssMB": [463, 369],
+      "managedCommittedMiB": [59.25, 59.25],
+      "managedLiveEstimateMiB": [94.807236, 95.435822],
+      "singlePageCacheMiB": [9.594635, 9.594635],
+      "continuousCacheMiB": [9.582489, 9.582489],
+      "heapReclaims": 1,
+      "idleHeapReclaimMs": 37,
+      "postReclaimBaselineValid": true,
+      "vmmapPhysicalFootprintPeakMiB": 546.3
+    }
+  ],
+  "bookNativeAt90Seconds": {
+    "source": "logs/issue1804-current/runs/resting-book-page30_r1/vmmap-9-post-settle-90s.txt",
+    "physicalFootprintMiB": 318.8,
+    "dirtyMiB": {
+      "VM_ALLOCATE": 132.2,
+      "MALLOC_SMALL": 62.9,
+      "IOSurface": 44.7,
+      "ownedUnmappedGraphics": 34.6,
+      "MALLOC_LARGE": 19.2,
+      "MALLOC_SMALL_empty": 0.0625
+    },
+    "attributionLimit": "VM_ALLOCATE includes runtime/native mappings; this region category is not a retained object or allocation-stack owner. A managed dump cannot assign the native remainder to one renderer cache."
+  },
+  "bookManagedDump": {
+    "path": "logs/issue1804-current/book-post90.dmp",
+    "statistics": "logs/issue1804-current/book-dumpheap-stat.txt",
+    "roots": "logs/issue1804-current/book-retained-roots.txt",
+    "totalObjects": 614291,
+    "totalBytesIncludingFree": 53392083,
+    "freeBytes": 429896,
+    "largestTypeGroups": [
+      { "type": "System.Byte[]", "count": 10351, "bytes": 11567606 },
+      { "type": "System.String", "count": 219823, "bytes": 9874564 },
+      { "type": "Excise.App.Services.IndexedWord[]", "count": 455, "bytes": 6361080 }
+    ],
+    "tracedOwners": [
+      { "allocation": "largest byte array, 2168492 bytes", "rootSuffix": "PdfViewerControl -> ContinuousPageView -> DecodedImageSampleRetention -> retained PdfStream -> System.Byte[]" },
+      { "allocation": "one representative IndexedWord array, 17024 bytes", "rootSuffix": "DocumentSession -> ServiceProviderEngineScope -> DocumentTextIndexSession -> DocumentTextIndex -> per-page IndexedWord arrays" }
+    ],
+    "interpretation": "The entire managed object walk is approximately 51MiB, not a 100MB recoverable managed allocation. The non-collecting GC.GetTotalMemory(false) samples are estimates and differ from the later object walk. No individual native retained owner was proven in this pass."
+  },
+  "validation": {
+    "liveScenarios": 3,
+    "failedSteps": 0,
+    "journalBoundaries": 26,
+    "acknowledgedOuterSamples": 26,
+    "scenarioListCheckPassed": true,
+    "jsonAndDiffCheckPassed": true,
+    "renderingBehaviorChanged": false
+  },
+  "decision": "Keep the already-merged immutable-image-sharing fix. No new renderer, allocator or cache-policy fix is justified by this one-run attribution pass. The custom drawing/owned-buffer rewrite remains #1926, which is deferred.",
+  "limitations": [
+    "One repeat per document; no calibrated noise floor; these are observations, not improvement claims.",
+    "Current managed Release differs from the historical shipping AOT build and rapid in-process paging differs from keystroke paging.",
+    "W9 had no idle reclaim and cannot serve as a confirmed post-reclaim comparison floor.",
+    "The metrics recorded only one single-page render duration in each run; page-turn p95 and scroll-hitch acceptance are not established by this protocol.",
+    "Preview was not measured; the 2-3x Preview bar and a new 100MB reduction on both documents are not established.",
+    "Physical footprint fell substantially between 45 and 90 seconds while managed committed and viewer cache bytes stayed unchanged. That is consistent with allocator/OS decay, but a region category alone is not proof of one native owner.",
+    "Raw dumps and personal PDF fixtures are local evidence and are not versioned or redistributed."
+  ]
+}

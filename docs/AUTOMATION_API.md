@@ -375,6 +375,30 @@ input path — it skips input dispatch and hit testing, and the driving-fidelity
 calibration bounds that residual rather than removing it. There is no gate on
 these numbers: they are absolute footprint on one machine under one load.
 
+### Resting-memory protocol (#1804)
+
+The optional `tests/gui-perf-resting-memory.json` measures W9, IRS instructions
+after 30 page changes, and the local Business Success with Open Source book
+after the same paging. Each launch uses single-page mode and fresh settings
+and caches, then requests two 45-second idle intervals after settling.
+
+```bash
+scripts/run-gui-perf-scenarios.sh --scenarios-file tests/gui-perf-resting-memory.json --repeats 3 --vmmap
+```
+
+Use journal `monotonicMs` for actual elapsed time: settling and boundary
+sampling add time to the nominal 45/90-second labels. Confirm natural idle
+trim and heap reclaim in `metrics.jsonl`; no step forces either. Read physical
+footprint beside managed live/committed heap, both viewer cache byte counts,
+and the boundary `vmmap` categories. A footprint remainder does not identify
+a retained owner without allocation/heap evidence. Deactivation stops the idle
+timer: a run with a deactivation trim but no idle reclaim must be reported
+separately or repeated. The book adds a final diagnostic window for a dump
+after the timed samples. Repeats show observed
+spread; calibrated floors are still required to claim an improvement. This
+protocol does not measure the Preview ratio or physical page-turn latency.
+The book remains an optional local corpus; it is not part of the default run.
+
 ### Multi-document scenarios (#1551–#1554)
 
 An optional set, never part of the default run:

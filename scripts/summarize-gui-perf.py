@@ -29,14 +29,15 @@ import json
 import os
 import statistics
 import sys
+import tempfile
 from pathlib import Path
 
 MB = 1024.0 * 1024.0
 
 # #1927: a noise-spread floor from fewer repeats than this is a min-max of too
 # few points to trust — the docs/#1497 noise measurement itself uses 5 runs.
-# Below this, IMPROVED/REGRESSED against that floor is flagged, not withheld:
-# the floor is still the best number in hand, but it is provisional.
+# Below this, deltas larger than the measured floor are not classified as wins:
+# the min-max spread from so few points can underestimate the real noise.
 MIN_NOISE_REPEATS_FOR_CONFIDENT_FLOOR = 5
 
 # Metrics whose deltas the summary reports, with the unit they print in.
@@ -516,14 +517,14 @@ def derive_floor(calibration, noise, scenario=None):
         entry = {"unit": unit, "value": value, "from": source,
                  "candidates": {name: v for name, v in candidates}}
 
-        if (source == "noiseSpread" and scenario_noise_n is not None
+        if (scenario_noise_n is not None
                 and scenario_noise_n < MIN_NOISE_REPEATS_FOR_CONFIDENT_FLOOR):
             entry["lowConfidenceN"] = scenario_noise_n
             entry["note"] = (
-                f"this floor's noise spread came from only {scenario_noise_n} repeat(s) "
-                f"(<{MIN_NOISE_REPEATS_FOR_CONFIDENT_FLOOR}); an IMPROVED/REGRESSED verdict against it "
-                f"is provisional, not evidence — rerun at --repeats {MIN_NOISE_REPEATS_FOR_CONFIDENT_FLOOR}+ "
-                "before trusting it (#1927)")
+                f"this scenario's noise spread came from only {scenario_noise_n} repeat(s) "
+                f"(<{MIN_NOISE_REPEATS_FOR_CONFIDENT_FLOOR}); deltas above the measured floor "
+                f"are unclassified until rerun at --repeats {MIN_NOISE_REPEATS_FOR_CONFIDENT_FLOOR}+ "
+                "(#1927)")
 
         # A floor of exactly zero is almost never "this metric is noise-free".
         # It means the metric did not move at all across repeats, which in
@@ -548,7 +549,36 @@ def verdict(delta, floor_entry):
         return "FLOOR-UNKNOWN"
     if abs(delta) <= floor_entry["value"]:
         return "BELOW-FLOOR"
+    if floor_entry.get("lowConfidenceN") is not None:
+        return "FLOOR-LOW-CONFIDENCE"
     return "IMPROVED" if delta < 0 else "REGRESSED"
+
+
+def self_test():
+    """Pin the #1927 verdict gate and single-sample metric suppression."""
+    calibration = {"measured": {}}
+    sparse_noise = {"sample": {"footprintMB": {
+        "n": 2, "spread": 1.0, "min": 100.0, "max": 101.0}}}
+    sparse_floor = derive_floor(calibration, sparse_noise, scenario="sample")["footprintMB"]
+    assert verdict(-11.0, sparse_floor) == "FLOOR-LOW-CONFIDENCE"
+    assert verdict(0.5, sparse_floor) == "BELOW-FLOOR"
+
+    enough_noise = {"sample": {"footprintMB": {
+        "n": MIN_NOISE_REPEATS_FOR_CONFIDENT_FLOOR, "spread": 1.0,
+        "min": 100.0, "max": 101.0}}}
+    confident_floor = derive_floor(calibration, enough_noise, scenario="sample")["footprintMB"]
+    assert verdict(-11.0, confident_floor) == "IMPROVED"
+    assert verdict(11.0, confident_floor) == "REGRESSED"
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        metrics_path = Path(temp_dir) / "metrics.jsonl"
+        metrics_path.write_text(json.dumps({
+            "instrument": "excise.viewer.continuous.band.render.duration",
+            "value": 12.0}) + "\n")
+        metrics = read_metrics(metrics_path)
+        assert metrics["bandRenders"] == 1
+        assert "bandRenderP50Ms" not in metrics and "bandRenderP99Ms" not in metrics
+    print("summarize-gui-perf self-test: all checks passed")
 
 
 def fmt(value, digits=1):
@@ -559,10 +589,17 @@ def fmt(value, digits=1):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--run-dir", required=True)
-    parser.add_argument("--scenario-file", required=True)
+    parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--run-dir")
+    parser.add_argument("--scenario-file")
     parser.add_argument("--baseline")
     args = parser.parse_args()
+
+    if args.self_test:
+        self_test()
+        return
+    if not args.run_dir or not args.scenario_file:
+        parser.error("--run-dir and --scenario-file are required unless --self-test is used")
 
     root = Path(args.run_dir)
     scenario_why = {}
@@ -961,9 +998,9 @@ def main():
             lines += [
                 f"⚠️ A floor marked `(n=k)` above came from fewer than "
                 f"{MIN_NOISE_REPEATS_FOR_CONFIDENT_FLOOR} repeats of that scenario's noise "
-                "measurement — its IMPROVED/REGRESSED verdict is provisional. Rerun at "
-                f"--repeats {MIN_NOISE_REPEATS_FOR_CONFIDENT_FLOOR}+ before treating it as "
-                "evidence (#1927).",
+                "measurement. Deltas above that floor are labeled `FLOOR-LOW-CONFIDENCE`, "
+                "not as IMPROVED/REGRESSED. Rerun at "
+                f"--repeats {MIN_NOISE_REPEATS_FOR_CONFIDENT_FLOOR}+ for a verdict (#1927).",
                 ""]
 
     (root / "summary.md").write_text("\n".join(lines) + "\n")

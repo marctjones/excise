@@ -279,7 +279,11 @@ public class PerfScenarioTests
                 AckPollInterval = TimeSpan.FromMilliseconds(20),
             };
 
-            var acknowledged = await journal.RecordAsync(Record("open"), CancellationToken.None);
+            var record = Record("open") with
+            {
+                Sample = PerfSample.FromRuntime() with { SinglePageCacheResidentBytes = 123456 },
+            };
+            var acknowledged = await journal.RecordAsync(record, CancellationToken.None);
 
             acknowledged.Should().BeFalse();
             journal.UnacknowledgedBoundaries.Should().Be(1);
@@ -291,6 +295,7 @@ public class PerfScenarioTests
             parsed.GetProperty("seq").GetInt32().Should().Be(1);
             parsed.GetProperty("step").GetString().Should().Be("open");
             parsed.GetProperty("liveHeapBytes").GetInt64().Should().BeGreaterThan(0);
+            parsed.GetProperty("singlePageCacheResidentBytes").GetInt64().Should().Be(123456);
         }
         finally
         {
