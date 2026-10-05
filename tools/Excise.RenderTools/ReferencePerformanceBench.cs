@@ -174,7 +174,7 @@ partial class Program
             var path = Path.IsPathRooted(fixture.path) ? fixture.path : Path.Combine(root, fixture.path);
             if (!File.Exists(path))
             {
-                results.Add(new ReferencePerformanceRun { fixture = fixture.id, status = "MISSING_FIXTURE", path = path, pageNumber = fixture.page, dpi = fixture.dpi });
+                results.Add(new ReferencePerformanceRun { fixture = fixture.id, status = "MISSING_FIXTURE", path = path, pageNumber = fixture.page, dpi = fixture.dpi, maxExcisePeakRssBytes = fixture.maxExcisePeakRssBytes });
                 continue;
             }
             for (var run = 1; run <= runs; run++)
@@ -224,13 +224,14 @@ partial class Program
             {
                 fixture = fixture.id, path = path, pageNumber = fixture.page, dpi = fixture.dpi, run = run,
                 cohort = fixture.cohort,
+                maxExcisePeakRssBytes = fixture.maxExcisePeakRssBytes,
                 status = cli.status == "OK" ? "OK" : "EXCISE_" + cli.status,
                 exciseCli = cli, references = references,
             };
         }
         catch (Exception ex)
         {
-            return new ReferencePerformanceRun { fixture = fixture.id, path = path, pageNumber = fixture.page, dpi = fixture.dpi, run = run, status = "EXCISE_ERROR", error = ex.Message };
+            return new ReferencePerformanceRun { fixture = fixture.id, path = path, pageNumber = fixture.page, dpi = fixture.dpi, run = run, status = "EXCISE_ERROR", error = ex.Message, maxExcisePeakRssBytes = fixture.maxExcisePeakRssBytes };
         }
     }
 
@@ -246,7 +247,20 @@ partial class Program
         IReadOnlyList<ReferencePerformanceRun> current, ReferencePerformanceReport? baseline, double maxTimeRatio, double maxRssRatio)
     {
         var checks = new List<ReferencePerformanceGateCheck>();
-        if (baseline is null) return new ReferencePerformanceGate { passed = true, checks = checks, note = "No baseline supplied; report captured for future comparison." };
+        // Explicit fixture ceilings apply even without a previous recording (#1821).
+        foreach (var fixture in current.Where(r => r.maxExcisePeakRssBytes > 0).GroupBy(r => r.fixture))
+        {
+            var ceiling = fixture.Min(r => r.maxExcisePeakRssBytes!.Value);
+            var measurements = fixture.Select(r => r.exciseCli?.peakWorkingSetBytes).ToArray();
+            var rss = measurements.Max();
+            checks.Add(new ReferencePerformanceGateCheck
+            {
+                name = fixture.Key + ".excise-cli.rss-ceiling",
+                actual = rss ?? -1, threshold = ceiling, unit = "bytes",
+                passed = measurements.All(m => m is >= MinPlausiblePeakRssBytes) && rss <= ceiling,
+            });
+        }
+        if (baseline is null) return new ReferencePerformanceGate { passed = checks.All(c => c.passed), checks = checks, note = "Fixture RSS ceilings checked; no baseline supplied for relative comparison." };
 
         // #1389 — REFUSE TO COMPARE ACROSS CODEGEN MODES, rather than comparing and being
         // wrong. Native AOT and the JIT generate different code from the same source: AOT
@@ -604,10 +618,10 @@ partial class Program
     private static string ToMib(long? bytes) => bytes.HasValue ? (bytes.Value / 1024d / 1024d).ToString("0.0", CultureInfo.InvariantCulture) : "";
 
     internal sealed class ReferencePerformanceManifest { public int schemaVersion { get; set; } public IReadOnlyList<ReferencePerformanceFixture> fixtures { get; set; } = Array.Empty<ReferencePerformanceFixture>(); }
-    internal sealed class ReferencePerformanceFixture { public string id { get; set; } = ""; public string path { get; set; } = ""; public int page { get; set; } = 1; public int dpi { get; set; } = 150; public bool heavy { get; set; } public string cohort { get; set; } = "typical"; public string why { get; set; } = ""; }
+    internal sealed class ReferencePerformanceFixture { public string id { get; set; } = ""; public string path { get; set; } = ""; public int page { get; set; } = 1; public int dpi { get; set; } = 150; public bool heavy { get; set; } public string cohort { get; set; } = "typical"; public string why { get; set; } = ""; public long? maxExcisePeakRssBytes { get; set; } }
     internal sealed class ReferencePerformanceReport { public int schemaVersion { get; set; } public string generatedUtc { get; set; } = ""; public string[] issues { get; set; } = Array.Empty<string>(); public string methodology { get; set; } = ""; public ReferencePerformanceConfiguration configuration { get; set; } = new(); public IReadOnlyList<ReferencePerformanceRun> runs { get; set; } = Array.Empty<ReferencePerformanceRun>(); public ReferencePerformanceGate regressionGate { get; set; } = new(); }
     internal sealed class ReferencePerformanceConfiguration { public string fixtureManifest { get; set; } = ""; public int runs { get; set; } public int timeoutMs { get; set; } public bool includeHeavy { get; set; } public string runtimeDescription { get; set; } = ""; public string dotnetRoot { get; set; } = ""; public IReadOnlyList<string> fixtureFilter { get; set; } = Array.Empty<string>(); public IReadOnlyList<string> cohortFilter { get; set; } = Array.Empty<string>(); public IReadOnlyList<string> selectedOracles { get; set; } = Array.Empty<string>(); public string? baseline { get; set; } public double maxExciseTimeRatio { get; set; } public double maxExciseRssRatio { get; set; } }
-    internal sealed class ReferencePerformanceRun { public string fixture { get; set; } = ""; public string path { get; set; } = ""; public int pageNumber { get; set; } public int dpi { get; set; } public int run { get; set; } public string cohort { get; set; } = "typical"; public string status { get; set; } = ""; public string? error { get; set; } public BenchmarkCliRenderResult? exciseCli { get; set; } public IReadOnlyList<BenchmarkReferenceResult> references { get; set; } = Array.Empty<BenchmarkReferenceResult>(); }
+    internal sealed class ReferencePerformanceRun { public string fixture { get; set; } = ""; public string path { get; set; } = ""; public int pageNumber { get; set; } public int dpi { get; set; } public int run { get; set; } public string cohort { get; set; } = "typical"; public long? maxExcisePeakRssBytes { get; set; } public string status { get; set; } = ""; public string? error { get; set; } public BenchmarkCliRenderResult? exciseCli { get; set; } public IReadOnlyList<BenchmarkReferenceResult> references { get; set; } = Array.Empty<BenchmarkReferenceResult>(); }
     internal sealed class ReferencePerformanceGate { public bool passed { get; set; } public IReadOnlyList<ReferencePerformanceGateCheck> checks { get; set; } = Array.Empty<ReferencePerformanceGateCheck>(); public string note { get; set; } = ""; }
     internal sealed class ReferencePerformanceGateCheck { public string name { get; set; } = ""; public double actual { get; set; } public double threshold { get; set; } public bool passed { get; set; } public string unit { get; set; } = ""; /* gated=false: reported for context only, excluded from the pass/fail decision (#1387). */ public bool gated { get; set; } = true; }
 }

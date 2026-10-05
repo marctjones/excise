@@ -1,0 +1,164 @@
+{
+  "issue": 1821,
+  "sourceRevision": "f5a12429658c68b287df862da049594be3f9d5cd",
+  "methodology": "Original image source from sourceRevision built with a temporary CoreCompile source override; other working-tree changes shared by both builds. Release JIT fresh processes, same-run mutool oracle. Single full-fixture comparison plus three plans acceptance runs per DPI. Build-output shape, not published ReadyToRun.",
+  "sourceImageSha256Before": "28940abda103e92f24570f0bc9b4d9614a6407793399c9e7f096821448ef6aa6",
+  "sourceImageSha256After": "1cbb9e1e86411196aff234d0750f4b172d3bd3d95462424aa6cb401fae7d62bb",
+  "finalSourceImageSha256": "12d464780682b987e04018bccb1a046ef46df70a0eab895cbfa4d3c48c8d344e",
+  "finalSourceChange": "Target sizing made a pure internal helper for invariant tests after the full comparison; final plans PNGs remain byte-identical.",
+  "runtime": ".NET 10.0.12",
+  "acceptance": [
+    {
+      "dpi": 36,
+      "freshRuns": 3,
+      "medianRenderMs": 100.52,
+      "maxPeakRssBytes": 96862208,
+      "medianMutoolWallMs": 79,
+      "beforeAfterPngMae": 0
+    },
+    {
+      "dpi": 150,
+      "freshRuns": 3,
+      "medianRenderMs": 222.89,
+      "maxPeakRssBytes": 151306240,
+      "medianMutoolWallMs": 232,
+      "beforeAfterPngMae": 0
+    }
+  ],
+  "referenceFixtures": [
+    {
+      "fixture": "plans-soft-masks-36dpi",
+      "beforeRenderMs": 118.47,
+      "afterRenderMs": 112.56,
+      "beforeMutoolMae": 10.233271958211779,
+      "afterMutoolMae": 10.233271958211779,
+      "allFidelityMetricsEqual": true
+    },
+    {
+      "fixture": "plans-soft-masks-150dpi",
+      "beforeRenderMs": 409.68,
+      "afterRenderMs": 219.12,
+      "beforeMutoolMae": 11.052350352224607,
+      "afterMutoolMae": 11.052350352224607,
+      "allFidelityMetricsEqual": true
+    },
+    {
+      "fixture": "acc-compensation-cover",
+      "beforeRenderMs": 634.83,
+      "afterRenderMs": 672.11,
+      "beforeMutoolMae": 4.966523271935037,
+      "afterMutoolMae": 4.966523271935037,
+      "allFidelityMetricsEqual": true
+    },
+    {
+      "fixture": "multilingual-cjk",
+      "beforeRenderMs": 58.62,
+      "afterRenderMs": 59.82,
+      "beforeMutoolMae": 0.9586725679165935,
+      "afterMutoolMae": 0.9586725679165935,
+      "allFidelityMetricsEqual": true
+    },
+    {
+      "fixture": "irs-w9-form",
+      "beforeRenderMs": 91.01,
+      "afterRenderMs": 92.05,
+      "beforeMutoolMae": 4.135357813428402,
+      "afterMutoolMae": 4.135357813428402,
+      "allFidelityMetricsEqual": true
+    },
+    {
+      "fixture": "altona-technical2-p1",
+      "beforeRenderMs": 2006.6,
+      "afterRenderMs": 2060.19,
+      "beforeMutoolMae": 16.43092858619642,
+      "afterMutoolMae": 16.43092858619642,
+      "allFidelityMetricsEqual": true
+    },
+    {
+      "fixture": "altona-technical2-p5",
+      "beforeRenderMs": 364.29,
+      "afterRenderMs": 362.58,
+      "beforeMutoolMae": 19.40247340766372,
+      "afterMutoolMae": 19.40247340766372,
+      "allFidelityMetricsEqual": true
+    },
+    {
+      "fixture": "altona-technical2-p7",
+      "beforeRenderMs": 205.61,
+      "afterRenderMs": 204.05,
+      "beforeMutoolMae": 30.728662053056517,
+      "afterMutoolMae": 30.728662053056517,
+      "allFidelityMetricsEqual": true
+    },
+    {
+      "fixture": "scotus-opinion-p1",
+      "beforeRenderMs": 66.95,
+      "afterRenderMs": 70.22,
+      "beforeMutoolMae": 1.5856423054070112,
+      "afterMutoolMae": 1.5856423054070112,
+      "allFidelityMetricsEqual": true
+    },
+    {
+      "fixture": "irs-1040-p1",
+      "beforeRenderMs": 96.27,
+      "afterRenderMs": 98.63,
+      "beforeMutoolMae": 3.458206219053278,
+      "afterMutoolMae": 3.458206219053278,
+      "allFidelityMetricsEqual": true
+    },
+    {
+      "fixture": "indexed-4bit-33mp-image",
+      "beforeRenderMs": 100.7,
+      "afterRenderMs": 100.08,
+      "beforeMutoolMae": 0.008550445632798574,
+      "afterMutoolMae": 0.008550445632798574,
+      "allFidelityMetricsEqual": true
+    },
+    {
+      "fixture": "fifty-transparency-groups",
+      "beforeRenderMs": 275.46,
+      "afterRenderMs": 279.83,
+      "beforeMutoolMae": 0.27734268171915233,
+      "afterMutoolMae": 0.27734268171915233,
+      "allFidelityMetricsEqual": true
+    },
+    {
+      "fixture": "mesh-shading-type7",
+      "beforeRenderMs": 374.94,
+      "afterRenderMs": 373.14,
+      "beforeMutoolMae": 0.3555576153693801,
+      "afterMutoolMae": 0.3555576153693801,
+      "allFidelityMetricsEqual": true
+    },
+    {
+      "fixture": "nested-forms-dct",
+      "beforeRenderMs": 112.92,
+      "afterRenderMs": 114.32,
+      "beforeMutoolMae": 1.9378865351838326,
+      "afterMutoolMae": 1.9378865351838326,
+      "allFidelityMetricsEqual": true
+    }
+  ],
+  "tests": {
+    "softMaskRendering": 63,
+    "performanceGate": 15
+  },
+  "profileSelfMs": {
+    "composition": {
+      "before": 17.3,
+      "after": 4.8
+    },
+    "alphaExtraction": {
+      "before": 9.4,
+      "after": 1.7
+    }
+  },
+  "logs": [
+    "logs/issue-1821/reference-before/reference-performance.json",
+    "logs/issue-1821/reference-after/reference-performance.json",
+    "logs/issue-1821/benchmark-after/reference-performance.json",
+    "logs/issue-1821/profile-before/report.txt",
+    "logs/issue-1821/profile-after/report.txt",
+    "logs/issue-1821/ceiling-final/reference-performance.json"
+  ]
+}

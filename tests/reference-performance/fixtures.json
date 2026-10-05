@@ -2,6 +2,25 @@
   "schemaVersion": 1,
   "fixtures": [
     {
+      "id": "plans-soft-masks-36dpi",
+      "path": "test-pdfs/reader-bench/plans-x20.pdf",
+      "page": 1,
+      "dpi": 36,
+      "heavy": true,
+      "cohort": "tail-flat",
+      "maxExcisePeakRssBytes": 100000000,
+      "why": "#1821: large DCT plates with image soft masks; thumbnail work must follow device size and peak RSS must stay below 100 MB"
+    },
+    {
+      "id": "plans-soft-masks-150dpi",
+      "path": "test-pdfs/reader-bench/plans-x20.pdf",
+      "page": 1,
+      "dpi": 150,
+      "heavy": true,
+      "cohort": "tail-flat",
+      "why": "#1821: full-page soft-mask performance and same-run mutool fidelity canary"
+    },
+    {
       "id": "acc-compensation-cover",
       "path": "test-pdfs/sample-pdfs/acc-global-compensation-report.pdf",
       "page": 1,

@@ -22,6 +22,40 @@ public class ReferencePerformanceGateTests
 {
     private const double MaxTime = 1.5, MaxRss = 1.25;
 
+    [Theory]
+    [InlineData(80_000_000, true)]
+    [InlineData(120_000_000, false)]
+    [InlineData(0, false)]
+    public void Gate_EnforcesFixtureRssCeilingWithoutABaseline(long peakBytes, bool expected)
+    {
+        var current = Runs("plans", renderMs: 100, oracleMs: 100, mode: "jit");
+        current[0].maxExcisePeakRssBytes = 100_000_000;
+        current[0].exciseCli!.peakWorkingSetBytes = peakBytes;
+
+        var gate = RenderProgram.EvaluateReferencePerformanceGate(current, null, MaxTime, MaxRss);
+
+        gate.passed.Should().Be(expected, "a missing or over-budget RSS measurement must fail even without a baseline");
+        gate.checks.Should().ContainSingle(c => c.name == "plans.excise-cli.rss-ceiling" && c.passed == expected);
+    }
+
+    [Theory]
+    [InlineData(120_000_000L)]
+    [InlineData(null)]
+    public void Gate_RssCeilingRejectsAnOverBudgetOrMissingRunEvenWhenTheMedianPasses(long? peakBytes)
+    {
+        var current = Enumerable.Range(0, 3)
+            .SelectMany(_ => Runs("plans", renderMs: 100, oracleMs: 100, mode: "jit")).ToArray();
+        foreach (var run in current)
+        {
+            run.maxExcisePeakRssBytes = 100_000_000;
+            run.exciseCli!.peakWorkingSetBytes = 80_000_000;
+        }
+        current[2].exciseCli!.peakWorkingSetBytes = peakBytes;
+
+        RenderProgram.EvaluateReferencePerformanceGate(current, null, MaxTime, MaxRss)
+            .passed.Should().BeFalse();
+    }
+
     /// <summary>
     /// Native AOT and the JIT generate different code for the same source. Measured on
     /// <c>fifty-transparency-groups</c>: 1568.7 ms under R2R, 2499.2 ms under AOT, with

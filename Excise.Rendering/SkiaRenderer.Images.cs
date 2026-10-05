@@ -732,6 +732,7 @@ internal partial class RenderContext
         }
 
         var (targetWidth, targetHeight) = EstimateImageSoftMaskTargetSize(
+            _canvas.TotalMatrix,
             width,
             height,
             bitmap.Width,
@@ -759,7 +760,8 @@ internal partial class RenderContext
         return true;
     }
 
-    private (int Width, int Height) EstimateImageSoftMaskTargetSize(
+    internal static (int Width, int Height) EstimateImageSoftMaskTargetSize(
+        SKMatrix canvasMatrix,
         int imageWidth,
         int imageHeight,
         int decodedImageWidth,
@@ -767,14 +769,19 @@ internal partial class RenderContext
         int maskWidth,
         int maskHeight)
     {
-        if (decodedImageWidth == maskWidth && decodedImageHeight == maskHeight)
-            return (decodedImageWidth, decodedImageHeight);
-
         var deviceDest = MapAxisAlignedRect(
-            _canvas.TotalMatrix,
+            canvasMatrix,
             new SKRect(0, 0, imageWidth, imageHeight));
         var targetWidth = Math.Max(1, (int)Math.Ceiling(deviceDest.Width));
         var targetHeight = Math.Max(1, (int)Math.Ceiling(deviceDest.Height));
+        if (decodedImageWidth == maskWidth && decodedImageHeight == maskHeight)
+        {
+            // A matching source/mask grid says nothing about the output size (#1821).
+            // Keep two samples per device pixel for mask edges, without expanding
+            // the decoded grid when rendering at or above its native resolution.
+            targetWidth = (int)Math.Min(decodedImageWidth, (long)targetWidth * 2);
+            targetHeight = (int)Math.Min(decodedImageHeight, (long)targetHeight * 2);
+        }
         return ClampSoftMaskTargetSize(maskWidth, maskHeight, targetWidth, targetHeight);
     }
 
@@ -808,31 +815,34 @@ internal partial class RenderContext
         return true;
     }
 
-    private static SKBitmap? CreateSoftMaskedImageBitmap(SKBitmap source, SoftMaskAlpha mask)
+    internal static SKBitmap? CreateSoftMaskedImageBitmap(SKBitmap source, SoftMaskAlpha mask)
     {
         if (source.Width <= 0 || source.Height <= 0 || mask.Width <= 0 || mask.Height <= 0)
             return null;
 
-        var pixels = new byte[checked(mask.Width * mask.Height * 4)];
+        var result = new SKBitmap(mask.Width, mask.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
         try
         {
-            var sourcePixels = source.Pixels;
-            if (sourcePixels.Length == 0)
+            var pixels = SkiaBitmapPixelBuffer.GetWritableSpan(result);
+            var sourcePixels = source.GetPixelSpan();
+            if (sourcePixels.IsEmpty || pixels.IsEmpty)
+            {
+                result.Dispose();
                 return null;
+            }
 
             var dst = 0;
             var maskIndex = 0;
+            var sourceInfo = source.Info;
+            var sourceRowBytes = source.RowBytes;
             for (int y = 0; y < mask.Height; y++)
             {
-                var sourceY = MapTargetToSource(y, mask.Height, source.Height);
-                var sourceRow = sourceY * source.Width;
+                var sourceY = MapTargetToSource(y, mask.Height, sourceInfo.Height);
+                var sourceRow = sourceY * sourceRowBytes;
                 for (int x = 0; x < mask.Width; x++)
                 {
-                    var sourceX = MapTargetToSource(x, mask.Width, source.Width);
-                    var sourceIndex = sourceRow + sourceX;
-                    var sourceColor = sourceIndex < sourcePixels.Length
-                        ? sourcePixels[sourceIndex]
-                        : SKColors.Transparent;
+                    var sourceX = MapTargetToSource(x, mask.Width, sourceInfo.Width);
+                    var sourceColor = ReadStraightImagePixel(source, sourceInfo, sourcePixels, sourceRow, sourceX, sourceY);
                     var maskAlpha = maskIndex < mask.Data.Length ? mask.Data[maskIndex] : (byte)0;
                     var alpha = (byte)((sourceColor.Alpha * maskAlpha + 127) / 255);
                     pixels[dst++] = sourceColor.Red;
@@ -843,12 +853,36 @@ internal partial class RenderContext
                 }
             }
 
-            return CreateBitmapFromRgbaBytes(mask.Width, mask.Height, pixels, SKAlphaType.Unpremul);
+            return result;
         }
         catch (Exception __ex) when (__ex is not OutOfMemoryException)
         {
+            result.Dispose();
             return null;
         }
+    }
+
+    // Read the common codec formats directly without SKBitmap.Pixels' whole-image
+    // managed copy or per-pixel SKImageInfo/colour-space native references (#1821).
+    private static SKColor ReadStraightImagePixel(
+        SKBitmap bitmap, SKImageInfo info, ReadOnlySpan<byte> pixels, int row, int x, int y)
+    {
+        if (info.ColorType is not (SKColorType.Rgba8888 or SKColorType.Bgra8888))
+            return bitmap.GetPixel(x, y);
+
+        var offset = row + x * 4;
+        var redOffset = info.ColorType == SKColorType.Rgba8888 ? 0 : 2;
+        var alpha = info.AlphaType == SKAlphaType.Opaque ? (byte)255 : pixels[offset + 3];
+        var red = pixels[offset + redOffset];
+        var green = pixels[offset + 1];
+        var blue = pixels[offset + 2 - redOffset];
+        if (info.AlphaType == SKAlphaType.Premul && alpha != 255)
+        {
+            red = UnpremultiplyChannel(red, alpha);
+            green = UnpremultiplyChannel(green, alpha);
+            blue = UnpremultiplyChannel(blue, alpha);
+        }
+        return new SKColor(red, green, blue, alpha);
     }
 
     private bool TryDrawImageWithExplicitMask(
@@ -1618,18 +1652,20 @@ internal partial class RenderContext
     private static byte[] ExtractSoftMaskAlpha(SKBitmap maskBitmap, int width, int height, Excise.Core.Primitives.PdfStream maskStream)
     {
         var alpha = new byte[width * height];
-        var pixels = maskBitmap.Pixels;
-        if (pixels.Length == 0)
+        var pixels = maskBitmap.GetPixelSpan();
+        if (pixels.IsEmpty)
             return alpha;
 
+        var info = maskBitmap.Info;
+        var rowBytes = maskBitmap.RowBytes;
         for (int y = 0; y < height; y++)
         {
-            var sourceY = Math.Clamp((int)((long)y * maskBitmap.Height / height), 0, maskBitmap.Height - 1);
-            var sourceRow = sourceY * maskBitmap.Width;
+            var sourceY = Math.Clamp((int)((long)y * info.Height / height), 0, info.Height - 1);
+            var sourceRow = sourceY * rowBytes;
             for (int x = 0; x < width; x++)
             {
-                var sourceX = Math.Clamp((int)((long)x * maskBitmap.Width / width), 0, maskBitmap.Width - 1);
-                var pixel = pixels[sourceRow + sourceX];
+                var sourceX = Math.Clamp((int)((long)x * info.Width / width), 0, info.Width - 1);
+                var pixel = ReadStraightImagePixel(maskBitmap, info, pixels, sourceRow, sourceX, sourceY);
                 var luma = (byte)Math.Clamp(
                     (0.299 * pixel.Red) + (0.587 * pixel.Green) + (0.114 * pixel.Blue),
                     0,
