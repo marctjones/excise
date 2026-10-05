@@ -69,6 +69,11 @@ var architecture = ArchitectureOwnershipIndex.Load(
 var analyzer = new ReachabilityAnalyzer(solution, options, architecture);
 var report = await analyzer.AnalyzeAsync();
 
+if (options.ReviewEvidenceOutput is not null)
+{
+    ReviewEvidenceWriter.Write(options.ReviewEvidenceOutput, report.ReviewEvidence!);
+}
+
 if (options.TopologyOutput is not null)
 {
     TopologyWriter.Write(options.TopologyOutput, report.Topology);
@@ -88,6 +93,7 @@ internal sealed record Options(
     bool Quiet,
     string? TopologyOutput,
     string? CheckTopologyOutput,
+    string? ReviewEvidenceOutput,
     string ArchitectureDesignPath,
     string ArchitectureInventoryPath,
     bool SelfTest,
@@ -101,6 +107,7 @@ internal sealed record Options(
         var quiet = false;
         string? topologyOutput = null;
         string? checkTopologyOutput = null;
+        string? reviewEvidenceOutput = null;
         var architectureDesignPath = "architecture/design.json";
         var architectureInventoryPath = "architecture/inventory.generated.json";
         var selfTest = false;
@@ -128,6 +135,9 @@ internal sealed record Options(
                 case "--check-topology-output":
                     checkTopologyOutput = RequireValue(args, ref i);
                     break;
+                case "--review-evidence-output":
+                    reviewEvidenceOutput = RequireValue(args, ref i);
+                    break;
                 case "--architecture-design":
                     architectureDesignPath = RequireValue(args, ref i);
                     break;
@@ -153,7 +163,7 @@ internal sealed record Options(
 
         return new Options(
             solutionPath, baselinePath, update, quiet,
-            topologyOutput, checkTopologyOutput,
+            topologyOutput, checkTopologyOutput, reviewEvidenceOutput,
             architectureDesignPath, architectureInventoryPath,
             selfTest, help);
     }
@@ -165,6 +175,7 @@ internal sealed record Options(
         Console.WriteLine("Builds a Roslyn symbol graph, seeds known production entry points,");
         Console.WriteLine("and reports unreachable private/internal symbols as a ratchet.");
         Console.WriteLine("--topology-output writes deterministic Roslyn source/coupling metrics as JSON.");
+        Console.WriteLine("--review-evidence-output writes complete source-symbol/API/edge evidence for #1942.");
         Console.WriteLine("--check-topology-output fails when checked JSON differs from current source.");
         Console.WriteLine("--architecture-design and --architecture-inventory select normalized ownership inputs.");
     }
@@ -235,7 +246,16 @@ internal sealed class ReachabilityAnalyzer(
             var compilation = await project.GetCompilationAsync();
             if (compilation is null)
             {
+                if (options.ReviewEvidenceOutput is not null)
+                    throw new InvalidOperationException($"No compilation for {project.Name}; refusing incomplete review evidence.");
                 continue;
+            }
+
+            if (options.ReviewEvidenceOutput is not null)
+            {
+                var errors = compilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).Take(10).ToArray();
+                if (errors.Length > 0)
+                    throw new InvalidOperationException($"Compilation errors in {project.Name}; refusing unbound review evidence:\n" + string.Join("\n", errors.Select(error => error.ToString())));
             }
 
             foreach (var tree in compilation.SyntaxTrees.Where(IsProjectSource))
@@ -292,7 +312,15 @@ internal sealed class ReachabilityAnalyzer(
             }
         }
 
-        return new AnalysisResult(rows, BuildTopology(reachable));
+        var topology = BuildTopology(reachable);
+        var review = options.ReviewEvidenceOutput is null ? null : ReviewEvidenceWriter.Build(
+            solution, topology,
+            _nodes.Values.Select(node => new ReviewNode(node.Symbol, node.Project.Path,
+                node.Project.Classification, architecture.ResolveSymbol(node.Symbol, node.Project).Component,
+                reachable.Contains(node.Symbol), _seeds.GetValueOrDefault(node.Symbol)?.ToArray() ?? [],
+                _testReferences.GetValueOrDefault(node.Symbol)?.Order(StringComparer.Ordinal).ToArray() ?? [])),
+            _edges.SelectMany(edge => edge.Value.Select(target => new MemberContractEdge(edge.Key, target))));
+        return new AnalysisResult(rows, topology, review);
     }
 
     private TopologyReport BuildTopology(HashSet<ISymbol> reachable)
@@ -1106,7 +1134,8 @@ internal sealed class ReachabilityAnalyzer(
 
 internal sealed record AnalysisResult(
     IReadOnlyList<ReachabilityRow> Unreachable,
-    TopologyReport Topology);
+    TopologyReport Topology,
+    ReviewEvidence? ReviewEvidence);
 
 internal sealed record TopologyReport(
     int SchemaVersion,
@@ -1473,6 +1502,11 @@ internal static class SelfTest
         }
 
         if (!TestReferenceResolver.RunSelfTest())
+        {
+            return 1;
+        }
+
+        if (!ReviewEvidenceWriter.RunSelfTest())
         {
             return 1;
         }

@@ -1,0 +1,15 @@
+{
+  "SchemaVersion": 1,
+  "Types": [
+    { "Type": "Excise.Rendering.Differential.MutoolTextExtractor", "Kind": "external-tool" },
+    { "Type": "Excise.Rendering.Differential.PdftotextTextExtractor", "Kind": "external-tool" },
+    { "Type": "Excise.Rendering.Differential.MutoolReferenceRenderer", "Kind": "external-tool" },
+    { "Type": "Excise.Rendering.Differential.GhostscriptReferenceRenderer", "Kind": "external-tool" },
+    { "Type": "Excise.Rendering.Differential.PdftocairoReferenceRenderer", "Kind": "external-tool" },
+    { "Type": "Excise.Rendering.Differential.PdftoppmReferenceRenderer", "Kind": "external-tool" },
+    { "Type": "Excise.Rendering.Differential.PdfiumReferenceRenderer", "Kind": "external-tool" },
+    { "Type": "Excise.Rendering.Differential.PdfBoxReferenceRenderer", "Kind": "external-tool" },
+    { "Type": "Excise.Rendering.Differential.QpdfReferenceTool", "Kind": "external-tool" },
+    { "Type": "Excise.TestSupport.SavedPdfLeakScanner", "Kind": "independent-byte-scan" }
+  ]
+}
