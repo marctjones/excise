@@ -51,13 +51,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(dirname "$SCRIPT_DIR")"
 DEST="$ROOT/test-pdfs/recap"
 MANIFEST="$DEST/.excise-manifest.tsv"
-# ⚠️ The NEGATIVES manifest is the other half of the bench and was missing.
-# A sweep that keeps only the hits throws away the population a false-positive
-# column needs — and #1624 (83.7% of a clean filing reported as hidden text)
-# scored as NOTHING precisely because every bench row was a leak row. Clean
-# documents are recorded as url+sha here and the FILE is still deleted; the
-# corpus stays reconstructible without keeping court records we do not need.
-NEGATIVES="$DEST/.excise-negatives.tsv"
+# The negatives ledger holds the other half of the bench: a sweep that keeps
+# only hits throws away the population needed to measure false positives —
+# and #1624 (83.7% of a clean filing reported as hidden text) scored as nothing
+# precisely because every bench row was a leak row. A clean PDF is deleted
+# after its URL, SHA-256 and size are recorded, so the corpus stays
+# reconstructible without keeping court records in Git. The canonical,
+# tracked ledger is in tests/corpora and sweeps append there (#1808).
+NEGATIVES="$ROOT/tests/corpora/recap-negatives.tsv"
+LEGACY_NEGATIVES="$DEST/.excise-negatives.tsv"
 XRAY_PY="$ROOT/tools/vendor/xray-venv/bin/python"
 [ -x "$XRAY_PY" ] || XRAY_PY="$(dirname "$ROOT")/../tools/vendor/xray-venv/bin/python"
 
@@ -231,7 +233,7 @@ sha_of_stdin() {
 cmd_status() {
     if [ ! -f "$MANIFEST" ]; then echo "no RECAP corpus yet — $DEST"; return 0; fi
     local n; n=$(grep -c . "$MANIFEST" 2>/dev/null || echo 0)
-    local neg; neg=$(grep -c . "$NEGATIVES" 2>/dev/null || echo 0)
+    local neg; neg=$(awk -F'\t' 'NF == 3 && $2 ~ /^https?:\/\// {n++} END {print n+0}' "$NEGATIVES" 2>/dev/null)
     echo "${BOLD}$n candidate(s)${RESET} and ${BOLD}$neg recorded negative(s)${RESET} in $DEST"
     awk -F'\t' '{printf "  %-28s [%s]  %s\n", $2, $4, $5}' "$MANIFEST"
 }
@@ -336,28 +338,60 @@ for r in d.get("results", []):
     rm -f "$tmp"
 }
 
+# Import data rows from older checkouts where the ledger lived in the ignored
+# RECAP directory. This makes a machine that still has the original sweep
+# provenance able to migrate it into the tracked canonical ledger.
+import_legacy_negatives() {
+    [ -s "$LEGACY_NEGATIVES" ] || return 0
+    while IFS=$'\t' read -r sha url size; do
+        [ -n "$url" ] || continue
+        [[ "$sha" =~ ^[0-9a-f]{64}$ && "$size" =~ ^[0-9]+$ && "$url" =~ ^https?:// ]] || \
+            die "invalid legacy negatives row in $LEGACY_NEGATIVES (expected sha256<TAB>url<TAB>size)"
+        if ! awk -F'\t' -v sha="$sha" '$1 == sha {found=1} END {exit !found}' "$NEGATIVES"; then
+            printf '%s\t%s\t%s\n' "$sha" "$url" "$size" >> "$NEGATIVES"
+        fi
+    done < "$LEGACY_NEGATIVES"
+}
+
 # ---------------------------------------------------------------------------
 # Re-fetch the recorded negatives into their own directory. Kept separate from
 # the candidates so a confusion matrix can address the two populations without
-# guessing which is which.
+# guessing which is which. Only data rows (sha256, public URL, byte size) are
+# fetched; comments record blockers without pretending to be provenance.
 # ---------------------------------------------------------------------------
 cmd_fetch_negatives() {
     [ -s "$NEGATIVES" ] || die "no negatives recorded yet — run a sweep first"
+    import_legacy_negatives
+    local available
+    available=$(awk -F'\t' 'NF == 3 && $2 ~ /^https?:\/\// {n++} END {print n+0}' "$NEGATIVES")
+    [ "$available" -gt 0 ] || die "no fetchable negatives in tracked manifest $NEGATIVES; #1670 remains blocked until the original RECAP URL and full SHA-256 are recovered (see tests/corpora/recap-problem-documents.tsv)"
     local out="$DEST/negatives"; mkdir -p "$out"
-    local n=0 got=0
+    local n=0 got=0 failed=0
     while IFS=$'\t' read -r sha url size; do
         [ -n "$url" ] || continue
+        [[ "$sha" =~ ^[0-9a-f]{64}$ && "$size" =~ ^[0-9]+$ ]] || \
+            die "invalid negatives row in $NEGATIVES (expected sha256<TAB>url<TAB>size)"
         n=$((n+1)); [ "$n" -gt "$MAX_DOCS" ] && break
         local f="$out/recap_neg_${sha:0:16}.pdf"
-        [ -f "$f" ] && { got=$((got+1)); continue; }
+        if [ -f "$f" ]; then
+            [ "$(sha_of "$f")" = "$sha" ] && [ "$(wc -c <"$f" | tr -d ' ')" = "$size" ] || \
+                die "existing negative failed SHA-256/size verification: $f"
+            got=$((got+1)); continue
+        fi
         if curl -fsSL --max-time 120 -A "$UA" -o "$f.part" "$url" \
-           && [ "$(head -c 5 "$f.part")" = "%PDF-" ]; then
+           && [ "$(head -c 5 "$f.part")" = "%PDF-" ] \
+           && [ "$(sha_of "$f.part")" = "$sha" ] \
+           && [ "$(wc -c <"$f.part" | tr -d ' ')" = "$size" ]; then
             mv "$f.part" "$f"; got=$((got+1))
         else
             rm -f "$f.part"
+            failed=$((failed+1))
+            echo "  ${RED}fetch or SHA-256/size verification failed${RESET} ${DIM}$url${RESET}" >&2
         fi
         sleep "$DELAY"
     done < "$NEGATIVES"
+    [ "$n" -gt 0 ] || die "no valid negative rows were found in $NEGATIVES"
+    [ "$failed" -eq 0 ] || die "$failed negative(s) failed fetch or SHA-256/size verification"
     echo "$got negative(s) in $out"
 }
 

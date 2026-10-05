@@ -126,7 +126,22 @@ check_dir "isartor"        "scripts/download-test-pdfs.sh"    "Isartor PDF/A rou
 check_dir "pdfjs"          "scripts/download-pdfjs-corpus.sh" "corpus rendering scan (685 pages)"
 check_dir "pdfium"         "scripts/download-pdfium-corpus.sh" "corpus rendering scan (331 pages) — the harshest of the four"
 check_dir "poppler"        "scripts/download-poppler-corpus.sh" "Poppler regression corpus exploratory rendering"
+check_dir "recap"           "scripts/download-recap-corpus.sh" "RECAP negative-corpus conformance; #1670 fixture is separately reported below"
 check_dir "unredaction-bench" "scripts/download-unredaction-bench.sh" "unredaction bench tier B/C real-world documents (#1590) — vetted rows only"
+
+# #1808/#1670: the known-slow negative filing's URL and full digest were only
+# in the local sweep output, which is absent from every tracked source. Do not
+# imply that a fetched RECAP corpus necessarily contains this exact document.
+RECAP_SLOW_FIXTURE="$TEST_PDF_DIR/recap/negatives/recap_neg_390a14872e8f0024.pdf"
+if [[ -f "$RECAP_SLOW_FIXTURE" ]]; then
+    printf "  %s✓%s %-22s %s(known-slow #1670 fixture present)%s\n" "$GREEN" "$RESET" "recap-slow-fixture" "$DIM" "$RESET"
+    ok=$((ok+1))
+else
+    printf "  %s✗%s %-22s %sblocked: exact URL and full SHA-256 are missing from tracked provenance (#1808)%s\n" \
+        "$RED" "$RESET" "recap-slow-fixture" "$YELLOW" "$RESET"
+    printf "                           known metadata: 39 pages, about 2.4 MB; see tests/corpora/recap-problem-documents.tsv\n"
+    missing=$((missing+1))
+fi
 
 # The bench corpus is only half the prerequisite. Tier-B scoring also needs the
 # ground truth, and that file is written BY HAND and never by a script, so its

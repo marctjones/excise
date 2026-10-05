@@ -1,0 +1,4 @@
+# Known RECAP problem documents whose corpus payloads are intentionally not in Git.
+# Columns: filename<TAB>sha256-prefix<TAB>reported-size<TAB>pages<TAB>status<TAB>provenance
+# An unavailable row records only facts present in the issue; it is not fetchable.
+recap_neg_390a14872e8f0024.pdf	390a14872e8f0024	about 2.4 MB	39	unavailable	Original URL and full SHA-256 were in the untracked 1645 sweep ledger, absent from all Git refs and issue/PR records; do not substitute a fresh search result.

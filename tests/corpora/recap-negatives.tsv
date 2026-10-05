@@ -1,0 +1,4 @@
+# Canonical RECAP negatives ledger; rows are sha256<TAB>public URL<TAB>byte size.
+# The previous sweep ledger was local-only and has not been found in any Git ref,
+# issue/PR record, or generated artifact. No provenance is invented here.
+# New sweeps append reproducible rows here; --fetch-negatives verifies SHA-256 and size.
