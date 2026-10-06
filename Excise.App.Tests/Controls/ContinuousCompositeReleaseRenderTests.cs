@@ -32,6 +32,32 @@ public class ContinuousCompositeReleaseRenderTests
     public ContinuousCompositeReleaseRenderTests(ITestOutputHelper output) => _out = output;
 
     [FixedAvaloniaFact]
+    public void ZoomWhileKeepingPreviousComposite_ScalesItsPageLocalPlacement()
+    {
+        // #1975: until replacement tiles arrive, the old band must track the
+        // page's new size, including a band that starts partway down the page.
+        var slot = new PdfPageSlot(1, 612, 792, 1);
+        var bitmap = new WriteableBitmap(new PixelSize(240, 320), new Vector(96, 96),
+            PixelFormat.Bgra8888, AlphaFormat.Premul);
+        slot.SetComposite(bitmap, default, 40, 200, 400, 500);
+        try
+        {
+            slot.ApplyZoom(0.62);
+            slot.Bitmap.Should().BeSameAs(bitmap);
+            slot.TileDisplayX.Should().BeApproximately(24.8, 0.001);
+            slot.TileDisplayY.Should().BeApproximately(124, 0.001);
+            slot.TileDisplayWidth.Should().BeApproximately(248, 0.001);
+            slot.TileDisplayHeight.Should().BeApproximately(310, 0.001);
+            slot.ApplyZoom(1);
+            slot.TileDisplayX.Should().BeApproximately(40, 0.001);
+            slot.TileDisplayY.Should().BeApproximately(200, 0.001);
+            slot.TileDisplayWidth.Should().BeApproximately(400, 0.001);
+            slot.TileDisplayHeight.Should().BeApproximately(500, 0.001);
+        }
+        finally { slot.ClearComposite(); }
+    }
+
+    [FixedAvaloniaFact]
     public async Task RecomposingRepeatedlyWhileRenderingFrames_ReleasesEveryReplacedComposite_WithoutObjectDisposed()
     {
         var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewer(pageCount: 3);

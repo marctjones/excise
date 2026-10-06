@@ -98,7 +98,18 @@ internal sealed class PdfPageSlot : INotifyPropertyChanged
 
     internal void ApplyZoom(double zoom)
     {
-        DisplayWidth = WidthPt * PdfViewerControl.PointsToDip * zoom;
+        var width = WidthPt * PdfViewerControl.PointsToDip * zoom;
+        // #1975: a previous band remains visible until new tiles are ready.
+        // Its placement must scale with the page, not clip at the old zoom.
+        if (Bitmap != null && DisplayWidth > 0)
+        {
+            var scale = width / DisplayWidth;
+            TileDisplayX *= scale;
+            TileDisplayY *= scale;
+            TileDisplayWidth *= scale;
+            TileDisplayHeight *= scale;
+        }
+        DisplayWidth = width;
         DisplayHeight = HeightPt * PdfViewerControl.PointsToDip * zoom;
     }
 
