@@ -12,6 +12,7 @@ using Excise.App.Services;
 using Excise.App.ViewModels;
 using Excise.App.Views;
 using Excise.App.Workspace;
+using Excise.Avalonia.Controls;
 using Xunit;
 using Harness = Excise.App.Tests.UI.MultiDocumentSessionTests.Harness;
 
@@ -71,6 +72,53 @@ public sealed class MultiDocumentTabTests : IDisposable
         var window = (MainWindow)first.Window!;
         await FlushAsync();
         return (first, window, window.DocumentTabs!);
+    }
+
+    [FixedAvaloniaTheory(Timeout = 60000)]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task NewContinuousTab_DoesNotInheritOutgoingReadingPosition(bool outgoingOffsetSettlesLate)
+    {
+        // #1974: exercise the real window, bindings, slots and scroll feedback.
+        using var harness = new Harness();
+        var (first, window, tabs) = await OpenTabsAsync(harness, NewMultiPagePdf("outgoing.pdf", 12));
+        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+        var scroll = viewer.ContinuousPart.ContinuousScrollViewer!;
+        window.UpdateLayout();
+        await FlushAsync();
+        var page = viewer.ContinuousPart.ContinuousItems!.ItemsSource!.Cast<PdfPageSlot>().ElementAt(6);
+        var outgoingY = page.TopDip + 0.3 * page.DisplayHeight;
+        scroll.Offset = new Vector(0, outgoingY);
+        await FlushAsync();
+        first.ViewModel.CurrentPageIndex.Should().Be(6);
+        var outgoingFraction = scroll.Offset.Y / (scroll.Extent.Height - scroll.Viewport.Height);
+
+        // Drive the late outgoing-offset notification deterministically, while
+        // SwitchSession suppresses feedback to the incoming VM. Native layout
+        // may retain that offset until the incoming list has been measured.
+        void OnWindowPropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
+        {
+            if (outgoingOffsetSettlesLate && e.Property == StyledElement.DataContextProperty)
+                Dispatcher.UIThread.Post(() => scroll.Offset = new Vector(0, outgoingY), DispatcherPriority.ContextIdle);
+        }
+        window.PropertyChanged += OnWindowPropertyChanged;
+
+        try { await harness.Workspace.OpenDocumentsAsync([NewMultiPagePdf("incoming.pdf", 10)], first); }
+        finally { window.PropertyChanged -= OnWindowPropertyChanged; }
+        window.UpdateLayout();
+        await FlushAsync();
+        var incoming = tabs.SelectedTab!.Session.ViewModel;
+        incoming.Should().NotBeSameAs(first.ViewModel);
+        incoming.CurrentPageIndex.Should().Be(0);
+        viewer.CurrentPage.Should().Be(1);
+        scroll.Offset.Y.Should().BeApproximately(0, 1);
+
+        tabs.SelectedTab = tabs.Tabs[0];
+        window.UpdateLayout();
+        await FlushAsync();
+        viewer.CurrentPage.Should().Be(7);
+        (scroll.Offset.Y / (scroll.Extent.Height - scroll.Viewport.Height)).Should().BeApproximately(outgoingFraction, 0.001,
+            "returning to an existing tab must preserve its reading fraction");
     }
 
     [FixedAvaloniaFact(Timeout = 60000)]

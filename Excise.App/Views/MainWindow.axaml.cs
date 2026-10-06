@@ -860,8 +860,12 @@ internal partial class MainWindow : Window
                 return;
             try
             {
-                if (saved is double fraction && ReferenceEquals(DataContext, next))
-                    _pdfViewerControl?.TrySetViewportVerticalFraction(fraction);
+                if (ReferenceEquals(DataContext, next))
+                    // #1974: a new tab has no saved viewport, but the shared
+                    // scroller can still hold the outgoing tab's late offset.
+                    // Restore its initial top explicitly, just as we restore an
+                    // existing tab's saved fraction, before enabling feedback.
+                    _pdfViewerControl?.TrySetViewportVerticalFraction(saved ?? 0);
             }
             finally
             {
