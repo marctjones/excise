@@ -6,7 +6,7 @@ semantic versioning.
 
 ## [Unreleased]
 
-## [3.16.0] - 2026-10-05
+## [3.16.0] - 2026-10-06
 
 ### Added
 
@@ -15,6 +15,8 @@ semantic versioning.
 
 ### Fixed
 
+- New document tabs explicitly reset the shared viewport after layout, preventing the outgoing reading position from disagreeing with the incoming page counter (#1974).
+- Continuous-view composites retained during a zoom scale their page-local placement with the page, avoiding oversized clipped content while replacement tiles render (#1975).
 - Queued first-result search navigation cannot override a later result selection, a replacement search, or a cancelled search; deterministic dispatcher-order regressions preserve normal first-result navigation (#1970).
 - Reading-order classification uses the extracted writing-mode flag, preserving short vertical columns without misclassifying stacked horizontal digits (#1915).
 - Multiline form-field overlays inherit default-appearance font size through parent fields and AcroForm defaults, while respecting local auto-size overrides (#1922).
