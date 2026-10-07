@@ -95,17 +95,18 @@ internal static class CommandAccessibility
     private static string BuildHelpText(PdfCommandMetadata metadata)
     {
         var helpText = metadata.Description;
-        if (!string.IsNullOrWhiteSpace(metadata.Shortcut))
-            helpText += $" Shortcut: {metadata.Shortcut}.";
+        var shortcut = Services.Input.CommandShortcutPolicy.GetDisplayText(metadata, OperatingSystem.IsMacOS());
+        if (!string.IsNullOrWhiteSpace(shortcut))
+            helpText += $" Shortcut: {shortcut}.";
         if (metadata.IsSecuritySensitive)
             helpText += " Security-sensitive command; verify the result before sharing output.";
         return helpText;
     }
 
     private static string BuildTooltip(PdfCommandMetadata metadata) =>
-        string.IsNullOrWhiteSpace(metadata.Shortcut)
+        Services.Input.CommandShortcutPolicy.GetDisplayText(metadata, OperatingSystem.IsMacOS()) is not { Length: > 0 } shortcut
             ? metadata.Label
-            : $"{metadata.Label} ({metadata.Shortcut})";
+            : $"{metadata.Label} ({shortcut})";
 
     private static void UpdateItemStatus(Control control, PdfCommandMetadata metadata)
     {

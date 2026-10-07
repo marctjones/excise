@@ -20,12 +20,58 @@ public class WindowShortcutResolverTests
             // Approved behavior change #1976; keep the frozen legacy oracle intact.
             if (expected is WindowShortcut.ToggleRedactionMode or WindowShortcut.ToggleTextSelectionMode)
                 expected = WindowShortcut.None;
+            // #1977: editors own navigation and native edit keys, including combo-box input.
+            if ((context.TextBoxFocused || context.ComboBoxFocused) && expected is
+                (WindowShortcut.NextPage or WindowShortcut.PreviousPage or WindowShortcut.FirstPage or
+                 WindowShortcut.LastPage or WindowShortcut.Undo or WindowShortcut.Redo or
+                 WindowShortcut.SelectAllText or WindowShortcut.ToggleContinuousView or WindowShortcut.CopyText))
+                expected = WindowShortcut.None;
+            if (expected == WindowShortcut.ApplyRedaction && ((KeyModifiers)modifiers & KeyModifiers.Meta) != 0)
+                expected = WindowShortcut.None;
             var actual = WindowShortcutResolver.Resolve(key, (KeyModifiers)modifiers, context);
             Assert.True(actual == expected,
                 $"{key}, modifiers={modifiers}, context={flags}: expected {expected}, got {actual}");
             checkedCases++;
         }
         Assert.True(checkedCases > 10000);
+    }
+
+    [Theory]
+    [InlineData(Key.O, "OpenFile")]
+    [InlineData(Key.S, "SaveFile")]
+    [InlineData(Key.F, "ToggleSearch")]
+    [InlineData(Key.C, "CopyText")]
+    [InlineData(Key.Z, "Undo")]
+    public void MacCommandModifier_ResolvesPrimaryCommands(Key key, string expected)
+    {
+        Assert.Equal(expected, WindowShortcutResolver.Resolve(key, KeyModifiers.Meta,
+            new(false, false, true, false, false), mac: true).ToString());
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void EditorFocus_KeepsNativeEditingAndNavigation(bool combo)
+    {
+        var context = new WindowShortcutContext(false, false, true, !combo, combo);
+        foreach (var mac in new[] { false, true })
+        foreach (var key in new[] { Key.Up, Key.Down, Key.Home, Key.End, Key.PageUp, Key.PageDown })
+            Assert.Equal(WindowShortcut.None, WindowShortcutResolver.Resolve(key, 0, context, mac));
+        foreach (var key in new[] { Key.A, Key.C, Key.Z, Key.Y })
+            Assert.Equal(WindowShortcut.None, WindowShortcutResolver.Resolve(key, KeyModifiers.Control, context));
+        foreach (var key in new[] { Key.F, Key.A, Key.E, Key.P, Key.N })
+            Assert.Equal(WindowShortcut.None, WindowShortcutResolver.Resolve(key, KeyModifiers.Control, context, mac: true));
+        Assert.Equal(WindowShortcut.ToggleSearch, WindowShortcutResolver.Resolve(Key.F, KeyModifiers.Meta, context, mac: true));
+    }
+
+    [Fact]
+    public void MacFindAndRedo_UseConventionalCommandChords()
+    {
+        var context = new WindowShortcutContext(false, false, true, false, false);
+        Assert.Equal(WindowShortcut.FindNext, WindowShortcutResolver.Resolve(Key.G, KeyModifiers.Meta, context, true));
+        Assert.Equal(WindowShortcut.FindPrevious, WindowShortcutResolver.Resolve(Key.G, KeyModifiers.Meta | KeyModifiers.Shift, context, true));
+        Assert.Equal(WindowShortcut.Redo, WindowShortcutResolver.Resolve(Key.Z, KeyModifiers.Meta | KeyModifiers.Shift, context, true));
+        Assert.Equal(WindowShortcut.None, WindowShortcutResolver.Resolve(Key.Z, KeyModifiers.Meta | KeyModifiers.Shift, context with { TextBoxFocused = true }, true));
     }
 
     // Frozen predicates from pre-refactor MainWindow_KeyDown (8ab3b4e2), not the new binding table.

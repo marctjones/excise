@@ -2753,21 +2753,22 @@ internal partial class MainWindowViewModel : ViewModelBase
     internal static string KeyboardShortcutsText(bool mac)
     {
         string K(string chord) => Services.ShortcutNotation.Format(chord, mac);
+        string C(string id) => Services.Input.CommandShortcutPolicy.GetDisplayText(Excise.Core.Automation.PdfCommandRegistry.Get(id), mac)!;
         return
             "File:\n" +
-            $"  {K("Primary+O")} - Open PDF\n" +
-            $"  {K("Primary+S")} - Save\n" +
-            $"  {K("Primary+Shift+S")} - Save As\n" +
-            $"  {K("Primary+W")} - Close Document\n\n" +
+            $"  {C(Excise.Core.Automation.PdfCommandIds.Open)} - Open PDF\n" +
+            $"  {C(Excise.Core.Automation.PdfCommandIds.Save)} - Save\n" +
+            $"  {C(Excise.Core.Automation.PdfCommandIds.SaveAs)} - Save As\n" +
+            $"  {C(Excise.Core.Automation.PdfCommandIds.CloseDocument)} - Close Document\n\n" +
             "Edit:\n" +
-            $"  {K("Primary+F")} - Find\n" +
-            $"  {K("F3")} - Find Next\n" +
-            $"  {K("Shift+F3")} - Find Previous\n" +
+            $"  {C(Excise.Core.Automation.PdfCommandIds.SearchOpen)} - Find\n" +
+            $"  {C(Excise.Core.Automation.PdfCommandIds.SearchNext)} - Find Next\n" +
+            $"  {C(Excise.Core.Automation.PdfCommandIds.SearchPrevious)} - Find Previous\n" +
             "\n" +
             "View:\n" +
-            $"  {K("Primary++")} - Zoom In\n" +
-            $"  {K("Primary+-")} - Zoom Out\n" +
-            $"  {K("Primary+0")} - Actual Size\n\n" +
+            $"  {C(Excise.Core.Automation.PdfCommandIds.ZoomIn)} - Zoom In\n" +
+            $"  {C(Excise.Core.Automation.PdfCommandIds.ZoomOut)} - Zoom Out\n" +
+            $"  {C(Excise.Core.Automation.PdfCommandIds.ZoomActualSize)} - Actual Size\n\n" +
             "Navigation:\n" +
             "  PgUp/PgDn - Previous/Next Page\n\n" +
             "Tabs:\n" +

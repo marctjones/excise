@@ -48,7 +48,7 @@ internal static class WindowShortcutResolver
 {
     private const KeyModifiers Control = KeyModifiers.Control;
     private const KeyModifiers Shift = KeyModifiers.Shift;
-    private const KeyModifiers Unmodified = Control | Shift | KeyModifiers.Alt;
+    private const KeyModifiers Unmodified = Control | Shift | KeyModifiers.Alt | KeyModifiers.Meta;
 
     // Ordered legacy precedence. Required/forbidden masks intentionally allow extra modifiers:
     // e.g. Ctrl+Alt+O opens, but Ctrl+Shift+O toggles the outline (#369).
@@ -81,21 +81,36 @@ internal static class WindowShortcutResolver
         new(Key.Add, Control, 0, WindowShortcut.ZoomIn),
         new(Key.OemMinus, Control, 0, WindowShortcut.ZoomOut),
         new(Key.Subtract, Control, 0, WindowShortcut.ZoomOut),
-        new(Key.PageDown, 0, 0, WindowShortcut.NextPage),
-        new(Key.Down, 0, Control, WindowShortcut.NextPage),
-        new(Key.PageUp, 0, 0, WindowShortcut.PreviousPage),
-        new(Key.Up, 0, Control, WindowShortcut.PreviousPage),
-        new(Key.Home, 0, 0, WindowShortcut.FirstPage),
-        new(Key.End, 0, 0, WindowShortcut.LastPage),
-        new(Key.Z, Control, Shift, WindowShortcut.Undo, Guard.NotTextBox),
-        new(Key.Y, Control, 0, WindowShortcut.Redo, Guard.NotTextBox),
-        new(Key.A, Control, Shift, WindowShortcut.SelectAllText, Guard.NotTextBox),
-        new(Key.C, Control | Shift, 0, WindowShortcut.ToggleContinuousView, Guard.NotTextBox),
+        new(Key.PageDown, 0, 0, WindowShortcut.NextPage, Guard.NotTextInput),
+        new(Key.Down, 0, Control, WindowShortcut.NextPage, Guard.NotTextInput),
+        new(Key.PageUp, 0, 0, WindowShortcut.PreviousPage, Guard.NotTextInput),
+        new(Key.Up, 0, Control, WindowShortcut.PreviousPage, Guard.NotTextInput),
+        new(Key.Home, 0, 0, WindowShortcut.FirstPage, Guard.NotTextInput),
+        new(Key.End, 0, 0, WindowShortcut.LastPage, Guard.NotTextInput),
+        new(Key.Z, Control, Shift, WindowShortcut.Undo, Guard.NotTextInput),
+        new(Key.Y, Control, 0, WindowShortcut.Redo, Guard.NotTextInput),
+        new(Key.A, Control, Shift, WindowShortcut.SelectAllText, Guard.NotTextInput),
+        new(Key.C, Control | Shift, 0, WindowShortcut.ToggleContinuousView, Guard.NotTextInput),
         new(Key.C, Control, Shift, WindowShortcut.CopyText, Guard.TextSelection)
     ];
 
-    internal static WindowShortcut Resolve(Key key, KeyModifiers modifiers, WindowShortcutContext context)
+    internal static WindowShortcut Resolve(Key key, KeyModifiers modifiers, WindowShortcutContext context, bool mac = false)
     {
+        if (mac)
+        {
+            if ((modifiers & KeyModifiers.Meta) != 0)
+            {
+                // Cmd is primary. Ctrl remains a document-focus compatibility alias;
+                // inside editors its native cursor/editing commands must pass through (#1977).
+                modifiers = (modifiers & ~KeyModifiers.Meta) | Control;
+                if (key == Key.G)
+                    return (modifiers & Shift) != 0 ? WindowShortcut.FindPrevious : WindowShortcut.FindNext;
+                if (key == Key.Z && (modifiers & Shift) != 0)
+                    return context.TextBoxFocused || context.ComboBoxFocused ? WindowShortcut.None : WindowShortcut.Redo;
+            }
+            else if ((modifiers & Control) != 0 && (context.TextBoxFocused || context.ComboBoxFocused))
+                return WindowShortcut.None;
+        }
         foreach (var binding in Bindings)
         {
             if (binding.Key == key && (modifiers & binding.Required) == binding.Required &&
@@ -109,12 +124,12 @@ internal static class WindowShortcutResolver
     {
         Guard.SearchVisible => context.SearchVisible,
         Guard.ApplyRedaction => context.RedactionMode && !context.TextBoxFocused && !context.ComboBoxFocused,
-        Guard.NotTextBox => !context.TextBoxFocused,
-        Guard.TextSelection => context.TextSelectionMode,
+        Guard.NotTextInput => !context.TextBoxFocused && !context.ComboBoxFocused,
+        Guard.TextSelection => context.TextSelectionMode && !context.TextBoxFocused && !context.ComboBoxFocused,
         _ => true
     };
 
-    private enum Guard { Always, SearchVisible, ApplyRedaction, NotTextBox, TextSelection }
+    private enum Guard { Always, SearchVisible, ApplyRedaction, NotTextInput, TextSelection }
     private readonly record struct Binding(Key Key, KeyModifiers Required, KeyModifiers Forbidden,
         WindowShortcut Action, Guard Condition = Guard.Always);
 }

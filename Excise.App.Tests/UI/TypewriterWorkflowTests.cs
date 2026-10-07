@@ -30,7 +30,7 @@ public class TypewriterWorkflowTests
         var tempDir = Path.Combine(Path.GetTempPath(), "Excise.AppTypewriterTests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempDir);
         var sourcePath = Path.Combine(tempDir, "source.pdf");
-        TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Original text");
+        TestPdfGenerator.CreateMultiPagePdf(sourcePath, pageCount: 3);
         var vm = MainWindowViewModelTestFactory.Create();
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
         window.Show();
@@ -45,11 +45,21 @@ public class TypewriterWorkflowTests
             var editor = viewer.SinglePagePart.TypewriterLayer.GetVisualDescendants().OfType<TextBox>().Single();
             editor.Focus();
             await window.TypeTextAsync("EXCISE QA typew");
+            if (OperatingSystem.IsMacOS())
+            {
+                await window.PressKeyAsync(Key.F, RawInputModifiers.Control);
+                vm.IsSearchVisible.Should().BeFalse("macOS Control-F belongs to the editor, not global Find (#1977)");
+            }
             // TextInput alone bypasses shortcut routing: exercise the real key-down first (#1976).
             await window.PressKeyAsync(Key.R);
+            await window.PressKeyAsync(Key.T);
+            foreach (var key in new[] { Key.Down, Key.Up, Key.Home, Key.End, Key.PageDown, Key.PageUp })
+                await window.PressKeyAsync(key);
+            vm.CurrentPageIndex.Should().Be(0, "cursor navigation inside an editor must not navigate the PDF (#1977)");
             vm.IsTypewriterMode.Should().BeTrue();
             vm.IsRedactionMode.Should().BeFalse();
             window.FocusManager!.GetFocusedElement().Should().BeSameAs(editor);
+            editor.CaretIndex = editor.Text!.Length;
             await window.TypeTextAsync("riter 3.16.0");
             editor.Text.Should().Be("EXCISE QA typewriter 3.16.0");
             vm.TypewriterTextOperations.Single().Text.Should().Be(editor.Text);

@@ -53,9 +53,10 @@ public class AccessibilityRegressionTests
             if (!helpText.Contains(metadata.Description, StringComparison.Ordinal))
                 failures.Add($"{Describe(control)} help text does not include registry description for {metadata.Id}");
 
-            if (!string.IsNullOrWhiteSpace(metadata.Shortcut) &&
-                !helpText.Contains(metadata.Shortcut, StringComparison.Ordinal))
-                failures.Add($"{Describe(control)} help text does not include shortcut {metadata.Shortcut}");
+            var shortcut = Excise.App.Services.Input.CommandShortcutPolicy.GetDisplayText(metadata, OperatingSystem.IsMacOS());
+            if (!string.IsNullOrWhiteSpace(shortcut) &&
+                !helpText.Contains(shortcut, StringComparison.Ordinal))
+                failures.Add($"{Describe(control)} help text does not include platform shortcut {shortcut}");
 
             if (!control.IsEnabled)
             {

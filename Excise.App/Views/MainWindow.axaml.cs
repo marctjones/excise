@@ -1245,13 +1245,13 @@ internal partial class MainWindow : Window
 
     private void MainWindow_KeyDown(object? sender, KeyEventArgs e)
     {
-        if (DataContext is not MainWindowViewModel viewModel)
+        if (e.Handled || DataContext is not MainWindowViewModel viewModel)
             return;
 
         var focused = FocusManager.GetFocusedElement();
         var action = Excise.App.Services.Input.WindowShortcutResolver.Resolve(e.Key, e.KeyModifiers,
             new(viewModel.IsSearchVisible, viewModel.IsRedactionMode, viewModel.IsTextSelectionMode,
-                focused is TextBox, focused is ComboBox));
+                focused is TextBox, focused is ComboBox), OperatingSystem.IsMacOS());
         if (action == Excise.App.Services.Input.WindowShortcut.None)
             return;
 

@@ -614,16 +614,9 @@ internal static class MacNativeMenuBuilder
             return item;
         }
 
-        // The key equivalents that differ from the registry's shortcut on macOS; every other item derives from it.
-        private static readonly Dictionary<string, string> MacShortcuts = new()
-        {
-            [PdfCommandIds.Redo] = "Cmd+Shift+Z",
-        };
-
         private static KeyGesture? GestureFor(string? commandId)
         {
-            var shortcut = commandId is null ? null : MacShortcuts.GetValueOrDefault(commandId) ?? PdfCommandRegistry.Get(commandId).Shortcut;
-            shortcut = shortcut?.Replace("Ctrl", "Cmd");
+            var shortcut = commandId is null ? null : Services.Input.CommandShortcutPolicy.GetChord(PdfCommandRegistry.Get(commandId), mac: true);
             // A bare digit parses as its numeric Key value ("0" is Key.None): name the key, D0.
             if (shortcut is [.., '+', >= '0' and <= '9'])
                 shortcut = shortcut.Insert(shortcut.Length - 1, "D");

@@ -16,6 +16,7 @@ semantic versioning.
 ### Fixed
 
 - Removed bare R/T mode shortcuts so typing in typewriter and form editors cannot unexpectedly change mode; the toolbar and menu remain mouse- and keyboard-accessible (#1976, #1977).
+- macOS command handlers accept Command-based shortcuts, including Command-G search navigation and Command-Shift-Z redo; menus and command help share platform-specific shortcut notation. Text editors retain navigation and native editing keys (#1977).
 - New document tabs explicitly reset the shared viewport after layout, preventing the outgoing reading position from disagreeing with the incoming page counter (#1974).
 - Continuous-view composites retained during a zoom scale their page-local placement with the page, avoiding oversized clipped content while replacement tiles render (#1975).
 - Queued first-result search navigation cannot override a later result selection, a replacement search, or a cancelled search; deterministic dispatcher-order regressions preserve normal first-result navigation (#1970).

@@ -167,7 +167,7 @@ public class HostSeamTests
         var text = Excise.App.ViewModels.MainWindowViewModel.KeyboardShortcutsText(true);
 
         text.Should().Contain("  ⌘S - Save\n").And.Contain("  ⌘⇧S - Save As\n")
-            .And.Contain("  ⇧F3 - Find Previous\n").And.Contain("  ⌘+ - Zoom In\n")
+            .And.Contain("  ⌘⇧G - Find Previous\n").And.Contain("  ⌘+ - Zoom In\n")
             .And.Contain("  ⌃Tab / ⌃⇧Tab - Next/Previous Document Tab\n")
             .And.NotContain("Ctrl").And.NotContain("Shift+");
     }
