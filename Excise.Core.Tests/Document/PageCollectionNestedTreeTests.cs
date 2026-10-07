@@ -26,13 +26,13 @@ public class PageCollectionNestedTreeTests
     /// font machinery. PagesA carries inheritable /Rotate and /Resources
     /// that p1/p2 do NOT declare locally.
     /// </summary>
-    private static byte[] BuildNestedTreePdf()
+    private static byte[] BuildNestedTreePdf(int inheritedRotation = 90)
     {
         var objects = new List<(int objNum, string content)>
         {
             (1, "<< /Type /Catalog /Pages 2 0 R >>"),
             (2, "<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 3 >>"),
-            (3, "<< /Type /Pages /Parent 2 0 R /Kids [5 0 R 6 0 R] /Count 2 /Rotate 90 /Resources << /ProcSet [/PDF] >> >>"),
+            (3, $"<< /Type /Pages /Parent 2 0 R /Kids [5 0 R 6 0 R] /Count 2 /Rotate {inheritedRotation} /Resources << /ProcSet [/PDF] >> >>"),
             (4, "<< /Type /Pages /Parent 2 0 R /Kids [7 0 R] /Count 1 >>"),
             (5, "<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Contents 8 0 R >>"),
             (6, "<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Contents 9 0 R >>"),
@@ -119,6 +119,37 @@ public class PageCollectionNestedTreeTests
 
     private static string[] Markers(PdfDocument doc) =>
         doc.GetPages().Select(Marker).ToArray();
+
+    // See issue #1981: zero must override an ancestor rather than expose it.
+    [Theory]
+    [InlineData(90)]
+    [InlineData(180)]
+    [InlineData(270)]
+    public void Rotation_ZeroOverridesInheritance_WithoutChangingSibling(int inheritedRotation)
+    {
+        using var doc = PdfDocument.Open(BuildNestedTreePdf(inheritedRotation));
+        doc.GetPage(1).Rotation.Should().Be(inheritedRotation);
+        doc.GetPage(1).Rotation = 0;
+
+        doc.GetPage(1).Rotation.Should().Be(0);
+        doc.GetPage(2).Rotation.Should().Be(inheritedRotation);
+        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+        reopened.GetPage(1).Rotation.Should().Be(0);
+        reopened.GetPage(2).Rotation.Should().Be(inheritedRotation);
+    }
+
+    [Fact]
+    public void Rotation_ZeroReplacesExplicitOverride_WithoutChangingAncestor()
+    {
+        using var doc = PdfDocument.Open(BuildInheritedAttributesPdf());
+        doc.GetPage(2).Rotation.Should().Be(180);
+        doc.GetPage(2).Rotation = 0;
+        doc.GetPage(2).Rotation.Should().Be(0);
+        doc.GetPage(1).Rotation.Should().Be(90);
+        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+        reopened.GetPage(2).Rotation.Should().Be(0);
+        reopened.GetPage(1).Rotation.Should().Be(90);
+    }
 
     [Fact]
     public void RemoveAt_OnNestedTree_RemovesExactlyOnePage()

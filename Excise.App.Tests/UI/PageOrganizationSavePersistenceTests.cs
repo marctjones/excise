@@ -9,6 +9,7 @@ using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Excise.App.Views;
 using Excise.Core.Document;
+using Excise.Core.Primitives;
 using Excise.Rendering.Differential;
 using Excise.TestSupport;
 using Xunit;
@@ -196,6 +197,72 @@ public class PageOrganizationSavePersistenceTests
             "the /Rotate the user applied must be written to the file");
 
         Close(window, dir);
+    }
+
+    // See #1981: crossing zero must not expose the parent's inherited rotation.
+    [FixedAvaloniaTheory]
+    [InlineData(90)]
+    [InlineData(180)]
+    [InlineData(270)]
+    public async Task InheritedRotation_FullTurnUndoRedoAndSave_PreserveExplicitZero(int inheritedRotation)
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        Assert.SkipUnless(ReferenceProcess.IsLaunchable("pdfinfo", 5000, "-v"), "Poppler pdfinfo not installed");
+        var (dir, src) = NewDir("inherited-rotate");
+        TestPdfGenerator.CreateMultiPagePdf(src, pageCount: 2);
+        byte[] inheritedBytes;
+        using (var source = PdfDocument.Open(src))
+        {
+            var parent = (PdfDictionary)source.Resolve(source.Catalog.GetOptional("Pages")!);
+            parent.SetInt("Rotate", inheritedRotation);
+            foreach (var page in source.GetPages())
+                page.Dictionary.Remove("Rotate");
+            inheritedBytes = source.SaveToBytes();
+        }
+        File.WriteAllBytes(src, inheritedBytes);
+        var (vm, window) = await OpenAsync(src);
+        try
+        {
+            vm.CurrentPageIndex = 0;
+            vm.PdfCoreDocument!.GetPage(1).Rotation.Should().Be(inheritedRotation);
+            for (int turn = 1; turn <= 4; turn++)
+            {
+                await vm.RotatePageRightCommand.Execute();
+                vm.PdfCoreDocument!.GetPage(1).Rotation.Should().Be((inheritedRotation + turn * 90) % 360);
+            }
+            for (int turn = 3; turn >= 0; turn--)
+            {
+                await vm.UndoCommand.Execute();
+                vm.PdfCoreDocument!.GetPage(1).Rotation.Should().Be((inheritedRotation + turn * 90) % 360);
+            }
+            for (int turn = 1; turn <= 4; turn++)
+            {
+                await vm.RedoCommand.Execute();
+                vm.PdfCoreDocument!.GetPage(1).Rotation.Should().Be((inheritedRotation + turn * 90) % 360);
+            }
+            for (int turn = 0; turn < inheritedRotation / 90; turn++)
+                await vm.RotatePageLeftCommand.Execute();
+            vm.PdfCoreDocument!.GetPage(1).Rotation.Should().Be(0);
+            vm.PdfCoreDocument!.GetPage(2).Rotation.Should().Be(inheritedRotation);
+            var saved = await SaveAsAsync(vm, dir, "upright.pdf");
+            using var reopened = PdfDocument.Open(saved);
+            reopened.GetPage(1).Rotation.Should().Be(0);
+            reopened.GetPage(2).Rotation.Should().Be(inheritedRotation);
+
+            var check = QpdfReferenceTool.Check(saved);
+            check.Should().NotBeNull();
+            check!.Value.Success.Should().BeTrue(check.Value.Output);
+            var info = ReferenceProcess.Run("pdfinfo", ["-f", "1", "-l", "2", saved], 15000);
+            info.ExitCode.Should().Be(0, info.Stderr);
+            System.Text.RegularExpressions.Regex.IsMatch(info.Stdout, @"Page\s+1 rot:\s+0\b")
+                .Should().BeTrue(info.Stdout);
+            System.Text.RegularExpressions.Regex.IsMatch(info.Stdout, $@"Page\s+2 rot:\s+{inheritedRotation}\b")
+                .Should().BeTrue(info.Stdout);
+        }
+        finally
+        {
+            Close(window, dir);
+        }
     }
 
     // ── a REAL document, not a synthetic fixture ─────────────────────────────

@@ -15,6 +15,7 @@ semantic versioning.
 
 ### Fixed
 
+- Setting a page rotation to zero now overrides inherited rotation, preserving upright orientation through save/reopen and Undo/Redo without changing sibling pages (#1981).
 - Typewriter saves refuse text that overflows its box before applying any pending text, preserving edits for resizing; Undo/Redo no longer loses its redo history when restored editors report unchanged text (#1978, #1979).
 - Removed bare R/T mode shortcuts so typing in typewriter and form editors cannot unexpectedly change mode; the toolbar and menu remain mouse- and keyboard-accessible (#1976, #1977).
 - macOS command handlers accept Command-based shortcuts, including Command-G search navigation and Command-Shift-Z redo; menus and command help share platform-specific shortcut notation. Text editors retain navigation and native editing keys (#1977).

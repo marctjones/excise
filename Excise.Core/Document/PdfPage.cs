@@ -136,10 +136,8 @@ public partial class PdfPage
             if (value != 0 && value != 90 && value != 180 && value != 270)
                 throw new ArgumentException("Rotation must be 0, 90, 180, or 270 degrees", nameof(value));
 
-            if (value == 0)
-                _pageDict.Remove("Rotate");
-            else
-                _pageDict.SetInt("Rotate", value);
+            // Zero must override an inherited /Rotate, not expose it (#1981).
+            _pageDict.SetInt("Rotate", value);
         }
     }
 
