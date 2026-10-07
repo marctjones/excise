@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1533,
-  "indexedContentSha256": "0a1d6ec74ce0031b388515933a5ae610e70ae7041b9fb22f84d986d3dc458cc2",
+  "indexedContentSha256": "e709aae7191ccfb008e71d2d0a77ac68f918a654f17b678c7b089e71b2669e23",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -4117,7 +4117,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 199
+      "candidateReferenceCount": 201
     },
     {
       "id": "pdf.17.document.navigation",
@@ -9950,7 +9950,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 271
+      "candidateReferenceCount": 272
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -69638,6 +69638,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Document/PageCollectionNestedTreeTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "data",
+            "dictionaries"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/PageRotationCoordinateTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -69680,17 +69688,9 @@
             "coordinate",
             "data"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Filters/Jbig2/Jbig2BitmapCompositorTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "coordinate",
-            "data"
-          ]
         }
       ],
-      "candidateReferenceCount": 229
+      "candidateReferenceCount": 230
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -71253,7 +71253,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 775
+      "candidateReferenceCount": 776
     },
     {
       "id": "pdf.20.extension.developer",
