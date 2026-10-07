@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
@@ -48,6 +49,47 @@ public class SearchHighlightOverlayTests : IDisposable
     {
         _windows.Dispose();
         try { Directory.Delete(_tempDir, recursive: true); } catch { /* best effort */ }
+    }
+
+    // See issue #1983: existing highlights must follow a UI rotation, not retain old geometry.
+    [FixedAvaloniaFact]
+    public async Task RotateAfterSearch_RepositionsExistingHighlights()
+    {
+        Directory.CreateDirectory(_tempDir);
+        var path = System.IO.Path.Combine(_tempDir, "rotate-search.pdf");
+        TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 1);
+        var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
+        var window = _windows.Show(new MainWindow { DataContext = vm, Width = 1280, Height = 900 });
+        await vm.LoadDocumentAsync(path);
+        vm.ViewMode = PdfViewMode.SinglePage;
+        vm.SearchText = "Page";
+        var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+        var layer = viewer.SinglePagePart.SearchHighlightsLayer!;
+        var deadline = DateTime.UtcNow.AddSeconds(15);
+        while (DateTime.UtcNow < deadline && layer.Children.OfType<Rectangle>().Count() != 2)
+            await Task.Delay(50);
+        layer.Children.OfType<Rectangle>().Should().HaveCount(2);
+        var original = layer.Children.OfType<Rectangle>()
+            .Select(r => new global::Avalonia.Rect(Canvas.GetLeft(r), Canvas.GetTop(r), r.Width, r.Height))
+            .ToArray();
+        var pageHeight = vm.PdfCoreDocument!.GetPage(1).MediaBox.Height * DipsPerPoint;
+
+        await vm.RotatePageRightCommand.Execute();
+        await Task.Delay(300);
+        window.UpdateLayout();
+        vm.PdfCoreDocument!.GetPage(1).Rotation.Should().Be(90);
+        var rotated = layer.Children.OfType<Rectangle>().ToArray();
+        rotated.Should().HaveCount(2);
+        foreach (var before in original)
+        {
+            // Clockwise rotation in top-left display space: (x,y) -> (H-y,x).
+            rotated.Should().Contain(r =>
+                Math.Abs(Canvas.GetLeft(r) - (pageHeight - before.Bottom)) < 1 &&
+                Math.Abs(Canvas.GetTop(r) - before.Left) < 1 &&
+                Math.Abs(r.Width - before.Height) < 1 &&
+                Math.Abs(r.Height - before.Width) < 1,
+                "a search highlight must turn with the page rather than keep its old rectangle");
+        }
     }
 
     [FixedAvaloniaFact]

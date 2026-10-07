@@ -36,8 +36,12 @@ namespace Excise.App.Tests.Controls;
 [Collection("AvaloniaTests")]
 public class PdfViewerSelectionTests
 {
-    [FixedAvaloniaFact]
-    public async Task SinglePageDrag_DrawsHighlightOverSelectedGlyphs_AtCorrectOnPagePositions()
+    [FixedAvaloniaTheory]
+    [InlineData(0)]
+    [InlineData(90)]
+    [InlineData(180)]
+    [InlineData(270)]
+    public async Task SinglePageDrag_DrawsHighlightOverSelectedGlyphs_AtCorrectOnPagePositions(int rotation)
     {
         // Text placed well away from the left/top edges so an origin/centering
         // offset in the overlay would push the highlight off the glyphs.
@@ -50,6 +54,7 @@ public class PdfViewerSelectionTests
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             doc = PdfCoreDocument.Open(bytes);
+            doc.GetPage(1).Rotation = rotation;
             control = new PdfViewerControl { Document = doc, CurrentPage = 1 };
             window = new Window { Content = control, Width = 900, Height = 1000 };
             window.Show();
@@ -138,10 +143,18 @@ public class PdfViewerSelectionTests
             Rect ExpectedGlyphImageRect(Excise.Core.Text.Letter l)
             {
                 var g = l.GlyphRectangle;
-                double x0 = (g.Left - mb.Left) / mb.Width * imgW;
-                double y0 = (mb.Top - g.Top) / mb.Height * imgH;
-                double x1 = (g.Right - mb.Left) / mb.Width * imgW;
-                double y1 = (mb.Top - g.Bottom) / mb.Height * imgH;
+                // Independent quarter-turn geometry, not the production mapper (#1983).
+                var (left, top, right, bottom, width, height) = rotation switch
+                {
+                    90 => (g.Bottom - mb.Bottom, g.Left - mb.Left, g.Top - mb.Bottom, g.Right - mb.Left, mb.Height, mb.Width),
+                    180 => (mb.Right - g.Right, g.Bottom - mb.Bottom, mb.Right - g.Left, g.Top - mb.Bottom, mb.Width, mb.Height),
+                    270 => (mb.Top - g.Top, mb.Right - g.Right, mb.Top - g.Bottom, mb.Right - g.Left, mb.Height, mb.Width),
+                    _ => (g.Left - mb.Left, mb.Top - g.Top, g.Right - mb.Left, mb.Top - g.Bottom, mb.Width, mb.Height)
+                };
+                double x0 = left / width * imgW;
+                double y0 = top / height * imgH;
+                double x1 = right / width * imgW;
+                double y1 = bottom / height * imgH;
                 return new Rect(x0, y0, x1 - x0, y1 - y0);
             }
             var expectedGlyphRects = letters.Select(ExpectedGlyphImageRect).ToList();
@@ -168,10 +181,15 @@ public class PdfViewerSelectionTests
 
             // The highlight as a whole spans a meaningful width of the line (a
             // left-to-right drag, not a single-glyph blip).
-            var drawnBBoxLeft = rects.Min(r => r.TranslatePoint(new Point(0, 0), img)!.Value.X);
-            var drawnBBoxRight = rects.Max(r => r.TranslatePoint(new Point(0, 0), img)!.Value.X + r.Bounds.Width);
-            (drawnBBoxRight - drawnBBoxLeft).Should().BeGreaterThan(imgW * 0.05,
-                "a left-to-right drag across the line produces a wide highlight");
+            bool vertical = rotation is 90 or 270;
+            var drawnStart = rects.Min(r => vertical
+                ? r.TranslatePoint(new Point(0, 0), img)!.Value.Y
+                : r.TranslatePoint(new Point(0, 0), img)!.Value.X);
+            var drawnEnd = rects.Max(r => vertical
+                ? r.TranslatePoint(new Point(0, 0), img)!.Value.Y + r.Bounds.Height
+                : r.TranslatePoint(new Point(0, 0), img)!.Value.X + r.Bounds.Width);
+            (drawnEnd - drawnStart).Should().BeGreaterThan((vertical ? imgH : imgW) * 0.05,
+                "dragging across the line must select more than a single glyph at every rotation");
         });
 
         await Dispatcher.UIThread.InvokeAsync(() =>
