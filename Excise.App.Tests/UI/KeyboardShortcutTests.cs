@@ -22,7 +22,7 @@ namespace Excise.App.Tests.UI;
 /// - Navigation: PageUp, PageDown, Home, End, Up/Down arrows
 /// - Page ops: Ctrl+L (rotate left), Ctrl+R (rotate right), Ctrl+E (export), Ctrl+P (print)
 /// - Zoom: Ctrl+=, Ctrl+-, Ctrl+0, Ctrl+1, Ctrl+2
-/// - Mode toggles: T (text selection); bare R must not change mode (#1976)
+/// - Mode buttons remain accessible; bare R/T must not change mode (#1976, #1977)
 /// - Other: F1 (help), Ctrl+, (preferences), Enter (apply redaction)
 /// </summary>
 [Collection("AvaloniaTests")]
@@ -535,10 +535,10 @@ public class KeyboardShortcutTests : IDisposable
     }
 
     /// <summary>
-    /// T: Toggle text selection mode.
+    /// Bare T must not change text selection mode (#1977).
     /// </summary>
     [FixedAvaloniaFact(Timeout = 15000)]
-    public async Task T_ToggleTextSelectionMode()
+    public async Task T_DoesNotToggleTextSelectionMode()
     {
         // Arrange
         var pdfPath = CreateTestPdf("text_select_mode.pdf");
@@ -557,7 +557,7 @@ public class KeyboardShortcutTests : IDisposable
         await Task.Delay(100);
 
         // Assert
-        vm.IsTextSelectionMode.Should().NotBe(initialState, "T should toggle text selection mode");
+        vm.IsTextSelectionMode.Should().Be(initialState, "bare T is ordinary input, not a mode shortcut (#1977)");
     }
 
     // Enter (apply redaction) real-effect coverage lives in

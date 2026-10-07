@@ -155,7 +155,7 @@
                 <MenuItem Header="Find _Previous" Command="{Binding FindPreviousCommand}" InputGesture="Shift+F3"
                           access:CommandAccessibility.CommandId="search.previous"/>
                 <Separator/>
-                <MenuItem Header="_Select Text Mode" Command="{Binding ToggleTextSelectionModeCommand}" InputGesture="T"
+                <MenuItem Header="_Select Text Mode" Command="{Binding ToggleTextSelectionModeCommand}"
                           access:CommandAccessibility.CommandId="edit.selectTextMode">
                     <MenuItem.Icon>
                         <TextBlock Text="✓" IsVisible="{Binding IsTextSelectionMode}"/>
@@ -747,7 +747,7 @@
                             Classes.active="{Binding IsTextSelectionMode}"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="edit.selectTextMode"
-                            ToolTip.Tip="Text Selection Mode (T)"
+                            ToolTip.Tip="Text Selection Mode"
                             AutomationProperties.Name="Text Selection Mode"
                             AutomationProperties.HelpText="Toggle text selection mode to select and copy text">
                         <StackPanel Orientation="Horizontal" Spacing="6">

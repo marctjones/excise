@@ -56,7 +56,7 @@ internal static class PdfCommandRegistry
         Search(PdfCommandIds.SearchPrevious, "Find Previous", "Move to the previous search result.", "Shift+F3"),
         Search(PdfCommandIds.SearchClose, "Close Search", "Close the search bar.", "Esc"),
 
-        Edit(PdfCommandIds.SelectTextMode, "Text Selection Mode", "Toggle text selection mode.", "T"),
+        Edit(PdfCommandIds.SelectTextMode, "Text Selection Mode", "Toggle text selection mode."),
         Edit(PdfCommandIds.CopyText, "Copy Selected Text", "Copy selected text to the clipboard.", "Ctrl+C"),
         Edit(PdfCommandIds.SelectAll, "Select All Text", "Select all text on the current page.", "Ctrl+A"),
         // Not document-gated, unlike other Edit commands: Cut acts on whatever text box

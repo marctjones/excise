@@ -52,7 +52,7 @@ internal static class WindowShortcutResolver
 
     // Ordered legacy precedence. Required/forbidden masks intentionally allow extra modifiers:
     // e.g. Ctrl+Alt+O opens, but Ctrl+Shift+O toggles the outline (#369).
-    // Bare R no longer changes mode: it interrupted text input (#1976).
+    // Bare R/T no longer change mode: letters belong to text input (#1976, #1977).
     // This is not a replacement for menu InputGesture/interaction-registry authority.
     private static readonly Binding[] Bindings =
     [
@@ -81,7 +81,6 @@ internal static class WindowShortcutResolver
         new(Key.Add, Control, 0, WindowShortcut.ZoomIn),
         new(Key.OemMinus, Control, 0, WindowShortcut.ZoomOut),
         new(Key.Subtract, Control, 0, WindowShortcut.ZoomOut),
-        new(Key.T, 0, Unmodified, WindowShortcut.ToggleTextSelectionMode, Guard.NotTextBox),
         new(Key.PageDown, 0, 0, WindowShortcut.NextPage),
         new(Key.Down, 0, Control, WindowShortcut.NextPage),
         new(Key.PageUp, 0, 0, WindowShortcut.PreviousPage),

@@ -10,6 +10,7 @@ public class PdfCommandRegistryTests
     public void RedactionMode_HasNoBareLetterShortcut()
     {
         PdfCommandRegistry.Get(PdfCommandIds.ToggleRedactionMode).Shortcut.Should().BeNull("#1976 removes bare R from all advertised command metadata");
+        PdfCommandRegistry.Get(PdfCommandIds.SelectTextMode).Shortcut.Should().BeNull("#1977 removes bare T too");
     }
 
     [Fact]

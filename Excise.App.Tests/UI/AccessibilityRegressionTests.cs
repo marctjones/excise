@@ -233,13 +233,15 @@ public class AccessibilityRegressionTests
             await KeyboardTestHelpers.FlushDispatcherAsync();
             vm.CurrentPageIndex.Should().BeGreaterThan(0, "keyboard navigation should reach later pages");
 
-            // #831: selection is on by default, so assert T flips the state
-            // (proves the keyboard reaches the toggle) rather than a fixed value.
+            // Selection is on by default; focus + Space must toggle it without a bare-letter shortcut.
             var selectionBeforeT = vm.IsTextSelectionMode;
-            await window.PressKeyAsync(global::Avalonia.Input.Key.T);
+            var selectionButton = FindButtonByName(window, "Text Selection Mode");
+            selectionButton.Should().NotBeNull();
+            selectionButton!.Focus();
+            await window.PressKeyAsync(global::Avalonia.Input.Key.Space);
             await KeyboardTestHelpers.FlushDispatcherAsync();
             vm.IsTextSelectionMode.Should().Be(!selectionBeforeT,
-                "T should toggle text selection without a mouse");
+                "the focused Select Text button should activate without a mouse");
 
             // Mode buttons remain keyboard-accessible without bare-letter accelerators (#1976).
             var redactionButton = FindButtonByName(window, "Redaction Mode");

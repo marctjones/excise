@@ -18,7 +18,7 @@ public class WindowShortcutResolverTests
                 (flags & 4) != 0, (flags & 8) != 0, (flags & 16) != 0);
             var expected = Legacy(key, (KeyModifiers)modifiers, context);
             // Approved behavior change #1976; keep the frozen legacy oracle intact.
-            if (expected == WindowShortcut.ToggleRedactionMode)
+            if (expected is WindowShortcut.ToggleRedactionMode or WindowShortcut.ToggleTextSelectionMode)
                 expected = WindowShortcut.None;
             var actual = WindowShortcutResolver.Resolve(key, (KeyModifiers)modifiers, context);
             Assert.True(actual == expected,
