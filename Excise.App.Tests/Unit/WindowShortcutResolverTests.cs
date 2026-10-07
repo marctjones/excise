@@ -6,7 +6,7 @@ namespace Excise.App.Tests.Unit;
 public class WindowShortcutResolverTests
 {
     [Fact]
-    public void AllKeysModifiersAndEditorStatesMatchFrozenLegacyPolicy()
+    public void AllKeysModifiersAndEditorStatesMatchLegacyExceptRemovedModeShortcut()
     {
         Assert.Equal(15, Enum.GetValues<KeyModifiers>().Aggregate(0, (bits, flag) => bits | (int)flag));
         var checkedCases = 0;
@@ -17,6 +17,9 @@ public class WindowShortcutResolverTests
             var context = new WindowShortcutContext((flags & 1) != 0, (flags & 2) != 0,
                 (flags & 4) != 0, (flags & 8) != 0, (flags & 16) != 0);
             var expected = Legacy(key, (KeyModifiers)modifiers, context);
+            // Approved behavior change #1976; keep the frozen legacy oracle intact.
+            if (expected == WindowShortcut.ToggleRedactionMode)
+                expected = WindowShortcut.None;
             var actual = WindowShortcutResolver.Resolve(key, (KeyModifiers)modifiers, context);
             Assert.True(actual == expected,
                 $"{key}, modifiers={modifiers}, context={flags}: expected {expected}, got {actual}");

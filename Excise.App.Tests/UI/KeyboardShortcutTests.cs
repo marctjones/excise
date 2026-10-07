@@ -22,7 +22,7 @@ namespace Excise.App.Tests.UI;
 /// - Navigation: PageUp, PageDown, Home, End, Up/Down arrows
 /// - Page ops: Ctrl+L (rotate left), Ctrl+R (rotate right), Ctrl+E (export), Ctrl+P (print)
 /// - Zoom: Ctrl+=, Ctrl+-, Ctrl+0, Ctrl+1, Ctrl+2
-/// - Mode toggles: R (redaction), T (text selection)
+/// - Mode toggles: T (text selection); bare R must not change mode (#1976)
 /// - Other: F1 (help), Ctrl+, (preferences), Enter (apply redaction)
 /// </summary>
 [Collection("AvaloniaTests")]
@@ -509,10 +509,10 @@ public class KeyboardShortcutTests : IDisposable
     #region Mode Toggles
 
     /// <summary>
-    /// R: Toggle redaction mode.
+    /// Bare R must not toggle redaction mode (#1976).
     /// </summary>
     [FixedAvaloniaFact(Timeout = 15000)]
-    public async Task R_ToggleRedactionMode()
+    public async Task R_DoesNotToggleRedactionMode()
     {
         // Arrange
         var pdfPath = CreateTestPdf("redaction_mode.pdf");
@@ -531,7 +531,7 @@ public class KeyboardShortcutTests : IDisposable
         await Task.Delay(100);
 
         // Assert
-        vm.IsRedactionMode.Should().NotBe(initialState, "R should toggle redaction mode");
+        vm.IsRedactionMode.Should().Be(initialState, "bare R is ordinary input, not a mode shortcut (#1976)");
     }
 
     /// <summary>

@@ -324,7 +324,7 @@ public class GuiWorkflowCoverageMatrixTests
             [
                 Capability.Covered("Ctrl+O opens the file dialog", typeof(KeyboardShortcutEffectTests), nameof(KeyboardShortcutEffectTests.CtrlO_ExecutesOpenFileCommand)),
                 Capability.Covered("Ctrl+S saves the file", typeof(KeyboardShortcutEffectTests), nameof(KeyboardShortcutEffectTests.CtrlS_ExecutesSaveFileCommand)),
-                Capability.Covered("R toggles redaction mode", typeof(KeyboardShortcutTests), nameof(KeyboardShortcutTests.R_ToggleRedactionMode)),
+                Capability.Covered("bare R does not interrupt typing by changing mode", typeof(KeyboardShortcutTests), nameof(KeyboardShortcutTests.R_DoesNotToggleRedactionMode)),
                 Capability.Covered("compound flow: search workflow", typeof(KeyboardShortcutTests), nameof(KeyboardShortcutTests.CompoundFlow_SearchWorkflow)),
             ]),
         new("Mouse link activation",

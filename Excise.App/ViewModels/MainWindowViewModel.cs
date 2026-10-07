@@ -2764,7 +2764,7 @@ internal partial class MainWindowViewModel : ViewModelBase
             $"  {K("F3")} - Find Next\n" +
             $"  {K("Shift+F3")} - Find Previous\n" +
             "  T - Toggle Text Selection Mode\n" +
-            "  R - Toggle Redaction Mode\n\n" +
+            "\n" +
             "View:\n" +
             $"  {K("Primary++")} - Zoom In\n" +
             $"  {K("Primary+-")} - Zoom Out\n" +

@@ -15,6 +15,7 @@ semantic versioning.
 
 ### Fixed
 
+- Removed the bare R Redaction-mode shortcut so typing in typewriter and form editors cannot unexpectedly change mode; the toolbar and menu remain mouse- and keyboard-accessible (#1976).
 - New document tabs explicitly reset the shared viewport after layout, preventing the outgoing reading position from disagreeing with the incoming page counter (#1974).
 - Continuous-view composites retained during a zoom scale their page-local placement with the page, avoiding oversized clipped content while replacement tiles render (#1975).
 - Queued first-result search navigation cannot override a later result selection, a replacement search, or a cancelled search; deterministic dispatcher-order regressions preserve normal first-result navigation (#1970).

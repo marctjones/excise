@@ -7,6 +7,12 @@ namespace Excise.Core.Tests.Automation;
 public class PdfCommandRegistryTests
 {
     [Fact]
+    public void RedactionMode_HasNoBareLetterShortcut()
+    {
+        PdfCommandRegistry.Get(PdfCommandIds.ToggleRedactionMode).Shortcut.Should().BeNull("#1976 removes bare R from all advertised command metadata");
+    }
+
+    [Fact]
     public void AllCommands_HaveStableUniqueIdsAndAccessibleMetadata()
     {
         var commands = PdfCommandRegistry.All;

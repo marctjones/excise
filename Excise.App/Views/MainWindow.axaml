@@ -401,7 +401,7 @@
 
             <!-- REDACTION MENU -->
             <MenuItem Header="_Redaction">
-                <MenuItem Header="_Enable Redaction Mode" Command="{Binding ToggleRedactionModeCommand}" InputGesture="R"
+                <MenuItem Header="_Enable Redaction Mode" Command="{Binding ToggleRedactionModeCommand}"
                           access:CommandAccessibility.CommandId="redaction.toggleMode">
                     <MenuItem.Icon>
                         <TextBlock Text="✓" IsVisible="{Binding IsRedactionMode}"/>
@@ -955,7 +955,7 @@
                             Classes.active="{Binding IsRedactionMode}"
                             IsEnabled="{Binding IsDocumentLoaded}"
                             access:CommandAccessibility.CommandId="redaction.toggleMode"
-                            ToolTip.Tip="Redaction Mode (R)"
+                            ToolTip.Tip="Redaction Mode"
                             AutomationProperties.Name="Redaction Mode"
                             AutomationProperties.HelpText="Toggle redaction mode to mark areas for removal">
                         <StackPanel Orientation="Horizontal" Spacing="6">

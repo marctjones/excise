@@ -157,7 +157,7 @@ internal static class PdfCommandRegistry
         View(PdfCommandIds.ToggleAnnotationPalette, "Floating Annotation Palette",
             "Show or hide a movable floating window with icon buttons for every annotation tool (#1789). Off by default; independent of the annotation toolbar.", null),
 
-        Redaction(PdfCommandIds.ToggleRedactionMode, "Redaction Mode", "Toggle redaction mode.", "R"),
+        Redaction(PdfCommandIds.ToggleRedactionMode, "Redaction Mode", "Toggle redaction mode."),
         Redaction(PdfCommandIds.ApplyRedaction, "Apply Redaction", "Apply the current redaction selection.", "Enter", isDestructive: true, isSecuritySensitive: true),
         Redaction(PdfCommandIds.MarkSelectionForRedaction, "Mark Selection for Redaction", "Mark the selected text as a pending redaction; nothing is removed until it is applied."),
         Redaction(PdfCommandIds.ApplyAllRedactions, "Apply All Redactions", "Apply every pending redaction.", isDestructive: true, isSecuritySensitive: true),

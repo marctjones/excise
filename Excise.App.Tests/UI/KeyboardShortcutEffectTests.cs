@@ -369,9 +369,7 @@ public class KeyboardShortcutEffectTests
     [FixedAvaloniaFact(Timeout = 20000)]
     public async Task CtrlR_RotatesCurrentPageRight()
     {
-        // NOTE: the #827 text says "Ctrl+R (redaction mode)", but the code is the
-        // authority: Ctrl+R = rotate RIGHT; plain R = redaction mode (already
-        // effect-tested by KeyboardShortcutTests.R_ToggleRedactionMode).
+        // Ctrl+R rotates RIGHT. Bare R is ordinary input, not a mode shortcut (#1976).
         var path = Temp("rotr_effect.pdf");
         TestPdfGenerator.CreateMultiPagePdf(path, pageCount: 1);
 

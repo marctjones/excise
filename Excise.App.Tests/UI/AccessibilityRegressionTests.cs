@@ -241,9 +241,13 @@ public class AccessibilityRegressionTests
             vm.IsTextSelectionMode.Should().Be(!selectionBeforeT,
                 "T should toggle text selection without a mouse");
 
-            await window.PressKeyAsync(global::Avalonia.Input.Key.R);
+            // Mode buttons remain keyboard-accessible without bare-letter accelerators (#1976).
+            var redactionButton = FindButtonByName(window, "Redaction Mode");
+            redactionButton.Should().NotBeNull();
+            redactionButton!.Focus();
+            await window.PressKeyAsync(global::Avalonia.Input.Key.Space);
             await KeyboardTestHelpers.FlushDispatcherAsync();
-            vm.IsRedactionMode.Should().BeTrue("R should toggle redaction mode without a mouse");
+            vm.IsRedactionMode.Should().BeTrue("the focused Redact button should activate without a mouse");
         }
         finally
         {

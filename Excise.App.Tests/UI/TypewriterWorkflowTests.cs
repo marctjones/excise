@@ -8,6 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using AwesomeAssertions;
 using Excise.Avalonia.Controls;
 using Excise.Core.Document;
@@ -23,6 +24,42 @@ namespace Excise.App.Tests.UI;
 [Collection("AvaloniaTests")]
 public class TypewriterWorkflowTests
 {
+    [FixedAvaloniaFact]
+    public async Task TypingR_KeepsTypewriterEditorFocusedAndPreservesCompleteText()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "Excise.AppTypewriterTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        var sourcePath = Path.Combine(tempDir, "source.pdf");
+        TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Original text");
+        var vm = MainWindowViewModelTestFactory.Create();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        try
+        {
+            await vm.LoadDocumentAsync(sourcePath);
+            await vm.ToggleTypewriterModeCommand.Execute();
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+            await SinglePageViewerWaits.WaitForSinglePageLaidOutAsync(window, viewer);
+            vm.OnTypewriterTextCreated(new PdfRectangle(72, 620, 300, 660), 1);
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+            var editor = viewer.SinglePagePart.TypewriterLayer.GetVisualDescendants().OfType<TextBox>().Single();
+            editor.Focus();
+            await window.TypeTextAsync("EXCISE QA typew");
+            // TextInput alone bypasses shortcut routing: exercise the real key-down first (#1976).
+            await window.PressKeyAsync(Key.R);
+            vm.IsTypewriterMode.Should().BeTrue();
+            vm.IsRedactionMode.Should().BeFalse();
+            window.FocusManager!.GetFocusedElement().Should().BeSameAs(editor);
+            await window.TypeTextAsync("riter 3.16.0");
+            editor.Text.Should().Be("EXCISE QA typewriter 3.16.0");
+            vm.TypewriterTextOperations.Single().Text.Should().Be(editor.Text);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+
     [FixedAvaloniaFact]
     public async Task SaveFileAsAsync_FlattensPendingTypewriterTextIntoSavedPdf()
     {

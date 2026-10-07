@@ -51,7 +51,8 @@ internal static class WindowShortcutResolver
     private const KeyModifiers Unmodified = Control | Shift | KeyModifiers.Alt;
 
     // Ordered legacy precedence. Required/forbidden masks intentionally allow extra modifiers:
-    // e.g. Ctrl+Alt+O opens, Meta+R toggles, but Ctrl+Shift+O toggles the outline (#369).
+    // e.g. Ctrl+Alt+O opens, but Ctrl+Shift+O toggles the outline (#369).
+    // Bare R no longer changes mode: it interrupted text input (#1976).
     // This is not a replacement for menu InputGesture/interaction-registry authority.
     private static readonly Binding[] Bindings =
     [
@@ -72,7 +73,6 @@ internal static class WindowShortcutResolver
         new(Key.Enter, 0, Unmodified, WindowShortcut.ApplyRedaction, Guard.ApplyRedaction),
         new(Key.Return, 0, Unmodified, WindowShortcut.ApplyRedaction, Guard.ApplyRedaction),
         new(Key.L, Control, 0, WindowShortcut.RotatePageLeft),
-        new(Key.R, 0, Unmodified, WindowShortcut.ToggleRedactionMode),
         new(Key.R, Control, 0, WindowShortcut.RotatePageRight),
         new(Key.D0, Control, 0, WindowShortcut.ZoomActualSize),
         new(Key.D1, Control, 0, WindowShortcut.ZoomFitWidth),
