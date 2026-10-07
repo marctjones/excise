@@ -155,10 +155,11 @@ public class MidTierCoverageTests
         page.Rotation = -90;
         page.Rotation.Should().Be(270);
 
-        // Set rotation to 0 should remove the Rotate key
+        // Explicit zero must override inherited rotation (#1981).
         page.Rotation = 0;
         page.Rotation.Should().Be(0);
-        page.Dictionary.ContainsKey("Rotate").Should().BeFalse();
+        page.Dictionary.ContainsKey("Rotate").Should().BeTrue();
+        page.Dictionary.GetInt("Rotate").Should().Be(0);
     }
 
     /// <summary>

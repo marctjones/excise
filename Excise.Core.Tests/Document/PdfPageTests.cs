@@ -498,7 +498,7 @@ public class PdfPageTests
     }
 
     [Fact]
-    public void Rotation_SetZeroAfterRotation_RemovesEntry()
+    public void Rotation_SetZeroAfterRotation_WritesExplicitZero()
     {
         var pdfData = CreateMinimalPdf();
         using var doc = PdfDocument.Open(pdfData);
@@ -507,7 +507,8 @@ public class PdfPageTests
         page.Rotation = 90;
         page.Rotation = 0;
 
-        page.Dictionary.ContainsKey("Rotate").Should().BeFalse();
+        // See #1981: an explicit zero is necessary when rotation is inherited.
+        page.Dictionary.GetInt("Rotate").Should().Be(0);
     }
 
     [Fact]
