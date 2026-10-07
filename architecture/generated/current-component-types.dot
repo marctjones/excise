@@ -24,7 +24,7 @@ digraph excise_architecture {
   subgraph cluster_foundation {
     label="foundation";
     color="#cbd5e1";
-    "core" [label="Excise.Core project\nimplemented\n885 retained symbols", fillcolor="#d8f3dc"];
+    "core" [label="Excise.Core project\nimplemented\n886 retained symbols", fillcolor="#d8f3dc"];
     "core-encryption" [label="Encryption contracts, permissions, and standard security handler\nimplemented\n46 retained symbols", fillcolor="#d8f3dc"];
     "core-parsing" [label="Parser, xref, filters, and hostile-input boundary\nimplemented\n571 retained symbols", fillcolor="#d8f3dc"];
     "core-primitives" [label="PDF primitives and object graph\nimplemented\n169 retained symbols", fillcolor="#d8f3dc"];
@@ -65,7 +65,7 @@ digraph excise_architecture {
   "cli" -> "core-writing" [label="34 refs / 9 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "ocr" [label="77 refs / 28 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "rendering" [label="27 refs / 7 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core" -> "core-document" [label="229 refs / 46 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core" -> "core-document" [label="231 refs / 47 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core" -> "core-fonts" [label="46 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core" -> "core-parsing" [label="2 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core" -> "core-primitives" [label="322 refs / 81 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
@@ -75,7 +75,7 @@ digraph excise_architecture {
   "core-content" -> "core-fonts" [label="66 refs / 17 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-content" -> "core-parsing" [label="6 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-content" -> "core-primitives" [label="324 refs / 45 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-document" -> "core" [label="116 refs / 29 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-document" -> "core" [label="121 refs / 30 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core-content" [label="7 refs / 2 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
   "core-document" -> "core-encryption" [label="26 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core-parsing" [label="85 refs / 16 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];

@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1533,
-  "indexedContentSha256": "0539556c605d1eaa961ab1a7e11266b1f3560e99d89d89273c79ad528f717446",
+  "indexedContentSha256": "0a1d6ec74ce0031b388515933a5ae610e70ae7041b9fb22f84d986d3dc458cc2",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -7820,6 +7820,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Graphics/TextWrapper.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "line",
+            "painting",
+            "pdfgraphics"
+          ]
+        },
+        {
           "path": "Excise.Core/Operations/PdfDocumentSplitter.cs",
           "kind": "source",
           "matchedTerms": [
@@ -8133,18 +8142,9 @@
             "construction",
             "line"
           ]
-        },
-        {
-          "path": "Excise.Core/Writing/PdfDocumentOptimizer.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "line",
-            "path",
-            "colorspace"
-          ]
         }
       ],
-      "candidateReferenceCount": 714
+      "candidateReferenceCount": 716
     },
     {
       "id": "pdf.17.graphics.color",
@@ -66352,7 +66352,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 202
+      "candidateReferenceCount": 203
     },
     {
       "id": "pdf.17.interactive.optional-content",
