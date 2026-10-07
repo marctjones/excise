@@ -757,10 +757,9 @@ public class PdfGraphics : IDisposable
         double y = bounds.Top;            // top of the text box (PDF coords)
         double used = 0;
         int drawn = 0;
-        foreach (var line in lines)
+        int fittingLines = TextWrapper.CountLinesThatFit(lines.Count, bounds, lineHeight);
+        foreach (var line in lines.Take(fittingLines))
         {
-            if (y - lineHeight < bounds.Bottom)
-                break;                    // no vertical room for another line
             double baseline = y - font.Ascender;
             DrawString(line, font, brush, x, baseline, alignment);
             y -= lineHeight;

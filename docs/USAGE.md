@@ -20,6 +20,10 @@ Multiple areas across multiple pages can be marked and applied as a single batch
 3. Type, move, resize, or delete the pending box before saving.
 4. Save to flatten the text into the PDF page content. When the open file is still the original, excise routes the save through **Save a Copy** so the original is preserved.
 
+If text does not fit its box, saving is refused and the pending text is retained.
+Enlarge the box with its resize grip or reduce the font size, then save again.
+Undo/Redo reverses pending edits; saving commits the text and clears edit history.
+
 ## Combine documents
 
 Choose **Document → Combine Documents…**, select the source PDFs, and choose an output file.

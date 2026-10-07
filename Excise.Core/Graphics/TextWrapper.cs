@@ -1,3 +1,5 @@
+using Excise.Core.Document;
+
 namespace Excise.Core.Graphics;
 
 /// <summary>
@@ -7,6 +9,22 @@ namespace Excise.Core.Graphics;
 /// </summary>
 internal static class TextWrapper
 {
+    // #1978: preflight and painting must use the same vertical-room calculation,
+    // including the page-coordinate subtraction at exact floating-point boundaries.
+    internal static int CountLinesThatFit(int lineCount, PdfRectangle bounds, double lineHeight)
+    {
+        var y = bounds.Top;
+        var count = 0;
+        while (count < lineCount)
+        {
+            if (y - lineHeight < bounds.Bottom)
+                break;
+            count++;
+            y -= lineHeight;
+        }
+        return count;
+    }
+
     /// <summary>
     /// Wrap <paramref name="text"/> to <paramref name="maxWidth"/> points. Hard
     /// line breaks (<c>\n</c>, <c>\r\n</c>) are preserved; a single word wider

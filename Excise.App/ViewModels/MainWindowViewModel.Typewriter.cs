@@ -95,7 +95,10 @@ internal partial class MainWindowViewModel
 
     public void OnTypewriterTextEdited(Guid operationId, string text, int pageNumber)
     {
-        if (IndexOfTypewriterOperation(operationId) < 0)
+        var operationIndex = IndexOfTypewriterOperation(operationId);
+        // #1979: restoring a box queues TextChanged after history replay ends.
+        // Rehydrating unchanged text is not an edit and must not erase Redo.
+        if (operationIndex < 0 || TypewriterTextOperations[operationIndex].Text == text)
             return;
 
         RecordTypewriterEdit("Edit text", () =>

@@ -25,6 +25,110 @@ namespace Excise.App.Tests.UI;
 public class TypewriterWorkflowTests
 {
     [FixedAvaloniaFact]
+    public async Task TypewriterUndo_RedrawDoesNotRecordAnotherEditOrEraseRedo()
+    {
+        var (sourcePath, _, _) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Original text");
+        var vm = MainWindowViewModelTestFactory.Create();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        try
+        {
+            await vm.LoadDocumentAsync(sourcePath);
+            await vm.ToggleTypewriterModeCommand.Execute();
+            var viewer = window.FindControl<PdfViewerControl>("PdfViewerControl")!;
+            await SinglePageViewerWaits.WaitForSinglePageLaidOutAsync(window, viewer);
+            vm.OnTypewriterTextCreated(new PdfRectangle(72, 620, 300, 660), 1);
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+            var editor = viewer.SinglePagePart.TypewriterLayer.GetVisualDescendants().OfType<TextBox>().Single();
+            editor.Focus();
+            await window.TypeTextAsync("BEFORE");
+            await window.TypeTextAsync("AFTER");
+
+            // Native menu actions invoke the document command directly, bypassing window-key guards (#1977).
+            await vm.UndoCommand.Execute();
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+            vm.TypewriterTextOperations.Single().Text.Should().Be("BEFORE");
+            vm.CanRedo.Should().BeTrue("rehydrating the editor must not push a new edit");
+            for (var replay = 0; replay < 3; replay++)
+            {
+                await vm.RedoCommand.Execute();
+                await KeyboardTestHelpers.FlushDispatcherAsync();
+                vm.TypewriterTextOperations.Single().Text.Should().Be("BEFOREAFTER");
+                viewer.SinglePagePart.TypewriterLayer.GetVisualDescendants().OfType<TextBox>().Single()
+                    .Text.Should().Be("BEFOREAFTER");
+                await vm.UndoCommand.Execute();
+                await KeyboardTestHelpers.FlushDispatcherAsync();
+                vm.TypewriterTextOperations.Single().Text.Should().Be("BEFORE");
+                vm.CanRedo.Should().BeTrue();
+            }
+        }
+        finally { window.Close(); }
+    }
+
+    [FixedAvaloniaFact]
+    public async Task SaveFileAsAsync_OverflowKeepsPendingEditsAndDoesNotWriteOutput()
+    {
+        var (sourcePath, outputPath, _) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "Original text");
+        var toast = new Excise.App.Services.ToastService();
+        string? details = null;
+        toast.ToastRequested += (_, e) => details = e.Details;
+        var vm = MainWindowViewModelTestFactory.Create(toastService: toast);
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        try
+        {
+            await vm.LoadDocumentAsync(sourcePath);
+            vm.OnTypewriterTextCreated(new PdfRectangle(72, 620, 300, 635), 1);
+            var id = vm.TypewriterTextOperations.Single().Id;
+            const string marker = "FIRSTLINE\nLASTLINE";
+            vm.OnTypewriterTextEdited(id, marker, 1);
+
+            await vm.SaveFileAsAsync(outputPath);
+
+            File.Exists(outputPath).Should().BeFalse("an overflowing save must fail before writing");
+            vm.TypewriterTextOperations.Single().Text.Should().Be(marker);
+            vm.HasPendingTypewriterEdits.Should().BeTrue();
+            vm.CanUndo.Should().BeTrue("failed saves must retain edit history");
+            details.Should().Contain("page 1").And.Contain("resize");
+        }
+        finally { window.Close(); }
+    }
+
+    [FixedAvaloniaFact]
+    public async Task SaveFileAsAsync_OverflowPreservesExistingOutput_ThenResizeSavesAllText()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+        Assert.SkipUnless(PdftotextTextExtractor.IsAvailable, "pdftotext not installed");
+        var (sourcePath, outputPath, _) = MakePaths();
+        TestPdfGenerator.CreateSimpleTextPdf(sourcePath, "PREEXISTING1978");
+        TestPdfGenerator.CreateSimpleTextPdf(outputPath, "DONOTOVERWRITE1978");
+        var before = File.ReadAllBytes(outputPath);
+        var vm = MainWindowViewModelTestFactory.Create();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+        try
+        {
+            await vm.LoadDocumentAsync(sourcePath);
+            vm.OnTypewriterTextCreated(new PdfRectangle(72, 620, 212, 635), 1);
+            var id = vm.TypewriterTextOperations.Single().Id;
+            const string marker = "EXCISE QA typewriter 3.16.0 r t R T";
+            vm.OnTypewriterTextEdited(id, marker, 1);
+            await vm.SaveFileAsAsync(outputPath);
+            File.ReadAllBytes(outputPath).Should().Equal(before);
+            vm.TypewriterTextOperations.Single().Text.Should().Be(marker);
+
+            vm.OnTypewriterTextBoundsChanged(id, new PdfRectangle(72, 600, 400, 660), 1);
+            await vm.SaveFileAsAsync(outputPath);
+            vm.TypewriterTextOperations.Should().BeEmpty();
+            foreach (var text in new[] { MutoolTextExtractor.ExtractPage(outputPath, 1), PdftotextTextExtractor.ExtractPage(outputPath, 1) })
+                text.Should().NotBeNull().And.Contain(marker).And.Contain("PREEXISTING1978");
+        }
+        finally { window.Close(); }
+    }
+
+    [FixedAvaloniaFact]
     public async Task TypingR_KeepsTypewriterEditorFocusedAndPreservesCompleteText()
     {
         var tempDir = Path.Combine(Path.GetTempPath(), "Excise.AppTypewriterTests", Guid.NewGuid().ToString("N"));

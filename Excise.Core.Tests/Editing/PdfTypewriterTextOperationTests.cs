@@ -8,6 +8,43 @@ namespace Excise.Core.Tests.Editing;
 
 public class PdfTypewriterTextOperationTests
 {
+    // #1978: preflight every box before drawing anything; saving is not permission to drop text.
+    [Theory]
+    [InlineData("EXCISE QA typewriter 3.16.0 r t R T", 140, 15)]
+    [InlineData("FIRSTLINE\nLASTLINE", 220, 15)]
+    [InlineData("ONE", 220, 1)]
+    public void Apply_OverflowIsRefusedBeforeAnyEditIsDrawn(string text, double width, double height)
+    {
+        using var document = PdfDocument.CreateNew();
+        document.Pages.AddBlank(300, 400);
+        document.Pages.AddBlank(300, 400);
+        var fine = PdfTypewriterTextOperation.Create(1, new PdfRectangle(40, 250, 260, 290), "KEEPME");
+        var overflow = PdfTypewriterTextOperation.Create(2, new PdfRectangle(40, 100, 40 + width, 100 + height), text);
+        var before = document.GetPages().Select(page => page.Dictionary.ToString()).ToArray();
+
+        var apply = () => PdfTypewriterTextApplier.Apply(document, new[] { fine, overflow });
+
+        apply.Should().Throw<ArgumentException>().WithMessage("*page 2*resize*");
+        document.GetPages().Select(page => page.Dictionary.ToString()).Should().Equal(before,
+            "refusal must leave every page dictionary and its resources untouched (save IDs are not stable)");
+        document.GetPages().Select(page => page.Text).Should().OnlyContain(text => text.Length == 0);
+        fine.IsPending.Should().BeTrue();
+        overflow.IsPending.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Apply_ResizedBoxPreservesTheCompleteMarker()
+    {
+        using var document = PdfDocument.CreateNew();
+        document.Pages.AddBlank(400, 500);
+        const string marker = "EXCISE QA typewriter 3.16.0 r t R T";
+        var operation = PdfTypewriterTextOperation.Create(1, new PdfRectangle(40, 250, 360, 290), marker);
+
+        PdfTypewriterTextApplier.Apply(document, operation).IsPending.Should().BeFalse();
+        using var reopened = PdfDocument.Open(document.SaveToBytes());
+        reopened.GetPage(1).Text.Should().Contain(marker);
+    }
+
     [Fact]
     public void Create_StoresTextBoundsStyleAndPendingState()
     {
