@@ -6,7 +6,7 @@ digraph excise_architecture {
   subgraph cluster_delivery {
     label="delivery";
     color="#cbd5e1";
-    "app" [label="Excise.App project\npartial\n1270 retained symbols", fillcolor="#fff3bf"];
+    "app" [label="Excise.App project\npartial\n1273 retained symbols", fillcolor="#fff3bf"];
     "cli" [label="Excise.Cli project\npartial\n469 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_engine {
@@ -48,7 +48,7 @@ digraph excise_architecture {
     "verification" [label="Repository verification system\npartial\n0 retained symbols", fillcolor="#fff3bf"];
   }
   "app" -> "app-main-window" [label="465 refs / 29 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "app-main-window" -> "app" [label="746 refs / 78 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "app-main-window" -> "app" [label="748 refs / 79 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "core" [label="7 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "core-document" [label="501 refs / 60 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "core-primitives" [label="11 refs / 3 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];

@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "fe3cf895f2dac35e2e07901bde2e4d9abd884717",
+  "sourceRevision": "dc3d08cfba8a35aeaaad1d1346565c3191513c72",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8431,
+    "retainedSymbols": 8434,
     "observedComponentDependencies": 83,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -38,8 +38,8 @@
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 746,
-      "typeDependencyCount": 78,
+      "references": 748,
+      "typeDependencyCount": 79,
       "classification": "declared",
       "evidence": [
         {

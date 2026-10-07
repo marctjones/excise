@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "79c680e5472eee3d2327c6a647cbe081d6110c93777dc1c1a778ee1c9e0a3b2c",
+  "sourceFingerprint": "4a2b35e492d9ea0964044062ffdd4596b1def99b7dd7bbf3b267c30baedb5c81",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -8651,6 +8651,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/Services/Input/CommandShortcutPolicy.cs",
+      "path": "Excise.App/Services/Input/CommandShortcutPolicy.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/Services/Input/WindowShortcutResolver.cs",
       "path": "Excise.App/Services/Input/WindowShortcutResolver.cs",
       "kind": "source-file",
@@ -11633,7 +11643,7 @@
     }
   ],
   "summary": {
-    "records": 585,
+    "records": 586,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 20,
@@ -11641,7 +11651,7 @@
       "fonts": 34,
       "forms": 11,
       "images": 40,
-      "product-integration-general": 333,
+      "product-integration-general": 334,
       "redaction": 82,
       "safe-save-and-metadata": 20,
       "security-and-encryption": 24,
@@ -11720,7 +11730,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 24,
       "pdfe.product.security.signature-and-permission-warning:write": 24
     },
-    "fallbackRecords": 333,
+    "fallbackRecords": 334,
     "allRecordsMapped": true
   }
 }

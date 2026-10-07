@@ -93435,6 +93435,13 @@
       "currentState": "partial",
       "testCandidates": [
         {
+          "test": "Excise.Core.Tests/Automation/PdfCommandRegistryTests.cs::PdfCommandRegistryTests.RedactionMode_HasNoBareLetterShortcut",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -94728,13 +94735,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.SMask_NearlyAllZero_IsNotYetDetected",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.ImageDrawnAtZeroAlpha_IsNotYetDetected",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -94777,6 +94777,13 @@
       "currentState": "partial",
       "testCandidates": [
         {
+          "test": "Excise.Core.Tests/Automation/PdfCommandRegistryTests.cs::PdfCommandRegistryTests.RedactionMode_HasNoBareLetterShortcut",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -96070,13 +96077,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.SMask_NearlyAllZero_IsNotYetDetected",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.ImageDrawnAtZeroAlpha_IsNotYetDetected",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96133,6 +96133,13 @@
       "currentState": "partial",
       "testCandidates": [
         {
+          "test": "Excise.Core.Tests/Automation/PdfCommandRegistryTests.cs::PdfCommandRegistryTests.RedactionMode_HasNoBareLetterShortcut",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97426,13 +97433,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.SMask_NearlyAllZero_IsNotYetDetected",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.ImageDrawnAtZeroAlpha_IsNotYetDetected",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97515,6 +97515,13 @@
       "currentState": "implemented",
       "testCandidates": [
         {
+          "test": "Excise.Core.Tests/Automation/PdfCommandRegistryTests.cs::PdfCommandRegistryTests.RedactionMode_HasNoBareLetterShortcut",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs::ContentStreamParserMetadataModeTests.DefaultMode_ComputesMetadata_RedactionContractUnchanged",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98808,13 +98815,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.SMask_NearlyAllZero_IsNotYetDetected",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeFixturesHardTests.cs::FailureModeFixturesHardTests.ImageDrawnAtZeroAlpha_IsNotYetDetected",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112674,8 +112674,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 8277,
-    "testMethodsWithCapabilityCandidate": 5374,
+    "testMethods": 8285,
+    "testMethodsWithCapabilityCandidate": 5376,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
