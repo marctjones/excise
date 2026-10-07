@@ -97,7 +97,7 @@ required_commands = [
 for command in required_commands:
     require(main, f'CommandId="{command}"', MAIN,
             "part of the audited toolbar/menu surface")
-for tip in ('ToolTip.Tip="Open PDF (Ctrl+O)"', 'ToolTip.Tip="Redaction Mode (R)"',
+for tip in ('ToolTip.Tip="Open PDF (Ctrl+O)"', 'ToolTip.Tip="Redaction Mode"',
             'ToolTip.Tip="Form Authoring Mode', 'ToolTip.Tip="Find Text (Ctrl+F)"'):
     require(main, tip, MAIN, "primary toolbar tooltip")
 

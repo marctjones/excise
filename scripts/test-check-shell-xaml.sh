@@ -29,7 +29,7 @@ write_main() { # write_main <repo> [extra-line]
   {
     echo '<Window>'
     echo '  <Button ToolTip.Tip="Open PDF (Ctrl+O)"><PathIcon Classes="toolbar-icon" Data="{StaticResource IconFolderOpen}" /></Button>'
-    echo '  <Button ToolTip.Tip="Redaction Mode (R)"><PathIcon Classes="toolbar-icon"'
+    echo '  <Button ToolTip.Tip="Redaction Mode"><PathIcon Classes="toolbar-icon"'
     echo '      Data="{StaticResource IconRedact}" /></Button>'
     echo '  <Button ToolTip.Tip="Form Authoring Mode (F)" />'
     echo '  <Button ToolTip.Tip="Find Text (Ctrl+F)" />'

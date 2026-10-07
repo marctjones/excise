@@ -4,13 +4,13 @@
   "description": "Every interaction a person can perform on the excise GUI: menu items, keyboard shortcuts, toolbar buttons and viewer mouse gestures, joined to the command id each invokes. Generated from Excise.App/Views/MainWindow.axaml and the viewer control; regenerate with scripts/check-gui-interaction-registry.sh.",
   "whyThisExists": "A command with no menu item, shortcut or button is unreachable, and a control with no command id cannot be driven by automation. Both have shipped — #1308's Sign Document was implemented, tested, and reachable from no production code. This is also the input to the AppleScript terminology (#1281) and the GUI workflow suite, so a control added to the XAML joins the scriptable surface and the test matrix automatically.",
   "generatedBy": "scripts/build-gui-interaction-registry.py",
-  "sourceRevision": "14ba61cd26f4b97aee85d57022371631eb25849c",
+  "sourceRevision": "31bce03a20b1ef9282377609a8505a92f3a373af",
   "summary": {
     "interactions": 214,
     "menuItems": 128,
     "buttons": 77,
     "mouseGestures": 9,
-    "keyboardShortcuts": 30,
+    "keyboardShortcuts": 28,
     "declaredCommandIds": 130,
     "commandIdsReachableFromTheGui": 116,
     "commandIdsWithNoGuiPath": 5,
@@ -302,7 +302,7 @@
     {
       "kind": "button",
       "path": "",
-      "label": "Redaction Mode (R)",
+      "label": "Redaction Mode",
       "command": "ToggleRedactionModeCommand",
       "commandParameter": null,
       "shortcut": null,
@@ -365,7 +365,7 @@
     {
       "kind": "button",
       "path": "",
-      "label": "Text Selection Mode (T)",
+      "label": "Text Selection Mode",
       "command": "ToggleTextSelectionModeCommand",
       "commandParameter": null,
       "shortcut": null,
@@ -1340,7 +1340,7 @@
       "label": "Select Text Mode",
       "command": "ToggleTextSelectionModeCommand",
       "commandParameter": null,
-      "shortcut": "T",
+      "shortcut": null,
       "commandId": "edit.selectTextMode"
     },
     {
@@ -1583,7 +1583,7 @@
       "label": "Enable Redaction Mode",
       "command": "ToggleRedactionModeCommand",
       "commandParameter": null,
-      "shortcut": "R",
+      "shortcut": null,
       "commandId": "redaction.toggleMode"
     },
     {
@@ -2084,19 +2084,9 @@
       "commandId": "search.next"
     },
     {
-      "shortcut": "R",
-      "path": "Redaction > Enable Redaction Mode",
-      "commandId": "redaction.toggleMode"
-    },
-    {
       "shortcut": "Shift+F3",
       "path": "Edit > Find Previous",
       "commandId": "search.previous"
-    },
-    {
-      "shortcut": "T",
-      "path": "Edit > Select Text Mode",
-      "commandId": "edit.selectTextMode"
     }
   ],
   "duplicateShortcuts": {},
