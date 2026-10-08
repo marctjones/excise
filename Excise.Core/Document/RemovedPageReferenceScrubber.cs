@@ -29,7 +29,8 @@ namespace Excise.Core.Document;
 /// nowhere a reader shows. An annotation a kept page also lists stays.</para>
 /// <para>The walk does not descend into what it cuts, so an object the removed
 /// page shares with a kept page is untouched and stays in the file through the
-/// kept page.</para>
+/// kept page. A structure element of the removed page loses its <c>/Pg</c> but
+/// stays in the structure tree with its own <c>/ActualText</c> (see issue #2014).</para>
 /// <para>Each indirect object an edit lands in is re-registered with
 /// <see cref="PdfDocument.ReplaceIndirectObject"/>: an edit inside an array
 /// nested in a parsed dictionary does not clear that dictionary's pristine

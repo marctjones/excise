@@ -52,10 +52,15 @@ internal static class RemovedPageFixtures
     /// source. <paramref name="pageThreeSharesFont"/> makes page 3 use page 2's
     /// font too; <paramref name="widgetOnPageOneToo"/> gives the
     /// <see cref="RemovedPageBackReference.AcroFormFieldKids"/> field a second
-    /// widget on page 1.
+    /// widget on page 1; <paramref name="nestPagesTwoAndThree"/> puts pages 2
+    /// and 3 under an intermediate <c>/Pages</c> node.
     /// </summary>
     public static byte[] Build(
-        RemovedPageBackReference back, string version, bool pageThreeSharesFont = false, bool widgetOnPageOneToo = false)
+        RemovedPageBackReference back,
+        string version,
+        bool pageThreeSharesFont = false,
+        bool widgetOnPageOneToo = false,
+        bool nestPagesTwoAndThree = false)
     {
         // 1 catalog, 2 pages, 3/4/5 pages, 6/7/8 contents, 9 shared font,
         // 10 page-2 font, 11 page-2 image, 12 page-2 annotation, 13+ extras.
@@ -134,6 +139,15 @@ internal static class RemovedPageFixtures
             $"<< /Type /Annot /Subtype /Text /Rect [72 650 92 670] /Contents ({AnnotText}) /P {p2} >>",
         };
         objs.AddRange(extras);
+        if (nestPagesTwoAndThree)
+        {
+            // Pages 2 and 3 under an intermediate /Pages node, the last object.
+            var node = objs.Count + 1;
+            objs[1] = $"<< /Type /Pages /Kids [3 0 R {node} 0 R] /Count 3 >>";
+            objs[3] = objs[3].Replace("/Parent 2 0 R", $"/Parent {node} 0 R");
+            objs[4] = objs[4].Replace("/Parent 2 0 R", $"/Parent {node} 0 R");
+            objs.Add("<< /Type /Pages /Parent 2 0 R /Kids [4 0 R 5 0 R] /Count 2 >>");
+        }
         return Assemble(objs, version);
     }
 

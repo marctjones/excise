@@ -107,6 +107,56 @@ public sealed class RemovedPageLeakOracleTests : IDisposable
         AssertValidWithPages(saved, 2, "field kept");
     }
 
+    [Theory]
+    [InlineData(Back.Outline)]
+    [InlineData(Back.AcroFormFieldKids)]
+    public void EncryptedSource_RemovePage_ThenSaveReEncrypted_RemovedPageIsNotInTheFile(Back back)
+    {
+        // The cut resolves objects of an encrypted document inside the save: qpdf
+        // encrypts the source (AES-128, R4), excise opens it with the password,
+        // removes the page and saves re-encrypted; qpdf decrypts the result.
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf is the independent oracle here (brew install qpdf)");
+        var encryptedSource = Path.Combine(_dir, Guid.NewGuid().ToString("N") + ".pdf");
+        QpdfReferenceTool.EncryptR4(Write(F.Build(back, "1.7")), encryptedSource, Password, Password)
+            .Should().BeTrue("qpdf must encrypt the fixture");
+
+        byte[] saved;
+        using (var doc = PdfDocument.Open(File.ReadAllBytes(encryptedSource), new PdfOpenOptions { UserPassword = Password }))
+        {
+            doc.Pages.RemoveAt(1);
+            var reEncrypt = doc.GetReEncryptionOptions(Password);
+            reEncrypt.Should().NotBeNull("an encrypted source saves encrypted");
+            saved = doc.SaveToBytes(reEncrypt);
+        }
+
+        QpdfReferenceTool.IsEncrypted(Write(saved)).Should().BeTrue("the round trip keeps the file encrypted");
+        var plain = Decrypt(saved);
+        AssertAbsent(plain, $"encrypted source/{back}", F.RemovedTokens(back));
+        AssertValidWithPages(plain, 2, $"encrypted source/{back}");
+    }
+
+    [Fact]
+    public void NestedPageTree_RemovePage_RemovedPageIsNotInTheFile()
+    {
+        // RemoveAt flattens a nested tree first (EnsureFlatKids); the page an
+        // outline points at sits under an intermediate /Pages node.
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf is the independent oracle here (brew install qpdf)");
+        var source = F.Build(Back.Outline, "1.4", nestPagesTwoAndThree: true);
+        var sourceFile = Write(source);
+        QpdfReferenceTool.Check(sourceFile)!.Value.Success.Should().BeTrue("the nested fixture must be valid");
+        QpdfReferenceTool.PageCount(sourceFile).Should().Be(3, "the nested fixture has three pages");
+
+        byte[] saved;
+        using (var doc = PdfDocument.Open(source))
+        {
+            doc.Pages.RemoveAt(1);
+            saved = doc.SaveToBytes();
+        }
+
+        AssertAbsent(saved, "nested tree", F.RemovedTokens(Back.Outline));
+        AssertValidWithPages(saved, 2, "nested tree");
+    }
+
     // ── Oracles ─────────────────────────────────────────────────────────
 
     private string Write(byte[] bytes)
