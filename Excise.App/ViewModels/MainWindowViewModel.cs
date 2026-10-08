@@ -927,9 +927,19 @@ internal partial class MainWindowViewModel : ViewModelBase
         set
         {
             this.RaiseAndSetIfChanged(ref _currentTextSelectionPageArea, value);
+            // The line rectangles describe the area they arrived with (#2009); a new area
+            // starts without them until the viewer supplies its own.
+            CurrentTextSelectionLineRectangles = Array.Empty<PdfRectangle>();
             this.RaisePropertyChanged(nameof(HasTextSelection));
         }
     }
+
+    /// <summary>
+    /// The current text selection as one content-space rectangle per line run (#2009), set by
+    /// the viewer after <see cref="CurrentTextSelectionPageArea"/>. Empty when the viewer gave
+    /// none, in which case markup falls back to the area's single rectangle.
+    /// </summary>
+    public IReadOnlyList<PdfRectangle> CurrentTextSelectionLineRectangles { get; set; } = Array.Empty<PdfRectangle>();
 
     public string SelectedText
     {

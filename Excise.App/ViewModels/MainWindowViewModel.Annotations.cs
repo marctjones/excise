@@ -74,7 +74,8 @@ internal partial class MainWindowViewModel
                 AnnotationRectKind.Highlight,
                 pageNumber,
                 contentRect,
-                contents),
+                contents,
+                LineRects: CurrentTextSelectionLineRectsFor()),
             "highlight");
     }
 
@@ -126,9 +127,20 @@ internal partial class MainWindowViewModel
         var contents = string.IsNullOrWhiteSpace(SelectedText) ? kind : SelectedText.Trim();
 
         await CommitRectAnnotationAsync(
-            new AnnotationRectRequest(annotationKind, pageNumber, contentRect, contents),
+            new AnnotationRectRequest(
+                annotationKind, pageNumber, contentRect, contents,
+                LineRects: CurrentTextSelectionLineRectsFor()),
             kind.ToLowerInvariant());
     }
+
+    /// <summary>
+    /// The per-line rectangles of the current text selection (#2009), or null when the selection
+    /// is one line or the viewer gave none: the single rectangle then stands for it. Setting
+    /// <see cref="CurrentTextSelectionPageArea"/> drops the lines, so they are never paired with
+    /// another selection's area.
+    /// </summary>
+    private IReadOnlyList<PdfRectangle>? CurrentTextSelectionLineRectsFor()
+        => CurrentTextSelectionLineRectangles.Count >= 2 ? CurrentTextSelectionLineRectangles : null;
 
     public Task AddUnderlineAnnotationFromSelectionAsync() =>
         AddTextMarkupFromSelectionAsync("Underline", AnnotationRectKind.Underline);

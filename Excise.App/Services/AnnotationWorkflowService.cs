@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Excise.Core.Document;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Excise.App.Services;
@@ -159,14 +160,18 @@ internal sealed class AnnotationWorkflowService
             AnnotationRectKind.TextNote => document.AddTextAnnotation(
                 request.PageNumber, request.Rect, request.Value ?? string.Empty,
                 open: request.Open, withPopup: true, popupRect: request.PopupRect),
-            AnnotationRectKind.Highlight => document.AddHighlightAnnotation(
-                request.PageNumber, request.Rect, request.Value ?? string.Empty),
-            AnnotationRectKind.Underline => document.AddUnderlineAnnotation(
-                request.PageNumber, request.Rect, request.Value ?? string.Empty),
-            AnnotationRectKind.StrikeOut => document.AddStrikeOutAnnotation(
-                request.PageNumber, request.Rect, request.Value ?? string.Empty),
-            AnnotationRectKind.Squiggly => document.AddSquigglyAnnotation(
-                request.PageNumber, request.Rect, request.Value ?? string.Empty),
+            AnnotationRectKind.Highlight => request.LineRects is { Count: > 0 } lines
+                ? document.AddHighlightAnnotation(request.PageNumber, lines, request.Value ?? string.Empty)
+                : document.AddHighlightAnnotation(request.PageNumber, request.Rect, request.Value ?? string.Empty),
+            AnnotationRectKind.Underline => request.LineRects is { Count: > 0 } lines
+                ? document.AddUnderlineAnnotation(request.PageNumber, lines, request.Value ?? string.Empty)
+                : document.AddUnderlineAnnotation(request.PageNumber, request.Rect, request.Value ?? string.Empty),
+            AnnotationRectKind.StrikeOut => request.LineRects is { Count: > 0 } lines
+                ? document.AddStrikeOutAnnotation(request.PageNumber, lines, request.Value ?? string.Empty)
+                : document.AddStrikeOutAnnotation(request.PageNumber, request.Rect, request.Value ?? string.Empty),
+            AnnotationRectKind.Squiggly => request.LineRects is { Count: > 0 } lines
+                ? document.AddSquigglyAnnotation(request.PageNumber, lines, request.Value ?? string.Empty)
+                : document.AddSquigglyAnnotation(request.PageNumber, request.Rect, request.Value ?? string.Empty),
             AnnotationRectKind.Square => document.AddSquareAnnotation(
                 request.PageNumber, request.Rect, request.Value),
             AnnotationRectKind.Circle => document.AddCircleAnnotation(
@@ -318,7 +323,10 @@ internal sealed record AnnotationRectRequest(
     // #1797: TextNote only — the linked /Popup's own /Rect (the draggable
     // CARD), independent of Rect (the note's true, never-moving anchor).
     // Null defaults to Rect itself: the popup starts where the note is placed.
-    PdfRectangle? PopupRect = null);
+    PdfRectangle? PopupRect = null,
+    // #2009: Highlight / Underline / StrikeOut / Squiggly only — one rectangle per selected
+    // line run, written as one quad per line. Null means Rect is the single run.
+    IReadOnlyList<PdfRectangle>? LineRects = null);
 
 internal sealed record AnnotationRectResult(
     AnnotationRectRequest Request,

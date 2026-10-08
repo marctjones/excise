@@ -279,6 +279,8 @@ namespace Excise.Avalonia.Controls
     public class TextSelectedEventArgs : System.EventArgs
     {
         public TextSelectedEventArgs(string text, Excise.Core.Document.PdfPageRect? pageArea) { }
+        public TextSelectedEventArgs(string text, Excise.Core.Document.PdfPageRect? pageArea, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfRectangle> lineRectangles) { }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.PdfRectangle> LineRectangles { get; }
         public Excise.Core.Document.PdfPageRect? PageArea { get; }
         public string Text { get; }
     }
