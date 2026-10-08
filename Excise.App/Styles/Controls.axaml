@@ -112,11 +112,6 @@
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
     </Style>
 
-    <Style Selector="StackPanel.dialog-footer">
-        <Setter Property="Orientation" Value="Horizontal"/>
-        <Setter Property="HorizontalAlignment" Value="Right"/>
-        <Setter Property="Spacing" Value="8"/>
-    </Style>
 
     <Style Selector="TextBlock.dialog-title">
         <Setter Property="FontSize" Value="16"/>

@@ -29,7 +29,16 @@ namespace Excise.App.Tests.UI;
 [Collection("AvaloniaTests")]
 public class DialogKeyboardFocusTests
 {
-    public static TheoryData<string> Dialogs() => new() { "Bates", "Security", "MakeSearchable", "ReduceFileSize", "LinuxPrint" };
+    public static TheoryData<string, bool> Dialogs()
+    {
+        var data = new TheoryData<string, bool>();
+        foreach (var dialog in new[] { "Bates", "Security", "MakeSearchable", "ReduceFileSize", "LinuxPrint" })
+        {
+            data.Add(dialog, false); // macOS / Linux footer order
+            data.Add(dialog, true);  // Windows footer order (#1999)
+        }
+        return data;
+    }
 
     private static Window Create(string name) => name switch
     {
@@ -53,8 +62,9 @@ public class DialogKeyboardFocusTests
 
     [FixedAvaloniaTheory]
     [MemberData(nameof(Dialogs))]
-    public async Task TabStops_AreDeclaredControls_InReadingOrder(string dialog)
+    public async Task TabStops_AreDeclaredControls_InReadingOrder(string dialog, bool windowsOrder)
     {
+        Excise.App.Controls.DialogButtonPanel.WindowsOrderOverride = windowsOrder;
         var window = Create(dialog);
         window.RequestedThemeVariant = ThemeVariant.Light;
         window.Styles.Add(new FluentAvaloniaTheme());
@@ -101,6 +111,7 @@ public class DialogKeyboardFocusTests
         }
         finally
         {
+            Excise.App.Controls.DialogButtonPanel.WindowsOrderOverride = null;
             window.Close();
             Application.Current!.Resources.MergedDictionaries.Remove(resources);
         }

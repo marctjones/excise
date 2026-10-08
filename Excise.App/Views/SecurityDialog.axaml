@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Excise.App.ViewModels"
+        xmlns:ctl="using:Excise.App.Controls"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
         x:Class="Excise.App.Views.SecurityDialog"
         x:DataType="vm:SecurityDialogViewModel"
@@ -105,8 +106,8 @@
                 BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,1,0,0"
                 Padding="24,12">
-            <StackPanel Classes="dialog-footer">
-                <Button Content="Remove Protection"
+            <ctl:DialogButtonPanel>
+                <Button ctl:DialogButtonPanel.Role="Extra" Content="Remove Protection"
                         Command="{Binding RemoveProtectionCommand}"
                         IsEnabled="{Binding CanRemove}"
                         IsVisible="{Binding IsEncrypted}"
@@ -114,21 +115,21 @@
                         AutomationProperties.Name="Remove Password Protection"
                         AutomationProperties.HelpText="Explicitly save an unprotected copy of the document. This is the only action that drops encryption; leaving the password fields blank and clicking Apply does not."/>
 
-                <Button Content="{Binding CloseButtonText}"
+                <Button ctl:DialogButtonPanel.Role="Cancel" Content="{Binding CloseButtonText}"
                         Command="{Binding CloseCommand}"
                         IsCancel="True"
                         Classes="modern-button dialog-button"
                         AutomationProperties.Name="Close Security Dialog"
                         AutomationProperties.HelpText="Close this dialog without further changes."/>
 
-                <Button Content="Apply"
+                <Button ctl:DialogButtonPanel.Role="Primary" Content="Apply"
                         Command="{Binding ApplyCommand}"
                         IsEnabled="{Binding CanApply}"
                         Classes="modern-button dialog-button accent"
                         IsDefault="True"
                         AutomationProperties.Name="Apply Security Settings"
                         AutomationProperties.HelpText="Save a copy of the document with the password/algorithm settings above."/>
-            </StackPanel>
+            </ctl:DialogButtonPanel>
         </Border>
     </Grid>
 

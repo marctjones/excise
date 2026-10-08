@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Excise.App.ViewModels"
+        xmlns:ctl="using:Excise.App.Controls"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
         x:Class="Excise.App.Views.MakeSearchableDialog"
         x:DataType="vm:MakeSearchableDialogViewModel"
@@ -93,22 +94,22 @@
                 BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,1,0,0"
                 Padding="24,12">
-            <StackPanel Classes="dialog-footer">
-                <Button Content="{Binding CancelButtonText}"
+            <ctl:DialogButtonPanel>
+                <Button ctl:DialogButtonPanel.Role="Cancel" Content="{Binding CancelButtonText}"
                         Command="{Binding CancelCommand}"
                         IsCancel="True"
                         Classes="modern-button dialog-button"
                         AutomationProperties.Name="Cancel or Close Make Searchable"
                         AutomationProperties.HelpText="Cancel the running OCR pass, or close this dialog."/>
 
-                <Button Content="Start"
+                <Button ctl:DialogButtonPanel.Role="Primary" Content="Start"
                         Command="{Binding StartCommand}"
                         IsEnabled="{Binding CanStart}"
                         Classes="modern-button dialog-button accent"
                         IsDefault="True"
                         AutomationProperties.Name="Start Make Searchable"
                         AutomationProperties.HelpText="Start OCR and write the recognized text back as an invisible, searchable layer."/>
-            </StackPanel>
+            </ctl:DialogButtonPanel>
         </Border>
     </Grid>
 

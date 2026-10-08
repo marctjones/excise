@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Excise.App.ViewModels"
+        xmlns:ctl="using:Excise.App.Controls"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="500"
@@ -335,28 +336,28 @@
                 BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,1,0,0"
                 Padding="24,12">
-            <Grid ColumnDefinitions="Auto,*,Auto">
-                <Button Grid.Column="0"
+            <ctl:DialogButtonPanel>
+                <Button ctl:DialogButtonPanel.Role="Extra"
                         Content="Reset to Defaults"
                         Command="{Binding ResetToDefaultsCommand}"
                         Classes="modern-button dialog-button"
                         AutomationProperties.Name="Reset Preferences to Defaults"
                         AutomationProperties.HelpText="Restore preference values to their defaults."/>
-                <StackPanel Grid.Column="2" Classes="dialog-footer">
-                    <Button Content="Cancel"
-                            Command="{Binding CancelCommand}"
-                            Classes="modern-button dialog-button"
-                            IsCancel="True"
-                            AutomationProperties.Name="Cancel Preferences"
-                            AutomationProperties.HelpText="Close preferences without saving changes."/>
-                    <Button Content="Save"
-                            Command="{Binding SaveCommand}"
-                            Classes="modern-button dialog-button accent"
-                            IsDefault="True"
-                            AutomationProperties.Name="Save Preferences"
-                            AutomationProperties.HelpText="Save preference changes and close this dialog."/>
-                </StackPanel>
-            </Grid>
+                <Button ctl:DialogButtonPanel.Role="Cancel"
+                        Content="Cancel"
+                        Command="{Binding CancelCommand}"
+                        Classes="modern-button dialog-button"
+                        IsCancel="True"
+                        AutomationProperties.Name="Cancel Preferences"
+                        AutomationProperties.HelpText="Close preferences without saving changes."/>
+                <Button ctl:DialogButtonPanel.Role="Primary"
+                        Content="Save"
+                        Command="{Binding SaveCommand}"
+                        Classes="modern-button dialog-button accent"
+                        IsDefault="True"
+                        AutomationProperties.Name="Save Preferences"
+                        AutomationProperties.HelpText="Save preference changes and close this dialog."/>
+            </ctl:DialogButtonPanel>
         </Border>
     </Grid>
 </Window>

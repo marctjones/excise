@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Excise.App.ViewModels"
+        xmlns:ctl="using:Excise.App.Controls"
         x:Class="Excise.App.Views.LinuxPrintDialog"
         x:DataType="vm:LinuxPrintDialogViewModel"
         Title="Print"
@@ -62,16 +63,16 @@
             BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="0,1,0,0"
             Padding="24,12">
-        <StackPanel Classes="dialog-footer">
-            <Button x:Name="LinuxPrintCancelButton" Content="Cancel"
+        <ctl:DialogButtonPanel>
+            <Button ctl:DialogButtonPanel.Role="Cancel" x:Name="LinuxPrintCancelButton" Content="Cancel"
                     Classes="modern-button dialog-button"
                     IsCancel="True" Command="{Binding CancelCommand}"
                     AutomationProperties.Name="Cancel printing"/>
-            <Button x:Name="LinuxPrintConfirmButton" Content="Print"
+            <Button ctl:DialogButtonPanel.Role="Primary" x:Name="LinuxPrintConfirmButton" Content="Print"
                     Classes="modern-button dialog-button accent"
                     IsDefault="True" Command="{Binding PrintCommand}"
                     AutomationProperties.Name="Send the job to the printer"/>
-        </StackPanel>
+        </ctl:DialogButtonPanel>
     </Border>
     </Grid>
 </Window>
