@@ -6,6 +6,28 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Added
+
+- excise follows the system light or dark appearance and switches live; Preferences ▸ Appearance offers Match system (default), Light or Dark. Pages are never recoloured (#2002).
+- Chrome colours, type and icons come from the Skeptical Engineering design system: theme tokens for Light and Dark with every text pairing at 4.5:1 or better, one moss accent with rust reserved for Apply Redaction, and one outline icon family for the toolbar, menus and Annotation Palette (#1992, #1993, #1827).
+- Setting a new open password asks for it twice, and Apply stays disabled until both entries match. "Show passwords" reveals both fields. Encryption behaviour is unchanged (#2001).
+- Field labels are linked to their fields, so clicking a label focuses its field; Windows gets Alt+letter access keys in Bates, Security, Make Searchable and Linux Print (#2005).
+- New gate `check-chrome-color-literals.sh` (t0) fails a hard-coded chrome colour in a view unless it is allowlisted with a reason (#1827).
+
+### Changed
+
+- Preferences applies each change as it is made and again when the window closes, and has Close instead of Save/Cancel. Settings are grouped into General, Performance, Text, Redaction and Printing with one row per setting and details behind a toggle. The redaction leak warning is always visible. On macOS the window is titled Settings (#2000).
+- Dialog footer buttons follow the platform order (Windows: Primary, Cancel; macOS and Linux: Cancel, Primary), and Tab order matches what is shown (#1999).
+- Dialogs share one style: footer band, content-sized inputs, per-platform type scale and label placement, InfoBar for success and failure messages, and no title repeated inside the content on macOS (#1997, #2003, #2004, #2006).
+- Option lists show plain-language labels instead of enum identifiers (for example "AES-256 (recommended)" rather than `Aes256`); settings files and CLI flags are unchanged (#1998).
+
+### Fixed
+
+- Security and Make Searchable no longer paint a dark palette inside the light app, and "Remove Protection" is no longer clipped (#1997).
+- Number boxes are one Tab stop instead of three (#2007).
+- The document tab band switches to dark with the rest of the app (#1827).
+- UX audit captures wait for each window to be ready and render with the app's real styles, so they no longer record blank or "Searching..." frames; the Windows CI job now runs the platform-conditional UI tests and uploads its captures (#1971, #1996, #2003).
+
 ## [3.16.0] - 2026-10-06
 
 ### Added
