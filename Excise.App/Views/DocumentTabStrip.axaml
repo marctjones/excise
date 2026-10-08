@@ -38,37 +38,54 @@
          (#1476): the headless test app loads FluentTheme only, so a
          DynamicResource from Styles/Brushes.axaml resolves to nothing there
          and the appearance this control is judged on could not be asserted.
-         The values are the app palette's (Styles/Brushes.axaml, light): keep them
-         in step with it (#1992). -->
+         The values are the app palette's (Styles/Brushes.axaml, light and dark):
+         keep them in step with it (#1992). -->
     <UserControl.Resources>
-        <SolidColorBrush x:Key="TabStripBandBrush" Color="#EFEFE9"/>
-        <SolidColorBrush x:Key="TabStripBorderBrush" Color="#DCDCD4"/>
-        <SolidColorBrush x:Key="TabSelectedBrush" Color="#F8F8F6"/>
-        <SolidColorBrush x:Key="TabHoverBrush" Color="#E4E4DC"/>
-        <SolidColorBrush x:Key="TabAccentBrush" Color="#4A7C4A"/>
-        <SolidColorBrush x:Key="TabTextBrush" Color="#1C1C1C"/>
-        <SolidColorBrush x:Key="TabTextMutedBrush" Color="#505048"/>
+        <!-- Light and dark, like the app tokens (#2002): a single set left the
+             tab band light in dark mode. -->
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default">
+                    <SolidColorBrush x:Key="TabStripBandBrush" Color="#EFEFE9"/>
+                    <SolidColorBrush x:Key="TabStripBorderBrush" Color="#DCDCD4"/>
+                    <SolidColorBrush x:Key="TabSelectedBrush" Color="#F8F8F6"/>
+                    <SolidColorBrush x:Key="TabHoverBrush" Color="#E4E4DC"/>
+                    <SolidColorBrush x:Key="TabAccentBrush" Color="#4A7C4A"/>
+                    <SolidColorBrush x:Key="TabTextBrush" Color="#1C1C1C"/>
+                    <SolidColorBrush x:Key="TabTextMutedBrush" Color="#505048"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="TabStripBandBrush" Color="#242422"/>
+                    <SolidColorBrush x:Key="TabStripBorderBrush" Color="#3A3A36"/>
+                    <SolidColorBrush x:Key="TabSelectedBrush" Color="#1C1C1C"/>
+                    <SolidColorBrush x:Key="TabHoverBrush" Color="#2A2A27"/>
+                    <SolidColorBrush x:Key="TabAccentBrush" Color="#4A7C4A"/>
+                    <SolidColorBrush x:Key="TabTextBrush" Color="#E0E0D8"/>
+                    <SolidColorBrush x:Key="TabTextMutedBrush" Color="#A0A090"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
     </UserControl.Resources>
 
     <UserControl.Styles>
         <Style Selector="Border.document-tab">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="{StaticResource TabStripBorderBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource TabStripBorderBrush}"/>
             <Setter Property="BorderThickness" Value="0,0,1,0"/>
             <Setter Property="MinWidth" Value="120"/>
             <Setter Property="MaxWidth" Value="240"/>
             <Setter Property="MinHeight" Value="32"/>
         </Style>
         <Style Selector="Border.document-tab:pointerover">
-            <Setter Property="Background" Value="{StaticResource TabHoverBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource TabHoverBrush}"/>
         </Style>
         <!-- The showing tab is lifted out of the band into the document's own
              background, so the eye reads it as continuous with the page below. -->
         <Style Selector="Border.document-tab.selected">
-            <Setter Property="Background" Value="{StaticResource TabSelectedBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource TabSelectedBrush}"/>
         </Style>
         <Style Selector="Border.document-tab.selected:pointerover">
-            <Setter Property="Background" Value="{StaticResource TabSelectedBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource TabSelectedBrush}"/>
         </Style>
 
         <!-- The accent bar along the top edge of the showing tab. -->
@@ -77,7 +94,7 @@
             <Setter Property="Background" Value="Transparent"/>
         </Style>
         <Style Selector="Border.document-tab.selected Border.document-tab-accent">
-            <Setter Property="Background" Value="{StaticResource TabAccentBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource TabAccentBrush}"/>
         </Style>
 
         <Style Selector="Button.document-tab-button">
@@ -88,13 +105,13 @@
             <Setter Property="VerticalAlignment" Value="Stretch"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Foreground" Value="{StaticResource TabTextMutedBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TabTextMutedBrush}"/>
         </Style>
         <Style Selector="Button.document-tab-button:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="Transparent"/>
         </Style>
         <Style Selector="Border.document-tab.selected Button.document-tab-button">
-            <Setter Property="Foreground" Value="{StaticResource TabTextBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TabTextBrush}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
 
@@ -109,7 +126,7 @@
             <Setter Property="Margin" Value="0,0,6,0"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Foreground" Value="{StaticResource TabTextMutedBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TabTextMutedBrush}"/>
             <Setter Property="Opacity" Value="0.35"/>
         </Style>
         <Style Selector="Border.document-tab:pointerover Button.document-tab-close">
@@ -130,16 +147,16 @@
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Foreground" Value="{StaticResource TabTextMutedBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TabTextMutedBrush}"/>
         </Style>
         <Style Selector="Button.tab-strip-action:pointerover">
-            <Setter Property="Foreground" Value="{StaticResource TabTextBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TabTextBrush}"/>
         </Style>
     </UserControl.Styles>
 
     <Border x:Name="TabStripBand"
-            Background="{StaticResource TabStripBandBrush}"
-            BorderBrush="{StaticResource TabStripBorderBrush}"
+            Background="{DynamicResource TabStripBandBrush}"
+            BorderBrush="{DynamicResource TabStripBorderBrush}"
             BorderThickness="0,1,0,1"
             IsVisible="{Binding IsStripVisible}">
         <Grid ColumnDefinitions="*,Auto">

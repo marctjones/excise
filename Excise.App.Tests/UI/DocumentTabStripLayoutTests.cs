@@ -166,6 +166,30 @@ public sealed class DocumentTabStripLayoutTests : IDisposable
         return path;
     }
 
+    /// <summary>
+    /// #2002: the strip's local palette follows the theme. A single set left the
+    /// band light when the rest of the window went dark.
+    /// </summary>
+    [FixedAvaloniaFact(Timeout = 60000)]
+    public async Task TheBand_SwitchesWithTheTheme()
+    {
+        using var harness = new Harness();
+        var (window, _) = await OpenTwoTabsAsync(harness);
+        var band = Band(window);
+
+        window.RequestedThemeVariant = global::Avalonia.Styling.ThemeVariant.Light;
+        await FlushAsync();
+        var light = BackgroundColor(band);
+
+        window.RequestedThemeVariant = global::Avalonia.Styling.ThemeVariant.Dark;
+        await FlushAsync();
+        var dark = BackgroundColor(band);
+
+        dark.Should().NotBe(light, "the band must change with the theme");
+        (dark.R + dark.G + dark.B).Should().BeLessThan(light.R + light.G + light.B,
+            "in the dark theme the band is the darker of the two");
+    }
+
     private async Task<(MainWindow Window, DocumentTabsViewModel Tabs)> OpenTwoTabsAsync(Harness harness)
     {
         var first = harness.OpenWindow(DocumentOpenMode.NewTab);

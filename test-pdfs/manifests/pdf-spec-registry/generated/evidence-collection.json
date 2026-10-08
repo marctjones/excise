@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1543,
-  "indexedContentSha256": "196f37b8baaba28152429f04872619eb91358323d2c70c232d91d3cd47f46fae",
+  "indexedFileCount": 1544,
+  "indexedContentSha256": "ca16824f4213e553d458583703ec7bcaedc4c7da1a4de8d76a25f6f5553bb498",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -8975,7 +8975,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 337
+      "candidateReferenceCount": 338
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -11544,7 +11544,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 193
+      "candidateReferenceCount": 194
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -23283,7 +23283,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 130
+      "candidateReferenceCount": 131
     },
     {
       "id": "pdf.20.renderer.requirement-007",
@@ -54134,7 +54134,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 176
+      "candidateReferenceCount": 177
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -54553,6 +54553,15 @@
           ]
         },
         {
+          "path": "tests/chrome-color-allowlist.tsv",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "popup",
+            "annotation"
+          ]
+        },
+        {
           "path": "tests/corpus-expectations.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -54583,7 +54592,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 38
+      "candidateReferenceCount": 39
     },
     {
       "id": "pdf.20.annotation.subtype-016",

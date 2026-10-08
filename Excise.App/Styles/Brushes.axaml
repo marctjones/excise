@@ -53,6 +53,8 @@
             <SolidColorBrush x:Key="DangerBrush" Color="#9A4A3A"/>
             <SolidColorBrush x:Key="DangerHoverBrush" Color="#8A4032"/>
             <SolidColorBrush x:Key="DangerPressedBrush" Color="#7A3526"/>
+            <!-- Text and icons on the accent and danger fills -->
+            <SolidColorBrush x:Key="OnFillTextBrush" Color="#FFFFFF"/>
             <SolidColorBrush x:Key="DisabledFillBrush" Color="#DCDCD4"/>
             <SolidColorBrush x:Key="DisabledTextBrush" Color="#686860"/>
 
@@ -95,6 +97,8 @@
             <SolidColorBrush x:Key="DangerBrush" Color="#9A4A3A"/>
             <SolidColorBrush x:Key="DangerHoverBrush" Color="#AA5646"/>
             <SolidColorBrush x:Key="DangerPressedBrush" Color="#7A3526"/>
+            <!-- Text and icons on the accent and danger fills -->
+            <SolidColorBrush x:Key="OnFillTextBrush" Color="#FFFFFF"/>
             <SolidColorBrush x:Key="DisabledFillBrush" Color="#2E2E2B"/>
             <SolidColorBrush x:Key="DisabledTextBrush" Color="#808078"/>
 

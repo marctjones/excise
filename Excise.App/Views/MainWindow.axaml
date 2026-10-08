@@ -2103,7 +2103,7 @@
                                 <Button.Styles>
                                     <Style Selector="Button.primary">
                                         <Setter Property="Background" Value="{DynamicResource DangerBrush}"/>
-                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource OnFillTextBrush}"/>
                                     </Style>
                                     <Style Selector="Button.primary:pointerover">
                                         <Setter Property="Background" Value="{DynamicResource DangerHoverBrush}"/>
@@ -2146,7 +2146,7 @@
                                                     <TextBlock Text="REDACTED"
                                                                FontSize="9"
                                                                FontWeight="Bold"
-                                                               Foreground="White"/>
+                                                               Foreground="{DynamicResource OnFillTextBrush}"/>
                                                 </Border>
                                                 <TextBlock Grid.Column="1"
                                                            Text="{Binding TimeDisplay}"
@@ -2334,7 +2334,7 @@
                             </Style>
                             <!-- Redaction mode text color (white for contrast) -->
                             <Style Selector="TextBlock.redactionActive">
-                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="Foreground" Value="{DynamicResource OnFillTextBrush}"/>
                             </Style>
                         </TextBlock.Styles>
                     </TextBlock>

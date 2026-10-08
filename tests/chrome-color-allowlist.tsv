@@ -1,0 +1,25 @@
+# Chrome colour literals allowed in Excise.App views (#1827): scripts/check-chrome-color-literals.sh.
+# file	literal	count	reason
+Excise.App/Views/MainWindow.axaml	#000000	1	typewriter ink swatch: document data, shows the ink it applies
+Excise.App/Views/MainWindow.axaml	#555555	1	typewriter ink swatch: document data
+Excise.App/Views/MainWindow.axaml	#D0021B	1	typewriter ink swatch: document data
+Excise.App/Views/MainWindow.axaml	#F5A623	1	typewriter ink swatch: document data
+Excise.App/Views/MainWindow.axaml	#2E7D32	1	typewriter ink swatch: document data
+Excise.App/Views/MainWindow.axaml	#1565C0	1	typewriter ink swatch: document data
+Excise.App/Views/MainWindow.axaml	#6A1B9A	1	typewriter ink swatch: document data
+Excise.App/Views/MainWindow.axaml	#FFFFFF	1	typewriter ink swatch: document data
+Excise.App/Views/StickyNotePopupView.axaml	#FFF59D	1	sticky-note annotation colour: the note looks like the annotation it edits
+Excise.App/Views/StickyNotePopupView.axaml	#E6D866	1	sticky-note annotation colour
+Excise.App/Views/StickyNotePopupView.axaml	#3A2E00	1	text on the sticky-note colour
+Excise.App/Views/DocumentTabStrip.axaml	#EFEFE9	1	tab strip's local palette (headless tests load no app tokens), Default theme, mirrors Brushes.axaml
+Excise.App/Views/DocumentTabStrip.axaml	#DCDCD4	1	tab strip local palette, Default
+Excise.App/Views/DocumentTabStrip.axaml	#F8F8F6	1	tab strip local palette, Default
+Excise.App/Views/DocumentTabStrip.axaml	#E4E4DC	1	tab strip local palette, Default
+Excise.App/Views/DocumentTabStrip.axaml	#4A7C4A	2	tab strip local palette, accent in Default and Dark
+Excise.App/Views/DocumentTabStrip.axaml	#1C1C1C	2	tab strip local palette: Default text, Dark selected tab
+Excise.App/Views/DocumentTabStrip.axaml	#505048	1	tab strip local palette, Default
+Excise.App/Views/DocumentTabStrip.axaml	#242422	1	tab strip local palette, Dark
+Excise.App/Views/DocumentTabStrip.axaml	#3A3A36	1	tab strip local palette, Dark
+Excise.App/Views/DocumentTabStrip.axaml	#2A2A27	1	tab strip local palette, Dark
+Excise.App/Views/DocumentTabStrip.axaml	#E0E0D8	1	tab strip local palette, Dark
+Excise.App/Views/DocumentTabStrip.axaml	#A0A090	1	tab strip local palette, Dark

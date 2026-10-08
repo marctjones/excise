@@ -64,20 +64,20 @@
     <Style Selector="Button.modern-button.primary">
         <Setter Property="Background" Value="{DynamicResource DangerBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnFillTextBrush}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
     <Style Selector="Button.modern-button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource DangerHoverBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource DangerHoverBrush}"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnFillTextBrush}"/>
     </Style>
 
     <Style Selector="Button.modern-button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource DangerPressedBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource DangerPressedBrush}"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnFillTextBrush}"/>
     </Style>
 
     <Style Selector="Button.modern-button.primary:disabled">
@@ -92,7 +92,7 @@
     <Style Selector="Button.modern-button.accent">
         <Setter Property="Background" Value="{DynamicResource BrandPrimaryBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnFillTextBrush}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
@@ -101,19 +101,19 @@
     <Style Selector="Button.modern-button.accent /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource BrandPrimaryBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnFillTextBrush}"/>
     </Style>
 
     <Style Selector="Button.modern-button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource BrandPrimaryHoverBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryHoverBrush}"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnFillTextBrush}"/>
     </Style>
 
     <Style Selector="Button.modern-button.accent:pressed /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource BrandPrimaryPressedBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryPressedBrush}"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnFillTextBrush}"/>
     </Style>
 
     <!-- Dialog chrome (#1992): one footer button size, one help-text size, one
@@ -245,7 +245,7 @@
     </Style>
 
     <Style Selector="Button.modern-button.primary PathIcon.toolbar-icon">
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Foreground" Value="{DynamicResource OnFillTextBrush}"/>
     </Style>
 
     <Style Selector="PathIcon.menu-icon">
