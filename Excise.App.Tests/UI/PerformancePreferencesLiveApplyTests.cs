@@ -348,11 +348,12 @@ public class PerformancePreferencesLiveApplyTests
             prefs.TileCacheText.Should().EndWith("MB", "the readout reads the main window's viewer");
 
             prefs.SelectedPerformancePreset = PerformancePreset.LowMemory;
-            await prefs.SaveCommand.Execute();
+            // #2000: no Save button; closing applies what the window shows.
+            await prefs.CloseCommand.Execute();
             await KeyboardTestHelpers.FlushDispatcherAsync();
             await KeyboardTestHelpers.FlushDispatcherAsync();
 
-            applyThreads.Should().Equal(new[] { uiThread }, "Save applies once, on the UI thread, where the viewer's setters may run");
+            applyThreads.Should().Equal(new[] { uiThread }, "closing applies once, on the UI thread, where the viewer's setters may run");
             dispatcherErrors.Should().BeEmpty();
             window.OwnedWindows.OfType<PreferencesWindow>().Should().BeEmpty("Save closes the dialog");
             dialog.HasMemoryReadoutTimer.Should().BeFalse();

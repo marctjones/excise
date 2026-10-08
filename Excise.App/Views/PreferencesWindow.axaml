@@ -7,7 +7,7 @@
         mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="500"
         x:Class="Excise.App.Views.PreferencesWindow"
         x:DataType="vm:PreferencesViewModel"
-        Title="Preferences"
+        Title="{OnPlatform Default=Preferences, macOS=Settings}"
         Width="680" Height="640"
         MinWidth="560" MinHeight="420"
         WindowStartupLocation="CenterOwner"
@@ -24,7 +24,7 @@
                 BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,0,0,1"
                 Padding="24,16">
-            <TextBlock Text="Preferences" Classes="dialog-title"/>
+            <TextBlock Text="{OnPlatform Default=Preferences, macOS=Settings}" Classes="dialog-title"/>
         </Border>
 
         <!-- Content -->
@@ -71,7 +71,7 @@
                                   IsChecked="{Binding RunFormCalc}"
                                   AutomationProperties.Name="Run Form Calculations"
                                   AutomationProperties.HelpText="Run a dynamic XFA form's FormCalc calculations when it opens."/>
-                        <TextBlock Text="On (default): when a dynamic XFA form opens, its FormCalc initialize and calculate scripts run, so totals and fields shown or hidden by a script appear as the form's author meant. Scripts can only change the form's own field values and visibility; they cannot reach files, the network or the rest of your computer, and each one is limited in time and memory. Off: the form shows the values stored in the file. JavaScript never runs. Applies to documents opened after you save."
+                        <TextBlock Text="On (default): when a dynamic XFA form opens, its FormCalc initialize and calculate scripts run, so totals and fields shown or hidden by a script appear as the form's author meant. Scripts can only change the form's own field values and visibility; they cannot reach files, the network or the rest of your computer, and each one is limited in time and memory. Off: the form shows the values stored in the file. JavaScript never runs. Applies to documents opened after the change."
                                    Classes="help"/>
                     </StackPanel>
                 </Border>
@@ -81,7 +81,7 @@
                     <StackPanel Spacing="12">
                         <TextBlock Text="Performance" Classes="settings-card-title"/>
 
-                        <TextBlock Text="Trade memory and CPU against how quickly pages you have already seen come back. Saved changes apply at once."
+                        <TextBlock Text="Trade memory and CPU against how quickly pages you have already seen come back. Changes apply as you make them."
                                    Classes="help"/>
 
                         <Separator/>
@@ -235,7 +235,7 @@
                             <ComboBox x:Name="RedactionProfileComboBox"
                                   Classes="enum-labels"
                                       ItemsSource="{Binding RedactionProfileOptions}"
-                                      SelectedItem="{Binding RedactionPreferences.Profile}"
+                                      SelectedItem="{Binding RedactionProfile}"
                                       AutomationProperties.Name="Redaction Output Profile"
                                       AutomationProperties.HelpText="How much of the PDF's hidden machinery a redaction removes."/>
                             <TextBlock Text="Standard: also removes the parts of the PDF that can repeat the page and that cutting a word out cannot make safe — all JavaScript, actions that open files or submit data (page links still work), the producer's private data, page thumbnails, the appearance of hidden fields, content on layers that are switched off, and the document properties and XMP (a PDF/A or PDF/UA marker is kept). Tooltips, alternate text, structure titles, field names, bookmark titles, link targets and signer names are KEPT, with the redacted word cut out. Maximum: all of that, plus the whole value of every kept item is dropped, bookmarks, links, comments and field names are stripped, and forms and annotations are flattened, signatures and their certificates included — THE RESULT IS NO LONGER ACCESSIBLE OR INTERACTIVE, so a screen reader cannot read it properly and forms no longer work."
@@ -246,7 +246,7 @@
                             <TextBlock Text="Match Rule" Classes="field-label"/>
                             <CheckBox x:Name="RedactionWholeWordCheckBox"
                                       Content="Whole words only"
-                                      IsChecked="{Binding RedactionPreferences.WholeWord}"
+                                      IsChecked="{Binding RedactionWholeWord}"
                                       AutomationProperties.Name="Whole Word Redaction"
                                       AutomationProperties.HelpText="Require the redacted term to be bounded by a non-word character on both sides."/>
                             <TextBlock Text="Off (default): the term matches anywhere, so redacting 'Lee' also removes it from 'Sleeman' — right for a case number inside a longer citation, wrong for a name. On: the term must stand alone. Applies to page text and to metadata, outlines and link targets alike."
@@ -257,7 +257,7 @@
                             <TextBlock Text="Attachments" Classes="field-label"/>
                             <CheckBox x:Name="RedactionKeepAttachmentsCheckBox"
                                       Content="Keep attachments in redacted copies"
-                                      IsChecked="{Binding RedactionPreferences.KeepAttachments}"
+                                      IsChecked="{Binding RedactionKeepAttachments}"
                                       AutomationProperties.Name="Keep Attachments When Redacting"
                                       AutomationProperties.HelpText="Keep the PDF's embedded files in a redacted copy instead of removing them."/>
                             <TextBlock Text="Off (default): a redacted copy contains none of the PDF's attached files. On: text attachments (txt, csv, xml, html, json, md) have the redacted text cut out and attached PDFs are redacted too; any other attachment is listed in the report as not checked, because it may still contain the redacted text. A PDF portfolio can only be redacted with this on."
@@ -269,7 +269,7 @@
                             <ComboBox x:Name="RedactionWidthPolicyComboBox"
                                   Classes="enum-labels"
                                       ItemsSource="{Binding WidthPolicyOptions}"
-                                      SelectedItem="{Binding RedactionPreferences.Width}"
+                                      SelectedItem="{Binding RedactionWidth}"
                                       AutomationProperties.Name="Redaction Width Policy"
                                       AutomationProperties.HelpText="How the removed text's width is handled."/>
                             <TextBlock Text="Fixed-size marker: like Close the gap, plus a covering box of one fixed size regardless of what was removed — closes the width channel AND stays visibly marked; the line keeps room for the box, so it covers none of the text that follows. Exact-width box: the box matches the removed text exactly and the page does not reflow — but the box's width then measures how long the removed text was. Widened box: rounded wider so similar-length words can't be told apart by measuring it. Close the gap: remove the space entirely and draw no box; removes the width from the file itself, at the cost of reflowing the line. Gap rounded to a whole em: no box; weaker than Close the gap, since the rounded gap still narrows the candidates. For an area redaction the box is the one you dragged; Close the gap, Fixed-size marker and Gap rounded to a whole em close the gap there too, and only Fixed-size marker draws a box. When redacting text, those three also remove an underline, box or highlight drawn to the removed word."
@@ -281,7 +281,7 @@
                             <ComboBox x:Name="LinkUriCarrierPolicyComboBox"
                                   Classes="enum-labels"
                                       ItemsSource="{Binding CarrierScrubModeOptions}"
-                                      SelectedItem="{Binding RedactionPreferences.LinkUriPolicy}"
+                                      SelectedItem="{Binding RedactionLinkUriPolicy}"
                                       AutomationProperties.Name="Link URL Redaction Policy"
                                       AutomationProperties.HelpText="How a link target containing the redacted text is handled."/>
                             <TextBlock Text="Cut out the redacted text: cut the word out of the URL, leaving the rest — and, under the Maximum profile, let that profile's own choice stand. Remove the whole value: drop the entire link target, so no surrounding text survives to infer the word from. Leave it and report it: change nothing and list the link in the redaction report for you to decide."
@@ -293,7 +293,7 @@
                             <ComboBox x:Name="MetadataCarrierPolicyComboBox"
                                   Classes="enum-labels"
                                       ItemsSource="{Binding CarrierScrubModeOptions}"
-                                      SelectedItem="{Binding RedactionPreferences.MetadataPolicy}"
+                                      SelectedItem="{Binding RedactionMetadataPolicy}"
                                       AutomationProperties.Name="Metadata Redaction Policy"
                                       AutomationProperties.HelpText="How document metadata containing the redacted text is handled."/>
                             <TextBlock Text="Applies to the /Info fields (Title, Author, Subject…) and the XMP packet. A templated field narrows a removed value the same way a known URL does."
@@ -345,19 +345,13 @@
                         AutomationProperties.Name="Reset Preferences to Defaults"
                         AutomationProperties.HelpText="Restore preference values to their defaults."/>
                 <Button ctl:DialogButtonPanel.Role="Cancel"
-                        Content="Cancel"
-                        Command="{Binding CancelCommand}"
+                        Content="Close"
+                        Command="{Binding CloseCommand}"
                         Classes="modern-button dialog-button"
                         IsCancel="True"
-                        AutomationProperties.Name="Cancel Preferences"
-                        AutomationProperties.HelpText="Close preferences without saving changes."/>
-                <Button ctl:DialogButtonPanel.Role="Primary"
-                        Content="Save"
-                        Command="{Binding SaveCommand}"
-                        Classes="modern-button dialog-button accent"
                         IsDefault="True"
-                        AutomationProperties.Name="Save Preferences"
-                        AutomationProperties.HelpText="Save preference changes and close this dialog."/>
+                        AutomationProperties.Name="Close Preferences"
+                        AutomationProperties.HelpText="Close preferences. Changes have already been applied and saved."/>
             </ctl:DialogButtonPanel>
         </Border>
     </Grid>

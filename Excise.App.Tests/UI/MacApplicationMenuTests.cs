@@ -38,8 +38,8 @@ public class MacApplicationMenuTests
         items[0].Header.Should().Be("About Excise",
             "the app menu's first item must be the app's own About — not Avalonia's default \"About Avalonia\"");
         items.Select(i => i.Header).Should().NotContain("About Avalonia");
-        items.Select(i => i.Header).Should().Contain("Preferences…",
-            "the app menu also carries Preferences (Quit/Hide/Services are appended by Avalonia)");
+        items.Select(i => i.Header).Should().Contain("Settings…",
+            "the app menu also carries Settings, the macOS 13+ name for Preferences (Quit/Hide/Services are appended by Avalonia)");
     }
 
     [FixedAvaloniaFact]

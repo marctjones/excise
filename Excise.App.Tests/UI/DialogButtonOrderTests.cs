@@ -71,9 +71,9 @@ public class DialogButtonOrderTests
         Window Prefs() => new PreferencesWindow { DataContext = new PreferencesViewModel() };
 
         (await OrderOn(windows: true, Prefs)).Should().Equal(
-            "Save Preferences", "Reset Preferences to Defaults", "Cancel Preferences");
+            "Reset Preferences to Defaults", "Close Preferences");
         (await OrderOn(windows: false, Prefs)).Should().Equal(
-            "Reset Preferences to Defaults", "Cancel Preferences", "Save Preferences");
+            "Reset Preferences to Defaults", "Close Preferences");
     }
 
     [FixedAvaloniaFact]

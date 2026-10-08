@@ -39,7 +39,7 @@ public class HiddenDialogCoverageTests
         await DriveAndAssertVisible(
             window,
             "PreferencesWindow",
-            "Cancel Preferences",
+            "Close Preferences",
             arrowKey: new[]
             {
                 "ReadingOrderStrategyComboBox", "WhitespaceModeComboBox",

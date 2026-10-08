@@ -189,14 +189,13 @@ public class AccessibilityRegressionTests
         preferences.Show();
         preferences.UpdateLayout();
 
-        var savePreferences = FindButtonByName(preferences, "Save Preferences");
-        savePreferences.Should().NotBeNull();
-        savePreferences!.IsDefault.Should().BeTrue();
-        AutomationProperties.GetHelpText(savePreferences).Should().Contain("Save preference changes");
-
-        var cancelPreferences = FindButtonByName(preferences, "Cancel Preferences");
-        cancelPreferences.Should().NotBeNull();
-        cancelPreferences!.IsCancel.Should().BeTrue();
+        // #2000: changes apply as they are made, so Close is the only action:
+        // both Enter and Esc reach it.
+        var closePreferences = FindButtonByName(preferences, "Close Preferences");
+        closePreferences.Should().NotBeNull();
+        closePreferences!.IsDefault.Should().BeTrue();
+        closePreferences.IsCancel.Should().BeTrue();
+        AutomationProperties.GetHelpText(closePreferences).Should().Contain("already been applied");
 
         var about = new AboutWindow();
         about.Show();

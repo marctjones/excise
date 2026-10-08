@@ -15,6 +15,15 @@ internal partial class PreferencesWindow : Window
     // would wake an idle app every second, undoing #1462.
     private DispatcherTimer? _memoryReadoutTimer;
 
+    /// <summary>How long a change settles before it applies (#2000).</summary>
+    internal static readonly TimeSpan ApplyDelay = TimeSpan.FromMilliseconds(300);
+
+    // #2000: changes apply as they are made. A burst (typing a number, stepping a
+    // spinner) applies once, after it settles; closing applies whatever is pending
+    // so the last change is never lost. Stopped on close like the readout timer.
+    private DispatcherTimer? _applyTimer;
+    private PreferencesViewModel? _subscribed;
+
     public PreferencesWindow()
     {
         InitializeComponent();
@@ -22,7 +31,47 @@ internal partial class PreferencesWindow : Window
         // Wire up commands to close the window when DataContext is set
         DataContextChanged += OnDataContextChanged;
         Opened += (_, _) => StartMemoryReadout();
+        Closing += (_, _) => FlushAndStopApplying();
         Closed += (_, _) => StopMemoryReadout();
+    }
+
+    /// <summary>True while a change waits to apply (tests).</summary>
+    internal bool HasPendingApply => _applyTimer?.IsEnabled == true;
+
+    private void OnPreferenceChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (PreferencesViewModel.IsReadout(e.PropertyName))
+            return;
+        _applyTimer ??= CreateApplyTimer();
+        _applyTimer.Stop();
+        _applyTimer.Start();
+    }
+
+    private DispatcherTimer CreateApplyTimer()
+    {
+        var timer = new DispatcherTimer(DispatcherPriority.Background) { Interval = ApplyDelay };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            _subscribed?.ApplyNow();
+        };
+        return timer;
+    }
+
+    /// <summary>
+    /// The guarantee (#2000): whatever the window shows when it closes is what
+    /// applies and persists, whether or not a control raised a change.
+    /// </summary>
+    private void FlushAndStopApplying()
+    {
+        _applyTimer?.Stop();
+        _applyTimer = null;
+        if (_subscribed != null)
+        {
+            _subscribed.PropertyChanged -= OnPreferenceChanged;
+            _subscribed.ApplyNow();
+            _subscribed = null;
+        }
     }
 
     /// <summary>True while the memory readout timer exists (tests).</summary>
@@ -52,10 +101,13 @@ internal partial class PreferencesWindow : Window
 
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
-        if (DataContext is PreferencesViewModel viewModel)
+        if (_subscribed != null)
+            _subscribed.PropertyChanged -= OnPreferenceChanged;
+        _subscribed = DataContext as PreferencesViewModel;
+        if (_subscribed != null)
         {
-            viewModel.SaveCommand.Subscribe(_ => Close());
-            viewModel.CancelCommand.Subscribe(_ => Close());
+            _subscribed.PropertyChanged += OnPreferenceChanged;
+            _subscribed.CloseRequested += (_, _) => Close();
         }
     }
 

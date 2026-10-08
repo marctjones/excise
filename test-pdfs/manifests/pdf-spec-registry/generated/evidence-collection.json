@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1542,
-  "indexedContentSha256": "3b6ecc5e4ce24894c39033ee9f74e40182e01ab6a09d63690ebaadc9cf1dc175",
+  "indexedFileCount": 1543,
+  "indexedContentSha256": "196f37b8baaba28152429f04872619eb91358323d2c70c232d91d3cd47f46fae",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -4909,7 +4909,8 @@
           "matchedTerms": [
             "named",
             "preferences",
-            "viewer"
+            "viewer",
+            "metadata"
           ]
         },
         {
@@ -8155,7 +8156,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 716
+      "candidateReferenceCount": 717
     },
     {
       "id": "pdf.17.graphics.color",
@@ -64031,6 +64032,16 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/PreferencesViewModel.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "applied",
+            "redaction",
+            "action",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/RedactionWorkflowManager.cs",
           "kind": "source",
           "matchedTerms": [
@@ -64400,20 +64411,9 @@
             "action",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/UnredactionTierABench.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "applied",
-            "redaction",
-            "action",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 102
+      "candidateReferenceCount": 104
     },
     {
       "id": "pdf.17.interactive.forms",
@@ -71264,7 +71264,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 779
+      "candidateReferenceCount": 780
     },
     {
       "id": "pdf.20.extension.developer",
@@ -72338,6 +72338,15 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "pdfa",
+            "profile",
+            "pdfa"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Authoring/PdfAIdentificationParserTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -72756,7 +72765,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 75
+      "candidateReferenceCount": 76
     },
     {
       "id": "pdf.20.profile.pdfua",
@@ -73080,6 +73089,15 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "accessibility",
+            "profile",
+            "pdfa"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Authoring/PdfUaConformanceTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -73319,7 +73337,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 49
+      "candidateReferenceCount": 50
     },
     {
       "id": "pdf.20.profile.pdfx",
@@ -75877,6 +75895,17 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/PreferencesViewModel.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "copy",
+            "metadata",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/SecurityDialogViewModel.cs",
           "kind": "source",
           "matchedTerms": [
@@ -75972,20 +76001,9 @@
             "copy",
             "metadata"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Operations/RedactAreaCarrierScopeTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "attachment",
-            "copy",
-            "metadata",
-            "stripping",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 170
+      "candidateReferenceCount": 171
     },
     {
       "id": "pdfe.product.security.external-links",
@@ -76839,6 +76857,17 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/PreferencesViewModel.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "save",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/SecurityDialogViewModel.cs",
           "kind": "source",
           "matchedTerms": [
@@ -77099,19 +77128,9 @@
             "redaction",
             "security"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/RedactedCopySafetyPolicyTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "attachment",
-            "attachments",
-            "save",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 151
+      "candidateReferenceCount": 152
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",

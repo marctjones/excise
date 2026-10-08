@@ -2,6 +2,7 @@ using Excise.App.Models;
 using ReactiveUI;
 using System;
 using System.Reactive;
+using System.Threading.Tasks;
 
 namespace Excise.App.ViewModels;
 
@@ -38,9 +39,8 @@ internal class PreferencesViewModel : ViewModelBase
 
     public PreferencesViewModel()
     {
-        SaveCommand = ReactiveCommand.Create(Save);
-        CancelCommand = ReactiveCommand.Create(Cancel);
-        ResetToDefaultsCommand = ReactiveCommand.Create(ResetToDefaults);
+        CloseCommand = ReactiveCommand.Create(() => CloseRequested?.Invoke(this, EventArgs.Empty));
+        ResetToDefaultsCommand = ReactiveCommand.CreateFromTask(ResetToDefaultsConfirmedAsync);
         SetPerformanceFields(PerformanceSettings.Balanced);
     }
 
@@ -333,7 +333,62 @@ internal class PreferencesViewModel : ViewModelBase
     public RedactionPreferences RedactionPreferences
     {
         get => _redactionPreferences;
-        set => this.RaiseAndSetIfChanged(ref _redactionPreferences, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _redactionPreferences, value);
+            RaiseRedactionFields();
+        }
+    }
+
+    // #2000: the controls bind these flat properties, not RedactionPreferences.X.
+    // The record raises nothing when a field changes, so with changes applied as
+    // they are made a binding into it would never tell anyone; a switch to the
+    // Maximum profile would then wait for the close flush alone. Each setter
+    // writes into the same record and raises, so the change applies at once.
+    public Excise.Core.Text.Segmentation.RedactionProfile RedactionProfile
+    {
+        get => _redactionPreferences.Profile;
+        set { if (_redactionPreferences.Profile == value) return; _redactionPreferences.Profile = value; this.RaisePropertyChanged(); }
+    }
+
+    public bool RedactionWholeWord
+    {
+        get => _redactionPreferences.WholeWord;
+        set { if (_redactionPreferences.WholeWord == value) return; _redactionPreferences.WholeWord = value; this.RaisePropertyChanged(); }
+    }
+
+    public bool RedactionKeepAttachments
+    {
+        get => _redactionPreferences.KeepAttachments;
+        set { if (_redactionPreferences.KeepAttachments == value) return; _redactionPreferences.KeepAttachments = value; this.RaisePropertyChanged(); }
+    }
+
+    public Excise.Core.Text.Segmentation.WidthPolicy RedactionWidth
+    {
+        get => _redactionPreferences.Width;
+        set { if (_redactionPreferences.Width == value) return; _redactionPreferences.Width = value; this.RaisePropertyChanged(); }
+    }
+
+    public Excise.Core.Operations.CarrierScrubMode RedactionLinkUriPolicy
+    {
+        get => _redactionPreferences.LinkUriPolicy;
+        set { if (_redactionPreferences.LinkUriPolicy == value) return; _redactionPreferences.LinkUriPolicy = value; this.RaisePropertyChanged(); }
+    }
+
+    public Excise.Core.Operations.CarrierScrubMode RedactionMetadataPolicy
+    {
+        get => _redactionPreferences.MetadataPolicy;
+        set { if (_redactionPreferences.MetadataPolicy == value) return; _redactionPreferences.MetadataPolicy = value; this.RaisePropertyChanged(); }
+    }
+
+    private void RaiseRedactionFields()
+    {
+        this.RaisePropertyChanged(nameof(RedactionProfile));
+        this.RaisePropertyChanged(nameof(RedactionWholeWord));
+        this.RaisePropertyChanged(nameof(RedactionKeepAttachments));
+        this.RaisePropertyChanged(nameof(RedactionWidth));
+        this.RaisePropertyChanged(nameof(RedactionLinkUriPolicy));
+        this.RaisePropertyChanged(nameof(RedactionMetadataPolicy));
     }
 
     // Print page scaling (#1545). AOT-safe Enum.GetValues<T>().
@@ -347,29 +402,35 @@ internal class PreferencesViewModel : ViewModelBase
     }
 
     // Commands
-    public ReactiveCommand<Unit, Unit> SaveCommand { get; }
-    public ReactiveCommand<Unit, Unit> CancelCommand { get; }
+    public ReactiveCommand<Unit, Unit> CloseCommand { get; }
     public ReactiveCommand<Unit, Unit> ResetToDefaultsCommand { get; }
 
-    public bool DialogResult { get; private set; }
+    /// <summary>Raised by <see cref="CloseCommand"/>; the window closes, flushing first.</summary>
+    public event EventHandler? CloseRequested;
 
     /// <summary>
-    /// Invoked by <see cref="SaveCommand"/> on the UI thread, before the window
-    /// closes: apply and persist the values (see MainWindowViewModel.ApplySavedPreferences).
+    /// Applies and persists every value, on the UI thread (#2000: changes apply
+    /// as they are made). Wired to MainWindowViewModel.ApplySavedPreferences: the
+    /// one path the old Save button used, so what is written is unchanged; only
+    /// when it is written changed.
     /// </summary>
-    internal Action? SaveRequested { get; set; }
+    internal Action? ApplyRequested { get; set; }
 
-    private void Save()
-    {
-        DialogResult = true;
-        SaveRequested?.Invoke();
-        CloseWindow();
-    }
+    /// <summary>Asks before Reset to Defaults; null resets without asking (tests).</summary>
+    internal Func<Task<bool>>? ConfirmReset { get; set; }
 
-    private void Cancel()
+    /// <summary>Apply now: the window calls this after a change settles, and always on close.</summary>
+    internal void ApplyNow() => ApplyRequested?.Invoke();
+
+    /// <summary>Properties that report state rather than hold a preference; changing them applies nothing.</summary>
+    internal static bool IsReadout(string? propertyName) =>
+        propertyName is nameof(WorkingSetText) or nameof(ManagedHeapText) or nameof(TileCacheText) or nameof(MaxRenderThreads);
+
+    private async Task ResetToDefaultsConfirmedAsync()
     {
-        DialogResult = false;
-        CloseWindow();
+        if (ConfirmReset != null && !await ConfirmReset())
+            return;
+        ResetToDefaults();
     }
 
     private void ResetToDefaults()
@@ -389,11 +450,6 @@ internal class PreferencesViewModel : ViewModelBase
         SelectedDocumentOpenMode = DocumentOpenMode.Automatic;
         SelectedAppearance = AppearanceMode.System;
         RunFormCalc = true;
-    }
-
-    private void CloseWindow()
-    {
-        // This will be handled by the window
     }
 
     public void LoadFromMainViewModel(MainWindowViewModel mainViewModel)

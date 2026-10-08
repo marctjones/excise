@@ -8,7 +8,7 @@ namespace Excise.App.Views;
 
 /// <summary>
 /// Builds the macOS application menu — the bold app-name menu that hosts
-/// "About Excise" and "Preferences…" (Avalonia appends the standard
+/// "About Excise" and "Settings…" (the macOS 13+ name; Avalonia appends the standard
 /// Services / Hide / Quit items automatically).
 ///
 /// This menu MUST be set on the Application during <see cref="App.Initialize"/>,
@@ -32,7 +32,7 @@ internal static class MacApplicationMenu
 
         menu.Add(new NativeMenuItemSeparator());
 
-        var preferences = new NativeMenuItem("Preferences…")
+        var preferences = new NativeMenuItem("Settings…")
         {
             Gesture = new KeyGesture(Key.OemComma, KeyModifiers.Meta)
         };

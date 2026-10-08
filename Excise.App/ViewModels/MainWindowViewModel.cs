@@ -3105,11 +3105,13 @@ internal partial class MainWindowViewModel : ViewModelBase
 
         var preferencesViewModel = new PreferencesViewModel();
         preferencesViewModel.LoadFromMainViewModel(this);
-        // Applied from the Save command itself, on the UI thread, before the
-        // dialog closes. The old ShowDialog(...).ContinueWith ran this on a
-        // thread-pool thread, where the viewer's cache setters (VerifyAccess)
-        // would throw; and it persisted nothing until the main window closed.
-        preferencesViewModel.SaveRequested = () => ApplySavedPreferences(preferencesViewModel);
+        // #2000: changes apply as they are made and once more when the window
+        // closes, always on the UI thread (the viewer's cache setters VerifyAccess)
+        // and always through the one path the old Save button used.
+        preferencesViewModel.ApplyRequested = () => ApplySavedPreferences(preferencesViewModel);
+        preferencesViewModel.ConfirmReset = () => _dialogService.ShowConfirmAsync(
+            "Reset to Defaults",
+            "Restore every preference to its default, including the redaction profile and carrier policies? This takes effect at once.");
 
         var window = new Views.PreferencesWindow
         {
