@@ -148,6 +148,15 @@ public class Letter
     /// </summary>
     public int TextRenderMode { get; internal set; }
 
+    /// <summary>
+    /// #2008: the user-space direction this glyph advances along, in radians
+    /// counterclockwise from +x, as the content-stream walker computed it from
+    /// Tm × CTM and the sign of Th. 0 for upright text and for synthetic
+    /// letters (form values, annotation text). A line turned by its matrix
+    /// runs along this direction, so line grouping reads it in that frame.
+    /// </summary>
+    internal double BaselineAngle { get; set; }
+
     /// <summary>True when this glyph paints nothing (§9.3.6 modes 3 and 7).</summary>
     public bool IsInvisible => TextRenderMode == 3 || TextRenderMode == 7;
 
