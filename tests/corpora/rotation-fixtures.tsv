@@ -31,3 +31,4 @@ probe-inherit90	synthetic		RotationProbes		1	parent	90	0 0 612 792	0 0 612 792	1
 probe-inherit270-leaf0	synthetic		RotationProbes		1	parent+leaf	0	0 0 612 792	0 0 612 792	1	ALPHA	/Pages says 270, the leaf overrides with an explicit 0 (#1981).
 probe-crop0	synthetic		RotationProbes		1	absent	0	0 0 612 792	90 250 522 742	1	ALPHA	CropBox origin (90,250): visible page differs from the MediaBox.
 probe-crop90	synthetic		RotationProbes		1	leaf	90	0 0 612 792	90 250 522 742	1	ALPHA	Nonzero CropBox origin combined with a quarter turn.
+probe-r90-textccw	synthetic		RotationProbes		1	leaf	90	0 0 612 792	0 0 612 792	1	ALPHA	Page turned 90 clockwise, text matrix turned 90 counter-clockwise, so the text reads upright on screen (the scanned-landscape shape). excise extraction splits such lines into single glyphs (#2008), so search cannot use it.

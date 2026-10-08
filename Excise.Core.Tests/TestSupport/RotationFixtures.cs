@@ -157,12 +157,18 @@ internal static class RotationProbes
         "probe-inherit270-leaf0" => Write(270, 0, null),
         "probe-crop0" => Write(null, null, "90 250 522 742"),
         "probe-crop90" => Write(null, 90, "90 250 522 742"),
+        // The scanned-landscape shape: the page turns 90 clockwise and the text matrix
+        // turns 90 counter-clockwise, so the text reads upright on screen. One line only:
+        // excise extracts such text one glyph per line (#2008), and a second line at the
+        // same content y would interleave with the first in reading order.
+        "probe-r90-textccw" => Write(null, 90, null,
+            "BT /F1 18 Tf 0 1 -1 0 300 150 Tm (" + Line1 + ") Tj ET\n"),
         _ => throw new ArgumentException($"No synthetic rotation probe '{id}'.", nameof(id)),
     };
 
-    private static byte[] Write(int? parentRotate, int? leafRotate, string? cropBox)
+    private static byte[] Write(int? parentRotate, int? leafRotate, string? cropBox, string? text = null)
     {
-        var content =
+        var content = text ??
             "BT /F1 18 Tf 1 0 0 1 120 600 Tm (" + Line1 + ") Tj ET\n" +
             "BT /F1 18 Tf 1 0 0 1 120 560 Tm (" + Line2 + ") Tj ET\n";
         var objects = new[]
@@ -313,6 +319,22 @@ internal static class MutoolStextGeometry
 
     internal sealed record StextPage(double Width, double Height, IReadOnlyList<IReadOnlyList<StextChar>> Lines)
     {
+        /// <summary>
+        /// Each line's writing direction in displayed space (stext <c>dir</c>, y down),
+        /// parallel to <see cref="Lines"/>. "Below the text" is this turned a quarter
+        /// clockwise on screen: (dx, dy) → (-dy, dx).
+        /// </summary>
+        public IReadOnlyList<(double X, double Y)> Directions { get; init; } = Array.Empty<(double, double)>();
+
+        /// <summary>The writing direction of the line holding the first occurrence of <paramref name="term"/>.</summary>
+        public (double X, double Y) DirectionOf(string term)
+        {
+            for (int i = 0; i < Lines.Count; i++)
+                if (string.Concat(Lines[i].Select(c => c.C)).Contains(term, StringComparison.Ordinal))
+                    return Directions[i];
+            throw new InvalidOperationException($"MuPDF has no line containing '{term}'");
+        }
+
         /// <summary>Every occurrence of <paramref name="term"/> inside one line, as the union of its char quads.</summary>
         public IReadOnlyList<VisualRegion> Find(string term) =>
             FindChars(term).Select(VisualRegion.Union).ToList();
@@ -364,10 +386,17 @@ internal static class MutoolStextGeometry
                 return new StextChar(ch.Attribute("c")?.Value ?? "",
                     new VisualRegion(xs.Min(), ys.Min(), xs.Max(), ys.Max()));
             }).ToList()).ToList();
+        var directions = page.Descendants("line").Select(l =>
+        {
+            var d = (l.Attribute("dir")?.Value ?? "1 0").Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Select(v => double.Parse(v, CultureInfo.InvariantCulture)).ToArray();
+            return (d[0], d[1]);
+        }).ToList();
         return new StextPage(
             double.Parse(page.Attribute("width")!.Value, CultureInfo.InvariantCulture),
             double.Parse(page.Attribute("height")!.Value, CultureInfo.InvariantCulture),
-            lines);
+            lines)
+        { Directions = directions };
     }
 
     internal static string Run(string exe, params string[] args) => RunTool(exe, args);
