@@ -136,21 +136,38 @@ public sealed class RotatedMarkupPlacementTests : IDisposable
     }
 
     /// <summary>
-    /// A two-line selection on a /Rotate 90 page, highlighted and saved: both lines'
-    /// words are covered in MuPDF's and Poppler's renders. The selection is written as
-    /// ONE quad (the selection's bounding box), so the gap between the lines is painted
-    /// too; that is measured and reported, not asserted (#2009: assert the gap is clear once
-    /// a selection is written as one quad per line).
+    /// A selection that spans two lines, marked and saved (#2009): one quad per selected line
+    /// run, and nothing drawn in the gap between the lines or on the unselected words.
+    ///
+    /// <para>The selection is made by the real gesture. Oracles are independent: qpdf reads
+    /// /QuadPoints and /Rect; MuPDF and Poppler each render the source and the saved file and
+    /// the pixels that CHANGED are compared in regions located by that renderer's own text
+    /// geometry (the middle third of the band between the two lines, and each word's box).
+    /// Diffing against the unmarked render keeps the test independent of how a renderer
+    /// synthesizes a Highlight that has no appearance stream.</para>
     /// </summary>
-    [FixedAvaloniaFact]
-    public async Task SavedHighlight_OfATwoLineSelection_CoversBothLines()
+    [FixedAvaloniaTheory]
+    [InlineData("s-r90", nameof(MarkupAnnotationKind.Highlight), "ALPHA", "TWO", "ALPHA,ONE,BRAVO,TWO", "")]
+    [InlineData("s-r0", nameof(MarkupAnnotationKind.Highlight), "ALPHA", "TWO", "ALPHA,ONE,BRAVO,TWO", "")]
+    // Mid-line to mid-line: the union box would also cover "ALPHA" and "TWO", which are not selected.
+    [InlineData("s-r0", nameof(MarkupAnnotationKind.Highlight), "ONE", "BRAVO", "ONE,BRAVO", "ALPHA,TWO")]
+    [InlineData("s-r90", nameof(MarkupAnnotationKind.Highlight), "ONE", "BRAVO", "ONE,BRAVO", "ALPHA,TWO")]
+    [InlineData("s-r0", nameof(MarkupAnnotationKind.Underline), "ALPHA", "TWO", "ALPHA,ONE,BRAVO,TWO", "")]
+    [InlineData("s-r90", nameof(MarkupAnnotationKind.StrikeOut), "ALPHA", "TWO", "ALPHA,ONE,BRAVO,TWO", "")]
+    [InlineData("s-r0", nameof(MarkupAnnotationKind.Squiggly), "ALPHA", "TWO", "ALPHA,ONE,BRAVO,TWO", "")]
+    public async Task SavedMarkup_OfAMultiLineSelection_MarksOnlyTheSelectedRuns(
+        string scenarioId, string kindName, string startWord, string endWord, string markedCsv, string clearCsv)
     {
+        var kind = Enum.Parse<MarkupAnnotationKind>(kindName);
         Assert.SkipWhen(!MutoolStextGeometry.IsAvailable || !MutoolReferenceRenderer.IsAvailable,
             "mutool is not installed; it is the glyph-region and render oracle.");
         Assert.SkipWhen(!PopplerGeometry.IsAvailable || !PdftoppmReferenceRenderer.IsAvailable,
             "Poppler (pdfinfo, pdftotext, pdftoppm) is not installed.");
+        Assert.SkipWhen(!QpdfReferenceTool.IsAvailable, "qpdf is not installed.");
 
-        var s = RotationScenarioTable.Get("s-r90");
+        var marked = markedCsv.Split(',', StringSplitOptions.RemoveEmptyEntries);
+        var clear = clearCsv.Split(',', StringSplitOptions.RemoveEmptyEntries);
+        var s = RotationScenarioTable.Get(scenarioId);
         var source = System.IO.Path.Combine(_tempDir, "source.pdf");
         await File.WriteAllBytesAsync(source, RotationFixtures.TryLoad(s.Fixture, out _)!);
         var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
@@ -160,44 +177,88 @@ public sealed class RotatedMarkupPlacementTests : IDisposable
         vm.ViewMode = PdfViewMode.SinglePage;
         vm.ZoomLevel = 1.0;
 
-        await MarkSpanAsync(window, viewer, vm, MarkupAnnotationKind.Highlight, FirstWord, "TWO");
+        await MarkSpanAsync(window, viewer, vm, kind, startWord, endWord);
+        vm.CurrentTextSelectionLineRectangles.Should().HaveCount(2,
+            "the viewer reports one rectangle per line run of the selection");
         var saved = System.IO.Path.Combine(_tempDir, "two-lines.pdf");
         await vm.SaveFileAsAsync(saved);
 
-        QpdfReferenceTool.ListAnnotations(saved)!.Where(a => a.Subtype == "Highlight").Should().ContainSingle();
-        var stext = MutoolStextGeometry.Read(saved, 1);
-        using var mupdf = MutoolReferenceRenderer.RenderPage(saved, 1, Dpi);
-        var poppler = PopplerGeometry.Words(saved, 1, cropBox: false);
-        using var popplerRender = PdftoppmReferenceRenderer.RenderPage(saved, 1, Dpi);
-        foreach (var w in new[] { FirstWord, "PROBE", "BRAVO", "TWO" })
+        // Structure (qpdf): one annotation, one quad per line, /Rect covering both quads.
+        var annot = QpdfReferenceTool.ListAnnotations(saved)!.Where(a => a.Subtype == kind.ToString()).Should()
+            .ContainSingle().Subject;
+        annot.QuadPoints.Should().NotBeNull().And.HaveCount(16, "two lines are two quads");
+        for (int q = 0; q < 2; q++)
         {
-            // Coverage only: with the gap painted, the colour centroid is not the word's.
-            ColoredFraction(mupdf!, stext.Width, stext.Find(w)[0]).Should().BeGreaterThan(0.35,
-                $"MuPDF: the two-line highlight covers '{w}'");
-            ColoredFraction(popplerRender!, popplerRender!.Width * 72.0 / Dpi, poppler.Words.First(p => p.Word == w).Box)
-                .Should().BeGreaterThan(0.35, $"Poppler: the two-line highlight covers '{w}'");
+            var quad = annot.QuadPoints!.Skip(q * 8).Take(8).ToList();
+            var xs = quad.Where((_, i) => i % 2 == 0).ToList();
+            var ys = quad.Where((_, i) => i % 2 == 1).ToList();
+            xs.Min().Should().BeGreaterThanOrEqualTo(annot.Left - 0.5);
+            xs.Max().Should().BeLessThanOrEqualTo(annot.Right + 0.5);
+            ys.Min().Should().BeGreaterThanOrEqualTo(annot.Bottom - 0.5);
+            ys.Max().Should().BeLessThanOrEqualTo(annot.Top + 0.5);
         }
 
-        // The gap between the two lines, in displayed space: between line 1's and line 2's boxes.
-        var line1 = stext.Find(FirstWord)[0];
-        var line2 = stext.Find("BRAVO")[0];
-        var gap = new VisualRegion(Math.Min(line1.Right, line2.Right), line1.Top,
-            Math.Max(line1.Left, line2.Left), line1.Bottom);
-        _out.WriteLine($"inter-line gap {gap}: highlighted fraction {ColoredFraction(mupdf!, stext.Width, gap):F2}");
+        // Pixels (MuPDF), against MuPDF's own render of the source and its own text boxes.
+        var stext = MutoolStextGeometry.Read(saved, 1);
+        using (var before = MutoolReferenceRenderer.RenderPage(source, 1, Dpi))
+        using (var after = MutoolReferenceRenderer.RenderPage(saved, 1, Dpi))
+        {
+            AssertMarkedRuns(before!, after!, stext.Width, w => stext.Find(w)[0], marked, clear, kind, "MuPDF");
+        }
+
+        // Pixels (Poppler), likewise in its own frame.
+        var poppler = PopplerGeometry.Words(saved, 1, cropBox: false);
+        using (var before = PdftoppmReferenceRenderer.RenderPage(source, 1, Dpi))
+        using (var after = PdftoppmReferenceRenderer.RenderPage(saved, 1, Dpi))
+        {
+            AssertMarkedRuns(before!, after!, after!.Width * 72.0 / Dpi,
+                w => poppler.Words.First(p => p.Word == w).Box, marked, clear, kind, "Poppler");
+        }
     }
 
-    private static double ColoredFraction(SKBitmap bmp, double pageWidthPt, VisualRegion r)
+    private void AssertMarkedRuns(SKBitmap before, SKBitmap after, double pageWidthPt, Func<string, VisualRegion> box,
+        string[] marked, string[] clear, MarkupAnnotationKind kind, string what)
     {
-        double scale = bmp.Width / pageWidthPt;
-        int colored = 0, total = 0;
-        for (int py = Math.Max(0, (int)(r.Top * scale)); py < Math.Min(bmp.Height, (int)(r.Bottom * scale)); py++)
-            for (int px = Math.Max(0, (int)(r.Left * scale)); px < Math.Min(bmp.Width, (int)(r.Right * scale)); px++)
-            {
-                var c = bmp.GetPixel(px, py);
-                total++;
-                if (Math.Max(c.Red, Math.Max(c.Green, c.Blue)) - Math.Min(c.Red, Math.Min(c.Green, c.Blue)) > 80) colored++;
-            }
-        return total == 0 ? 0 : (double)colored / total;
+        before.Width.Should().Be(after.Width);
+        double scale = after.Width / pageWidthPt;
+        int Changed(VisualRegion r)
+        {
+            int n = 0;
+            for (int py = Math.Max(0, (int)(r.Top * scale)); py < Math.Min(after.Height, (int)(r.Bottom * scale)); py++)
+                for (int px = Math.Max(0, (int)(r.Left * scale)); px < Math.Min(after.Width, (int)(r.Right * scale)); px++)
+                {
+                    var a = after.GetPixel(px, py);
+                    var b = before.GetPixel(px, py);
+                    if (Math.Abs(a.Red - b.Red) + Math.Abs(a.Green - b.Green) + Math.Abs(a.Blue - b.Blue) > 90) n++;
+                }
+            return n;
+        }
+
+        foreach (var w in marked)
+            Changed(box(w).Inflate(6)).Should().BeGreaterThan(10, $"{what}: the {kind} marks '{w}'");
+        foreach (var w in clear)
+            Changed(box(w).Inflate(2)).Should().BeLessThan(3, $"{what}: '{w}' is not selected, so the {kind} leaves it alone");
+
+        // The band between the two lines, measured between the first word of each (ALPHA, BRAVO).
+        var a1 = box("ALPHA");
+        var b1 = box("BRAVO");
+        var everything = VisualRegion.Union(marked.Select(box));
+        bool separatedInY = a1.Bottom <= b1.Top || b1.Bottom <= a1.Top;
+        VisualRegion gap;
+        if (separatedInY)
+        {
+            double lo = Math.Min(a1.Bottom, b1.Bottom), hi = Math.Max(a1.Top, b1.Top);
+            gap = new VisualRegion(everything.Left, lo + (hi - lo) / 3, everything.Right, hi - (hi - lo) / 3);
+        }
+        else
+        {
+            double lo = Math.Min(a1.Right, b1.Right), hi = Math.Max(a1.Left, b1.Left);
+            gap = new VisualRegion(lo + (hi - lo) / 3, everything.Top, hi - (hi - lo) / 3, everything.Bottom);
+        }
+        _out.WriteLine($"{what}: gap {gap}: changed pixels {Changed(gap)}");
+        gap.Width.Should().BeGreaterThan(0);
+        gap.Height.Should().BeGreaterThan(0);
+        Changed(gap).Should().BeLessThan(3, $"{what}: nothing of the {kind} is drawn in the gap between the lines");
     }
 
     private Task MarkWordAsync(Window window, PdfViewerControl viewer, MainWindowViewModel vm,

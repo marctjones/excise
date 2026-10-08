@@ -212,6 +212,7 @@ internal sealed partial class ContinuousPageView
 
         var parts = new List<string>(endpoints.Count);
         var singlePageRects = new List<Rect>();
+        IReadOnlyList<PdfRectangle> lineRectangles = Array.Empty<PdfRectangle>();
         var singlePageNumber = 0;
 
         foreach (var (p, from, to) in endpoints)
@@ -233,6 +234,7 @@ internal sealed partial class ContinuousPageView
                 singlePageRects = selection.VisualRange
                     .Select(l => ContinuousGlyphToPageLocalRect(page, l.GlyphRectangle))
                     .ToList();
+                lineRectangles = TextSelectionEngine.LineRectangles(selection.VisualRange);
             }
         }
 
@@ -243,7 +245,7 @@ internal sealed partial class ContinuousPageView
             ? new PdfPageRect(singlePageNumber, b.X, b.Y, b.Width, b.Height,
                 PdfCoordinateSpace.ContinuousDips, PointsToDip * ZoomLevel)
             : (PdfPageRect?)null;
-        TextSelected?.Invoke(this, new TextSelectedEventArgs(text, pageArea));
+        TextSelected?.Invoke(this, new TextSelectedEventArgs(text, pageArea, lineRectangles));
     }
 
     /// <summary>Redraw the whole anchor→focus span, clearing every page first.</summary>

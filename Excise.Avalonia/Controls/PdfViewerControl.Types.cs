@@ -32,10 +32,24 @@ public class TextSelectedEventArgs : EventArgs
     /// </summary>
     public PdfPageRect? PageArea { get; }
 
+    /// <summary>
+    /// One rectangle per line run of the selected glyphs, in the page's content points
+    /// (PDF user space). Empty when the selection spans pages or is empty. Text markup
+    /// writes one quad per entry, so a multi-line selection does not paint the gap between
+    /// its lines (#2009).
+    /// </summary>
+    public IReadOnlyList<PdfRectangle> LineRectangles { get; }
+
     public TextSelectedEventArgs(string text, PdfPageRect? pageArea)
+        : this(text, pageArea, Array.Empty<PdfRectangle>())
+    {
+    }
+
+    public TextSelectedEventArgs(string text, PdfPageRect? pageArea, IReadOnlyList<PdfRectangle> lineRectangles)
     {
         Text = text;
         PageArea = pageArea;
+        LineRectangles = lineRectangles ?? Array.Empty<PdfRectangle>();
     }
 }
 

@@ -1551,6 +1551,8 @@ internal partial class MainWindow : Window
         // continuous-view markup off by the zoom factor, and on the wrong page
         // when the selection was not on the viewport's current page (#1796).
         viewModel.CurrentTextSelectionPageArea = e.PageArea;
+        // #2009: after the area, which resets them; markup writes one quad per line.
+        viewModel.CurrentTextSelectionLineRectangles = e.LineRectangles;
         // #1645: selecting text does NOT copy it. This used to call
         // SetSelectedTextAndCopyAsync, which put every selection on the OS
         // clipboard and into Clipboard History — so an ordinary click, which is

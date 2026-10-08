@@ -46,7 +46,8 @@ internal sealed partial class SinglePageView
             ? UnionRects(letterDips)
             : null;
         TextSelected?.Invoke(this, new TextSelectedEventArgs(
-            text, bbox is { Width: > 0, Height: > 0 } b ? ViewerDipsRect(b, CurrentPage) : null));
+            text, bbox is { Width: > 0, Height: > 0 } b ? ViewerDipsRect(b, CurrentPage) : null,
+            TextSelectionEngine.LineRectangles(selection.VisualRange)));
     }
 
     /// <summary>

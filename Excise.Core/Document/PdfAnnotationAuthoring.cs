@@ -228,13 +228,38 @@ public static class PdfAnnotationAuthoring
         double blue = 0)
     {
         ArgumentNullException.ThrowIfNull(document);
-        ValidateRect(rect);
+        return AddHighlightAnnotation(document, pageNumber, new[] { rect }, contents, author, red, green, blue);
+    }
+
+    /// <summary>
+    /// Add a Highlight over a selection that spans several lines: one /QuadPoints quad per
+    /// entry of <paramref name="lineRects"/> (ISO 32000-2 §12.5.6.10 allows n quads), so a
+    /// viewer paints only the selected runs and not the gap between lines (#2009). /Rect is
+    /// the union of the quads.
+    /// </summary>
+    public static PdfAnnotation AddHighlightAnnotation(
+        this PdfDocument document,
+        int pageNumber,
+        IReadOnlyList<PdfRectangle> lineRects,
+        string? contents = null,
+        string? author = null,
+        double red = 1,
+        double green = 1,
+        double blue = 0)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(lineRects);
+        if (lineRects.Count == 0)
+            throw new ArgumentException("At least one line rectangle is required.", nameof(lineRects));
+        foreach (var r in lineRects) ValidateRect(r);
         ValidateColor(red, nameof(red));
         ValidateColor(green, nameof(green));
         ValidateColor(blue, nameof(blue));
 
-        var normalized = rect.Normalize();
-        var annot = NewAnnotationDict("Highlight", normalized);
+        var quads = lineRects.Select(r => r.Normalize()).ToList();
+        var union = new PdfRectangle(
+            quads.Min(q => q.Left), quads.Min(q => q.Bottom), quads.Max(q => q.Right), quads.Max(q => q.Top));
+        var annot = NewAnnotationDict("Highlight", union);
 
         if (!string.IsNullOrWhiteSpace(contents))
             annot.SetString("Contents", contents);
@@ -246,15 +271,15 @@ public static class PdfAnnotationAuthoring
             new PdfReal(green),
             new PdfReal(blue));
 
-        annot["QuadPoints"] = new PdfArray(
-            new PdfReal(normalized.Left),
-            new PdfReal(normalized.Top),
-            new PdfReal(normalized.Right),
-            new PdfReal(normalized.Top),
-            new PdfReal(normalized.Left),
-            new PdfReal(normalized.Bottom),
-            new PdfReal(normalized.Right),
-            new PdfReal(normalized.Bottom));
+        var points = new List<PdfObject>(quads.Count * 8);
+        foreach (var q in quads)
+        {
+            points.Add(new PdfReal(q.Left)); points.Add(new PdfReal(q.Top));
+            points.Add(new PdfReal(q.Right)); points.Add(new PdfReal(q.Top));
+            points.Add(new PdfReal(q.Left)); points.Add(new PdfReal(q.Bottom));
+            points.Add(new PdfReal(q.Right)); points.Add(new PdfReal(q.Bottom));
+        }
+        annot["QuadPoints"] = new PdfArray(points);
 
         return AttachAnnotation(document, pageNumber, annot);
     }
@@ -811,10 +836,39 @@ public static class PdfAnnotationAuthoring
         double blue = 0)
         => AddTextMarkupAnnotation(document, pageNumber, rect, "Squiggly", contents, author, red, green, blue);
 
+    /// <summary>
+    /// Underline over a selection that spans several lines: one /QuadPoints quad and one
+    /// stroke per entry of <paramref name="lineRects"/> (#2009), so nothing is drawn in
+    /// the gap between lines. /Rect is the union. A one-element list is exactly the
+    /// single-rect overload.
+    /// </summary>
+    public static PdfAnnotation AddUnderlineAnnotation(
+        this PdfDocument document, int pageNumber, IReadOnlyList<PdfRectangle> lineRects,
+        string? contents = null, string? author = null, double red = 1, double green = 0, double blue = 0)
+        => AddTextMarkupAnnotation(document, pageNumber, lineRects, "Underline", contents, author, red, green, blue);
+
+    /// <summary>StrikeOut over a selection that spans several lines; see the Underline overload (#2009).</summary>
+    public static PdfAnnotation AddStrikeOutAnnotation(
+        this PdfDocument document, int pageNumber, IReadOnlyList<PdfRectangle> lineRects,
+        string? contents = null, string? author = null, double red = 1, double green = 0, double blue = 0)
+        => AddTextMarkupAnnotation(document, pageNumber, lineRects, "StrikeOut", contents, author, red, green, blue);
+
+    /// <summary>Squiggly over a selection that spans several lines; see the Underline overload (#2009).</summary>
+    public static PdfAnnotation AddSquigglyAnnotation(
+        this PdfDocument document, int pageNumber, IReadOnlyList<PdfRectangle> lineRects,
+        string? contents = null, string? author = null, double red = 1, double green = 0, double blue = 0)
+        => AddTextMarkupAnnotation(document, pageNumber, lineRects, "Squiggly", contents, author, red, green, blue);
+
+    private static PdfAnnotation AddTextMarkupAnnotation(
+        PdfDocument document, int pageNumber, PdfRectangle rect, string subtype,
+        string? contents, string? author, double red, double green, double blue)
+        => AddTextMarkupAnnotation(
+            document, pageNumber, new[] { rect }, subtype, contents, author, red, green, blue);
+
     private static PdfAnnotation AddTextMarkupAnnotation(
         PdfDocument document,
         int pageNumber,
-        PdfRectangle rect,
+        IReadOnlyList<PdfRectangle> lineRects,
         string subtype,
         string? contents,
         string? author,
@@ -823,11 +877,29 @@ public static class PdfAnnotationAuthoring
         double blue)
     {
         ArgumentNullException.ThrowIfNull(document);
-        ValidateRect(rect);
+        ArgumentNullException.ThrowIfNull(lineRects);
+        if (lineRects.Count == 0)
+            throw new ArgumentException("At least one line rectangle is required.", nameof(lineRects));
+        foreach (var r in lineRects) ValidateRect(r);
         ValidateColor(red, nameof(red));
         ValidateColor(green, nameof(green));
         ValidateColor(blue, nameof(blue));
 
+        if (lineRects.Count > 1)
+        {
+            // #2009: one quad and one stroke per line. Each line measures its own text
+            // direction, so a selection across differently turned runs still follows each.
+            var lines = lineRects.Select(r =>
+            {
+                var n = r.Normalize();
+                var (dx, dy) = TextDirectionIn(document, pageNumber, n);
+                return (n, dx, dy);
+            }).ToList();
+            return AttachAnnotation(document, pageNumber,
+                TurnedTextMarkup(document, lines, subtype, contents, author, (red, green, blue)));
+        }
+
+        var rect = lineRects[0];
         var normalized = rect.Normalize();
 
         // #1984: text whose baseline does not run along +x in user space (the
@@ -837,7 +909,7 @@ public static class PdfAnnotationAuthoring
         var (dirX, dirY) = TextDirectionIn(document, pageNumber, normalized);
         if (dirX != 1 || dirY != 0)
             return AttachAnnotation(document, pageNumber,
-                TurnedTextMarkup(document, normalized, subtype, contents, author, (red, green, blue), dirX, dirY));
+                TurnedTextMarkup(document, new[] { (normalized, dirX, dirY) }, subtype, contents, author, (red, green, blue)));
 
         // #1796 follow-up: QuadPoints mark up the SELECTED TEXT — the letter
         // cells ContentStreamWalker hands out run baseline -> baseline+fontSize
@@ -924,64 +996,85 @@ public static class PdfAnnotationAuthoring
     /// the first edge is the text's top edge in reading direction.
     /// </summary>
     private static PdfDictionary TurnedTextMarkup(
-        PdfDocument document, PdfRectangle rect, string subtype, string? contents, string? author,
-        (double R, double G, double B) color, int dirX, int dirY)
+        PdfDocument document, IReadOnlyList<(PdfRectangle Rect, int DirX, int DirY)> lines, string subtype,
+        string? contents, string? author, (double R, double G, double B) color)
     {
-        // "Down" in the text frame is the reading direction turned a quarter clockwise.
-        int downX = dirY, downY = -dirX;
-        bool vertical = dirX == 0;
-        double along = vertical ? rect.Height : rect.Width;
-        double cross = vertical ? rect.Width : rect.Height;
+        var path = new StringBuilder();
+        var quads = new List<PdfObject>();
+        double minX = double.MaxValue, minY = double.MaxValue, maxX = double.MinValue, maxY = double.MinValue;
+        double lineWidthMax = 0.5;
 
-        // The text frame origin: the start of the text along its direction, on the baseline.
-        double startX = dirX > 0 ? rect.Left : dirX < 0 ? rect.Right : 0;
-        double startY = dirY > 0 ? rect.Bottom : dirY < 0 ? rect.Top : 0;
-        double baseX = downX > 0 ? rect.Right : downX < 0 ? rect.Left : startX;
-        double baseY = downY > 0 ? rect.Top : downY < 0 ? rect.Bottom : startY;
-        if (vertical) baseY = startY; else baseX = startX;
+        foreach (var (rect, dirX, dirY) in lines)
+        {
+            // "Down" in the text frame is the reading direction turned a quarter clockwise.
+            int downX = dirY, downY = -dirX;
+            bool vertical = dirX == 0;
+            double along = vertical ? rect.Height : rect.Width;
+            double cross = vertical ? rect.Width : rect.Height;
 
-        // Text-frame (t along, s up from the baseline) to user space.
-        (double X, double Y) At(double t, double s) =>
-            (baseX + t * dirX - s * downX, baseY + t * dirY - s * downY);
+            // The text frame origin: the start of the text along its direction, on the baseline.
+            double startX = dirX > 0 ? rect.Left : dirX < 0 ? rect.Right : 0;
+            double startY = dirY > 0 ? rect.Bottom : dirY < 0 ? rect.Top : 0;
+            double baseX = downX > 0 ? rect.Right : downX < 0 ? rect.Left : startX;
+            double baseY = downY > 0 ? rect.Top : downY < 0 ? rect.Bottom : startY;
+            if (vertical) baseY = startY; else baseX = startX;
 
-        bool belowBaseline = subtype is "Underline" or "Squiggly";
-        double pad = belowBaseline ? Math.Max(1.0, cross * 0.15) : 0;
-        double lineWidth = Math.Max(0.5, cross * 0.06);
-        double offset = subtype == "StrikeOut" ? cross * 0.45 : -pad * 0.6;
+            // Text-frame (t along, s up from the baseline) to user space.
+            (double X, double Y) At(double t, double s) =>
+                (baseX + t * dirX - s * downX, baseY + t * dirY - s * downY);
 
-        var corners = new[] { At(0, -pad), At(along, -pad), At(0, cross), At(along, cross) };
-        var apRect = new PdfRectangle(
-            corners.Min(c => c.X), corners.Min(c => c.Y), corners.Max(c => c.X), corners.Max(c => c.Y));
+            bool belowBaseline = subtype is "Underline" or "Squiggly";
+            double pad = belowBaseline ? Math.Max(1.0, cross * 0.15) : 0;
+            double offset = subtype == "StrikeOut" ? cross * 0.45 : -pad * 0.6;
+            lineWidthMax = Math.Max(lineWidthMax, Math.Max(0.5, cross * 0.06));
 
+            foreach (var c in new[] { At(0, -pad), At(along, -pad), At(0, cross), At(along, cross) })
+            {
+                minX = Math.Min(minX, c.X); maxX = Math.Max(maxX, c.X);
+                minY = Math.Min(minY, c.Y); maxY = Math.Max(maxY, c.Y);
+            }
+
+            var p0 = At(0, offset);
+            path.Append($"{Num(p0.X)} {Num(p0.Y)} m\n");
+            if (subtype == "Squiggly")
+            {
+                double amplitude = Math.Max(1, cross * 0.06);
+                double period = Math.Max(2, cross * 0.18);
+                bool up = true;
+                int emitted = 0;
+                for (double t = period; t <= along + period && emitted < 200; t += period, emitted++)
+                {
+                    var p = At(Math.Min(t, along), offset + (up ? amplitude : -amplitude));
+                    path.Append($"{Num(p.X)} {Num(p.Y)} l\n");
+                    up = !up;
+                }
+                if (emitted == 0)
+                {
+                    var p = At(along, offset);
+                    path.Append($"{Num(p.X)} {Num(p.Y)} l\n");
+                }
+            }
+            else
+            {
+                var p1 = At(along, offset);
+                path.Append($"{Num(p1.X)} {Num(p1.Y)} l\n");
+            }
+            path.Append("S\n");
+
+            // One quad per line, in the text frame: the first edge is the text's top edge in reading direction.
+            foreach (var q in new[] { At(0, cross), At(along, cross), At(0, 0), At(along, 0) })
+            {
+                quads.Add(new PdfReal(q.X));
+                quads.Add(new PdfReal(q.Y));
+            }
+        }
+
+        var apRect = new PdfRectangle(minX, minY, maxX, maxY);
         var sb = new StringBuilder();
         sb.Append($"{Num(color.R)} {Num(color.G)} {Num(color.B)} RG\n");
-        sb.Append($"{Num(lineWidth)} w\n");
-        var p0 = At(0, offset);
-        sb.Append($"{Num(p0.X)} {Num(p0.Y)} m\n");
-        if (subtype == "Squiggly")
-        {
-            double amplitude = Math.Max(1, cross * 0.06);
-            double period = Math.Max(2, cross * 0.18);
-            bool up = true;
-            int emitted = 0;
-            for (double t = period; t <= along + period && emitted < 200; t += period, emitted++)
-            {
-                var p = At(Math.Min(t, along), offset + (up ? amplitude : -amplitude));
-                sb.Append($"{Num(p.X)} {Num(p.Y)} l\n");
-                up = !up;
-            }
-            if (emitted == 0)
-            {
-                var p = At(along, offset);
-                sb.Append($"{Num(p.X)} {Num(p.Y)} l\n");
-            }
-        }
-        else
-        {
-            var p1 = At(along, offset);
-            sb.Append($"{Num(p1.X)} {Num(p1.Y)} l\n");
-        }
-        sb.Append("S\n");
+        // A single line keeps its own width; several share the widest, so the lines match.
+        sb.Append($"{Num(lineWidthMax)} w\n");
+        sb.Append(path);
 
         var stream = new PdfStream(Encoding.ASCII.GetBytes(sb.ToString()));
         stream.SetName("Type", "XObject");
@@ -997,16 +1090,7 @@ public static class PdfAnnotationAuthoring
             annot.SetString("T", author);
         annot.SetString("CreationDate", PdfDate.Format(DateTimeOffset.UtcNow));
         annot["C"] = new PdfArray(new PdfReal(color.R), new PdfReal(color.G), new PdfReal(color.B));
-
-        var topStart = At(0, cross);
-        var topEnd = At(along, cross);
-        var baseStart = At(0, 0);
-        var baseEnd = At(along, 0);
-        annot["QuadPoints"] = new PdfArray(
-            new PdfReal(topStart.X), new PdfReal(topStart.Y),
-            new PdfReal(topEnd.X), new PdfReal(topEnd.Y),
-            new PdfReal(baseStart.X), new PdfReal(baseStart.Y),
-            new PdfReal(baseEnd.X), new PdfReal(baseEnd.Y));
+        annot["QuadPoints"] = new PdfArray(quads.ToArray());
 
         var ap = new PdfDictionary();
         ap["N"] = document.AddIndirectObject(stream);

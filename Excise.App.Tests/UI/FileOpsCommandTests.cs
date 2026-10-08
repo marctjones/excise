@@ -173,6 +173,64 @@ public class FileOpsCommandTests
         Cleanup(tempDir);
     }
 
+    // #1973: the panel's name field got the whole absolute path.
+    [FixedAvaloniaFact]
+    public async Task SaveFlattenedFormCopyCommand_SuggestsABareName_AndOpensBesideTheSource()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), "ExciseFileOpsTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        var sourcePath = Path.Combine(tempDir, "filled-w9.pdf");
+        File.WriteAllBytes(sourcePath, BuildFormPdf());
+
+        var picker = new Excise.App.Tests.Utilities.Fakes.RecordingFilePicker(); // cancels
+        var vm = MainWindowViewModelTestFactory.Create(filePicker: picker);
+        await vm.LoadDocumentAsync(sourcePath);
+
+        await vm.SaveFlattenedFormCopyCommand.Execute();
+
+        var request = picker.LastSaveRequest;
+        request.Should().NotBeNull();
+        request!.Title.Should().Be("Save Flattened Form Copy");
+        request.SuggestedFileName.Should().Be("filled-w9_flattened.pdf");
+        request.SuggestedFileName.Should().NotContain(Path.DirectorySeparatorChar.ToString());
+        request.SuggestedStartDirectory.Should().Be(tempDir);
+
+        Cleanup(tempDir);
+    }
+
+    [Fact]
+    public void SuggestedNames_AreBareFileNames_NeverPaths()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "some folder", "report.pdf");
+
+        MainWindowViewModel.SuggestFlattenedFormFilename(path).Should().Be("report_flattened.pdf");
+        MainWindowViewModel.SuggestReducedFilename(path).Should().Be("report_reduced.pdf");
+        MainWindowViewModel.SuggestSignedFilename(path).Should().Be("report_signed.pdf");
+        MainWindowViewModel.SuggestedStartDirectoryOf(path).Should().Be(Path.GetDirectoryName(path));
+        MainWindowViewModel.SuggestedStartDirectoryOf("").Should().BeNull();
+    }
+
+    [Theory]
+    [InlineData("/abs/dir/filled-w9.pdf", "filled-w9_flattened.pdf", "/abs/dir")]
+    [InlineData("sub/form.pdf", "form_flattened.pdf", "sub")]
+    [InlineData("form.pdf", "form_flattened.pdf", null)]
+    [InlineData("/abs/dir/noext", "noext_flattened.pdf", "/abs/dir")]
+    [InlineData("", "document_flattened.pdf", null)]
+    [InlineData("   ", "document_flattened.pdf", null)]
+    public void FlattenedFormSuggestion_SplitsNameFromDirectory(string current, string name, string? directory)
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            current = current.Replace('/', '\\');
+            directory = directory?.Replace('/', '\\');
+        }
+
+        var suggested = MainWindowViewModel.SuggestFlattenedFormFilename(current);
+        suggested.Should().Be(name);
+        suggested.Should().NotContain("/").And.NotContain("\\");
+        MainWindowViewModel.SuggestedStartDirectoryOf(current).Should().Be(directory);
+    }
+
     // ── ExportCurrentPageCommand ─────────────────────────────────────────
     [FixedAvaloniaFact]
     public async Task ExportCurrentPageCommand_Execute_StubbedDialog_WritesNonEmptyPng()

@@ -1008,6 +1008,50 @@ public static class TextSelectionEngine
     private static bool IsSpaceGlyph(string v) =>
         string.IsNullOrEmpty(v) || char.IsWhiteSpace(v[0]);
 
+    /// <summary>One rectangle per line run of the selected glyphs (#2009); see the body.</summary>
+    internal static IReadOnlyList<PdfRectangle> LineRectangles(IReadOnlyList<Letter> letters)
+    {
+        // #2009: one rectangle per line run of the selected glyphs, so text markup writes one
+        // quad per line instead of the whole selection's bounding box. A line is a run of
+        // consecutive glyphs whose pen stays on one baseline: the step to the next glyph moves
+        // less than half a font size ACROSS the line's axis. The axis is the one the first
+        // real step of the line moved along, so text turned in user space (a /Rotate page whose
+        // text matrix turns the other way) groups by its own baseline, not by page y.
+        var result = new List<PdfRectangle>();
+        if (letters.Count == 0)
+            return result;
+
+        PdfRectangle current = EffectiveHighlightRect(letters, 0);
+        int axis = -1; // 0 = the line runs along x, 1 = along y, -1 = not yet known
+        for (int i = 1; i < letters.Count; i++)
+        {
+            var prev = letters[i - 1];
+            var l = letters[i];
+            double dx = l.StartX - prev.StartX, dy = l.StartY - prev.StartY;
+            bool moved = Math.Abs(dx) > 1e-6 || Math.Abs(dy) > 1e-6;
+            int stepAxis = axis >= 0 ? axis : (Math.Abs(dx) >= Math.Abs(dy) ? 0 : 1);
+            double across = stepAxis == 0 ? Math.Abs(dy) : Math.Abs(dx);
+            double halfFont = 0.5 * Math.Max(1, Math.Abs(prev.FontSize));
+
+            var rect = EffectiveHighlightRect(letters, i);
+            if (moved && across > halfFont)
+            {
+                result.Add(current);
+                current = rect;
+                axis = -1;
+                continue;
+            }
+
+            if (moved && axis < 0)
+                axis = stepAxis;
+            current = new PdfRectangle(
+                Math.Min(current.Left, rect.Left), Math.Min(current.Bottom, rect.Bottom),
+                Math.Max(current.Right, rect.Right), Math.Max(current.Top, rect.Top));
+        }
+        result.Add(current);
+        return result;
+    }
+
     /// <summary>
     /// The glyph rectangle to DRAW A SELECTION HIGHLIGHT with — widened to the
     /// glyph's advance when the reported width is degenerate (#833). Some fonts
