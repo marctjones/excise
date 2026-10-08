@@ -9,6 +9,7 @@ semantic versioning.
 ### Fixed
 
 - Sticky-note and FreeText text in Adlam, Hanifi Rohingya or Arabic Mathematical Alphabetic Symbols is now recognised as needing complex shaping, so the viewer declines to draw it unshaped (with the existing diagnostic) instead of drawing plausible but wrong glyphs (#1958).
+- `excise redact --carrier-policy` now lists, accepts and documents `page-labels`, `name-tree-keys`, `signatures` and `optional-content`, the carriers the engine already scrubbed and reported; help and parser read one table (#1896).
 
 ## [3.17.0] - 2026-10-08
 

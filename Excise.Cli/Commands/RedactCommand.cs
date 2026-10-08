@@ -121,8 +121,7 @@ internal static class RedactCommand
         var carrierPolicyOption = new Option<string[]>("--carrier-policy")
         {
             Description = "How a document-level carrier holding the term is handled: " +
-                "'<carrier>=<mode>', repeatable. Carriers: info, xmp, xfa, outlines, annotations, " +
-                "form-fields, struct-tree, javascript, embedded-files, uri, marked-content, all. " +
+                "'<carrier>=<mode>', repeatable. Carriers: " + CarrierNameList + ". " +
                 "Modes: strip (default; cut the term out), remove-whole (drop the entire value), " +
                 "report-only (change nothing and report it). " +
                 "Use remove-whole where the surrounding text is KNOWN -- stripping 'your' from " +
@@ -384,8 +383,7 @@ internal static class RedactCommand
 
             if (!TryParseCarrierName(parts[0].Trim(), out var carriers))
             {
-                error = $"unknown carrier '{parts[0].Trim()}' (info, xmp, xfa, outlines, annotations, " +
-                    "form-fields, struct-tree, javascript, embedded-files, uri, marked-content, all)";
+                error = $"unknown carrier '{parts[0].Trim()}' ({CarrierNameList})";
                 return false;
             }
 
@@ -401,25 +399,45 @@ internal static class RedactCommand
         return true;
     }
 
+    /// <summary>
+    /// The one table behind <c>--carrier-policy</c>: the name a user types for
+    /// each <see cref="Excise.Core.Operations.RedactionCarriers"/> flag. The
+    /// parser, the help text and the unknown-carrier error all read it, so a
+    /// carrier the engine can scrub cannot be absent from the list a user sees
+    /// (#1896). A test reflects the engine's carrier set against it.
+    /// </summary>
+    internal static readonly (string Name, Excise.Core.Operations.RedactionCarriers Flag)[] CarrierNames =
+    {
+        ("info", Excise.Core.Operations.RedactionCarriers.Info),
+        ("xmp", Excise.Core.Operations.RedactionCarriers.Xmp),
+        ("xfa", Excise.Core.Operations.RedactionCarriers.Xfa),
+        ("outlines", Excise.Core.Operations.RedactionCarriers.Outlines),
+        ("annotations", Excise.Core.Operations.RedactionCarriers.Annotations),
+        ("form-fields", Excise.Core.Operations.RedactionCarriers.FormFields),
+        ("struct-tree", Excise.Core.Operations.RedactionCarriers.StructTree),
+        ("javascript", Excise.Core.Operations.RedactionCarriers.JavaScript),
+        ("embedded-files", Excise.Core.Operations.RedactionCarriers.EmbeddedFiles),
+        ("uri", Excise.Core.Operations.RedactionCarriers.ActionUris),
+        ("marked-content", Excise.Core.Operations.RedactionCarriers.MarkedContent),
+        ("page-labels", Excise.Core.Operations.RedactionCarriers.PageLabels),
+        ("name-tree-keys", Excise.Core.Operations.RedactionCarriers.NameTreeKeys),
+        ("signatures", Excise.Core.Operations.RedactionCarriers.Signatures),
+        ("optional-content", Excise.Core.Operations.RedactionCarriers.OptionalContent),
+        ("all", Excise.Core.Operations.RedactionCarriers.All),
+    };
+
+    /// <summary>The names accepted by <c>--carrier-policy</c>, as shown in help and errors.</summary>
+    internal static string CarrierNameList => string.Join(", ", CarrierNames.Select(c => c.Name));
+
     private static bool TryParseCarrierName(
         string name, out Excise.Core.Operations.RedactionCarriers carriers)
     {
         var c = Excise.Core.Operations.RedactionCarriers.None;
-        switch (name.ToLowerInvariant())
+        var key = name.ToLowerInvariant();
+        if (key == "action-uris") key = "uri";   // long-standing alias, not listed
+        foreach (var (listed, flag) in CarrierNames)
         {
-            case "info": c = Excise.Core.Operations.RedactionCarriers.Info; break;
-            case "xmp": c = Excise.Core.Operations.RedactionCarriers.Xmp; break;
-            case "xfa": c = Excise.Core.Operations.RedactionCarriers.Xfa; break;
-            case "outlines": c = Excise.Core.Operations.RedactionCarriers.Outlines; break;
-            case "annotations": c = Excise.Core.Operations.RedactionCarriers.Annotations; break;
-            case "form-fields": c = Excise.Core.Operations.RedactionCarriers.FormFields; break;
-            case "struct-tree": c = Excise.Core.Operations.RedactionCarriers.StructTree; break;
-            case "javascript": c = Excise.Core.Operations.RedactionCarriers.JavaScript; break;
-            case "embedded-files": c = Excise.Core.Operations.RedactionCarriers.EmbeddedFiles; break;
-            case "uri":
-            case "action-uris": c = Excise.Core.Operations.RedactionCarriers.ActionUris; break;
-            case "marked-content": c = Excise.Core.Operations.RedactionCarriers.MarkedContent; break;
-            case "all": c = Excise.Core.Operations.RedactionCarriers.All; break;
+            if (listed == key) { c = flag; break; }
         }
 
         carriers = c;
