@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1539,
-  "indexedContentSha256": "2d7360779de27e4b3d350b2f0bb10037f85fba2fbd37db80bbce03d7dd4b3b60",
+  "indexedContentSha256": "d2eddad81a13a19c67ab20117e287fab17aea81fb294a3a7a5e6daa51c115561",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -7292,6 +7292,14 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/VisualPolishAuditTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "dictionaries",
+            "resource"
+          ]
+        },
+        {
           "path": "tests/format-compatibility-suite.json",
           "kind": "test",
           "matchedTerms": [
@@ -7318,7 +7326,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 46
+      "candidateReferenceCount": 47
     },
     {
       "id": "pdf.17.graphics.paths-painting",
@@ -54125,7 +54133,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 175
+      "candidateReferenceCount": 176
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -59646,7 +59654,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 242
+      "candidateReferenceCount": 243
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -63409,7 +63417,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 121
+      "candidateReferenceCount": 122
     },
     {
       "id": "pdf.17.security.redaction-content-removal",
@@ -69693,7 +69701,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 231
+      "candidateReferenceCount": 232
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -71959,7 +71967,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 167
+      "candidateReferenceCount": 168
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -75160,7 +75168,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 168
+      "candidateReferenceCount": 169
     },
     {
       "id": "pdfe.product.security.privacy-clean-copy",
@@ -79525,6 +79533,17 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/VisualPolishAuditTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "platform",
+            "printing",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/WindowsDocumentPrinterTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -79632,7 +79651,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 38
+      "candidateReferenceCount": 39
     },
     {
       "id": "pdfe.product.forms.restricted-javascript-research",
