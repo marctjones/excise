@@ -329,14 +329,13 @@ internal class PdfSearchService
         // composition (#724); identity for other text. Indices below are
         // all within the folded string.
         text = MatchingNormalization.Fold(text);
-        searchTerm = MatchingNormalization.Fold(searchTerm);
 
         if (useRegex)
         {
             Regex regex;
             try
             {
-                regex = new Regex(searchTerm,
+                regex = new Regex(MatchingNormalization.Fold(searchTerm),
                     caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase);
             }
             catch (ArgumentException) { yield break; }
@@ -348,6 +347,8 @@ internal class PdfSearchService
         }
 
         // Substring search.
+        searchTerm = NormalizeNeedle(searchTerm);
+        if (searchTerm.Length == 0) yield break;
         int startIndex = 0;
         while (startIndex < text.Length)
         {
@@ -360,6 +361,16 @@ internal class PdfSearchService
             startIndex = found + Math.Max(1, searchTerm.Length);
         }
     }
+
+    /// <summary>
+    /// The caller's substring needle in the matching space, exactly as redaction
+    /// reads it (<c>Fold(term).Trim()</c>, #942): search must show what redaction
+    /// would remove, so a trailing space does not hide a hit. A needle that folds
+    /// to nothing (a lone zero-width space) is empty and matches nothing; an empty
+    /// needle would otherwise never advance the page scan (#1848).
+    /// </summary>
+    private static string NormalizeNeedle(string searchTerm) =>
+        MatchingNormalization.Fold(searchTerm).Trim();
 
     private SearchMatch BuildAnnotationMatch(
         Excise.Core.Document.PdfRectangle rect,
@@ -467,7 +478,8 @@ internal class PdfSearchService
         // index arithmetic stays consistent.
         // #924: haystack from the WORDS, not page.Text — see BuildSearchableText.
         (pageText, var wordSpans) = BuildSearchableText(words);
-        searchTerm = MatchingNormalization.Fold(searchTerm);
+        searchTerm = NormalizeNeedle(searchTerm);
+        if (searchTerm.Length == 0) return matches;
 
         int index = 0;
         while ((index = TermMatch.IndexOf(pageText, searchTerm, caseSensitive, wholeWord, index)) != -1)
