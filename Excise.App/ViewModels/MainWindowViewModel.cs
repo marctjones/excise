@@ -31,7 +31,6 @@ internal partial class MainWindowViewModel : ViewModelBase
 
     private readonly ILogger<MainWindowViewModel> _logger;
     private readonly PdfDocumentService _documentService;
-    private readonly RedactionService _redactionService;
     private readonly RedactedCopyDialogFormatter _redactedCopyDialogFormatter;
     private readonly RedactionWorkflowService _redactionWorkflowService;
     private readonly PdfTextExtractionService _textExtractionService;
@@ -120,7 +119,6 @@ internal partial class MainWindowViewModel : ViewModelBase
     internal MainWindowViewModel(
         ILogger<MainWindowViewModel> logger,
         PdfDocumentService documentService,
-        RedactionService redactionService,
         RedactedCopyDialogFormatter redactedCopyDialogFormatter,
         RedactionWorkflowService redactionWorkflowService,
         PdfTextExtractionService textExtractionService,
@@ -143,7 +141,6 @@ internal partial class MainWindowViewModel : ViewModelBase
     {
         _logger = logger;
         _documentService = documentService;
-        _redactionService = redactionService;
         _redactedCopyDialogFormatter = redactedCopyDialogFormatter;
         _redactionWorkflowService = redactionWorkflowService;
         _textExtractionService = textExtractionService;

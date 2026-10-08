@@ -6,6 +6,8 @@ using AwesomeAssertions;
 using Excise.App.Services;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
+using Excise.App.Tests.Utilities.Fakes;
+using Excise.Ocr;
 using Excise.Rendering.Differential;
 using Excise.TestSupport;
 using Xunit;
@@ -467,6 +469,107 @@ public class ScriptedGuiTests
         viewModel.PdfCoreDocument.Should().NotBeNull();
         viewModel.PdfCoreDocument.Should().BeSameAs(viewModel.SaveDocumentForTests,
             "the scripted load must point PdfCoreDocument at the document service's own document");
+    }
+
+    /// <summary>
+    /// #1501: a scripted text redaction reports exactly what <c>excise
+    /// redact</c> reports, because both run <see cref="TermRedactionRunner"/>.
+    /// The old scripted path returned a count and two warnings: it said nothing
+    /// about a hyphen-wrapped occurrence still readable in the output, and it
+    /// re-saved the file through a second, area-shaped safety pass the CLI
+    /// does not run. The fixture carries the term in the page text, /Info and
+    /// an outline title, and a second term wrapped across a line by a hyphen.
+    /// </summary>
+    [Fact]
+    public async Task SaveDocumentCommand_TextRedaction_ReportsWhatTheCliReports()
+    {
+        var sourcePdf = Path.Combine(_testDataDir, $"parity-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(sourcePdf, ParityFixture());
+        var scriptedPdf = Path.Combine(_testDataDir, $"parity-scripted-{Guid.NewGuid():N}.pdf");
+        var cliMiddlePdf = Path.Combine(_testDataDir, $"parity-cli-1-{Guid.NewGuid():N}.pdf");
+        var cliPdf = Path.Combine(_testDataDir, $"parity-cli-2-{Guid.NewGuid():N}.pdf");
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(sourcePdf), "PARITYSECRET").Should().HaveCountGreaterThan(1,
+            "input-side control: the term must be findable in the page and its other carriers");
+
+        try
+        {
+            var viewModel = MainWindowViewModelTestFactory.Create(settingsStore: new InMemorySettingsStore());
+            await viewModel.LoadDocumentHeadlessAsync(sourcePdf);
+            await viewModel.RedactTextCommand("PARITYSECRET");
+            await viewModel.RedactTextCommand("Anderson");
+            await viewModel.SaveDocumentCommand(scriptedPdf);
+
+            // What `excise redact` runs for each term, with the same options.
+            var options = viewModel.RedactionPreferences.ToOptions() with { CaseSensitive = false };
+            var cli = new[]
+            {
+                TermRedactionRunner.Execute(new TermRedactionRequest(sourcePdf, cliMiddlePdf, "PARITYSECRET", options)),
+                TermRedactionRunner.Execute(new TermRedactionRequest(cliMiddlePdf, cliPdf, "Anderson", options)),
+            };
+
+            static object Report(TermRedactionResult r) => new
+            {
+                r.Text, r.Count, r.Flattened, r.WholeWord, r.HasUnremovedWrappedOccurrence,
+                r.AccessibilityRemoved, Notes = string.Join("\n", r.CarrierNotes),
+                Diagnostics = string.Join("\n", r.Diagnostics),
+                Removals = string.Join("\n", r.Removals.Select(x => x.ToString())),
+            };
+            viewModel.LastTextRedactionResults.Select(Report).Should().Equal(cli.Select(Report));
+
+            var wrapped = viewModel.LastTextRedactionResults.Single(r => r.Text == "Anderson");
+            wrapped.HasUnremovedWrappedOccurrence.Should().BeTrue();
+            wrapped.CarrierNotes.Should().Contain(n => n.Contains("NOT REMOVED (hyphen-wrapped)"),
+                "a wrapped occurrence is still readable in the output and the scripted result must say so");
+
+            var scriptedBytes = File.ReadAllBytes(scriptedPdf);
+            SavedPdfLeakScanner.FindTerm(scriptedBytes, "PARITYSECRET").Should().BeEmpty(
+                "page text, /Info and the outline title must all lose the term");
+            SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(cliPdf), "PARITYSECRET").Should().BeEmpty();
+            var mutool = MutoolTextExtractor.ExtractPage(scriptedPdf, 1);
+            if (mutool != null)
+                mutool.Should().NotContain("PARITYSECRET");
+        }
+        finally
+        {
+            foreach (var path in new[] { sourcePdf, scriptedPdf, cliMiddlePdf, cliPdf })
+                File.Delete(path);
+        }
+    }
+
+    /// <summary>
+    /// One page: the term on a line by itself, "Ander-" / "son" wrapped across
+    /// two lines (#1372), plus the term in /Info /Title and an outline title.
+    /// </summary>
+    private static byte[] ParityFixture()
+    {
+        const string content =
+            "BT /F1 12 Tf 72 720 Td (Filed by PARITYSECRET today) Tj ET " +
+            "BT /F1 12 Tf 72 700 Td (Reported by Ander-) Tj ET " +
+            "BT /F1 12 Tf 72 686 Td (son on the record) Tj ET";
+        var objects = new[]
+        {
+            "<< /Type /Catalog /Pages 2 0 R /Outlines 6 0 R >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+            $"<< /Length {content.Length} >>\nstream\n{content}\nendstream",
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+            "<< /Type /Outlines /First 7 0 R /Last 7 0 R /Count 1 >>",
+            "<< /Title (PARITYSECRET chapter) /Parent 6 0 R /Dest [3 0 R /XYZ 0 792 0] >>",
+            "<< /Title (PARITYSECRET report) /Producer (test) >>",
+        };
+        var pdf = new System.Text.StringBuilder("%PDF-1.4\n");
+        var offsets = new int[objects.Length];
+        for (var i = 0; i < objects.Length; i++)
+        {
+            offsets[i] = pdf.Length;
+            pdf.Append($"{i + 1} 0 obj\n{objects[i]}\nendobj\n");
+        }
+        var xref = pdf.Length;
+        pdf.Append($"xref\n0 {objects.Length + 1}\n0000000000 65535 f \n");
+        foreach (var offset in offsets)
+            pdf.Append($"{offset:D10} 00000 n \n");
+        pdf.Append($"trailer\n<< /Root 1 0 R /Info 8 0 R /Size {objects.Length + 1} >>\nstartxref\n{xref}\n%%EOF\n");
+        return System.Text.Encoding.ASCII.GetBytes(pdf.ToString());
     }
 
     /// <summary>

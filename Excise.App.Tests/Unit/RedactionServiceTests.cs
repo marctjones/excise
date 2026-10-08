@@ -33,6 +33,15 @@ public class RedactionServiceTests : IDisposable
         return path;
     }
 
+    // #1501: redacting a term through a file is TermRedactionRunner, the
+    // workflow the CLI runs too; these pin it with GUI-shaped options.
+    private static TermRedactionResult RedactText(
+        string inputPath, string outputPath, string term, RedactionOptions options, bool allowLowConfidence = false) =>
+        TermRedactionRunner.Execute(new TermRedactionRequest(inputPath, outputPath, term, options)
+        {
+            AllowLowConfidence = allowLowConfidence,
+        });
+
     void IDisposable.Dispose()
     {
         try
@@ -225,11 +234,10 @@ public class RedactionServiceTests : IDisposable
         var outputPath = Path.Combine(_tempDir, "output.pdf");
 
         // Act
-        var result = _service.RedactText(inputPath, outputPath, "RedactMe", RedactionOptions.Default);
+        RedactText(inputPath, outputPath, "RedactMe", RedactionOptions.Default);
 
         // Assert
         File.Exists(outputPath).Should().BeTrue();
-        result.Success.Should().BeTrue();
         // #1769: "a file was produced and the service says it worked" is true
         // of a copy operation. The file must also not hold the term.
         SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "RedactMe").Should().BeEmpty(
@@ -250,7 +258,7 @@ public class RedactionServiceTests : IDisposable
         var outputPath = Path.Combine(_tempDir, "output.pdf");
 
         // Act
-        _service.RedactText(inputPath, outputPath, "SecretTerm", RedactionOptions.Default);
+        RedactText(inputPath, outputPath, "SecretTerm", RedactionOptions.Default);
 
         // Assert — on the saved bytes, not on a list of what the service says it
         // did. A service can record a term it failed to remove.
@@ -272,10 +280,9 @@ public class RedactionServiceTests : IDisposable
         var outputPath = Path.Combine(_tempDir, "output.pdf");
 
         // Act
-        var result = _service.RedactText(inputPath, outputPath, "NonExistentTerm", RedactionOptions.Default);
+        RedactText(inputPath, outputPath, "NonExistentTerm", RedactionOptions.Default);
 
         // Assert
-        result.Success.Should().BeTrue();
         SavedPdfLeakScanner.AllCarriersText(File.ReadAllBytes(outputPath))
             .Should().Contain("SomeText",
                 "redacting a term the document does not contain must not remove the text it does");
@@ -291,7 +298,7 @@ public class RedactionServiceTests : IDisposable
         var outputPath = Path.Combine(_tempDir, "output.pdf");
 
         // Act
-        _service.RedactText(inputPath, outputPath, "TestContent", RedactionOptions.Default);
+        RedactText(inputPath, outputPath, "TestContent", RedactionOptions.Default);
 
         // Assert - Verify we can open the output
         using var doc = PdfDocument.Open(File.ReadAllBytes(outputPath));
@@ -317,15 +324,12 @@ public class RedactionServiceTests : IDisposable
         var insensitivePath = Path.Combine(_tempDir, "output-insensitive.pdf");
 
         // Act — the SAME wrong-case needle through both modes.
-        var resultSensitive = _service.RedactText(
+        var resultSensitive = RedactText(
             inputPath, sensitivePath, "testcontenttoken", RedactionOptions.Default with { CaseSensitive = true });
-        var resultInsensitive = _service.RedactText(
+        var resultInsensitive = RedactText(
             inputPath, insensitivePath, "testcontenttoken", RedactionOptions.Default);
 
         // Assert
-        resultSensitive.Success.Should().BeTrue();
-        resultInsensitive.Success.Should().BeTrue();
-
         SavedPdfLeakScanner.AllCarriersText(File.ReadAllBytes(sensitivePath))
             .Should().Contain("TestContentToken",
                 "a case-SENSITIVE search for the lower-case spelling must not match the document's text");
@@ -335,30 +339,14 @@ public class RedactionServiceTests : IDisposable
     }
 
     [Fact]
-    public void RedactText_WithInvalidInputPath_ReturnsFailed()
+    public void RedactText_WithInvalidInputPath_Throws()
     {
-        // Arrange
         var outputPath = Path.Combine(_tempDir, "output.pdf");
 
-        // Act
-        var result = _service.RedactText("/nonexistent/path.pdf", outputPath, "Term", RedactionOptions.Default);
+        var act = () => RedactText("/nonexistent/path.pdf", outputPath, "Term", RedactionOptions.Default);
 
-        // Assert
-        result.Success.Should().BeFalse();
-    }
-
-    /// <summary>#650: every result carries a Warnings collection — never null, even when empty.</summary>
-    [Fact]
-    public void RedactText_ResultAlwaysHasNonNullWarnings()
-    {
-        var inputPath = CreateTestFile("input.pdf", path =>
-            TestPdfGenerator.CreateSimpleTextPdf(path, "RedactMe"));
-        var outputPath = Path.Combine(_tempDir, "output.pdf");
-
-        var result = _service.RedactText(inputPath, outputPath, "RedactMe", RedactionOptions.Default);
-
-        result.Success.Should().BeTrue();
-        result.Warnings.Should().NotBeNull();
+        act.Should().Throw<FileNotFoundException>();
+        File.Exists(outputPath).Should().BeFalse();
     }
 
     /// <summary>#650: allowLowConfidence must not change behavior on a healthy document — it only matters when the confidence check refuses.</summary>
@@ -369,10 +357,9 @@ public class RedactionServiceTests : IDisposable
             TestPdfGenerator.CreateSimpleTextPdf(path, "RedactMe"));
         var outputPath = Path.Combine(_tempDir, "output.pdf");
 
-        var result = _service.RedactText(inputPath, outputPath, "RedactMe", RedactionOptions.Default, allowLowConfidence: true);
+        var result = RedactText(inputPath, outputPath, "RedactMe", RedactionOptions.Default, allowLowConfidence: true);
 
-        result.Success.Should().BeTrue();
-        result.RedactionCount.Should().BeGreaterThan(0);
+        result.Count.Should().BeGreaterThan(0);
         // A count the service reports is not removal; the saved bytes are.
         SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "RedactMe").Should().BeEmpty();
     }
@@ -396,11 +383,9 @@ public class RedactionServiceTests : IDisposable
         var outputPath = Path.Combine(_tempDir, "output.pdf");
 
         // Act
-        var result = _service.RedactText(inputPath, outputPath, "Secret", RedactionOptions.Default);
+        RedactText(inputPath, outputPath, "Secret", RedactionOptions.Default);
 
         // Assert
-        result.Success.Should().BeTrue();
-
         var savedBytes = File.ReadAllBytes(outputPath);
         SavedPdfLeakScanner.FindTerm(savedBytes, "Secret").Should().BeEmpty(
             "every page's copy of the term must be gone, in every carrier");
@@ -416,22 +401,22 @@ public class RedactionServiceTests : IDisposable
     }
 
     [Fact]
-    public void RedactTextFlattenOcr_WritesImageOnlyOutputWithoutTheTargetTextLayer()
+    public void FlattenOcr_WritesImageOnlyOutputWithoutTheTargetTextLayer()
     {
         Assert.SkipUnless(new PdfOcrService().IsAvailable(), "tesseract not installed");
         var inputPath = CreateTestFile("flatten-input.pdf", path =>
             TestPdfGenerator.CreateSimpleTextPdf(path, "GUIFLATTENSECRET"));
         var outputPath = Path.Combine(_tempDir, "flatten-output.pdf");
 
-        var result = _service.RedactTextFlattenOcr(inputPath, outputPath, "GUIFLATTENSECRET");
+        var result = TermRedactionRunner.Execute(new TermRedactionRequest(
+            inputPath, outputPath, "GUIFLATTENSECRET", RedactionOptions.Default) { FlattenOcr = true });
 
-        result.Success.Should().BeTrue(result.ErrorMessage);
-        result.RedactionCount.Should().BeGreaterThan(0);
+        result.Flattened.Should().BeTrue();
+        result.Count.Should().BeGreaterThan(0);
         SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "GUIFLATTENSECRET")
             .Should().BeEmpty("the image-only output must not retain the target in any saved text carrier");
         using var output = PdfDocument.Open(File.ReadAllBytes(outputPath));
         output.GetPage(1).Text.Should().BeEmpty("the GUI image-only path must not recreate an OCR text layer");
-        result.Warnings.Should().ContainSingle().Which.Should().Contain("intentionally removed selectable text");
     }
 
     #endregion
@@ -513,8 +498,7 @@ public class RedactionServiceTests : IDisposable
         var finalPath = Path.Combine(_tempDir, "final.pdf");
 
         // Act - First do text redaction
-        var textResult = _service.RedactText(inputPath, intermediatePath, "Secret", RedactionOptions.Default);
-        textResult.Success.Should().BeTrue();
+        RedactText(inputPath, intermediatePath, "Secret", RedactionOptions.Default);
 
         // Then do area redaction on the result
         using var doc = PdfDocument.Open(File.ReadAllBytes(intermediatePath));

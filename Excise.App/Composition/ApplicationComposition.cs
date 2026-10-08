@@ -111,7 +111,6 @@ internal static class ApplicationComposition
         new(
             services.GetRequiredService<Microsoft.Extensions.Logging.ILogger<MainWindowViewModel>>(),
             services.GetRequiredService<PdfDocumentService>(),
-            services.GetRequiredService<RedactionService>(),
             services.GetRequiredService<RedactedCopyDialogFormatter>(),
             services.GetRequiredService<RedactionWorkflowService>(),
             services.GetRequiredService<PdfTextExtractionService>(),

@@ -1,19 +1,14 @@
 using Microsoft.Extensions.Logging;
-using Excise.App.Models;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
-using Excise.Ocr;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 
 namespace Excise.App.Services;
 
 /// <summary>
 /// GUI-facing redaction orchestrator. A thin shell over Excise.Core:
-/// delegates glyph/image removal to <see cref="PdfPageRedactionExtensions"/>
-/// and text-search redaction to <see cref="PdfDocumentRedactionExtensions"/>.
+/// delegates glyph/image removal to <see cref="PdfPageRedactionExtensions"/>.
+/// Redacting a term through a file is <c>Excise.Ocr.TermRedactionRunner</c>,
+/// the workflow the CLI runs too (#1501).
 /// </summary>
 /// <remarks>
 /// ⚠️ CRITICAL FOR AI CODING ASSISTANTS:
@@ -84,122 +79,4 @@ internal class RedactionService
                visualArea.Right <= visualPageWidth + tolerance &&
                visualArea.Y2 <= visualPageHeight + tolerance;
     }
-
-    /// <summary>
-    /// Redact every occurrence of <paramref name="textToRedact"/> in the
-    /// PDF at <paramref name="inputPath"/>, writing to <paramref name="outputPath"/>.
-    /// Shares the same Excise.Core pipeline as area-click redaction.
-    /// </summary>
-    /// <param name="allowLowConfidence">
-    /// #650: before redacting, excise's own extraction is checked against an
-    /// independent oracle (mutool, or tesseract if mutool isn't installed)
-    /// for this specific document. When that check comes back Severe — the
-    /// oracle finds substantially more/different text than excise extracted,
-    /// the same signature as a real redaction leak — the redaction is
-    /// refused by default. Pass true to proceed anyway. A Degraded or
-    /// Unverified result never blocks; it's surfaced in
-    /// <see cref="TextRedactionResult.Warnings"/> instead.
-    /// </param>
-    /// <param name="options">
-    /// The caller's whole option set, carrier policy included: rebuilding it
-    /// here from a profile and a few scalars dropped the user's link-URI and
-    /// metadata preferences (#1857). The match rule that ran is echoed back in
-    /// <see cref="TextRedactionResult.WholeWord"/>.
-    /// </param>
-    public TextRedactionResult RedactText(
-        string inputPath, string outputPath, string textToRedact,
-        Excise.Core.Text.Segmentation.RedactionOptions options, bool allowLowConfidence = false)
-    {
-        _logger.LogInformation(
-            "RedactText: '{Text}' in {Input} (wholeWord={WholeWord}, profile={Profile})",
-            textToRedact, inputPath, options.WholeWord, options.Profile);
-
-        try
-        {
-            using var doc = PdfDocument.Open(File.ReadAllBytes(inputPath));
-
-            var confidence = new RedactionConfidenceChecker().CheckDocument(doc, sourceFilePath: inputPath);
-            if (confidence.ShouldRefuse && !allowLowConfidence)
-            {
-                _logger.LogWarning(
-                    "RedactText refused for '{Text}': extraction-confidence check reported {Tier} (oracle: {Oracle})",
-                    textToRedact, confidence.Tier, confidence.Oracle);
-                return TextRedactionResult.Failed(
-                    $"Redaction refused: excise's own text extraction disagrees sharply with an independent " +
-                    $"check ({confidence.Oracle}) on this document — the same signature as a real redaction " +
-                    "leak. This may be a false alarm, but proceeding without understanding why requires " +
-                    "explicit confirmation.");
-            }
-
-            // #1089: VerifiedRemovals, not the located count. The old int was
-            // an attempt counter and reported a term that survived as success.
-            var redaction = doc.RedactText(textToRedact, options);
-            int totalMatches = redaction.VerifiedRemovals;
-            // #643: this path opens without a password, so only empty-user-
-            // password encrypted sources reach here — their redacted output
-            // stays encrypted with the same parameters.
-            doc.Save(outputPath, doc.GetReEncryptionOptions(userPassword: null));
-
-            var warnings = new List<string>();
-            if (confidence.ShouldWarn)
-                warnings.Add(BuildConfidenceWarning(confidence));
-            // #1572: a kept attachment excise could not check, or whose own
-            // redaction was not clean, may still hold the term.
-            foreach (var attachment in redaction.Attachments.Where(a => !a.IsClean))
-                warnings.Add($"Kept attachment {attachment}.");
-            var removedAttachments = redaction.Attachments.Count(
-                a => a.Disposition == AttachmentDisposition.Removed);
-            if (removedAttachments > 0)
-                _logger.LogInformation("Removed {Count} attachment(s) from the redacted output", removedAttachments);
-
-            _logger.LogInformation(
-                "Redacted {Count} occurrence(s) of '{Text}' (wholeWord={WholeWord})",
-                totalMatches, textToRedact, options.WholeWord);
-            return TextRedactionResult.Succeeded(totalMatches, warnings, options.WholeWord);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "RedactText failed for '{Text}'", textToRedact);
-            return TextRedactionResult.Failed($"Redaction failed: {ex.Message}");
-        }
-    }
-
-    /// <summary>
-    /// #1186 image-only redaction escape hatch for scanned or image-baked text.
-    /// Every source page is rasterized, OCR-located target pixels are blacked
-    /// out, and a fresh PDF containing only page-image XObjects is written.
-    /// This intentionally drops selectable text, forms, links, and metadata.
-    /// </summary>
-    /// <remarks>
-    /// This is deliberately a separate GUI-service operation rather than a
-    /// fallback inside <see cref="RedactText"/>: flattening is lossy and must
-    /// remain an explicit user/automation decision.
-    /// </remarks>
-    public TextRedactionResult RedactTextFlattenOcr(
-        string inputPath, string outputPath, string textToRedact, bool caseSensitive = false)
-    {
-        _logger.LogInformation("RedactTextFlattenOcr: '{Text}' in {Input}", textToRedact, inputPath);
-        try
-        {
-            var count = new PdfRasterRedactionConverter(new PdfOcrService())
-                .RedactToImageOnly(inputPath, outputPath, textToRedact, caseSensitive);
-            return TextRedactionResult.Succeeded(count, new[]
-            {
-                "Image-only redaction intentionally removed selectable text, forms, links, and metadata."
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "RedactTextFlattenOcr failed for '{Text}'", textToRedact);
-            return TextRedactionResult.Failed($"Image-only redaction failed: {ex.Message}");
-        }
-    }
-
-    private static string BuildConfidenceWarning(RedactionConfidenceReport confidence) =>
-        confidence.Tier == RedactionConfidenceTier.Unverified
-            ? "Redaction could not be independently verified — neither mutool nor tesseract is installed. " +
-              "excise's own extraction was used as-is; install one of those tools for a confidence check on future redactions."
-            : $"Redaction succeeded, but excise's extraction differs somewhat from an independent check " +
-              $"({confidence.Oracle}) on one or more pages of this document. Review the result before relying on it.";
 }
-
