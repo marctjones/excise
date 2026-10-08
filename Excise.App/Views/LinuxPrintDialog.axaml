@@ -24,8 +24,11 @@
                   AutomationProperties.Name="Printer queue"/>
 
         <Grid Grid.Row="2" Margin="0,14,0,0" ColumnDefinitions="Auto,90,Auto,*">
-            <TextBlock Grid.Column="0" Text="Copies" VerticalAlignment="Center"
-                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+            <Label Grid.Column="0" Target="{Binding #LinuxPrintCopiesBox}" Classes="field-label" VerticalAlignment="Center">
+                <Label.Content>
+                    <OnPlatform x:TypeArguments="x:String" Default="Copies" Windows="_Copies"/>
+                </Label.Content>
+            </Label>
             <TextBox x:Name="LinuxPrintCopiesBox" Grid.Column="1"
                      Margin="10,0,0,0"
                      Text="{Binding CopiesText}"
@@ -36,9 +39,11 @@
                       AutomationProperties.Name="Collate copies"/>
         </Grid>
 
-        <TextBlock Grid.Row="3" Margin="0,14,0,0"
-                   Text="Pages"
-                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+        <Label Grid.Row="3" Margin="0,14,0,0" Target="{Binding #LinuxPrintPageRangeBox}" Classes="field-label">
+            <Label.Content>
+                <OnPlatform x:TypeArguments="x:String" Default="Pages" Windows="_Pages"/>
+            </Label.Content>
+        </Label>
 
         <TextBox x:Name="LinuxPrintPageRangeBox" Grid.Row="4"
                  Margin="0,6,0,0"

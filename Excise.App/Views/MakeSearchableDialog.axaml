@@ -34,7 +34,11 @@
 
             <!-- Options -->
             <StackPanel Spacing="8" IsEnabled="{Binding CanEditOptions}">
-                <TextBlock Text="Language" Classes="field-label"/>
+                <Label Target="{Binding #LanguageTextBox}" Classes="field-label">
+                    <Label.Content>
+                        <OnPlatform x:TypeArguments="x:String" Default="Language" Windows="_Language"/>
+                    </Label.Content>
+                </Label>
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBox x:Name="LanguageTextBox"
                              Grid.Column="0"

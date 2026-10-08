@@ -58,7 +58,7 @@
                     <StackPanel Spacing="4">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
                             <StackPanel Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Text="Appearance" Classes="field-label"/>
+                                <Label Content="Appearance" Target="{Binding #AppearanceComboBox}" Classes="field-label"/>
                                 <TextBlock Text="Light or dark window chrome. Pages always show as the PDF draws them." Classes="help"/>
                             </StackPanel>
                             <ComboBox x:Name="AppearanceComboBox" Grid.Column="1"
@@ -76,7 +76,7 @@
                     <StackPanel Spacing="4">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
                             <StackPanel Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Text="Open documents in" Classes="field-label"/>
+                                <Label Content="Open documents in" Target="{Binding #DocumentOpenModeComboBox}" Classes="field-label"/>
                                 <TextBlock Text="Where a document opens when the window already shows one." Classes="help"/>
                             </StackPanel>
                             <ComboBox x:Name="DocumentOpenModeComboBox" Grid.Column="1"
@@ -99,7 +99,7 @@
                     <StackPanel Spacing="4">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
                             <StackPanel Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Text="Run form calculations (FormCalc)" Classes="field-label"/>
+                                <Label Content="Run form calculations (FormCalc)" Target="{Binding #RunFormCalcCheckBox}" Classes="field-label"/>
                                 <TextBlock Text="Dynamic XFA forms compute their totals and show the fields their author meant. JavaScript never runs." Classes="help"/>
                             </StackPanel>
                             <CheckBox x:Name="RunFormCalcCheckBox" Grid.Column="1"
@@ -125,7 +125,7 @@
                     <StackPanel Spacing="4">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
                             <StackPanel Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Text="Preset" Classes="field-label"/>
+                                <Label Content="Preset" Target="{Binding #PerformancePresetComboBox}" Classes="field-label"/>
                                 <TextBlock Text="Changing an advanced value below switches this to Custom." Classes="help"/>
                             </StackPanel>
                             <ComboBox x:Name="PerformancePresetComboBox" Grid.Column="1"
@@ -169,7 +169,7 @@
                               AutomationProperties.HelpText="Individual cache, thumbnail, trim and render-thread limits.">
                         <StackPanel Spacing="12" Margin="0,8,0,0">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                                <TextBlock Text="Page tile cache (MB)" Classes="field-label" VerticalAlignment="Center"/>
+                                <Label Content="Page tile cache (MB)" Target="{Binding #TileCacheBudgetNumericUpDown}" Classes="field-label" VerticalAlignment="Center"/>
                                 <NumericUpDown x:Name="TileCacheBudgetNumericUpDown" Grid.Column="1"
                                                Value="{Binding TileCacheBudgetMb}"
                                                Minimum="32" Maximum="1024" Increment="16" FormatString="0"
@@ -178,7 +178,7 @@
                             </Grid>
 
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                                <TextBlock Text="Cached pages (single-page view)" Classes="field-label" VerticalAlignment="Center"/>
+                                <Label Content="Cached pages (single-page view)" Target="{Binding #SinglePageCachedPagesNumericUpDown}" Classes="field-label" VerticalAlignment="Center"/>
                                 <NumericUpDown x:Name="SinglePageCachedPagesNumericUpDown" Grid.Column="1"
                                                Value="{Binding SinglePageCachedPages}"
                                                Minimum="1" Maximum="24" Increment="1" FormatString="0"
@@ -187,7 +187,7 @@
                             </Grid>
 
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                                <TextBlock Text="Render thumbnails in the background" Classes="field-label" VerticalAlignment="Center"/>
+                                <Label Content="Render thumbnails in the background" Target="{Binding #ThumbnailPrewarmCheckBox}" Classes="field-label" VerticalAlignment="Center"/>
                                 <CheckBox x:Name="ThumbnailPrewarmCheckBox" Grid.Column="1"
                                           IsChecked="{Binding ThumbnailPrewarm}"
                                           AutomationProperties.Name="Thumbnail Background Rendering"
@@ -195,7 +195,7 @@
                             </Grid>
 
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                                <TextBlock Text="Thumbnails kept around the visible ones" Classes="field-label" VerticalAlignment="Center"/>
+                                <Label Content="Thumbnails kept around the visible ones" Target="{Binding #ThumbnailKeepMarginNumericUpDown}" Classes="field-label" VerticalAlignment="Center"/>
                                 <NumericUpDown x:Name="ThumbnailKeepMarginNumericUpDown" Grid.Column="1"
                                                Value="{Binding ThumbnailKeepMargin}"
                                                Minimum="12" Maximum="500" Increment="4" FormatString="0"
@@ -204,7 +204,7 @@
                             </Grid>
 
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                                <TextBlock Text="Release caches when excise is in the background or idle" Classes="field-label" VerticalAlignment="Center"/>
+                                <Label Content="Release caches when excise is in the background or idle" Target="{Binding #SoftCacheTrimsCheckBox}" Classes="field-label" VerticalAlignment="Center"/>
                                 <CheckBox x:Name="SoftCacheTrimsCheckBox" Grid.Column="1"
                                           IsChecked="{Binding SoftCacheTrims}"
                                           AutomationProperties.Name="Background Cache Trims"
@@ -212,7 +212,7 @@
                             </Grid>
 
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                                <TextBlock Text="Idle delay (seconds)" Classes="field-label" VerticalAlignment="Center"/>
+                                <Label Content="Idle delay (seconds)" Target="{Binding #IdleTrimSecondsNumericUpDown}" Classes="field-label" VerticalAlignment="Center"/>
                                 <!-- #1565: this is now the app's one idle delay. It gates the
                                      background thumbnail pre-render as well as the cache trim,
                                      so it stays editable when soft trims are off. -->
@@ -224,7 +224,7 @@
                             </Grid>
 
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                                <TextBlock Text="Render threads" Classes="field-label" VerticalAlignment="Center"/>
+                                <Label Content="Render threads" Target="{Binding #RenderThreadsNumericUpDown}" Classes="field-label" VerticalAlignment="Center"/>
                                 <NumericUpDown x:Name="RenderThreadsNumericUpDown" Grid.Column="1"
                                                Value="{Binding RenderThreads}"
                                                Minimum="1" Maximum="{Binding MaxRenderThreads}" Increment="1" FormatString="0"
@@ -243,7 +243,7 @@
                     <StackPanel Spacing="4">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
                             <StackPanel Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Text="Reading order" Classes="field-label"/>
+                                <Label Content="Reading order" Target="{Binding #ReadingOrderStrategyComboBox}" Classes="field-label"/>
                                 <TextBlock Text="The order selected text is copied in." Classes="help"/>
                             </StackPanel>
                             <ComboBox x:Name="ReadingOrderStrategyComboBox" Grid.Column="1"
@@ -265,7 +265,7 @@
                     <StackPanel Spacing="4">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
                             <StackPanel Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Text="Whitespace" Classes="field-label"/>
+                                <Label Content="Whitespace" Target="{Binding #WhitespaceModeComboBox}" Classes="field-label"/>
                                 <TextBlock Text="Blank lines and list indentation in copied text." Classes="help"/>
                             </StackPanel>
                             <ComboBox x:Name="WhitespaceModeComboBox" Grid.Column="1"
@@ -293,7 +293,7 @@
                     <StackPanel Spacing="4">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
                             <StackPanel Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Text="Output profile" Classes="field-label"/>
+                                <Label Content="Output profile" Target="{Binding #RedactionProfileComboBox}" Classes="field-label"/>
                                 <TextBlock Text="How much of the PDF's hidden machinery a redaction removes. Maximum is no longer accessible or interactive." Classes="help"/>
                             </StackPanel>
                             <ComboBox x:Name="RedactionProfileComboBox" Grid.Column="1"
@@ -315,7 +315,7 @@
                     <StackPanel Spacing="4">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
                             <StackPanel Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Text="Whole words only" Classes="field-label"/>
+                                <Label Content="Whole words only" Target="{Binding #RedactionWholeWordCheckBox}" Classes="field-label"/>
                                 <TextBlock Text="Off: 'Lee' also matches inside 'Sleeman'. On: the term must stand alone." Classes="help"/>
                             </StackPanel>
                             <CheckBox x:Name="RedactionWholeWordCheckBox" Grid.Column="1"
@@ -336,7 +336,7 @@
                     <StackPanel Spacing="4">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
                             <StackPanel Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Text="Keep attachments in redacted copies" Classes="field-label"/>
+                                <Label Content="Keep attachments in redacted copies" Target="{Binding #RedactionKeepAttachmentsCheckBox}" Classes="field-label"/>
                                 <TextBlock Text="Off: a redacted copy has no attached files. On: text and PDF attachments are redacted too." Classes="help"/>
                             </StackPanel>
                             <CheckBox x:Name="RedactionKeepAttachmentsCheckBox" Grid.Column="1"
@@ -357,7 +357,7 @@
                     <StackPanel Spacing="4">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
                             <StackPanel Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Text="Covering box width" Classes="field-label"/>
+                                <Label Content="Covering box width" Target="{Binding #RedactionWidthPolicyComboBox}" Classes="field-label"/>
                                 <TextBlock Text="Whether the removed text's width can be measured from what is left." Classes="help"/>
                             </StackPanel>
                             <ComboBox x:Name="RedactionWidthPolicyComboBox" Grid.Column="1"
@@ -379,7 +379,7 @@
                     <StackPanel Spacing="4">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
                             <StackPanel Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Text="Link URLs" Classes="field-label"/>
+                                <Label Content="Link URLs" Target="{Binding #LinkUriCarrierPolicyComboBox}" Classes="field-label"/>
                                 <TextBlock Text="A link target that contains the redacted text." Classes="help"/>
                             </StackPanel>
                             <ComboBox x:Name="LinkUriCarrierPolicyComboBox" Grid.Column="1"
@@ -401,7 +401,7 @@
                     <StackPanel Spacing="4">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
                             <StackPanel Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Text="Document metadata" Classes="field-label"/>
+                                <Label Content="Document metadata" Target="{Binding #MetadataCarrierPolicyComboBox}" Classes="field-label"/>
                                 <TextBlock Text="The /Info fields (Title, Author, Subject…) and the XMP packet." Classes="help"/>
                             </StackPanel>
                             <ComboBox x:Name="MetadataCarrierPolicyComboBox" Grid.Column="1"
@@ -432,7 +432,7 @@
                     <StackPanel Spacing="4">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
                             <StackPanel Spacing="2" VerticalAlignment="Center">
-                                <TextBlock Text="Page scaling" Classes="field-label"/>
+                                <Label Content="Page scaling" Target="{Binding #PrintScalingComboBox}" Classes="field-label"/>
                                 <TextBlock Text="How printed pages are scaled onto the paper." Classes="help"/>
                             </StackPanel>
                             <ComboBox x:Name="PrintScalingComboBox" Grid.Column="1"

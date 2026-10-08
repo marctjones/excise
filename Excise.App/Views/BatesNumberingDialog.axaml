@@ -23,36 +23,60 @@
 
         <Grid Grid.Row="2" ColumnDefinitions="Auto,*" ColumnSpacing="16" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" VerticalAlignment="Top">
 
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="Prefix" Classes="form-label" Margin="0,4"/>
+            <Label Grid.Row="0" Grid.Column="0" Margin="0,4" Target="{Binding #PrefixBox}" Classes="form-label">
+                <Label.Content>
+                    <OnPlatform x:TypeArguments="x:String" Default="Prefix" Windows="_Prefix"/>
+                </Label.Content>
+            </Label>
             <TextBox x:Name="PrefixBox" Grid.Row="0" Grid.Column="1" Margin="0,4"
                      Text="{Binding Prefix}" PlaceholderText="e.g. DOE"
                      AutomationProperties.Name="Bates prefix"/>
 
-            <TextBlock Grid.Row="1" Grid.Column="0" Text="Suffix" Classes="form-label" Margin="0,4"/>
+            <Label Grid.Row="1" Grid.Column="0" Margin="0,4" Target="{Binding #SuffixBox}" Classes="form-label">
+                <Label.Content>
+                    <OnPlatform x:TypeArguments="x:String" Default="Suffix" Windows="S_uffix"/>
+                </Label.Content>
+            </Label>
             <TextBox x:Name="SuffixBox" Grid.Row="1" Grid.Column="1" Margin="0,4"
                      Text="{Binding Suffix}" PlaceholderText="e.g. -CONF"
                      AutomationProperties.Name="Bates suffix"/>
 
-            <TextBlock Grid.Row="2" Grid.Column="0" Text="Start number" Classes="form-label" Margin="0,4"/>
+            <Label Grid.Row="2" Grid.Column="0" Margin="0,4" Target="{Binding #StartNumberBox}" Classes="form-label">
+                <Label.Content>
+                    <OnPlatform x:TypeArguments="x:String" Default="Start number" Windows="_Start number"/>
+                </Label.Content>
+            </Label>
             <NumericUpDown x:Name="StartNumberBox" Grid.Row="2" Grid.Column="1" Margin="0,4"
                            Minimum="0" Maximum="99999999" Increment="1" FormatString="0"
                            Value="{Binding StartNumber}"
                            AutomationProperties.Name="Bates start number"/>
 
-            <TextBlock Grid.Row="3" Grid.Column="0" Text="Digits" Classes="form-label" Margin="0,4"/>
+            <Label Grid.Row="3" Grid.Column="0" Margin="0,4" Target="{Binding #DigitsBox}" Classes="form-label">
+                <Label.Content>
+                    <OnPlatform x:TypeArguments="x:String" Default="Digits" Windows="_Digits"/>
+                </Label.Content>
+            </Label>
             <NumericUpDown x:Name="DigitsBox" Grid.Row="3" Grid.Column="1" Margin="0,4"
                            Minimum="1" Maximum="12" Increment="1" FormatString="0"
                            Value="{Binding NumberOfDigits}"
                            AutomationProperties.Name="Bates digit count"/>
 
-            <TextBlock Grid.Row="4" Grid.Column="0" Text="Position" Classes="form-label" Margin="0,4"/>
+            <Label Grid.Row="4" Grid.Column="0" Margin="0,4" Target="{Binding #PositionBox}" Classes="form-label">
+                <Label.Content>
+                    <OnPlatform x:TypeArguments="x:String" Default="Position" Windows="P_osition"/>
+                </Label.Content>
+            </Label>
             <ComboBox x:Name="PositionBox" Classes="enum-labels" Grid.Row="4" Grid.Column="1" Margin="0,4"
                       HorizontalAlignment="Stretch"
                       ItemsSource="{Binding Positions}"
                       SelectedItem="{Binding Position}"
                       AutomationProperties.Name="Bates position"/>
 
-            <TextBlock Grid.Row="5" Grid.Column="0" Text="Font size" Classes="form-label" Margin="0,4"/>
+            <Label Grid.Row="5" Grid.Column="0" Margin="0,4" Target="{Binding #FontSizeBox}" Classes="form-label">
+                <Label.Content>
+                    <OnPlatform x:TypeArguments="x:String" Default="Font size" Windows="_Font size"/>
+                </Label.Content>
+            </Label>
             <NumericUpDown x:Name="FontSizeBox" Grid.Row="5" Grid.Column="1" Margin="0,4"
                            Minimum="4" Maximum="72" Increment="1" FormatString="0"
                            Value="{Binding FontSize}"

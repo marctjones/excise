@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1544,
-  "indexedContentSha256": "fc5c17891ecbac42d0f5505f85d3fbe662926daf13b09881cb338f5232f7bf7b",
+  "indexedFileCount": 1545,
+  "indexedContentSha256": "5393e713401470164d858add1fd1da036c8d240d1daef29b172571a14795d6ff",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -5034,7 +5034,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 176
+      "candidateReferenceCount": 177
     },
     {
       "id": "pdf.17.document.metadata",
@@ -7283,6 +7283,14 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/LinkedLabelTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "dictionaries",
+            "resource"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/ModernButtonStateStyleTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -7325,7 +7333,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 47
+      "candidateReferenceCount": 48
     },
     {
       "id": "pdf.17.graphics.paths-painting",
@@ -65436,7 +65444,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 229
+      "candidateReferenceCount": 230
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -68959,7 +68967,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 433
+      "candidateReferenceCount": 434
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -69708,7 +69716,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 232
+      "candidateReferenceCount": 233
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -71271,7 +71279,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 780
+      "candidateReferenceCount": 781
     },
     {
       "id": "pdf.20.extension.developer",
@@ -71974,7 +71982,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 169
+      "candidateReferenceCount": 170
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -79541,6 +79549,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/LinkedLabelTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "platform",
+            "printing",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/MultiDocumentSessionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -79677,7 +79694,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 39
+      "candidateReferenceCount": 40
     },
     {
       "id": "pdfe.product.forms.restricted-javascript-research",

@@ -25,7 +25,11 @@
 
             <!-- Current password (only relevant on an already-encrypted document) -->
             <StackPanel Spacing="4" IsVisible="{Binding IsEncrypted}" IsEnabled="{Binding CanEditOptions}">
-                <TextBlock Text="Current password" Classes="field-label"/>
+                <Label Target="{Binding #CurrentPasswordBox}" Classes="field-label">
+                    <Label.Content>
+                        <OnPlatform x:TypeArguments="x:String" Default="Current password" Windows="_Current password"/>
+                    </Label.Content>
+                </Label>
                 <TextBox x:Name="CurrentPasswordBox"
                          Text="{Binding CurrentPassword}"
                          PasswordChar="{Binding PasswordMaskChar}"
@@ -37,7 +41,11 @@
             <!-- New passwords -->
             <StackPanel Spacing="12" IsEnabled="{Binding CanEditOptions}">
                 <StackPanel Spacing="4">
-                    <TextBlock Text="New user password (required to open)" Classes="field-label"/>
+                    <Label Target="{Binding #NewUserPasswordBox}" Classes="field-label">
+                        <Label.Content>
+                            <OnPlatform x:TypeArguments="x:String" Default="New user password (required to open)" Windows="New _user password (required to open)"/>
+                        </Label.Content>
+                    </Label>
                     <TextBox x:Name="NewUserPasswordBox"
                              Text="{Binding NewUserPassword}"
                              PasswordChar="{Binding PasswordMaskChar}"
@@ -46,7 +54,11 @@
                              AutomationProperties.HelpText="Password required to open the document. Leave blank for none."/>
                 </StackPanel>
                 <StackPanel Spacing="4">
-                    <TextBlock Text="Confirm new user password" Classes="field-label"/>
+                    <Label Target="{Binding #ConfirmNewUserPasswordBox}" Classes="field-label">
+                        <Label.Content>
+                            <OnPlatform x:TypeArguments="x:String" Default="Confirm new user password" Windows="Co_nfirm new user password"/>
+                        </Label.Content>
+                    </Label>
                     <TextBox x:Name="ConfirmNewUserPasswordBox"
                              Text="{Binding ConfirmNewUserPassword}"
                              PasswordChar="{Binding PasswordMaskChar}"
@@ -58,7 +70,11 @@
                                IsVisible="{Binding PasswordMismatchMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                 </StackPanel>
                 <StackPanel Spacing="4">
-                    <TextBlock Text="New owner password (permissions)" Classes="field-label"/>
+                    <Label Target="{Binding #NewOwnerPasswordBox}" Classes="field-label">
+                        <Label.Content>
+                            <OnPlatform x:TypeArguments="x:String" Default="New owner password (permissions)" Windows="New _owner password (permissions)"/>
+                        </Label.Content>
+                    </Label>
                     <TextBox x:Name="NewOwnerPasswordBox"
                              Text="{Binding NewOwnerPassword}"
                              PasswordChar="{Binding PasswordMaskChar}"
@@ -72,7 +88,11 @@
                           AutomationProperties.Name="Show Passwords"
                           AutomationProperties.HelpText="Show the typed passwords instead of bullets."/>
                 <StackPanel Spacing="4">
-                    <TextBlock Text="Algorithm" Classes="field-label"/>
+                    <Label Target="{Binding #AlgorithmComboBox}" Classes="field-label">
+                        <Label.Content>
+                            <OnPlatform x:TypeArguments="x:String" Default="Algorithm" Windows="_Algorithm"/>
+                        </Label.Content>
+                    </Label>
                     <ComboBox x:Name="AlgorithmComboBox" Classes="enum-labels"
                               ItemsSource="{Binding Algorithms}"
                               SelectedItem="{Binding Algorithm}"

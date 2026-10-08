@@ -251,6 +251,27 @@
         <Setter Property="CornerRadius" Value="4"/>
     </Style>
 
+    <!-- Labels linked to their field (#2005): Label + Target, so clicking the
+         label focuses the field (and, on Windows, Alt+the underlined letter
+         does). Same look as the TextBlock label classes. -->
+    <Style Selector="Label.field-label, Label.form-label">
+        <!-- Transparent, not null: the whole label is clickable, not just its glyphs. -->
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="FontSize">
+            <OnPlatform x:TypeArguments="x:Double" Default="13" Windows="14"/>
+        </Setter>
+    </Style>
+    <Style Selector="Label.form-label">
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalAlignment">
+            <OnPlatform x:TypeArguments="HorizontalAlignment" Default="Right" Windows="Left"/>
+        </Setter>
+    </Style>
+
     <!-- Settings inputs are sized to their content, not stretched across the
          window (#2003). -->
     <Style Selector="Border.settings-row ComboBox">
