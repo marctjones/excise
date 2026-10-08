@@ -410,7 +410,7 @@
                 <MenuItem Header="_Apply Redaction" Command="{Binding ApplyRedactionCommand}" InputGesture="Enter"
                           IsEnabled="{Binding IsRedactionMode}"
                           access:CommandAccessibility.CommandId="redaction.apply">
-                    <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconRedact}" Foreground="#D32F2F"/></MenuItem.Icon>
+                    <MenuItem.Icon><PathIcon Classes="menu-icon" Data="{StaticResource IconRedact}" Foreground="{DynamicResource DangerBrush}"/></MenuItem.Icon>
                 </MenuItem>
                 <Separator/>
                 <!-- Toggle items bind IsChecked ONE-WAY and mutate state only via
@@ -1690,7 +1690,7 @@
             <!-- PDF Viewer -->
             <Border x:Name="DocumentArea"
                     Grid.Column="1"
-                    Background="#E8E8E8">
+                    Background="{DynamicResource CanvasBrush}">
                 <Grid>
                     <!-- Empty State (shown when no document is loaded) -->
                     <Grid IsVisible="{Binding !IsDocumentLoaded}"
@@ -1968,13 +1968,13 @@
                                        Text="{Binding SearchMatches.Count, StringFormat='({0})'}"
                                        FontWeight="SemiBold"
                                        FontSize="13"
-                                       Foreground="{DynamicResource BrandPrimaryBrush}"
+                                       Foreground="{DynamicResource BrandTextBrush}"
                                        IsVisible="{Binding ShowSearchResultsPanel}"/>
                             <TextBlock Grid.Column="1"
                                        Text="{Binding RedactionWorkflow.PendingCount, StringFormat='({0})'}"
                                        FontWeight="SemiBold"
                                        FontSize="13"
-                                       Foreground="{DynamicResource BrandPrimaryBrush}"
+                                       Foreground="{DynamicResource BrandTextBrush}"
                                        IsVisible="{Binding ShowPendingRedactionsPanel}"/>
                         </Grid>
                     </Border>
@@ -2008,7 +2008,7 @@
                                                            Text="{Binding PageNumber, StringFormat='p.{0}'}"
                                                            FontSize="11"
                                                            Margin="6,0,0,0"
-                                                           Foreground="{DynamicResource BrandPrimaryBrush}"/>
+                                                           Foreground="{DynamicResource BrandTextBrush}"/>
                                             </Grid>
                                             <TextBlock Text="{Binding Context}"
                                                        FontSize="11"
@@ -2030,7 +2030,7 @@
                                 <DataTemplate x:DataType="models:PendingRedaction">
                                     <Border Margin="8" Padding="10"
                                             Background="{DynamicResource CardBrush}"
-                                            BorderBrush="#E53935"
+                                            BorderBrush="{DynamicResource DangerBrush}"
                                             BorderThickness="2"
                                             CornerRadius="6">
                                         <StackPanel Spacing="6">
@@ -2040,7 +2040,7 @@
                                                            Text="{Binding PageNumber, StringFormat='Page {0}'}"
                                                            FontSize="11"
                                                            FontWeight="Bold"
-                                                           Foreground="{DynamicResource BrandPrimaryBrush}"/>
+                                                           Foreground="{DynamicResource BrandTextBrush}"/>
                                                 <Button Grid.Column="1"
                                                         Content="×"
                                                         FontSize="16"
@@ -2102,15 +2102,15 @@
                                     FontWeight="SemiBold">
                                 <Button.Styles>
                                     <Style Selector="Button.primary">
-                                        <Setter Property="Background" Value="#E53935"/>
+                                        <Setter Property="Background" Value="{DynamicResource DangerBrush}"/>
                                         <Setter Property="Foreground" Value="White"/>
                                     </Style>
                                     <Style Selector="Button.primary:pointerover">
-                                        <Setter Property="Background" Value="#D32F2F"/>
+                                        <Setter Property="Background" Value="{DynamicResource DangerHoverBrush}"/>
                                     </Style>
                                     <Style Selector="Button.primary:disabled">
-                                        <Setter Property="Background" Value="#666"/>
-                                        <Setter Property="Foreground" Value="#999"/>
+                                        <Setter Property="Background" Value="{DynamicResource DisabledFillBrush}"/>
+                                        <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
                                     </Style>
                                 </Button.Styles>
                             </Button>
@@ -2130,7 +2130,7 @@
                                             Classes.redacted="{Binding IsRedacted}">
                                         <Border.Styles>
                                             <Style Selector="Border.redacted">
-                                                <Setter Property="BorderBrush" Value="#E53935"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
                                                 <Setter Property="BorderThickness" Value="2"/>
                                             </Style>
                                         </Border.Styles>
@@ -2138,7 +2138,7 @@
                                             <!-- Header: Type, Time and Page -->
                                             <Grid ColumnDefinitions="Auto,*,Auto">
                                                 <Border Grid.Column="0"
-                                                        Background="#E53935"
+                                                        Background="{DynamicResource DangerBrush}"
                                                         CornerRadius="3"
                                                         Padding="6,2"
                                                         Margin="0,0,8,0"
@@ -2152,7 +2152,7 @@
                                                            Text="{Binding TimeDisplay}"
                                                            FontSize="11"
                                                            FontWeight="Medium"
-                                                           Foreground="{DynamicResource BrandPrimaryBrush}"/>
+                                                           Foreground="{DynamicResource BrandTextBrush}"/>
                                                 <TextBlock Grid.Column="2"
                                                            Text="{Binding PageNumber, StringFormat='Page {0}'}"
                                                            FontSize="11"
@@ -2172,7 +2172,7 @@
                                                        IsVisible="{Binding HasUnicodeSecurityControls}"
                                                        FontSize="10"
                                                        FontWeight="SemiBold"
-                                                       Foreground="#D97706"/>
+                                                       Foreground="{DynamicResource WarningTextBrush}"/>
 
                                             <!-- Character Count -->
                                             <TextBlock Text="{Binding CharacterCount, StringFormat='{}{0} characters'}"
@@ -2316,7 +2316,7 @@
                         </Style>
                         <!-- Redaction mode active style -->
                         <Style Selector="Border.redactionActive">
-                            <Setter Property="Background" Value="#E53935"/>
+                            <Setter Property="Background" Value="{DynamicResource DangerBrush}"/>
                         </Style>
                     </Border.Styles>
                     <TextBlock x:Name="CurrentModeStatusText"
@@ -2342,15 +2342,15 @@
 
                 <!-- Status Text / Operation Status -->
                 <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="2">
-                    <!-- Operation Status (shown when an operation is in progress). The pressed
-                         shade, not BrandPrimaryBrush: #0078D4 on this #F5F5F5 bar is 4.2:1, under
-                         WCAG AA for 12px text; #005A9E is 6.5:1 (#1800). -->
+                    <!-- Operation Status (shown when an operation is in progress). The text
+                         form of the accent, not the fill: on this sunk bar the fill colour falls
+                         under WCAG AA for 12px text (#1800, #1992). -->
                     <TextBlock x:Name="OperationStatusText"
                                Text="{Binding OperationStatus}"
                                VerticalAlignment="Center"
                                FontSize="12"
                                FontWeight="SemiBold"
-                               Foreground="{DynamicResource BrandPrimaryPressedBrush}"
+                               Foreground="{DynamicResource BrandTextBrush}"
                                AutomationProperties.Name="Operation Status"
                                AutomationProperties.ItemStatus="{Binding OperationStatus}"
                                IsVisible="{Binding OperationStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>

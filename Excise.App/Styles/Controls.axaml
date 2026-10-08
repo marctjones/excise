@@ -3,6 +3,11 @@
         xmlns:sys="using:System"
         xmlns:conv="using:Excise.App.Converters">
 
+    <!-- Every window sits on the paper ground (#1992) unless it sets its own. -->
+    <Style Selector="Window">
+        <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}"/>
+    </Style>
+
     <!-- Modern Button Styles -->
     <Style Selector="Button.modern-button">
         <Setter Property="Background" Value="Transparent"/>
@@ -44,15 +49,15 @@
     <!-- Toggle Button Active State -->
     <Style Selector="Button.modern-button.toggle.active">
         <Setter Property="Background" Value="{DynamicResource SelectedBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}"/>
-        <Setter Property="Foreground" Value="{DynamicResource BrandPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandTextBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource BrandTextBrush}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
     <Style Selector="Button.modern-button.toggle.active:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource SelectedHoverBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}"/>
-        <Setter Property="Foreground" Value="{DynamicResource BrandPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandTextBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource BrandTextBrush}"/>
     </Style>
 
     <!-- Primary Button (Apply Redaction) -->
@@ -89,6 +94,14 @@
         <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <!-- FluentAvalonia's own Button.accent paints PART_ContentPresenter at rest,
+         which outranks the TemplateBinding above (seen in the dark render). -->
+    <Style Selector="Button.modern-button.accent /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource BrandPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
     </Style>
 
     <Style Selector="Button.modern-button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
@@ -150,7 +163,7 @@
         <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="CornerRadius" Value="4"/>
         <Setter Property="Padding" Value="20,16"/>
     </Style>
 
@@ -188,7 +201,7 @@
     </Style>
 
     <Style Selector="Button.modern-button.toggle.active PathIcon.toolbar-icon">
-        <Setter Property="Foreground" Value="{DynamicResource BrandPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource BrandTextBrush}"/>
     </Style>
 
     <Style Selector="Button.modern-button.primary PathIcon.toolbar-icon">

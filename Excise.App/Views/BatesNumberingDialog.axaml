@@ -63,7 +63,7 @@
                        VerticalAlignment="Center"
                        FontFamily="{DynamicResource MonospaceFontFamily}"
                        FontWeight="SemiBold"
-                       Foreground="{DynamicResource BrandPrimaryBrush}"
+                       Foreground="{DynamicResource BrandTextBrush}"
                        Text="{Binding Preview}"/>
         </Grid>
     </Grid>

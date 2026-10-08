@@ -32,6 +32,14 @@ public class ModernButtonStateStyleTests
 
     private static Color ColorOf(IBrush? brush) => (brush as ISolidColorBrush)?.Color ?? default;
 
+    // The palette lives in Styles/Brushes.axaml (#1992); these tests pin that each
+    // state's style REACHES the presenter (#1801), so they compare with the token
+    // as the window resolves it rather than a copied hex value.
+    private static Color Token(Window window, string key) =>
+        window.TryFindResource(key, window.ActualThemeVariant, out var value) && value is ISolidColorBrush brush
+            ? brush.Color
+            : throw new InvalidOperationException($"{key} did not resolve");
+
     private async Task<(Window window, Button button, ContentPresenter presenter)> ShowAsync(string classes)
     {
         var window = new Window { Width = 300, Height = 200, RequestedThemeVariant = ThemeVariant.Light };
@@ -112,7 +120,7 @@ public class ModernButtonStateStyleTests
             window.MouseMove(Center(window, button));
             await KeyboardTestHelpers.FlushDispatcherAsync();
 
-            ColorOf(presenter.Background).Should().Be(Color.Parse("#F44336"));
+            ColorOf(presenter.Background).Should().Be(Token(window, "DangerHoverBrush"));
             ColorOf(presenter.Foreground).Should().Be(Colors.White,
                 "FluentAvalonia's near-black hover foreground must not win over the primary button's white");
         }
@@ -128,8 +136,8 @@ public class ModernButtonStateStyleTests
             window.MouseMove(Center(window, button));
             await KeyboardTestHelpers.FlushDispatcherAsync();
 
-            ColorOf(presenter.Background).Should().Be(Color.Parse("#BBDEFB"));
-            ColorOf(presenter.Foreground).Should().Be(Color.Parse("#0078D4"));
+            ColorOf(presenter.Background).Should().Be(Token(window, "SelectedHoverBrush"));
+            ColorOf(presenter.Foreground).Should().Be(Token(window, "BrandTextBrush"));
         }
         finally { Close(window); }
     }

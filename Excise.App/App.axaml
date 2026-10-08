@@ -15,7 +15,7 @@
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Fonts -->
-            <FontFamily x:Key="MonospaceFontFamily">Consolas, Menlo, Monaco, monospace</FontFamily>
+            <FontFamily x:Key="MonospaceFontFamily">IBM Plex Mono, Consolas, Menlo, Monaco, monospace</FontFamily>
 
             <!-- Converters -->
             <local:BooleanToBrushConverter x:Key="BooleanToBrushConverter"/>
@@ -27,7 +27,7 @@
         <!-- FluentAvalonia Theme - Modern Fluent Design System -->
         <sty:FluentAvaloniaTheme PreferSystemTheme="False"
                                   PreferUserAccentColor="False"
-                                  CustomAccentColor="#0078D4"/>
+                                  CustomAccentColor="#4A7C4A"/>
 
         <!-- Custom Control Styles -->
         <StyleInclude Source="/Styles/Controls.axaml"/>

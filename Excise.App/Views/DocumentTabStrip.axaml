@@ -38,15 +38,16 @@
          (#1476): the headless test app loads FluentTheme only, so a
          DynamicResource from Styles/Brushes.axaml resolves to nothing there
          and the appearance this control is judged on could not be asserted.
-         The values are the app palette's. -->
+         The values are the app palette's (Styles/Brushes.axaml, light): keep them
+         in step with it (#1992). -->
     <UserControl.Resources>
-        <SolidColorBrush x:Key="TabStripBandBrush" Color="#F0F0F0"/>
-        <SolidColorBrush x:Key="TabStripBorderBrush" Color="#D0D0D0"/>
-        <SolidColorBrush x:Key="TabSelectedBrush" Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="TabHoverBrush" Color="#E6E6E6"/>
-        <SolidColorBrush x:Key="TabAccentBrush" Color="#0078D4"/>
-        <SolidColorBrush x:Key="TabTextBrush" Color="#1F1F1F"/>
-        <SolidColorBrush x:Key="TabTextMutedBrush" Color="#666666"/>
+        <SolidColorBrush x:Key="TabStripBandBrush" Color="#EFEFE9"/>
+        <SolidColorBrush x:Key="TabStripBorderBrush" Color="#DCDCD4"/>
+        <SolidColorBrush x:Key="TabSelectedBrush" Color="#F8F8F6"/>
+        <SolidColorBrush x:Key="TabHoverBrush" Color="#E4E4DC"/>
+        <SolidColorBrush x:Key="TabAccentBrush" Color="#4A7C4A"/>
+        <SolidColorBrush x:Key="TabTextBrush" Color="#1C1C1C"/>
+        <SolidColorBrush x:Key="TabTextMutedBrush" Color="#505048"/>
     </UserControl.Resources>
 
     <UserControl.Styles>
