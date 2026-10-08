@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Excise.App.ViewModels"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
         x:Class="Excise.App.Views.SecurityDialog"
         x:DataType="vm:SecurityDialogViewModel"
         Title="Document Security"
@@ -15,7 +16,8 @@
 
             <!-- Header -->
             <StackPanel Spacing="4">
-                <TextBlock Text="Document Security" Classes="dialog-title"/>
+                <TextBlock Text="Document Security" Classes="dialog-title"
+                           IsVisible="{OnPlatform Default=True, macOS=False}"/>
                 <TextBlock Text="Set, change, or remove password protection. Saving writes a new file — the currently open document is not modified in place."
                            Classes="help"/>
             </StackPanel>
@@ -79,15 +81,21 @@
                 </StackPanel>
             </StackPanel>
 
-            <!-- Result -->
-            <TextBlock Text="{Binding ResultMessage}"
-                       Classes="success"
-                       IsVisible="{Binding ResultMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-
-            <!-- Error -->
-            <TextBlock Text="{Binding ErrorMessage}"
-                       Classes="error"
-                       IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            <!-- Outcome (#2004) -->
+            <ui:FAInfoBar Severity="Success"
+                        Title="Saved"
+                        IsClosable="False"
+                        IsOpen="{Binding ResultMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        IsVisible="{Binding ResultMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding ResultMessage}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+            </ui:FAInfoBar>
+            <ui:FAInfoBar Severity="Error"
+                        Title="Could not apply"
+                        IsClosable="False"
+                        IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+            </ui:FAInfoBar>
 
         </StackPanel>
 

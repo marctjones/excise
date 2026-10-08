@@ -143,11 +143,6 @@
         <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
     </Style>
 
-    <Style Selector="TextBlock.success">
-        <Setter Property="FontSize" Value="12"/>
-        <Setter Property="TextWrapping" Value="Wrap"/>
-        <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
-    </Style>
 
     <Style Selector="TextBlock.error">
         <Setter Property="FontSize" Value="12"/>
@@ -155,13 +150,6 @@
         <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}"/>
     </Style>
 
-    <Style Selector="Border.error-banner">
-        <Setter Property="Background" Value="{DynamicResource ErrorBackgroundBrush}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource ErrorBorderBrush}"/>
-        <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="6"/>
-        <Setter Property="Padding" Value="12,10"/>
-    </Style>
 
     <Style Selector="Border.settings-card">
         <Setter Property="Background" Value="{DynamicResource CardBrush}"/>

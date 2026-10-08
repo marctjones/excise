@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Excise.App.ViewModels"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
         x:Class="Excise.App.Views.MakeSearchableDialog"
         x:DataType="vm:MakeSearchableDialogViewModel"
         Title="Make Searchable"
@@ -15,17 +16,20 @@
 
             <!-- Header -->
             <StackPanel Spacing="4">
-                <TextBlock Text="Make Searchable" Classes="dialog-title"/>
+                <TextBlock Text="Make Searchable" Classes="dialog-title"
+                           IsVisible="{OnPlatform Default=True, macOS=False}"/>
                 <TextBlock Text="OCRs every page that doesn't already have extractable text and writes the recognized words back as an invisible, searchable layer. The page's visual appearance is unchanged. This cannot be undone: it clears the undo history and marks the document as changed, so close without saving to discard it."
                            Classes="help"/>
             </StackPanel>
 
             <!-- Tesseract-not-installed banner -->
-            <Border Classes="error-banner"
-                    IsVisible="{Binding !TesseractAvailable}">
-                <TextBlock Text="{x:Static vm:MakeSearchableDialogViewModel.TesseractMissingMessage}"
-                           Classes="error"/>
-            </Border>
+            <ui:FAInfoBar Severity="Error"
+                        Title="OCR engine not found"
+                        IsClosable="False"
+                        IsOpen="{Binding !TesseractAvailable}"
+                        IsVisible="{Binding !TesseractAvailable}">
+                <TextBlock Text="{x:Static vm:MakeSearchableDialogViewModel.TesseractMissingMessage}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+            </ui:FAInfoBar>
 
             <!-- Options -->
             <StackPanel Spacing="8" IsEnabled="{Binding CanEditOptions}">
@@ -64,14 +68,22 @@
             </StackPanel>
 
             <!-- Result summary -->
-            <TextBlock Text="{Binding ResultSummary}"
-                       Classes="success"
-                       IsVisible="{Binding ResultSummary, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            <ui:FAInfoBar Severity="Success"
+                        Title="Done"
+                        IsClosable="False"
+                        IsOpen="{Binding ResultSummary, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        IsVisible="{Binding ResultSummary, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding ResultSummary}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+            </ui:FAInfoBar>
 
             <!-- Error -->
-            <TextBlock Text="{Binding ErrorMessage}"
-                       Classes="error"
-                       IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            <ui:FAInfoBar Severity="Error"
+                        Title="OCR failed"
+                        IsClosable="False"
+                        IsOpen="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+            </ui:FAInfoBar>
 
         </StackPanel>
 

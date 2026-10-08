@@ -296,7 +296,7 @@
                             <TextBlock Text="Applies to the /Info fields (Title, Author, Subject…) and the XMP packet. A templated field narrows a removed value the same way a known URL does."
                                        Classes="help"/>
                             <TextBlock Text="⚠ Leave it and report it leaves the redacted text in the document. The redaction report will say so — act on it before sharing the file."
-                                       Classes="help"/>
+                                       Classes="warning"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
