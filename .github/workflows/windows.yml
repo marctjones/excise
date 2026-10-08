@@ -288,6 +288,27 @@ jobs:
         shell: bash
         run: scripts/assert-trx-green.sh artifacts/trx/windows-platform.trx --min-passed 40
 
+      # ── platform-conditional UI (#2003, #1999) ───────────────────────────
+      # {OnPlatform} follows the REAL OS, so headless runs on macOS can only
+      # ever show the macOS variant of the dialog type scale, form-label
+      # alignment and footer button order. This runs the dialog tests that
+      # read those values, plus the UX audit, on Windows, and keeps the
+      # captures (artifacts/ux-audit) for review. Filtered by class name;
+      # judged by assert-trx-green like every filtered step.
+      - name: Windows UI variant (dialog order, focus, labels, UX audit captures)
+        run: |
+          $env:EXCISE_UX_AUDIT_OUTPUT = "${{ github.workspace }}\artifacts\ux-audit"
+          dotnet test Excise.App.Tests --no-build -c Debug `
+            --filter "FullyQualifiedName~Excise.App.Tests.UI.VisualPolishAuditTests|FullyQualifiedName~Excise.App.Tests.UI.DialogButtonOrderTests|FullyQualifiedName~Excise.App.Tests.UI.DialogKeyboardFocusTests|FullyQualifiedName~Excise.App.Tests.UI.LinkedLabelTests|FullyQualifiedName~Excise.App.Tests.UI.AppearancePreferenceTests" `
+            --results-directory "$env:TRX_DIR" `
+            --logger "trx;LogFileName=windows-ui-variant.trx" `
+            --logger "console;verbosity=normal" `
+            --blame-hang-timeout 180000
+
+      - name: Verify the Windows UI variant tests actually ran
+        shell: bash
+        run: scripts/assert-trx-green.sh artifacts/trx/windows-ui-variant.trx --min-passed 20
+
       # ── headless-ish app smoke ───────────────────────────────────────────
       - name: GUI smoke (launch, open a PDF, quit)
         # #1497's in-process scenario runner. The `null` scenario is
@@ -342,6 +363,7 @@ jobs:
             artifacts/trx/
             artifacts/gui-smoke/
             artifacts/cli-smoke/
+            artifacts/ux-audit/
             **/TestResults/
           retention-days: 14
           if-no-files-found: warn
