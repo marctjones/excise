@@ -824,8 +824,7 @@
                                     <StackPanel x:Name="TypewriterFontSizeGroup"
                                                 Orientation="Horizontal" Spacing="6"
                                                 VerticalAlignment="Center">
-                                        <TextBlock Text="Size" VerticalAlignment="Center" FontSize="11"
-                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Classes="caption" Text="Size" VerticalAlignment="Center"/>
                                         <NumericUpDown x:Name="TypewriterFontSizeUpDown"
                                                        Value="{Binding TypewriterFontSize}"
                                                        Minimum="4" Maximum="96" Increment="1"
@@ -846,8 +845,7 @@
                                         <ComboBoxItem Content="Center"/>
                                         <ComboBoxItem Content="Right"/>
                                     </ComboBox>
-                                    <TextBlock Text="Color" FontWeight="Medium" FontSize="11"
-                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Classes="caption" Text="Color" FontWeight="Medium"/>
                                     <!-- #1476: the same eight presets are in Edit > Typewriter Text
                                          Color and in MacNativeMenuBuilder; TypewriterColorPresetAccessibilityTests
                                          keeps the three lists equal AND keeps each one named.
@@ -1442,11 +1440,9 @@
                              Margin="0,0,8,0"
                              VerticalAlignment="Center"
                              ShowProgressText="False" />
-                <TextBlock Grid.Column="1"
+                <TextBlock Classes="caption" Grid.Column="1"
                            Text="{Binding SearchProgressText}"
-                           VerticalAlignment="Center"
-                           FontSize="11"
-                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                           VerticalAlignment="Center" />
             </Grid>
           </StackPanel>
         </Border>
@@ -1559,10 +1555,8 @@
                                 <TextBlock Text="Thumbnails"
                                            FontWeight="SemiBold" FontSize="12"
                                            Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                <TextBlock Text="{Binding PageSelectionSummary}"
-                                           HorizontalAlignment="Right"
-                                           FontSize="11"
-                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Classes="caption" Text="{Binding PageSelectionSummary}"
+                                           HorizontalAlignment="Right"/>
                             </DockPanel>
                             <WrapPanel Grid.Row="1" Orientation="Horizontal">
                                 <Button Content="↑" Command="{Binding MoveSelectedPagesEarlierCommand}"
@@ -1641,12 +1635,10 @@
                                                           VerticalAlignment="Center"
                                                           ToolTip.Tip="Select page for batch operations"
                                                           AutomationProperties.Name="{Binding PageNumber, StringFormat='Select Page {0}'}"/>
-                                                <TextBlock Grid.Column="1"
+                                                <TextBlock Classes="caption" Grid.Column="1"
                                                            Text="{Binding PageNumber, StringFormat='Page {0}'}"
                                                            HorizontalAlignment="Center"
-                                                           FontSize="11"
-                                                           FontWeight="Medium"
-                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                           FontWeight="Medium"/>
                                             </Grid>
                                             <!-- EffectiveViewportChanged fires whenever this Image's
                                                  visible area changes. We use it to lazy-load the
@@ -2010,12 +2002,10 @@
                                                            Margin="6,0,0,0"
                                                            Foreground="{DynamicResource BrandTextBrush}"/>
                                             </Grid>
-                                            <TextBlock Text="{Binding Context}"
-                                                       FontSize="11"
+                                            <TextBlock Classes="caption" Text="{Binding Context}"
                                                        TextWrapping="Wrap"
                                                        MaxLines="2"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                       TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
                                     </Button>
                                 </DataTemplate>
@@ -2060,9 +2050,7 @@
                                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
 
                                             <!-- Area info -->
-                                            <TextBlock Text="{Binding DisplayText}"
-                                                       FontSize="10"
-                                                       Foreground="{DynamicResource TextTertiaryBrush}"/>
+                                            <TextBlock Classes="caption" Text="{Binding DisplayText}"/>
                                         </StackPanel>
                                     </Border>
                                 </DataTemplate>
@@ -2153,10 +2141,8 @@
                                                            FontSize="11"
                                                            FontWeight="Medium"
                                                            Foreground="{DynamicResource BrandTextBrush}"/>
-                                                <TextBlock Grid.Column="2"
-                                                           Text="{Binding PageNumber, StringFormat='Page {0}'}"
-                                                           FontSize="11"
-                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                <TextBlock Classes="caption" Grid.Column="2"
+                                                           Text="{Binding PageNumber, StringFormat='Page {0}'}"/>
                                             </Grid>
 
                                             <!-- Preview Text -->
@@ -2170,14 +2156,11 @@
                                                  non-printing Unicode control explicit in the preview. -->
                                             <TextBlock Text="{Binding UnicodeSecurityNotice}"
                                                        IsVisible="{Binding HasUnicodeSecurityControls}"
-                                                       FontSize="10"
-                                                       FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource WarningTextBrush}"/>
+                                                       Classes="warning"
+                                                       FontWeight="SemiBold"/>
 
                                             <!-- Character Count -->
-                                            <TextBlock Text="{Binding CharacterCount, StringFormat='{}{0} characters'}"
-                                                       FontSize="10"
-                                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                            <TextBlock Classes="caption" Text="{Binding CharacterCount, StringFormat='{}{0} characters'}"
                                                        HorizontalAlignment="Right"/>
                                         </StackPanel>
                                     </Border>
@@ -2207,20 +2190,16 @@
                                 <TextBlock Text="Attachments"
                                            FontWeight="SemiBold" FontSize="12"
                                            Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                <TextBlock Text="{Binding AttachmentsCountText}"
-                                           HorizontalAlignment="Right"
-                                           FontSize="11"
-                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Classes="caption" Text="{Binding AttachmentsCountText}"
+                                           HorizontalAlignment="Right"/>
                             </DockPanel>
                         </Border>
 
-                        <TextBlock x:Name="AttachmentsEmptyText"
+                        <TextBlock Classes="caption" x:Name="AttachmentsEmptyText"
                                    Grid.Row="1"
                                    Margin="10,8"
-                                   FontSize="11"
                                    Text="{Binding AttachmentsEmptyText}"
-                                   IsVisible="{Binding !HasAttachments}"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                   IsVisible="{Binding !HasAttachments}"/>
 
                         <ListBox x:Name="AttachmentsList"
                                  Grid.Row="1"
@@ -2243,21 +2222,17 @@
                                 <DataTemplate x:DataType="models:AttachmentEntry">
                                     <StackPanel Spacing="1" ToolTip.Tip="{Binding ToolTipText}">
                                         <DockPanel>
-                                            <TextBlock DockPanel.Dock="Right"
+                                            <TextBlock Classes="caption" DockPanel.Dock="Right"
                                                        Margin="6,0,0,0"
-                                                       Text="{Binding SizeDisplay}"
-                                                       FontSize="10"
-                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                       Text="{Binding SizeDisplay}"/>
                                             <TextBlock Text="{Binding DisplayName}"
                                                        FontSize="11"
                                                        TextTrimming="CharacterEllipsis"
                                                        Foreground="{DynamicResource TextPrimaryBrush}"/>
                                         </DockPanel>
-                                        <TextBlock Text="{Binding DetailText}"
+                                        <TextBlock Classes="caption" Text="{Binding DetailText}"
                                                    IsVisible="{Binding HasDetail}"
-                                                   FontSize="10"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                   TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>

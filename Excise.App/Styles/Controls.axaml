@@ -326,9 +326,13 @@
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
 
+    <!-- Single-line secondary text in lists and panels: sizes, counts, details
+         (#2006). Platform scale like .help, but no wrapping, so trimming works. -->
     <Style Selector="TextBlock.caption">
-        <Setter Property="FontSize" Value="11"/>
         <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="FontSize">
+            <OnPlatform x:TypeArguments="x:Double" Default="11" Windows="12"/>
+        </Setter>
     </Style>
 
     <!-- Border Styles -->
