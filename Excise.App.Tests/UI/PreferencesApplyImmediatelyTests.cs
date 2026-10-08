@@ -2,7 +2,10 @@ using System;
 using System.Diagnostics;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using System.Linq;
 using Avalonia.Controls;
+using Avalonia.LogicalTree;
+using Avalonia.VisualTree;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using AwesomeAssertions;
@@ -140,6 +143,48 @@ public class PreferencesApplyImmediatelyTests
             answer = true;
             await h.Prefs.ResetToDefaultsCommand.Execute();
             h.Prefs.RedactionProfile.Should().Be(RedactionProfile.Standard);
+        }
+        finally
+        {
+            h.Window.Close();
+        }
+    }
+
+    [FixedAvaloniaFact(Timeout = 30000)]
+    public async Task ChoosingACategory_ScrollsItsSectionIntoView()
+    {
+        var h = await OpenAsync();
+        try
+        {
+            var nav = h.Window.FindControl<ListBox>("SettingsNav")!;
+            var scroller = h.Window.FindControl<ScrollViewer>("SettingsScroller")!;
+            var header = h.Window.FindControl<TextBlock>("SectionRedaction")!;
+            scroller.Offset.Y.Should().Be(0);
+
+            nav.SelectedIndex = 3; // Redaction
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+
+            scroller.Offset.Y.Should().BeGreaterThan(0, "Redaction sits below the fold");
+            var top = global::Avalonia.VisualExtensions.TranslatePoint(header, new global::Avalonia.Point(0, 0), scroller)!.Value.Y;
+            top.Should().BeInRange(0, 40, "the chosen section's header lands at the top of the pane");
+        }
+        finally
+        {
+            h.Window.Close();
+        }
+    }
+
+    [FixedAvaloniaFact(Timeout = 30000)]
+    public async Task TheReportOnlyLeakWarning_IsNeverBehindDetails()
+    {
+        var h = await OpenAsync();
+        try
+        {
+            var warning = h.Window.GetLogicalDescendants().OfType<TextBlock>()
+                .Single(t => t.Text?.Contains("leaves the redacted text in the document") == true);
+            warning.GetLogicalAncestors().OfType<Expander>().Should().BeEmpty(
+                "a data-leak warning must not hide behind a collapsed Details expander");
+            warning.IsEffectivelyVisible.Should().BeTrue();
         }
         finally
         {

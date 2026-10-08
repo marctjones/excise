@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
@@ -27,12 +28,30 @@ internal partial class PreferencesWindow : Window
     public PreferencesWindow()
     {
         InitializeComponent();
+        if (this.FindControl<ListBox>("SettingsNav") is { } nav)
+            nav.SelectionChanged += OnSettingsNavSelectionChanged;
 
         // Wire up commands to close the window when DataContext is set
         DataContextChanged += OnDataContextChanged;
         Opened += (_, _) => StartMemoryReadout();
         Closing += (_, _) => FlushAndStopApplying();
         Closed += (_, _) => StopMemoryReadout();
+    }
+
+    /// <summary>
+    /// #2000: choosing a category scrolls its section header to the top of the
+    /// settings pane. Every section stays in the tree (no paging), so keyboard,
+    /// automation and the change-apply path see every control at all times.
+    /// </summary>
+    private void OnSettingsNavSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not ListBox { SelectedItem: ListBoxItem { Tag: string section } }
+            || this.FindControl<Control>(section) is not { } header
+            || this.FindControl<ScrollViewer>("SettingsScroller") is not { Content: Visual content } scroller)
+            return;
+        var top = header.TranslatePoint(new Point(0, 0), content);
+        if (top is { } point)
+            scroller.Offset = new Vector(scroller.Offset.X, Math.Max(0, point.Y - 8));
     }
 
     /// <summary>True while a change waits to apply (tests).</summary>

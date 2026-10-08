@@ -186,15 +186,80 @@
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
 
+    <!-- Settings rows (#2000): the Windows 11 settings pattern built from plain
+         controls so every input stays in the logical and automation trees
+         (FASettingsExpander's Footer does not): label and one-line description
+         left, the control right, long help in a collapsed Details expander. -->
+    <Style Selector="Border.settings-row">
+        <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="16,12"/>
+    </Style>
+
+    <Style Selector="TextBlock.settings-section">
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="Margin" Value="0,12,0,0"/>
+        <Setter Property="FontSize">
+            <OnPlatform x:TypeArguments="x:Double" Default="15" Windows="20"/>
+        </Setter>
+    </Style>
+
+    <Style Selector="Expander.settings-details">
+        <Setter Property="Padding" Value="0,4,0,0"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="MinHeight" Value="0"/>
+    </Style>
+
+    <!-- A text-weight "Details" toggle under a settings row (#2000): the long help
+         shows only when asked for. -->
+    <Style Selector="ToggleButton.details-toggle">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0,2"/>
+        <Setter Property="MinHeight" Value="0"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="Foreground" Value="{DynamicResource BrandTextBrush}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontSize">
+            <OnPlatform x:TypeArguments="x:Double" Default="11.5" Windows="12"/>
+        </Setter>
+    </Style>
+    <Style Selector="ToggleButton.details-toggle /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="ToggleButton.details-toggle:checked /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource BrandTextBrush}"/>
+    </Style>
+    <Style Selector="ToggleButton.details-toggle:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    </Style>
+
+    <Style Selector="ListBox.settings-nav">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="ListBox.settings-nav ListBoxItem">
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="CornerRadius" Value="4"/>
+    </Style>
+
     <!-- Settings inputs are sized to their content, not stretched across the
          window (#2003). -->
-    <Style Selector="Border.settings-card ComboBox">
-        <Setter Property="HorizontalAlignment" Value="Left"/>
-        <Setter Property="MinWidth" Value="260"/>
+    <Style Selector="Border.settings-row ComboBox">
+        <Setter Property="MinWidth" Value="240"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
-    <Style Selector="Border.settings-card NumericUpDown">
-        <Setter Property="HorizontalAlignment" Value="Left"/>
-        <Setter Property="MinWidth" Value="160"/>
+    <Style Selector="Border.settings-row NumericUpDown">
+        <Setter Property="MinWidth" Value="140"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
     <Style Selector="Border.settings-card">
