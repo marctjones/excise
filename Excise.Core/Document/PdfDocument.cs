@@ -138,11 +138,12 @@ public partial class PdfDocument : IDisposable
     /// <summary>
     /// Mark an indirect object as free so it is no longer serialized.
     /// Used by flatten-then-redact (#355) to drop a Form XObject that has
-    /// been inlined into a page and is no longer reachable from the trailer —
-    /// otherwise the writer (which serializes every in-use object, with no
-    /// garbage collection) would re-emit the orphan's content and leak the
-    /// very text the redaction removed. Callers must confirm the object is
-    /// unreachable before calling this.
+    /// been inlined into a page and is no longer reachable from the trailer.
+    /// The writer already saves only reachable objects (#359); freeing also
+    /// drops the orphan from the in-memory table, so nothing that enumerates
+    /// the store (<see cref="GetAllObjects"/>) still finds the text the
+    /// redaction removed. Callers must confirm the object is unreachable
+    /// before calling this.
     /// </summary>
     internal void RemoveObject(int objectNumber)
     {

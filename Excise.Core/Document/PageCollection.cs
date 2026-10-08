@@ -19,6 +19,10 @@ public class PageCollection : IReadOnlyList<PdfPage>
     private PdfArray _kidsArray;
     private int _declaredCount;
     private bool _malformedPageTree;
+    // Object numbers of pages RemoveAt took out of the tree, and of annotations
+    // taken out of a page's /Annots (#2012).
+    private HashSet<int>? _removedPageObjects;
+    private HashSet<int>? _removedAnnotationObjects;
     private const int MaxRecoverableMalformedPageCountOverage = 128;
 
     /// <summary>
@@ -439,6 +443,12 @@ public class PageCollection : IReadOnlyList<PdfPage>
 
         EnsureFlatKids();
 
+        // Anything else that points at the page (a bookmark, a link, /Pg) would
+        // keep it, and its content, in the saved file (#2012). Cut those
+        // references when the document is saved, after every removal is in.
+        if (_pages[index].Reference is { } removedRef)
+            RecordRemovedPage(removedRef.ObjectNum);
+
         // Remove from Kids array
         _kidsArray.RemoveAt(index);
         _pagesDict["Kids"] = _kidsArray;
@@ -448,6 +458,51 @@ public class PageCollection : IReadOnlyList<PdfPage>
 
         // Reload pages
         ReloadAfterStructureMutation();
+    }
+
+    private void RecordRemovedPage(int objectNumber)
+    {
+        EnsureRemovalScrubRegistered();
+        _removedPageObjects.Add(objectNumber);
+    }
+
+    /// <summary>
+    /// An annotation was taken out of a page's <c>/Annots</c>: cut whatever
+    /// else still points at it when the document is saved, unless a page lists
+    /// it again by then (#2012).
+    /// </summary>
+    internal void RecordRemovedAnnotation(int objectNumber)
+    {
+        EnsureRemovalScrubRegistered();
+        _removedAnnotationObjects.Add(objectNumber);
+    }
+
+    [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(_removedPageObjects), nameof(_removedAnnotationObjects))]
+    private void EnsureRemovalScrubRegistered()
+    {
+        if (_removedPageObjects != null && _removedAnnotationObjects != null)
+            return;
+        _removedPageObjects = new HashSet<int>();
+        _removedAnnotationObjects = new HashSet<int>();
+        _document.RegisterPreSaveAction(ScrubRemovedReferences);
+    }
+
+    /// <summary>
+    /// Pre-save: cut every reference to a removed page that is not back in the
+    /// tree, to the annotations only it listed, and to deleted annotations no
+    /// page lists again (#2012). See <see cref="RemovedPageReferenceScrubber"/>.
+    /// </summary>
+    private void ScrubRemovedReferences()
+    {
+        if (_removedPageObjects == null || _removedAnnotationObjects == null)
+            return;
+        foreach (var page in _pages)
+        {
+            if (page.Reference is { } live)
+                _removedPageObjects.Remove(live.ObjectNum);
+        }
+        RemovedPageReferenceScrubber.Scrub(
+            _document, _removedPageObjects, _removedAnnotationObjects, _pages.Select(p => p.Dictionary));
     }
 
     /// <summary>

@@ -1851,10 +1851,12 @@ public static class PdfAnnotationAuthoring
     /// Remove an annotation from a page's <c>/Annots</c> array.
     /// </summary>
     /// <remarks>
-    /// The underlying indirect object is left in the xref (unreachable, and
-    /// garbage-collected on the next full rewrite by whatever wrote the file)
-    /// — this only detaches it from the page, matching how every other
-    /// mutation in this class works on the in-memory object graph.
+    /// The underlying indirect object stays in memory, so putting the same
+    /// reference back in <c>/Annots</c> restores it. The writer saves only
+    /// reachable objects, and at save every other reference to an annotation no
+    /// page lists any more (a reply's <c>/IRT</c>, a structure element's
+    /// <c>/OBJR</c>, the form's field tree) is cut, so the deleted annotation
+    /// is not in the saved file (#2012).
     /// </remarks>
     /// <returns><c>true</c> if the annotation was found and removed;
     /// <c>false</c> if it wasn't on that page's /Annots array (already
@@ -1887,6 +1889,8 @@ public static class PdfAnnotationAuthoring
             if (document.Resolve(annots[i]) is PdfDictionary d &&
                 targets.Any(t => ReferenceEquals(t, d)))
             {
+                if (annots[i] is PdfReference removedRef)
+                    document.Pages.RecordRemovedAnnotation(removedRef.ObjectNum);
                 annots.RemoveAt(i);
                 removedAny = true;
             }

@@ -234,8 +234,9 @@ public static class PdfXfaLayout
 
         acroForm.Remove("XFA");
 
-        // The writer saves every object in the table, reachable or not, so the
-        // packet streams must be freed or their data would still be in the file.
+        // The writer saves only objects reachable from the trailer; freeing the
+        // packet streams nothing else references also drops them from the
+        // in-memory table, so no later reader of the store finds them.
         var reachable = document.ComputeReachableObjects();
         foreach (var objectNumber in packetObjects)
         {
