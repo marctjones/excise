@@ -75,6 +75,8 @@
     <Compile Include="../Excise.Core.Tests/TestSupport/TestRepoLayout.cs" Link="TestSupport/TestRepoLayout.cs" />
     <!-- ONE reader of tests/corpus-passwords.tsv: a test that opens a corpus file asks it for the key. -->
     <Compile Include="../Excise.Core.Tests/TestSupport/CorpusPasswords.cs" Link="TestSupport/CorpusPasswords.cs" />
+    <!-- #1982: the shared rotation fixtures, scenario table and raw stext/Poppler geometry readers. -->
+    <Compile Include="../Excise.Core.Tests/TestSupport/RotationFixtures.cs" Link="TestSupport/RotationFixtures.cs" />
     <!-- #1830: the one-page content-stream fixture, same reasoning. -->
     <Compile Include="../Excise.Core.Tests/Content/ContentStreamFixture.cs" Link="TestSupport/ContentStreamFixture.cs" />
     <!-- #1645: the failure-mode fixture corpus. Linked rather than duplicated

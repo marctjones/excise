@@ -1,0 +1,33 @@
+# Rotated-page geometry fixtures for the D18 rotation work (#1980, #1982).
+# Read by Excise.Core.Tests/TestSupport/RotationFixtures.cs; verified against qpdf, Poppler
+# (pdfinfo, pdftotext -bbox) and MuPDF (mutool draw -F stext) by
+# Excise.Rendering.Tests/Differential/RotationFixtureManifestTests.cs.
+#
+# Columns (tab-separated):
+#   id                 stable id used by RotationScenarioTable
+#   kind               corpus    = a gitignored corpus file, resolved through TestRepoLayout
+#                      synthetic = built in memory by RotationProbes from the id
+#   path               repo-relative corpus path (empty for synthetic)
+#   source             provenance URL (corpus) or "RotationProbes" (synthetic)
+#   sha256             full SHA-256 of the corpus file (empty for synthetic)
+#   page               1-based page the geometry describes
+#   rotate_at          where /Rotate is written: leaf | parent | absent | parent+leaf
+#   effective_rotation /Rotate after inheritance, as qpdf and Poppler resolve it
+#   mediabox           llx lly urx ury
+#   cropbox            llx lly urx ury (MediaBox when absent)
+#   userunit           /UserUnit (1 when absent)
+#   target             text whose region the interaction tests use; "-" when the page has
+#                      no extractable text (glyph geometry only)
+#   limitations        what the fixture cannot establish
+#
+#id	kind	path	source	sha256	page	rotate_at	effective_rotation	mediabox	cropbox	userunit	target	limitations
+pdfjs-font-ascent-descent	corpus	test-pdfs/pdfjs/font_ascent_descent.pdf	https://raw.githubusercontent.com/mozilla/pdf.js/master/test/pdfs/font_ascent_descent.pdf	ac32f419e728d1fa96daa24172871f8d38cf7ad6a7f3076a2f86b76a6811517e	1	leaf	90	0 0 595 842	0 0 595 842	1	-	Odfjell Drilling presentation excerpt (Acrobat Distiller 8.1). The Type1 subset has no ToUnicode, so MuPDF and Poppler extract symbol garbage: usable for glyph geometry and markup placement, not for search or exact copied text. qpdf --check passes with a linearization hint-table warning.
+pdfjs-issue14497	corpus	test-pdfs/pdfjs/issue14497.pdf	https://raw.githubusercontent.com/mozilla/pdf.js/master/test/pdfs/issue14497.pdf	7bd3bd4073aa4fe1b12d072c25e892d04e9d8579bc4a31b13282ff86abcf09b7	1	leaf	90	0 0 2384 3370	0 0 2384 3370	1	Parklands	Parklands Phase 14B land-survey excerpt, A0, re-saved by pdf-lib. One searchable header line; the rest is survey bearings. Zero CropBox origin, so it cannot exercise a cropped origin.
+probe-r0	synthetic		RotationProbes		1	absent	0	0 0 612 792	0 0 612 792	1	ALPHA	Omits /Rotate entirely: pins the ISO 32000-2 default of 0.
+probe-r90	synthetic		RotationProbes		1	leaf	90	0 0 612 792	0 0 612 792	1	ALPHA	Helvetica (non-embedded): renderers substitute metrically compatible fonts.
+probe-r180	synthetic		RotationProbes		1	leaf	180	0 0 612 792	0 0 612 792	1	ALPHA	As probe-r90.
+probe-r270	synthetic		RotationProbes		1	leaf	270	0 0 612 792	0 0 612 792	1	ALPHA	As probe-r90.
+probe-inherit90	synthetic		RotationProbes		1	parent	90	0 0 612 792	0 0 612 792	1	ALPHA	/Rotate only on the /Pages node; the leaf inherits it.
+probe-inherit270-leaf0	synthetic		RotationProbes		1	parent+leaf	0	0 0 612 792	0 0 612 792	1	ALPHA	/Pages says 270, the leaf overrides with an explicit 0 (#1981).
+probe-crop0	synthetic		RotationProbes		1	absent	0	0 0 612 792	90 250 522 742	1	ALPHA	CropBox origin (90,250): visible page differs from the MediaBox.
+probe-crop90	synthetic		RotationProbes		1	leaf	90	0 0 612 792	90 250 522 742	1	ALPHA	Nonzero CropBox origin combined with a quarter turn.
