@@ -1,10 +1,8 @@
 using AwesomeAssertions;
-using Excise.Cli;
-using Excise.Cli.Commands;
 using Excise.Ocr;
 using Xunit;
 
-namespace Excise.Cli.Tests;
+namespace Excise.Ocr.Tests;
 
 /// <summary>
 /// #650: <c>excise redact</c>'s policy for what to do with a

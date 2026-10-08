@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using Excise.Cli.Commands;
+using Excise.Ocr;
 using Xunit;
 
 namespace Excise.Cli.Tests;
@@ -32,7 +33,7 @@ public sealed class RedactCommandHandlerTests : IDisposable
         var stderr = new StringWriter();
         Console.SetOut(stdout);
         Console.SetError(stderr);
-        RedactCommandResult result;
+        TermRedactionResult result;
         try
         {
             result = RedactCommandHandler.Execute(new RedactCommandRequest(

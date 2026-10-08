@@ -15,6 +15,10 @@ namespace Excise.Ocr
         public int PageNumber { get; init; }
         public string Text { get; init; }
     }
+    public sealed class LowConfidenceExtractionException : System.InvalidOperationException
+    {
+        public LowConfidenceExtractionException(string message) { }
+    }
     public sealed class OcrResult : System.IEquatable<Excise.Ocr.OcrResult>
     {
         public OcrResult(string Text, System.Collections.Generic.IReadOnlyList<Excise.Ocr.OcrWord> Words) { }
@@ -102,5 +106,41 @@ namespace Excise.Ocr
         public bool Skipped { get; init; }
         public int WordsSkippedEncoding { get; init; }
         public int WordsWritten { get; init; }
+    }
+    public sealed class TermRedactionRequest : System.IEquatable<Excise.Ocr.TermRedactionRequest>
+    {
+        public TermRedactionRequest(string InputPath, string OutputPath, string Text, Excise.Core.Text.Segmentation.RedactionOptions Options) { }
+        public bool AllowDecrypt { get; init; }
+        public bool AllowLowConfidence { get; init; }
+        public bool FlattenOcr { get; init; }
+        public string InputPath { get; init; }
+        public bool OcrImageText { get; init; }
+        public Excise.Core.Text.Segmentation.RedactionOptions Options { get; init; }
+        public string OutputPath { get; init; }
+        public string? Password { get; init; }
+        public bool Strict { get; init; }
+        public string Text { get; init; }
+    }
+    public sealed class TermRedactionResult : System.IEquatable<Excise.Ocr.TermRedactionResult>
+    {
+        public TermRedactionResult(string InputPath, string OutputPath, string Text, int Count, bool Flattened, System.Collections.Generic.IReadOnlyList<string> CarrierNotes, System.Collections.Generic.IReadOnlyList<string> Diagnostics, bool WholeWord = false, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult>? AttachmentResults = null, System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval>? ProfileRemovals = null, bool AccessibilityRemoved = false, bool HasUnremovedWrappedOccurrence = false) { }
+        public bool AccessibilityRemoved { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult>? AttachmentResults { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult> Attachments { get; }
+        public System.Collections.Generic.IReadOnlyList<string> CarrierNotes { get; init; }
+        public int Count { get; init; }
+        public System.Collections.Generic.IReadOnlyList<string> Diagnostics { get; init; }
+        public bool Flattened { get; init; }
+        public bool HasUnremovedWrappedOccurrence { get; init; }
+        public string InputPath { get; init; }
+        public string OutputPath { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval>? ProfileRemovals { get; init; }
+        public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval> Removals { get; }
+        public string Text { get; init; }
+        public bool WholeWord { get; init; }
+    }
+    public static class TermRedactionRunner
+    {
+        public static Excise.Ocr.TermRedactionResult Execute(Excise.Ocr.TermRedactionRequest request, System.Action<int, int>? progress = null, System.Threading.CancellationToken cancellationToken = default) { }
     }
 }

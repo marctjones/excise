@@ -82,7 +82,7 @@
           },
           {
             "kind": "unit",
-            "ref": "Excise.Cli.Tests/RedactionConfidencePolicyTests.cs::Severe_WithoutOverride_Throws",
+            "ref": "Excise.Ocr.Tests/RedactionConfidencePolicyTests.cs::Severe_WithoutOverride_Throws",
             "modes": [
               "mutate",
               "write"
@@ -90,7 +90,7 @@
           },
           {
             "kind": "unit",
-            "ref": "Excise.Cli.Tests/RedactionConfidencePolicyTests.cs::Severe_WithAllowLowConfidence_ReturnsWarning_DoesNotThrow",
+            "ref": "Excise.Ocr.Tests/RedactionConfidencePolicyTests.cs::Severe_WithAllowLowConfidence_ReturnsWarning_DoesNotThrow",
             "modes": [
               "mutate",
               "write"
