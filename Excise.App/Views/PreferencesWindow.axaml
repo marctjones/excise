@@ -36,12 +36,13 @@
                         <TextBlock Text="Documents" Classes="settings-card-title"/>
                         <TextBlock Text="Open Documents In" Classes="field-label"/>
                         <ComboBox x:Name="DocumentOpenModeComboBox"
+                                  Classes="enum-labels"
                                   ItemsSource="{Binding DocumentOpenModeOptions}"
                                   SelectedItem="{Binding SelectedDocumentOpenMode}"
                                   HorizontalAlignment="Stretch"
                                   AutomationProperties.Name="Open Documents In"
                                   AutomationProperties.HelpText="Where a document opens when the window already shows one."/>
-                        <TextBlock Text="Automatic (default): a new window. On macOS, System Settings &gt; Desktop &amp; Dock &gt; Prefer tabs when opening documents decides whether it opens as a tab. NewWindow: always a new window. NewTab: a tab in the current window (Ctrl+Tab switches tabs; right-click a tab to move it to its own window). ReplaceCurrent: replace the document in the current window, as older versions did. A window with no document always takes the file, and a file that is already open is brought to the front."
+                        <TextBlock Text="Automatic: a new window; on macOS, System Settings &gt; Desktop &amp; Dock &gt; Prefer tabs when opening documents decides whether it opens as a tab. New window: always a new window. New tab: a tab in the current window (Ctrl+Tab switches tabs; right-click a tab to move it to its own window). Replace current document: as older versions did. A window with no document always takes the file, and a file that is already open is brought to the front."
                                    Classes="help"/>
                     </StackPanel>
                 </Border>
@@ -73,12 +74,13 @@
                         <StackPanel Spacing="8">
                             <TextBlock Text="Preset" Classes="field-label"/>
                             <ComboBox x:Name="PerformancePresetComboBox"
+                                  Classes="enum-labels"
                                       ItemsSource="{Binding PerformancePresetOptions}"
                                       SelectedItem="{Binding SelectedPerformancePreset}"
                                       HorizontalAlignment="Stretch"
                                       AutomationProperties.Name="Performance Preset"
                                       AutomationProperties.HelpText="Choose how much memory and CPU the viewer may use. Changing an advanced value switches this to Custom."/>
-                            <TextBlock Text="LowMemory: small caches, no background thumbnail rendering, trims after 15 s idle. Balanced (default): today's behaviour. Fast: large caches, more render threads, no background trims."
+                            <TextBlock Text="Low memory: small caches, no background thumbnail rendering, trims after 15 s idle. Balanced: today's behaviour. Fast: large caches, more render threads, no background trims."
                                        Classes="help"/>
                         </StackPanel>
 
@@ -186,24 +188,26 @@
                         <StackPanel Spacing="8">
                             <TextBlock Text="Reading Order" Classes="field-label"/>
                             <ComboBox x:Name="ReadingOrderStrategyComboBox"
+                                  Classes="enum-labels"
                                       ItemsSource="{Binding ReadingOrderStrategyOptions}"
                                       SelectedItem="{Binding SelectedReadingOrderStrategy}"
                                       HorizontalAlignment="Stretch"
                                       AutomationProperties.Name="Reading Order Strategy"
                                       AutomationProperties.HelpText="How selected text is ordered when copied."/>
-                            <TextBlock Text="ColumnAware (default): reads each column top-to-bottom before the next. Simple: geometric top-to-bottom, left-to-right (interleaves columns). RawStream: the PDF's stored text order."
+                            <TextBlock Text="Column by column: reads each column top to bottom before the next. Top to bottom, left to right: geometric order, which interleaves columns. As stored in the file: the PDF's own text order."
                                        Classes="help"/>
                         </StackPanel>
 
                         <StackPanel Spacing="8">
                             <TextBlock Text="Whitespace" Classes="field-label"/>
                             <ComboBox x:Name="WhitespaceModeComboBox"
+                                  Classes="enum-labels"
                                       ItemsSource="{Binding WhitespaceModeOptions}"
                                       SelectedItem="{Binding SelectedWhitespaceMode}"
                                       HorizontalAlignment="Stretch"
                                       AutomationProperties.Name="Copy Whitespace Mode"
                                       AutomationProperties.HelpText="How blank lines and list indentation are added to copied text."/>
-                            <TextBlock Text="Smart (default): inserts a blank line at detected paragraph breaks and keeps bullet/numbered lists indented. LineFaithful: one line break per visual line, no paragraph or list detection."
+                            <TextBlock Text="Keep paragraphs and lists: a blank line at detected paragraph breaks, bullet and numbered lists kept indented. One line per visual line: no paragraph or list detection."
                                        Classes="help"/>
                         </StackPanel>
                     </StackPanel>
@@ -222,12 +226,13 @@
                         <StackPanel Spacing="8">
                             <TextBlock Text="Output Profile" Classes="field-label"/>
                             <ComboBox x:Name="RedactionProfileComboBox"
+                                  Classes="enum-labels"
                                       ItemsSource="{Binding RedactionProfileOptions}"
                                       SelectedItem="{Binding RedactionPreferences.Profile}"
                                       HorizontalAlignment="Stretch"
                                       AutomationProperties.Name="Redaction Output Profile"
                                       AutomationProperties.HelpText="How much of the PDF's hidden machinery a redaction removes."/>
-                            <TextBlock Text="Standard (default): also removes the parts of the PDF that can repeat the page and that cutting a word out cannot make safe — all JavaScript, actions that open files or submit data (page links still work), the producer's private data, page thumbnails, the appearance of hidden fields, content on layers that are switched off, and the document properties and XMP (a PDF/A or PDF/UA marker is kept). Tooltips, alternate text, structure titles, field names, bookmark titles, link targets and signer names are KEPT, with the redacted word cut out. Maximum: all of that, plus the whole value of every kept item is dropped, bookmarks, links, comments and field names are stripped, and forms and annotations are flattened, signatures and their certificates included — THE RESULT IS NO LONGER ACCESSIBLE OR INTERACTIVE, so a screen reader cannot read it properly and forms no longer work."
+                            <TextBlock Text="Standard: also removes the parts of the PDF that can repeat the page and that cutting a word out cannot make safe — all JavaScript, actions that open files or submit data (page links still work), the producer's private data, page thumbnails, the appearance of hidden fields, content on layers that are switched off, and the document properties and XMP (a PDF/A or PDF/UA marker is kept). Tooltips, alternate text, structure titles, field names, bookmark titles, link targets and signer names are KEPT, with the redacted word cut out. Maximum: all of that, plus the whole value of every kept item is dropped, bookmarks, links, comments and field names are stripped, and forms and annotations are flattened, signatures and their certificates included — THE RESULT IS NO LONGER ACCESSIBLE OR INTERACTIVE, so a screen reader cannot read it properly and forms no longer work."
                                        Classes="help"/>
                         </StackPanel>
 
@@ -256,30 +261,33 @@
                         <StackPanel Spacing="8">
                             <TextBlock Text="Covering Box Width" Classes="field-label"/>
                             <ComboBox x:Name="RedactionWidthPolicyComboBox"
+                                  Classes="enum-labels"
                                       ItemsSource="{Binding WidthPolicyOptions}"
                                       SelectedItem="{Binding RedactionPreferences.Width}"
                                       HorizontalAlignment="Stretch"
                                       AutomationProperties.Name="Redaction Width Policy"
                                       AutomationProperties.HelpText="How the removed text's width is handled."/>
-                            <TextBlock Text="For an area redaction the box is the one you dragged; CloseGap, FixedMarker and QuantizeGap close the gap there too, and only FixedMarker draws a box. CollapsePreserveLayout: the box matches the removed text exactly and the page does not reflow — but the box's width then measures how long the removed text was. OvershootPreserveLayout: round the box wider so similar-length words can't be told apart by measuring it. CloseGap: remove the space entirely and draw no box; removes the width from the file itself, at the cost of reflowing the line. FixedMarker (default): like CloseGap, plus a covering box of one fixed size regardless of what was removed — closes the width channel AND stays visibly marked; the line keeps room for the box, so it covers none of the text that follows. QuantizeGap: keep a gap rounded up to a whole em instead of the exact width, and draw no box; weaker than CloseGap, since the rounded gap still narrows the candidates. When redacting text, the three that close the gap also remove an underline, box or highlight drawn to the removed word."
+                            <TextBlock Text="Fixed-size marker: like Close the gap, plus a covering box of one fixed size regardless of what was removed — closes the width channel AND stays visibly marked; the line keeps room for the box, so it covers none of the text that follows. Exact-width box: the box matches the removed text exactly and the page does not reflow — but the box's width then measures how long the removed text was. Widened box: rounded wider so similar-length words can't be told apart by measuring it. Close the gap: remove the space entirely and draw no box; removes the width from the file itself, at the cost of reflowing the line. Gap rounded to a whole em: no box; weaker than Close the gap, since the rounded gap still narrows the candidates. For an area redaction the box is the one you dragged; Close the gap, Fixed-size marker and Gap rounded to a whole em close the gap there too, and only Fixed-size marker draws a box. When redacting text, those three also remove an underline, box or highlight drawn to the removed word."
                                        Classes="help"/>
                         </StackPanel>
 
                         <StackPanel Spacing="8">
                             <TextBlock Text="Link URLs" Classes="field-label"/>
                             <ComboBox x:Name="LinkUriCarrierPolicyComboBox"
+                                  Classes="enum-labels"
                                       ItemsSource="{Binding CarrierScrubModeOptions}"
                                       SelectedItem="{Binding RedactionPreferences.LinkUriPolicy}"
                                       HorizontalAlignment="Stretch"
                                       AutomationProperties.Name="Link URL Redaction Policy"
                                       AutomationProperties.HelpText="How a link target containing the redacted text is handled."/>
-                            <TextBlock Text="Strip (default): cut the word out of the URL, leaving the rest — and, under the Maximum profile, let that profile's own choice stand. RemoveWhole: drop the entire link target, so no surrounding text survives to infer the word from. ReportOnly: change nothing and list the link in the redaction report for you to decide."
+                            <TextBlock Text="Cut out the redacted text: cut the word out of the URL, leaving the rest — and, under the Maximum profile, let that profile's own choice stand. Remove the whole value: drop the entire link target, so no surrounding text survives to infer the word from. Leave it and report it: change nothing and list the link in the redaction report for you to decide."
                                        Classes="help"/>
                         </StackPanel>
 
                         <StackPanel Spacing="8">
                             <TextBlock Text="Document Metadata" Classes="field-label"/>
                             <ComboBox x:Name="MetadataCarrierPolicyComboBox"
+                                  Classes="enum-labels"
                                       ItemsSource="{Binding CarrierScrubModeOptions}"
                                       SelectedItem="{Binding RedactionPreferences.MetadataPolicy}"
                                       HorizontalAlignment="Stretch"
@@ -287,7 +295,7 @@
                                       AutomationProperties.HelpText="How document metadata containing the redacted text is handled."/>
                             <TextBlock Text="Applies to the /Info fields (Title, Author, Subject…) and the XMP packet. A templated field narrows a removed value the same way a known URL does."
                                        Classes="help"/>
-                            <TextBlock Text="⚠ ReportOnly leaves the redacted text in the document. The redaction report will say so — act on it before sharing the file."
+                            <TextBlock Text="⚠ Leave it and report it leaves the redacted text in the document. The redaction report will say so — act on it before sharing the file."
                                        Classes="help"/>
                         </StackPanel>
                     </StackPanel>
@@ -306,12 +314,13 @@
                         <StackPanel Spacing="8">
                             <TextBlock Text="Page Scaling" Classes="field-label"/>
                             <ComboBox x:Name="PrintScalingComboBox"
+                                  Classes="enum-labels"
                                       ItemsSource="{Binding PrintScalingOptions}"
                                       SelectedItem="{Binding SelectedPrintScaling}"
                                       HorizontalAlignment="Stretch"
                                       AutomationProperties.Name="Print Page Scaling"
                                       AutomationProperties.HelpText="How printed pages are scaled onto the paper."/>
-                            <TextBlock Text="ShrinkOversized (default): pages larger than the paper are scaled down; smaller pages print at actual size. FitToPage: every page is scaled up or down to fill the paper. ActualSize: every page prints at 100%. On macOS pages are drawn by macOS's own PDF renderer, so small differences from the excise viewer are possible; on Windows they are drawn by excise's renderer."
+                            <TextBlock Text="Shrink oversized pages: pages larger than the paper are scaled down; smaller pages print at actual size. Fit to page: every page is scaled up or down to fill the paper. Actual size: every page prints at 100%. On macOS pages are drawn by macOS's own PDF renderer, so small differences from the excise viewer are possible; on Windows they are drawn by excise's renderer."
                                        Classes="help"/>
                         </StackPanel>
                     </StackPanel>

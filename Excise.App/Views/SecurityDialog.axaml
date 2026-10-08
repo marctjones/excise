@@ -53,7 +53,7 @@
                 </StackPanel>
                 <StackPanel Spacing="4">
                     <TextBlock Text="Algorithm" Classes="field-label"/>
-                    <ComboBox x:Name="AlgorithmComboBox"
+                    <ComboBox x:Name="AlgorithmComboBox" Classes="enum-labels"
                               ItemsSource="{Binding Algorithms}"
                               SelectedItem="{Binding Algorithm}"
                               AutomationProperties.Name="Encryption Algorithm"

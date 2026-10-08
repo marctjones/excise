@@ -45,7 +45,7 @@
                            AutomationProperties.Name="Bates digit count"/>
 
             <TextBlock Grid.Row="4" Grid.Column="0" Text="Position" VerticalAlignment="Center" Margin="0,4"/>
-            <ComboBox x:Name="PositionBox" Grid.Row="4" Grid.Column="1" Margin="0,4"
+            <ComboBox x:Name="PositionBox" Classes="enum-labels" Grid.Row="4" Grid.Column="1" Margin="0,4"
                       HorizontalAlignment="Stretch"
                       ItemsSource="{Binding Positions}"
                       SelectedItem="{Binding Position}"

@@ -1,5 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="using:System"
+        xmlns:conv="using:Excise.App.Converters">
 
     <!-- Modern Button Styles -->
     <Style Selector="Button.modern-button">
@@ -174,6 +176,16 @@
         <Setter Property="FontSize" Value="15"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    </Style>
+
+    <!-- Option lists bound to enums show plain-language labels (#1998); the
+         binding still selects the enum value. -->
+    <Style Selector="ComboBox.enum-labels">
+        <Setter Property="ItemTemplate">
+            <DataTemplate x:DataType="sys:Object">
+                <TextBlock Text="{Binding Converter={x:Static conv:EnumDisplayConverter.Instance}}"/>
+            </DataTemplate>
+        </Setter>
     </Style>
 
     <!-- Shared vector icon affordances. Icons use local StreamGeometry resources

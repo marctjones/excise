@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1533,
-  "indexedContentSha256": "cd6df5d84c12ee92c84035f42a89addff667c52118fe274f355ff6565c09e439",
+  "indexedFileCount": 1536,
+  "indexedContentSha256": "67e2dace77dd53e9fc1ef73ecf733c13e4334d16c9b4db8206c3cdaa074b3858",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -2746,6 +2746,14 @@
           ]
         },
         {
+          "path": "Excise.App/Converters/EnumDisplayConverter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "crypt",
+            "encryption"
+          ]
+        },
+        {
           "path": "Excise.App/Services/PageOrganizationWorkflowService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -3178,19 +3186,9 @@
             "permissions",
             "xref"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/EncryptedRedactionOutputIntegrityTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "crypt",
-            "encryption",
-            "permissions",
-            "xref"
-          ]
         }
       ],
-      "candidateReferenceCount": 124
+      "candidateReferenceCount": 126
     },
     {
       "id": "pdf.17.document.catalog-pages",
@@ -4784,6 +4782,14 @@
           ]
         },
         {
+          "path": "Excise.App/Converters/EnumDisplayConverter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "labels",
+            "preferences"
+          ]
+        },
+        {
           "path": "Excise.App/Models/OutlineNode.cs",
           "kind": "source",
           "matchedTerms": [
@@ -5027,20 +5033,9 @@
             "catalog",
             "pdfdocument"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Document/PdfOutlineTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "destinations",
-            "named",
-            "outlines",
-            "catalog",
-            "pdfdocument"
-          ]
         }
       ],
-      "candidateReferenceCount": 172
+      "candidateReferenceCount": 174
     },
     {
       "id": "pdf.17.document.metadata",
@@ -68941,7 +68936,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 428
+      "candidateReferenceCount": 429
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -73966,6 +73961,17 @@
           ]
         },
         {
+          "path": "Excise.App/Converters/EnumDisplayConverter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "editing",
+            "pdfe",
+            "redaction",
+            "redaction",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.App/Models/AttachmentEntry.cs",
           "kind": "source",
           "matchedTerms": [
@@ -74345,18 +74351,9 @@
             "refusal",
             "redaction"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/HiddenTextVisibleRedactionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "redaction",
-            "safety",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 161
+      "candidateReferenceCount": 163
     },
     {
       "id": "pdfe.product.redaction.review-panel",
@@ -74732,6 +74729,16 @@
             "redaction",
             "review",
             "redaction"
+          ]
+        },
+        {
+          "path": "Excise.App/Converters/EnumDisplayConverter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "pdfe",
+            "redaction",
+            "redaction",
+            "security"
           ]
         },
         {
@@ -75143,18 +75150,9 @@
             "review",
             "redaction"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "redaction",
-            "review",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 166
+      "candidateReferenceCount": 168
     },
     {
       "id": "pdfe.product.security.privacy-clean-copy",
@@ -78855,6 +78853,16 @@
           ]
         },
         {
+          "path": "Excise.App/Converters/EnumDisplayConverter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "log",
+            "pdfe",
+            "redaction",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.App/Services/AppPaths.cs",
           "kind": "source",
           "matchedTerms": [
@@ -79216,19 +79224,9 @@
             "log",
             "redaction"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/AttachmentRedactionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "log",
-            "pdfe",
-            "redaction",
-            "security"
-          ]
         }
       ],
-      "candidateReferenceCount": 177
+      "candidateReferenceCount": 179
     },
     {
       "id": "pdfe.product.platform.printing",
@@ -79292,6 +79290,16 @@
             "platform",
             "printing",
             "redaction"
+          ]
+        },
+        {
+          "path": "Excise.App/Converters/EnumDisplayConverter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "pdfe",
+            "printing",
+            "redaction",
+            "security"
           ]
         },
         {
@@ -79472,6 +79480,16 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/EnumDisplayLabelTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "printing",
+            "redaction",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/FileOpsCommandTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -79606,7 +79624,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 36
+      "candidateReferenceCount": 38
     },
     {
       "id": "pdfe.product.forms.restricted-javascript-research",
