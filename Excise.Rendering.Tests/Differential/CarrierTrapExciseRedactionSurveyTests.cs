@@ -35,10 +35,12 @@ namespace Excise.Rendering.Tests.Differential;
 ///     Maximum, <b>1 of 56</b> under Standard: <c>signature-certificate</c>, the
 ///     declared limit (a term in a certificate is refused and reported, not cut).</item>
 /// </list>
-/// <para>Corroborated on the same 98 outputs (49 traps × 2 profiles) by tools
-/// that are not excise: mutool, pdftotext and pdfdetach read the token 0
-/// times, and <c>qpdf --check</c> reported 0 structure failures. The check is
-/// not inert — the same tools read the token in <b>49 of 49 INPUTS</b>.</para>
+/// <para>Corroborated (as of the 49-trap run above, 98 outputs = 49 traps × 2
+/// profiles; the live count is the <c>InBench</c> rows of
+/// <c>CarrierTrapFixtures.All</c>, and the survey prints it) by tools that are
+/// not excise: mutool, pdftotext and pdfdetach read the token 0 times, and
+/// <c>qpdf --check</c> reported 0 structure failures. The check is not inert —
+/// the same tools read the token in <b>49 of 49 INPUTS</b>.</para>
 /// <para>⚠️ It is still a SURVEY: it prints the table and asserts only that it
 /// ran over the traps. The assertions live in <c>RedactionProfileTests</c> and
 /// <c>CarrierTrapIndependentCorroborationTests</c>, so a leak that reappears

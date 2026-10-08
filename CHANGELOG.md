@@ -10,6 +10,7 @@ semantic versioning.
 
 - Sticky-note and FreeText text in Adlam, Hanifi Rohingya or Arabic Mathematical Alphabetic Symbols is now recognised as needing complex shaping, so the viewer declines to draw it unshaped (with the existing diagnostic) instead of drawing plausible but wrong glyphs (#1958).
 - `excise redact --carrier-policy` now lists, accepts and documents `page-labels`, `name-tree-keys`, `signatures` and `optional-content`, the carriers the engine already scrubbed and reported; help and parser read one table (#1896).
+- Search no longer hangs on a term that folds to nothing (a lone zero-width space or soft hyphen), and surrounding spaces in the term no longer change what it finds, matching what redaction removes (#1848).
 
 ## [3.17.0] - 2026-10-08
 

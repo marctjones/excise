@@ -81,7 +81,29 @@ public class ComplexShapingGateTests
         diagnostics.Should().NotContain(d => d.Contains(StickyNoteDiagnostic));
     }
 
-    private static List<string> Render(byte[] pdf)
+    private const string FreeTextDiagnostic = "FreeText /Contents not drawn";
+
+    [Fact]
+    public void FreeText_WithAdlamContents_RoutesToTheTypesetterAndFailsClosedWithoutACoveringFont()
+    {
+        // No system fallback and the stated /Helv face has no Adlam glyphs, so
+        // the typesetter must decline with its diagnostic. Before #1958 the run
+        // never reached it: the single-line path drew it unshaped, silently.
+        var adlam = "\uFEFF" + char.ConvertFromUtf32(0x1E900) + char.ConvertFromUtf32(0x1E901);
+        var diagnostics = Render(FreeTextPdf(adlam), disableSystemFontFallback: true);
+
+        diagnostics.Should().Contain(d => d.Contains(FreeTextDiagnostic));
+    }
+
+    [Fact]
+    public void FreeText_WithLatinContents_StaysOnTheSingleLinePath()
+    {
+        var diagnostics = Render(FreeTextPdf("\uFEFFHello Za\u0142\u0105cznik"), disableSystemFontFallback: true);
+
+        diagnostics.Should().NotContain(d => d.Contains(FreeTextDiagnostic));
+    }
+
+    private static List<string> Render(byte[] pdf, bool disableSystemFontFallback = false)
     {
         var path = Path.Combine(Path.GetTempPath(), $"excise-shaping-{Guid.NewGuid():N}.pdf");
         File.WriteAllBytes(path, pdf);
@@ -90,14 +112,24 @@ public class ComplexShapingGateTests
             var diagnostics = new List<string>();
             using var doc = PdfDocument.Open(path);
             using var bmp = new SkiaRenderer().RenderPage(doc.GetPage(1),
-                new RenderOptions { Dpi = 72, BackgroundColor = SKColors.White, Diagnostics = diagnostics });
+                new RenderOptions
+                {
+                    Dpi = 72, BackgroundColor = SKColors.White, Diagnostics = diagnostics,
+                    DisableSystemFontFallback = disableSystemFontFallback,
+                });
             return diagnostics;
         }
         finally { try { File.Delete(path); } catch { } }
     }
 
     /// <summary>/Contents as a UTF-16BE hex string (BOM included in the passed text).</summary>
-    private static byte[] StickyNotePdf(string contents)
+    private static byte[] StickyNotePdf(string contents) =>
+        AnnotPdf(hex => $"<< /Type /Annot /Subtype /Text /F 4 /Rect [20 20 220 170] /Contents <{hex}> /C [1 0.85 0.2] /Name /Note >>", contents);
+
+    private static byte[] FreeTextPdf(string contents) =>
+        AnnotPdf(hex => $"<< /Type /Annot /Subtype /FreeText /F 4 /Rect [20 20 220 170] /Contents <{hex}> /DA (/Helv 10 Tf 0 g) >>", contents);
+
+    private static byte[] AnnotPdf(Func<string, string> annotation, string contents)
     {
         var hex = Convert.ToHexString(Encoding.BigEndianUnicode.GetBytes(contents));
         string[] objects =
@@ -105,7 +137,7 @@ public class ComplexShapingGateTests
             "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
             "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 260 260] >>\nendobj\n",
             "3 0 obj\n<< /Type /Page /Parent 2 0 R /Annots [4 0 R] >>\nendobj\n",
-            $"4 0 obj\n<< /Type /Annot /Subtype /Text /F 4 /Rect [20 20 220 170] /Contents <{hex}> /C [1 0.85 0.2] /Name /Note >>\nendobj\n",
+            $"4 0 obj\n{annotation(hex)}\nendobj\n",
         };
         var sb = new StringBuilder("%PDF-1.7\n");
         var offsets = new List<int>();
