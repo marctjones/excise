@@ -326,7 +326,8 @@ internal sealed partial class SinglePageView
         // toggling overlays. Set Image.Source immediately so the user
         // doesn't even see a loading flicker. The cache is keyed by the
         // DEVICE render DPI so a monitor change (dpr) re-renders.
-        if (_singlePageRenderLifetime.TryGet(pageNumber, renderDpi, out var cached, out var cachedDip))
+        var rotation = page.Rotation;
+        if (_singlePageRenderLifetime.TryGet(pageNumber, renderDpi, out var cached, out var cachedDip, rotation))
         {
             // A cache hit is still a newer display request. Supersede an older
             // in-flight render so it cannot later overwrite this cached page.
@@ -400,7 +401,7 @@ internal sealed partial class SinglePageView
                 {
                     var dip = spec.LayoutSize;
                     Trace($"SinglePageRender page={pageNumber} RENDERED px={bitmap.PixelSize.Width}x{bitmap.PixelSize.Height} dip={dip.Width:F0}x{dip.Height:F0}");
-                    AddToCache(pageNumber, renderDpi, bitmap, dip);
+                    AddToCache(pageNumber, renderDpi, bitmap, dip, rotation);
                     ViewerMetrics.RecordSinglePageRender(renderStart, renderDpi);
                     Trace($"ContVis={_viewer.ContinuousPart.ContinuousScrollViewer?.IsVisible} SingleVis={PdfScrollViewer?.IsVisible}");
                     Trace($"ImageSet page={pageNumber} imgWidth={PdfImage?.Width:F0} srcDip={dip.Width:F0}x{dip.Height:F0} srcPx={bitmap.PixelSize.Width} zoom={ZoomLevel:F3}");

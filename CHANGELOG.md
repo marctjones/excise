@@ -6,6 +6,10 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- In single-page view, rotating a page now re-renders it. Previously, at a zoom you had set, or after two quarter turns at fit, the page image stayed at its old rotation while search highlights moved to the new one, so highlights were drawn off the text. The page cache now keys bitmaps by rotation, and a rotation clears any text selection on that page (#1983).
+
 ## [3.17.0] - 2026-10-08
 
 ### Added

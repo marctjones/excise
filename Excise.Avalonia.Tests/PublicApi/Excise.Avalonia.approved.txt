@@ -203,6 +203,7 @@ namespace Excise.Avalonia.Controls
         protected override void OnPropertyChanged(Avalonia.AvaloniaPropertyChangedEventArgs change) { }
         public void PreserveContinuousReadingPositionOnNextRebuild() { }
         public void PreviousPage() { }
+        public void RefreshAfterStructureChange() { }
         public void RefreshContinuousLayout() { }
         public bool SelectAllText(int pageNumber = 0) { }
         public void TrimCaches(Excise.Avalonia.Controls.PdfViewerCacheTrimLevel level) { }

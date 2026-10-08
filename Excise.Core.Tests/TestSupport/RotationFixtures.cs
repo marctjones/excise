@@ -314,9 +314,13 @@ internal static class MutoolStextGeometry
     internal sealed record StextPage(double Width, double Height, IReadOnlyList<IReadOnlyList<StextChar>> Lines)
     {
         /// <summary>Every occurrence of <paramref name="term"/> inside one line, as the union of its char quads.</summary>
-        public IReadOnlyList<VisualRegion> Find(string term)
+        public IReadOnlyList<VisualRegion> Find(string term) =>
+            FindChars(term).Select(VisualRegion.Union).ToList();
+
+        /// <summary>Every occurrence of <paramref name="term"/>, as its per-char boxes in reading order.</summary>
+        public IReadOnlyList<IReadOnlyList<VisualRegion>> FindChars(string term)
         {
-            var hits = new List<VisualRegion>();
+            var hits = new List<IReadOnlyList<VisualRegion>>();
             foreach (var line in Lines)
             {
                 var text = string.Concat(line.Select(c => c.C));
@@ -325,7 +329,7 @@ internal static class MutoolStextGeometry
                 {
                     // One stext char is one string element only for single-UTF-16 chars;
                     // the probe and fixture targets are ASCII.
-                    hits.Add(VisualRegion.Union(line.Skip(at).Take(term.Length).Select(c => c.Box)));
+                    hits.Add(line.Skip(at).Take(term.Length).Select(c => c.Box).ToList());
                 }
             }
             return hits;

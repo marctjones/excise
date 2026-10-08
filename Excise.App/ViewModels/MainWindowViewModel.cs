@@ -1747,7 +1747,8 @@ internal partial class MainWindowViewModel : ViewModelBase
         // the page bitmap the viewer is currently showing and re-renders
         // asynchronously, which leaves layout touching a disposed bitmap. Page
         // CONTENT did not change — only the page order — so ask for the layout
-        // rebuild alone.
+        // rebuild alone. In single-page view the same signal re-renders the
+        // displayed page, which a rotation needs (#1983).
         DocumentStructureChanged?.Invoke(this, EventArgs.Empty);
 
         CurrentPageIndex = Math.Clamp(CurrentPageIndex, 0, Math.Max(0, _documentService.PageCount - 1));
