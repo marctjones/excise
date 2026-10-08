@@ -67,6 +67,12 @@ internal class WindowSettings
     public string DocumentOpenMode { get; set; } = "Automatic";
 
     /// <summary>
+    /// Light or dark chrome (#2002). Persisted as a string; parsed back to
+    /// <see cref="Excise.App.Models.AppearanceMode"/>. System follows the OS.
+    /// </summary>
+    public string Appearance { get; set; } = "System";
+
+    /// <summary>
     /// Run a dynamic XFA form's FormCalc initialize and calculate scripts when it opens (#1570).
     /// On by default; see docs/architecture/xfa-rendering.md, "FormCalc threat model".
     /// </summary>

@@ -41,6 +41,13 @@ internal sealed class EnumDisplayConverter : IValueConverter
             DocumentOpenMode.ReplaceCurrent => "Replace current document",
             _ => null,
         },
+        AppearanceMode v => v switch
+        {
+            AppearanceMode.System => "Match system (default)",
+            AppearanceMode.Light => "Light",
+            AppearanceMode.Dark => "Dark",
+            _ => null,
+        },
         PerformancePreset v => v switch
         {
             PerformancePreset.LowMemory => "Low memory",

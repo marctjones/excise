@@ -214,6 +214,24 @@ internal partial class MainWindowViewModel
             DocumentOpenMode = parsed;
     }
 
+    private AppearanceMode _appearance = AppearanceMode.System;
+
+    /// <summary>
+    /// Light or dark chrome (#2002). The window applies it to the application
+    /// (AppearanceService); the view model only holds the preference.
+    /// </summary>
+    internal AppearanceMode Appearance
+    {
+        get => _appearance;
+        set => this.RaiseAndSetIfChanged(ref _appearance, value);
+    }
+
+    internal void ApplyAppearancePreference(string? mode)
+    {
+        if (Enum.TryParse<AppearanceMode>(mode, out var parsed) && Enum.IsDefined(parsed))
+            Appearance = parsed;
+    }
+
     /// <summary>
     /// Keep <see cref="HasRecentFiles"/> and <see cref="RecentFileMenuItems"/>
     /// current when the collection changes from anywhere. With one shared

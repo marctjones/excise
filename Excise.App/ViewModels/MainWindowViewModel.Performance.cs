@@ -149,6 +149,7 @@ internal partial class MainWindowViewModel
         settings.Redaction = RedactionPreferences;
         settings.PrintScaling = PrintScaling.ToString();
         settings.DocumentOpenMode = DocumentOpenMode.ToString(); // #1463
+        settings.Appearance = Appearance.ToString(); // #2002
         settings.RunFormCalc = RunFormCalc; // #1570
         _performanceSettings.WriteTo(settings);
     }

@@ -4,7 +4,7 @@
              xmlns:local="using:Excise.App"
              x:Class="Excise.App.App"
              Name="Excise"
-             RequestedThemeVariant="Light">
+             RequestedThemeVariant="Default">
 
     <!-- Application Resources -->
     <Application.Resources>
@@ -25,7 +25,7 @@
     <!-- Application Styles -->
     <Application.Styles>
         <!-- FluentAvalonia Theme - Modern Fluent Design System -->
-        <sty:FluentAvaloniaTheme PreferSystemTheme="False"
+        <sty:FluentAvaloniaTheme PreferSystemTheme="True"
                                   PreferUserAccentColor="False"
                                   CustomAccentColor="#4A7C4A"/>
 

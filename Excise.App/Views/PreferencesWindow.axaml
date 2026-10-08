@@ -31,6 +31,21 @@
         <ScrollViewer Grid.Row="1" Padding="20,16">
             <StackPanel Spacing="16">
 
+                <!-- Appearance (#2002) -->
+                <Border Classes="settings-card">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Appearance" Classes="settings-card-title"/>
+                        <ComboBox x:Name="AppearanceComboBox"
+                                  Classes="enum-labels"
+                                  ItemsSource="{Binding AppearanceOptions}"
+                                  SelectedItem="{Binding SelectedAppearance}"
+                                  AutomationProperties.Name="Appearance"
+                                  AutomationProperties.HelpText="Light or dark window chrome. Match system follows the operating system."/>
+                        <TextBlock Text="Match system follows your computer's light or dark setting as it changes. Pages are shown as the PDF draws them in every mode."
+                                   Classes="help"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- Documents (#1463) -->
                 <Border Classes="settings-card">
                     <StackPanel Spacing="8">

@@ -113,6 +113,17 @@ public class VisualPolishAuditTests
                 "Typewriter mode plus highlight and sticky-note annotation commands.",
                 () => vm.IsTypewriterMode && PageIsDrawn(window)));
 
+            // Dark appearance (#2002): chrome switches, pages stay as the PDF draws them.
+            vm.IsTypewriterMode = false;
+            window.RequestedThemeVariant = ThemeVariant.Dark;
+            // Locally styled elements (the status-bar mode badge) restyle a dispatcher
+            // pass after the variant flips; the page is already drawn, so readiness
+            // alone would capture them half-switched.
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+            captures.Add(await CaptureWindow(window, output, "14-dark-main-window.png",
+                "Main window in the Dark appearance: chrome on the dark tokens, page unchanged.",
+                () => window.ActualThemeVariant == ThemeVariant.Dark && PageIsDrawn(window)));
+
             window.Close();
 
             // Settings and dialogs (#1996): previously absent from the audit.
@@ -140,6 +151,17 @@ public class VisualPolishAuditTests
                 DataContext = new LinuxPrintDialogViewModel([new CupsPrintQueue("Office", "idle", true)], pageCount: 4),
             }, "12-linux-print.png", "Linux printer chooser.");
             await CaptureDialog(captures, output, new AboutWindow(), "13-about.png", "About.");
+            var darkPreferences = new PreferencesWindow
+            {
+                DataContext = new PreferencesViewModel(),
+                Width = 720,
+                Height = 520,
+            };
+            WithAppStyles(darkPreferences).RequestedThemeVariant = ThemeVariant.Dark;
+            darkPreferences.Show();
+            captures.Add(await CaptureWindow(darkPreferences, output, "15-dark-preferences.png",
+                "Preferences in the Dark appearance."));
+            darkPreferences.Close();
 
             var manifestPath = Path.Combine(output, "ux-icon-audit.json");
             await File.WriteAllTextAsync(manifestPath, JsonSerializer.Serialize(new
@@ -199,7 +221,13 @@ public class VisualPolishAuditTests
     private static T WithAppStyles<T>(T window) where T : Window
     {
         window.RequestedThemeVariant = ThemeVariant.Light;
-        window.Styles.Add(new FluentAvaloniaTheme());
+        // Mirror App.axaml's FluentAvaloniaTheme, accent included, or FluentAvalonia's
+        // own default accent shows up in the captures.
+        window.Styles.Add(new FluentAvaloniaTheme
+        {
+            PreferUserAccentColor = false,
+            CustomAccentColor = global::Avalonia.Media.Color.Parse("#4A7C4A"),
+        });
         window.Styles.Add(new StyleInclude(new Uri("avares://Excise.App/"))
             { Source = new Uri("avares://Excise.App/Styles/Controls.axaml") });
         return window;

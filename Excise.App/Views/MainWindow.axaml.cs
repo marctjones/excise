@@ -12,6 +12,7 @@ using Avalonia.VisualTree;
 using Excise.Avalonia.Controls;
 using Excise.Core.Document;
 using Excise.App.Models;
+using Excise.App.Services;
 using Excise.App.Services.Host;
 using Excise.App.ViewModels;
 using System;
@@ -613,6 +614,7 @@ internal partial class MainWindow : Window
         viewModel.RedactionPreferences = settings.Redaction;
         viewModel.ApplyPrintScalingPreference(settings.PrintScaling);
         viewModel.ApplyDocumentOpenModePreference(settings.DocumentOpenMode);
+        viewModel.ApplyAppearancePreference(settings.Appearance); // #2002
         viewModel.RunFormCalc = settings.RunFormCalc;
         viewModel.ApplyAnnotationToolbarPreference(settings.AnnotationToolbarVisible);
         // Preferences → Performance: subscribe first so the restore below
@@ -633,6 +635,16 @@ internal partial class MainWindow : Window
 
     private void Subscribe(MainWindowViewModel viewModel)
     {
+        // #2002: the Appearance preference applies app-wide, now and on change.
+        AppearanceService.Apply(Application.Current, viewModel.Appearance);
+        System.ComponentModel.PropertyChangedEventHandler appearanceChanged = (_, e) =>
+        {
+            if (e.PropertyName == nameof(MainWindowViewModel.Appearance))
+                AppearanceService.Apply(Application.Current, viewModel.Appearance);
+        };
+        viewModel.PropertyChanged += appearanceChanged;
+        _viewModelUnsubscribers.Add(() => viewModel.PropertyChanged -= appearanceChanged);
+
         viewModel.PerformanceSettingsApplied += OnPerformanceSettingsApplied;
         _viewModelUnsubscribers.Add(() => viewModel.PerformanceSettingsApplied -= OnPerformanceSettingsApplied);
 

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "074d7d8f0b637073a5527db1aeaafff187a99a78b13900cf24bdc354ab01a945",
+  "sourceFingerprint": "4eba3099ae2bb785b0e90e1e6b3f31e0de39f2304eeda8c09c112167bd0e3a2d",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -8106,6 +8106,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.App/Models/AppearanceMode.cs",
+      "path": "Excise.App/Models/AppearanceMode.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.App/Models/AttachmentEntry.cs",
       "path": "Excise.App/Models/AttachmentEntry.cs",
       "kind": "source-file",
@@ -8404,6 +8414,16 @@
           ]
         }
       ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.App/Services/AppearanceService.cs",
+      "path": "Excise.App/Services/AppearanceService.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
       "promotion": "review-required"
     },
     {
@@ -11663,7 +11683,7 @@
     }
   ],
   "summary": {
-    "records": 588,
+    "records": 590,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 20,
@@ -11671,7 +11691,7 @@
       "fonts": 34,
       "forms": 11,
       "images": 40,
-      "product-integration-general": 336,
+      "product-integration-general": 338,
       "redaction": 82,
       "safe-save-and-metadata": 20,
       "security-and-encryption": 24,
@@ -11750,7 +11770,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 24,
       "pdfe.product.security.signature-and-permission-warning:write": 24
     },
-    "fallbackRecords": 336,
+    "fallbackRecords": 338,
     "allRecordsMapped": true
   }
 }

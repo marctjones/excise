@@ -27,6 +27,7 @@ public class EnumDisplayLabelTests
         var data = new TheoryData<Enum>();
         void Add<T>() where T : struct, Enum { foreach (var v in Enum.GetValues<T>()) data.Add(v); }
         Add<DocumentOpenMode>();
+        Add<AppearanceMode>();
         Add<PerformancePreset>();
         Add<ReadingOrderStrategy>();
         Add<WhitespaceMode>();
@@ -79,6 +80,6 @@ public class EnumDisplayLabelTests
             window.Close();
         }
 
-        checkedCount.Should().Be(11, "nine Preferences lists, the encryption algorithm and the Bates position");
+        checkedCount.Should().Be(12, "ten Preferences lists, the encryption algorithm and the Bates position");
     }
 }

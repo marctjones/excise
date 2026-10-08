@@ -63,6 +63,23 @@ internal class PreferencesViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _documentOpenMode, value);
     }
 
+    // ── Appearance (#2002) ───────────────────────────────────────────────────
+
+    private AppearanceMode _appearance = AppearanceMode.System;
+
+    public AppearanceMode[] AppearanceOptions { get; } =
+    [
+        AppearanceMode.System,
+        AppearanceMode.Light,
+        AppearanceMode.Dark,
+    ];
+
+    public AppearanceMode SelectedAppearance
+    {
+        get => _appearance;
+        set => this.RaiseAndSetIfChanged(ref _appearance, value);
+    }
+
     // ── Forms (#1570) ────────────────────────────────────────────────────────
 
     private bool _runFormCalc = true;
@@ -370,6 +387,7 @@ internal class PreferencesViewModel : ViewModelBase
         SelectedPrintScaling = Excise.App.Services.Printing.PrintScalingMode.ShrinkOversized;
         SetPerformanceFields(PerformanceSettings.Balanced);
         SelectedDocumentOpenMode = DocumentOpenMode.Automatic;
+        SelectedAppearance = AppearanceMode.System;
         RunFormCalc = true;
     }
 
@@ -387,6 +405,7 @@ internal class PreferencesViewModel : ViewModelBase
         SetPerformanceFields(mainViewModel.PerformanceSettings);
         TileCacheBytesSource = mainViewModel.ViewerTileCacheResidentBytesProvider;
         SelectedDocumentOpenMode = mainViewModel.DocumentOpenMode;
+        SelectedAppearance = mainViewModel.Appearance;
         RunFormCalc = mainViewModel.RunFormCalc;
     }
 
@@ -398,6 +417,7 @@ internal class PreferencesViewModel : ViewModelBase
         mainViewModel.PrintScaling = SelectedPrintScaling;
         mainViewModel.ApplyPerformanceSettings(BuildPerformanceSettings());
         mainViewModel.DocumentOpenMode = SelectedDocumentOpenMode;
+        mainViewModel.Appearance = SelectedAppearance;
         mainViewModel.RunFormCalc = RunFormCalc;
     }
 }
