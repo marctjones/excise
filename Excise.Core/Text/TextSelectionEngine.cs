@@ -1029,6 +1029,9 @@ public static class TextSelectionEngine
     /// has its own frame (#1902) and is never "turned".
     /// </summary>
     internal static bool IsTurned(Letter l) =>
+        // Upright text carries exactly 0 (atan2(0, +x)): skip the trigonometry
+        // on the per-glyph join path #600/#966 tuned.
+        l.BaselineAngle != 0 &&
         !l.IsVerticalWriting &&
         (Math.Abs(Math.Sin(l.BaselineAngle)) > TurnedSineTolerance || Math.Cos(l.BaselineAngle) < 0);
 
