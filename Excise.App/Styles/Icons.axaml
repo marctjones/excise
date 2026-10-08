@@ -1,48 +1,80 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <StreamGeometry x:Key="IconFolderOpen">M10 4H2c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2H12l-2-2z</StreamGeometry>
-    <StreamGeometry x:Key="IconSave">M17 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zM12 19c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3zM6 8V5h9v3H6z</StreamGeometry>
-    <StreamGeometry x:Key="IconSearch">M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.6-.6 3.1-1.6 4.2l.3.3h.8l5 5-1.5 1.5-5-5v-.8l-.3-.3A6.5 6.5 0 1 1 9.5 3zM9.5 5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z</StreamGeometry>
-    <StreamGeometry x:Key="IconAdd">M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z</StreamGeometry>
-    <StreamGeometry x:Key="IconDelete">M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4h-3.5z</StreamGeometry>
-    <StreamGeometry x:Key="IconRedact">M4 6h16v12H4V6zm2 2v8h12V8H6z</StreamGeometry>
-    <StreamGeometry x:Key="IconCheck">M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z</StreamGeometry>
-    <StreamGeometry x:Key="IconClipboard">M19 3h-4.2C14.4 1.8 13.3 1 12 1S9.6 1.8 9.2 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.6 0 1 .4 1 1s-.4 1-1 1-1-.4-1-1 .4-1 1-1zm7 16H5V5h2v3h10V5h2v14z</StreamGeometry>
-    <StreamGeometry x:Key="IconLock">M17 8h-1V6c0-2.8-2.2-5-5-5S6 3.2 6 6v2H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM8 6c0-1.7 1.3-3 3-3s3 1.3 3 3v2H8V6z</StreamGeometry>
-    <StreamGeometry x:Key="IconSettings">M19.4 13.5c.1-.5.1-1 .1-1.5s0-1-.1-1.5l2.1-1.6-2-3.5-2.5 1a7.3 7.3 0 0 0-2.6-1.5L14 2h-4l-.4 2.9c-.9.3-1.8.8-2.6 1.5l-2.5-1-2 3.5 2.1 1.6c-.1.5-.1 1-.1 1.5s0 1 .1 1.5l-2.1 1.6 2 3.5 2.5-1c.8.7 1.7 1.2 2.6 1.5L10 22h4l.4-2.9c.9-.3 1.8-.8 2.6-1.5l2.5 1 2-3.5-2.1-1.6zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z</StreamGeometry>
-    <StreamGeometry x:Key="IconOutline">M4 5h4v4H4V5zm6 0h10v2H10V5zm0 4h10v2H10V9zM4 15h4v4H4v-4zm6 0h10v2H10v-2zm0 4h10v2H10v-2z</StreamGeometry>
-    <StreamGeometry x:Key="IconThumbnails">M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z</StreamGeometry>
-    <StreamGeometry x:Key="IconContinuous">M5 4h14v4H5V4zm0 6h14v4H5v-4zm0 6h14v4H5v-4z</StreamGeometry>
-    <StreamGeometry x:Key="IconLayers">M12 2 2 7l10 5 10-5-10-5zM2 12l10 5 10-5-2.2-1.1L12 14.8 4.2 10.9 2 12zm0 5 10 5 10-5-2.2-1.1L12 19.8l-7.8-3.9L2 17z</StreamGeometry>
-    <StreamGeometry x:Key="IconTextSelect">M3 4v3h5v13h3V7h5V4H3zm15 4v2h3V8h-3zm0 5v2h3v-2h-3zm0 5v2h3v-2h-3z</StreamGeometry>
-    <StreamGeometry x:Key="IconTypewriter">M3 17.3V21h3.7L17.8 9.9l-3.7-3.7L3 17.3zM20.7 7c.4-.4.4-1 0-1.4l-2.3-2.3a1 1 0 0 0-1.4 0l-1.8 1.8 3.7 3.7L20.7 7z</StreamGeometry>
-    <!-- #1476: the typewriter style flyout (size, alignment). A large A beside a
-         small one — the conventional "text formatting" glyph, deliberately
-         unlike IconTypewriter (the mode toggle) and IconTextSelect. -->
-    <StreamGeometry x:Key="IconTextStyle">M9 4v3h5v12h3V7h5V4H9zm-6 8h3v7h3v-7h3V9H3v3z</StreamGeometry>
-    <StreamGeometry x:Key="IconHighlight">M3 17.2V21h3.8L18.4 9.4l-3.8-3.8L3 17.2zm17.7-10.5c.4-.4.4-1 0-1.4l-2-2c-.4-.4-1-.4-1.4 0l-1.6 1.6 3.8 3.8 1.2-2zM3 23h18v-2H3v2z</StreamGeometry>
-    <StreamGeometry x:Key="IconNote">M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h10l6-6V5c0-1.1-.9-2-2-2zm-5 16.5V14h5.5L14 19.5z</StreamGeometry>
-    <StreamGeometry x:Key="IconForm">M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM8 7h8v2H8V7zm0 4h8v2H8v-2zm0 4h5v2H8v-2z</StreamGeometry>
-    <StreamGeometry x:Key="IconSparkles">M12 2l1.4 4.6L18 8l-4.6 1.4L12 14l-1.4-4.6L6 8l4.6-1.4L12 2zm6 10 1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3zM5 13l.8 2.2L8 16l-2.2.8L5 19l-.8-2.2L2 16l2.2-.8L5 13z</StreamGeometry>
-    <StreamGeometry x:Key="IconPage">M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z</StreamGeometry>
-
-    <!-- #1789: the optional annotation toolbar row / floating palette need an
-         icon per annotation command; only IconHighlight and IconNote existed
-         before (the Annotate menu itself is text-only). Each follows the
-         file's existing conventions: a 24-unit coordinate space, and either a
-         filled silhouette or an outer/inner "ring" pair (same trick as
-         IconRedact's hollow rectangle) for a hollow shape. -->
-    <StreamGeometry x:Key="IconUnderline">M4 4h2v8a6 6 0 0 0 12 0V4h2v8a8 8 0 0 1 -16 0V4zM4 20h16v2H4z</StreamGeometry>
-    <StreamGeometry x:Key="IconStrikeOut">M5 5h14v2H5V5zM5 17h14v2H5v-2zM3 11h18v2H3v-2z</StreamGeometry>
-    <StreamGeometry x:Key="IconSquiggly">M3 15l3 -3 3 3 3 -3 3 3 3 -3 3 3v3l-3 -3 -3 3 -3 -3 -3 3 -3 -3 -3 3z</StreamGeometry>
-    <StreamGeometry x:Key="IconSquare">M4 4h16v16H4V4zm2 2v12h12V6H6z</StreamGeometry>
-    <StreamGeometry x:Key="IconCircle">M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0 -20zM12 4a8 8 0 1 1 0 16a8 8 0 1 1 0 -16z</StreamGeometry>
-    <StreamGeometry x:Key="IconFreeText">M4 4h16v16H4V4zm2 2v12h12V6H6zm2 3h8v2H8V9zm0 4h5v2H8v-2z</StreamGeometry>
-    <StreamGeometry x:Key="IconStamp">M9 2h6v6l3 3v3H6v-3l3 -3zM6 16h12v2H6v-2zM8 20h8v2H8v-2z</StreamGeometry>
-    <StreamGeometry x:Key="IconImageStamp">M4 4h16v16H4V4zm2 2v12h12V6H6zM8 16l3 -4 2 2 3 -4 4 6H8z</StreamGeometry>
-    <StreamGeometry x:Key="IconInk">M4 20v-3l11 -11 3 3 -11 11H4zM16 5l3 -3 2 2 -3 3z</StreamGeometry>
-    <StreamGeometry x:Key="IconAnnotationLine">M3 19l1.5 1.5L20 5.5 18.5 4z</StreamGeometry>
-    <StreamGeometry x:Key="IconArrow">M3 19l2 2L21 3l-2 -2zM15 3h6v6z</StreamGeometry>
-    <StreamGeometry x:Key="IconPolygon">M12 3l8 6 -3 9H7l-3 -9z</StreamGeometry>
-    <StreamGeometry x:Key="IconPolyLine">M3 8l1.5 -1.5 4 4 4 -4 4 4 4 -4 1.5 1.5 -5.5 5.5 -4 -4 -4 4z</StreamGeometry>
+    <!-- Workbench icons (#1993, design system #1827): 24-unit grid, 1.5 stroke,
+         square caps, miter joins, outline only, outlined to fill paths so PathIcon
+         can draw them. Each starts with a zero-length frame at (0,0) and (24,24):
+         PathIcon stretches a geometry to its own bounds, and the frame makes those
+         bounds the full grid, so every icon keeps the same optical size. Icons with
+         a Workbench name use that icon's published `filled` path; the rest were drawn
+         to the same rules (scratch outliner: SkiaSharp stroke -> fill path). -->
+    <!-- IconFolderOpen: workbench:folder-open -->
+    <StreamGeometry x:Key="IconFolderOpen">F1 M0,0 L0,0 M24,24 L24,24 M2.25,19.75 L1.918,19.75 L2.25,18.864 L2.25,4.25 L9.36,4.25 L11.36,6.75 L19.75,6.75 L19.75,10.25 L23.082,10.25 L19.52,19.75 L2.25,19.75 Z M4.082,18.25 L18.48,18.25 L20.918,11.75 L6.52,11.75 L4.082,18.25 Z M18.25,10.25 L18.25,8.25 L10.64,8.25 L8.64,5.75 L3.75,5.75 L3.75,14.864 L5.48,10.25 L18.25,10.25 Z</StreamGeometry>
+    <!-- IconSave: workbench:save -->
+    <StreamGeometry x:Key="IconSave">F1 M0,0 L0,0 M24,24 L24,24 M7.25,3.25 L17.311,3.25 L20.75,6.689 L20.75,20.75 L3.25,20.75 L3.25,3.25 L7.25,3.25 Z M7.25,4.75 L4.75,4.75 L4.75,19.25 L6.25,19.25 L6.25,13.25 L17.75,13.25 L17.75,19.25 L19.25,19.25 L19.25,7.311 L16.75,4.811 L16.75,9.75 L7.25,9.75 L7.25,4.75 Z M16.25,19.25 L16.25,14.75 L7.75,14.75 L7.75,19.25 L16.25,19.25 Z M8.75,4.75 L8.75,8.25 L12.75,8.25 L12.75,4.75 L8.75,4.75 Z M15.25,4.75 L14.25,4.75 L14.25,8.25 L15.25,8.25 L15.25,4.75 Z</StreamGeometry>
+    <!-- IconSearch: workbench:search -->
+    <StreamGeometry x:Key="IconSearch">F1 M0,0 L0,0 M24,24 L24,24 M3.25,10.5 Q3.25,7.497 5.373,5.373 Q7.497,3.25 10.5,3.25 Q13.503,3.25 15.627,5.373 Q17.75,7.497 17.75,10.5 Q17.75,13.503 15.627,15.627 Q13.503,17.75 10.5,17.75 Q7.497,17.75 5.373,15.627 Q3.25,13.503 3.25,10.5 Z M4.75,10.5 Q4.75,12.882 6.434,14.566 Q8.118,16.25 10.5,16.25 Q12.882,16.25 14.566,14.566 Q16.25,12.882 16.25,10.5 Q16.25,8.118 14.566,6.434 Q12.882,4.75 10.5,4.75 Q8.118,4.75 6.434,6.434 Q4.75,8.118 4.75,10.5 Z M16.03,14.97 L22.061,21 L21,22.061 L14.439,15.5 L15.5,14.439 Z</StreamGeometry>
+    <!-- IconAdd: workbench:plus -->
+    <StreamGeometry x:Key="IconAdd">F1 M0,0 L0,0 M24,24 L24,24 M12.75,11.25 L20.75,11.25 L20.75,12.75 L12.75,12.75 L12.75,20.75 L11.25,20.75 L11.25,12.75 L3.25,12.75 L3.25,11.25 L11.25,11.25 L11.25,3.25 L12.75,3.25 L12.75,11.25 Z</StreamGeometry>
+    <!-- IconDelete: workbench:trash -->
+    <StreamGeometry x:Key="IconDelete">F1 M0,0 L0,0 M24,24 L24,24 M15.75,5.25 L17.298,5.25 L17.302,5.202 L18.025,5.25 L20.75,5.25 L20.75,6.75 L18.702,6.75 L17.702,21.75 L6.298,21.75 L5.298,6.75 L3.25,6.75 L3.25,5.25 L5.975,5.25 L6.698,5.202 L6.702,5.25 L8.25,5.25 L8.25,2.25 L15.75,2.25 L15.75,5.25 Z M8.25,6.75 L6.802,6.75 L7.702,20.25 L16.298,20.25 L17.198,6.75 L8.25,6.75 Z M10.75,17 L10.75,17.75 L9.25,17.75 L9.25,9.25 L10.75,9.25 L10.75,17 Z M14.75,17.75 L13.25,17.75 L13.25,9.25 L14.75,9.25 L14.75,17.75 Z M9.75,5.25 L14.25,5.25 L14.25,3.75 L9.75,3.75 L9.75,5.25 Z</StreamGeometry>
+    <!-- IconRedact: drawn -->
+    <StreamGeometry x:Key="IconRedact">F1 M0,0 L0,0 M24,24 L24,24 M3.25 5.25L20.75 5.25L20.75 6.75L3.25 6.75L3.25 5.25ZM20 10.25L4 10.25L4 13.75L20 13.75L20 10.25ZM3.25 17.25L20.75 17.25L20.75 18.75L3.25 18.75L3.25 17.25Z</StreamGeometry>
+    <!-- IconCheck: workbench:check -->
+    <StreamGeometry x:Key="IconCheck">F1 M0,0 L0,0 M24,24 L24,24 M4.53,11.97 L9,16.439 L20,5.439 L21.061,6.5 L9,18.561 L2.939,12.5 L4,11.439 Z</StreamGeometry>
+    <!-- IconClipboard: workbench:paste -->
+    <StreamGeometry x:Key="IconClipboard">F1 M0,0 L0,0 M24,24 L24,24 M15.75,2.25 L15.75,4.25 L19.75,4.25 L19.75,21.75 L4.25,21.75 L4.25,4.25 L8.25,4.25 L8.25,2.25 L15.75,2.25 Z M8.25,5.75 L5.75,5.75 L5.75,20.25 L18.25,20.25 L18.25,5.75 L15.75,5.75 L15.75,7.75 L8.25,7.75 L8.25,5.75 Z M14.25,5.75 L14.25,3.75 L9.75,3.75 L9.75,6.25 L14.25,6.25 L14.25,5.75 Z</StreamGeometry>
+    <!-- IconLock: workbench:lock -->
+    <StreamGeometry x:Key="IconLock">F1 M0,0 L0,0 M24,24 L24,24 M16.75,10.25 L19.75,10.25 L19.75,21.75 L4.25,21.75 L4.25,10.25 L7.25,10.25 L7.25,7 Q7.25,5.032 8.641,3.641 Q10.032,2.25 12,2.25 Q13.968,2.25 15.359,3.641 Q16.75,5.032 16.75,7 L16.75,10.25 Z M7.25,11.75 L5.75,11.75 L5.75,20.25 L18.25,20.25 L18.25,11.75 L7.25,11.75 Z M8.75,10.25 L15.25,10.25 L15.25,7 Q15.25,3.75 12,3.75 Q8.75,3.75 8.75,7 L8.75,10.25 Z M12.75,17.75 L11.25,17.75 L11.25,14.25 L12.75,14.25 L12.75,17.75 Z</StreamGeometry>
+    <!-- IconSettings: workbench:settings -->
+    <StreamGeometry x:Key="IconSettings">F1 M0,0 L0,0 M24,24 L24,24 M19.32,9.627 L22.16,10.028 L22.16,13.972 L19.32,14.373 L18.856,15.5 L20.581,17.789 L17.789,20.581 L15.5,18.856 L14.373,19.32 L13.972,22.16 L10.028,22.16 L9.627,19.32 L8.5,18.856 L6.211,20.581 L3.419,17.789 L5.144,15.5 L4.68,14.373 L1.84,13.972 L1.84,10.028 L4.68,9.627 L5.144,8.5 L3.419,6.211 L6.211,3.419 L8.5,5.144 L9.627,4.68 L10.028,1.84 L13.972,1.84 L14.373,4.68 L15.5,5.144 L17.789,3.419 L20.581,6.211 L18.856,8.5 L19.32,9.627 Z M18.26,10.993 L17.144,8.28 L18.599,6.349 L17.651,5.401 L15.72,6.856 L13.007,5.74 L12.668,3.34 L11.332,3.34 L10.993,5.74 L8.28,6.856 L6.349,5.401 L5.401,6.349 L6.856,8.28 L5.74,10.993 L3.34,11.332 L3.34,12.668 L5.74,13.007 L6.856,15.72 L5.401,17.651 L6.349,18.599 L8.28,17.144 L10.993,18.26 L11.332,20.66 L12.668,20.66 L13.007,18.26 L15.72,17.144 L17.651,18.599 L18.599,17.651 L17.144,15.72 L18.26,13.007 L20.66,12.668 L20.66,11.332 L18.685,11.053 Z M8.25,12 Q8.25,8.25 12,8.25 Q15.75,8.25 15.75,12 Q15.75,15.75 12,15.75 Q8.25,15.75 8.25,12 Z M9.75,12 Q9.75,14.25 12,14.25 Q14.25,14.25 14.25,12 Q14.25,9.75 12,9.75 Q9.75,9.75 9.75,12 Z</StreamGeometry>
+    <!-- IconOutline: workbench:bookmark -->
+    <StreamGeometry x:Key="IconOutline">F1 M0,0 L0,0 M24,24 L24,24 M18.75,2.25 L18.75,22.601 L12,16.976 L5.25,22.601 L5.25,2.25 L18.75,2.25 Z M6.75,3.75 L6.75,19.399 L12,15.024 L17.25,19.399 L17.25,3.75 L6.75,3.75 Z</StreamGeometry>
+    <!-- IconThumbnails: drawn -->
+    <StreamGeometry x:Key="IconThumbnails">F1 M0,0 L0,0 M24,24 L24,24 M10.75 3.25L3.25 3.25L3.25 11.75L10.75 11.75L10.75 3.25ZM20.75 3.25L13.25 3.25L13.25 11.75L20.75 11.75L20.75 3.25ZM4.75 4.75L9.25 4.75L9.25 10.25L4.75 10.25L4.75 4.75ZM14.75 4.75L19.25 4.75L19.25 10.25L14.75 10.25L14.75 4.75ZM10.75 12.25L3.25 12.25L3.25 20.75L10.75 20.75L10.75 12.25ZM20.75 12.25L13.25 12.25L13.25 20.75L20.75 20.75L20.75 12.25ZM4.75 13.75L9.25 13.75L9.25 19.25L4.75 19.25L4.75 13.75ZM14.75 13.75L19.25 13.75L19.25 19.25L14.75 19.25L14.75 13.75Z</StreamGeometry>
+    <!-- IconContinuous: drawn -->
+    <StreamGeometry x:Key="IconContinuous">F1 M0,0 L0,0 M24,24 L24,24 M18.75 2.25L5.25 2.25L5.25 11.25L18.75 11.25L18.75 2.25ZM6.75 3.75L17.25 3.75L17.25 9.75L6.75 9.75L6.75 3.75ZM18.75 12.75L5.25 12.75L5.25 21.75L18.75 21.75L18.75 12.75ZM6.75 14.25L17.25 14.25L17.25 20.25L6.75 20.25L6.75 14.25Z</StreamGeometry>
+    <!-- IconLayers: drawn -->
+    <StreamGeometry x:Key="IconLayers">F1 M0,0 L0,0 M24,24 L24,24 M21.6771 8.5L12.3354 3.82918L12 3.66147L2.32295 8.5L12 13.3385L21.6771 8.5ZM12 5.33853L18.3229 8.5L12 11.6615L5.67705 8.5L12 5.33853ZM12 15.6615L4.33541 11.8292L3.66459 11.4938L2.99377 12.8354L12 17.3385L21.0062 12.8354L20.3354 11.4938L12 15.6615ZM12 19.6615L4.33541 15.8292L3.66459 15.4938L2.99377 16.8354L12 21.3385L21.0062 16.8354L20.3354 15.4938L12 19.6615Z</StreamGeometry>
+    <!-- IconTextSelect: drawn -->
+    <StreamGeometry x:Key="IconTextSelect">F1 M0,0 L0,0 M24,24 L24,24 M11.25 3.25L8.25 3.25L8.25 4.75L11.25 4.75L11.25 19.25L8.25 19.25L8.25 20.75L15.75 20.75L15.75 19.25L12.75 19.25L12.75 4.75L15.75 4.75L15.75 3.25L11.25 3.25Z</StreamGeometry>
+    <!-- IconTypewriter: drawn -->
+    <StreamGeometry x:Key="IconTypewriter">F1 M0,0 L0,0 M24,24 L24,24 M8.75 4.25L3.25 4.25L3.25 5.75L8.75 5.75L8.75 19.75L10.25 19.75L10.25 5.75L15.75 5.75L15.75 4.25L8.75 4.25ZM19.25 20.75L19.25 8.25L17.75 8.25L17.75 20.75L19.25 20.75Z</StreamGeometry>
+    <!-- IconTextStyle: drawn -->
+    <StreamGeometry x:Key="IconTextStyle">F1 M0,0 L0,0 M24,24 L24,24 M7.25 12.405L4.32036 18.6828L4.0032 19.3625L5.36247 19.9968L8.27765 13.75L15.7224 13.75L18.3204 19.3172L18.6375 19.9968L19.9968 19.3625L19.6796 18.6828L16.75 12.405L16.75 12.25L16.6776 12.25L12 2.22647L7.32235 12.25L7.25 12.25L7.25 12.405ZM8.97765 12.25L12 5.77353L15.0224 12.25L8.97765 12.25Z</StreamGeometry>
+    <!-- IconHighlight: drawn -->
+    <StreamGeometry x:Key="IconHighlight">F1 M0,0 L0,0 M24,24 L24,24 M21.0607 9.5L15.0303 3.46967L14.5 2.93934L5.25 12.1893L5.25 18.75L11.8107 18.75L21.0607 9.5ZM14.5 5.06066L18.9393 9.5L11.1893 17.25L6.75 17.25L6.75 12.8107L14.5 5.06066ZM21.75 20.25L2.25 20.25L2.25 21.75L21.75 21.75L21.75 20.25Z</StreamGeometry>
+    <!-- IconNote: drawn -->
+    <StreamGeometry x:Key="IconNote">F1 M0,0 L0,0 M24,24 L24,24 M20.75 3.25L3.25 3.25L3.25 20.75L15.75 20.75L15.75 20.3107L20.3107 15.75L20.75 15.75L20.75 3.25ZM19.25 14.25L14.25 14.25L14.25 19.25L4.75 19.25L4.75 4.75L19.25 4.75L19.25 14.25ZM15.75 18.1893L15.75 15.75L18.1893 15.75L15.75 18.1893Z</StreamGeometry>
+    <!-- IconForm: workbench:checkbox-checked -->
+    <StreamGeometry x:Key="IconForm">F1 M0,0 L0,0 M24,24 L24,24 M20.75,3.25 L20.75,20.75 L3.25,20.75 L3.25,3.25 L20.75,3.25 Z M4.75,4.75 L4.75,19.25 L19.25,19.25 L19.25,4.75 L4.75,4.75 Z M8.03,11.47 L10.478,13.918 L16.458,7.44 L17.56,8.458 L10.522,16.082 L6.439,12 L7.5,10.939 Z</StreamGeometry>
+    <!-- IconSparkles: workbench:loupe-eyepiece -->
+    <StreamGeometry x:Key="IconSparkles">F1 M0,0 L0,0 M24,24 L24,24 M16.097,3.25 L19.443,17.75 L4.557,17.75 L7.903,3.25 L16.097,3.25 Z M9.097,4.75 L6.443,16.25 L17.557,16.25 L14.903,4.75 L9.097,4.75 Z M4.75,17 Q4.75,14.25 12,14.25 Q19.25,14.25 19.25,17 Q19.25,19.75 12,19.75 Q4.75,19.75 4.75,17 Z M6.25,17 Q6.25,18.25 12,18.25 Q17.75,18.25 17.75,17 Q17.75,15.75 12,15.75 Q6.25,15.75 6.25,17 Z M7.4,9.25 L17.35,9.25 L17.35,10.75 L6.65,10.75 L6.65,9.25 Z</StreamGeometry>
+    <!-- IconPage: workbench:file -->
+    <StreamGeometry x:Key="IconPage">F1 M0,0 L0,0 M24,24 L24,24 M13.25,2.25 L14.75,2.25 L14.75,2.689 L18.311,6.25 L18.75,6.25 L18.75,21.75 L5.25,21.75 L5.25,2.25 L13.25,2.25 Z M13.25,3.75 L6.75,3.75 L6.75,20.25 L17.25,20.25 L17.25,7.75 L13.25,7.75 L13.25,3.75 Z M16.189,6.25 L14.75,4.811 L14.75,6.25 L16.189,6.25 Z</StreamGeometry>
+    <!-- IconUnderline: drawn -->
+    <StreamGeometry x:Key="IconUnderline">F1 M0,0 L0,0 M24,24 L24,24 M7.75 10.5L7.75 3.25L6.25 3.25L6.25 10.5Q6.25 12.8817 7.93414 14.5659Q9.61827 16.25 12 16.25Q14.3817 16.25 16.0659 14.5659Q17.75 12.8817 17.75 10.5L17.75 3.25L16.25 3.25L16.25 10.5Q16.25 12.2604 15.0052 13.5052Q13.7604 14.75 12 14.75Q10.2396 14.75 8.9948 13.5052Q7.75 12.2604 7.75 10.5ZM20.75 19.25L3.25 19.25L3.25 20.75L20.75 20.75L20.75 19.25Z</StreamGeometry>
+    <!-- IconStrikeOut: drawn -->
+    <StreamGeometry x:Key="IconStrikeOut">F1 M0,0 L0,0 M24,24 L24,24 M12 4.75Q15.0365 4.75 16.3292 7.33541L16.6646 8.00623L18.0062 7.33541L17.6708 6.66459Q15.9635 3.25 12 3.25Q6.25 3.25 6.25 8L6.25 8.75L7.75 8.75L7.75 8Q7.75 4.75 12 4.75ZM21.75 11.25L2.25 11.25L2.25 12.75L21.75 12.75L21.75 11.25ZM12 19.25Q8.96353 19.25 7.67082 16.6646L7.33541 15.9938L5.99377 16.6646L6.32918 17.3354Q8.03647 20.75 12 20.75Q17.75 20.75 17.75 16L17.75 15.25L16.25 15.25L16.25 16Q16.25 19.25 12 19.25Z</StreamGeometry>
+    <!-- IconSquiggly: drawn -->
+    <StreamGeometry x:Key="IconSquiggly">F1 M0,0 L0,0 M24,24 L24,24 M20 6.25L3.25 6.25L3.25 7.75L20.75 7.75L20.75 6.25L20 6.25ZM6 13.9393L3.46967 16.4697L2.93934 17L4 18.0607L6 16.0607L8 18.0607L10 16.0607L12 18.0607L14 16.0607L16 18.0607L18 16.0607L20 18.0607L21.0607 17L18 13.9393L16 15.9393L14 13.9393L12 15.9393L10 13.9393L8 15.9393L6 13.9393Z</StreamGeometry>
+    <!-- IconSquare: drawn -->
+    <StreamGeometry x:Key="IconSquare">F1 M0,0 L0,0 M24,24 L24,24 M19.75 4.25L4.25 4.25L4.25 19.75L19.75 19.75L19.75 4.25ZM5.75 18.25L5.75 5.75L18.25 5.75L18.25 18.25L5.75 18.25Z</StreamGeometry>
+    <!-- IconCircle: drawn -->
+    <StreamGeometry x:Key="IconCircle">F1 M0,0 L0,0 M24,24 L24,24 M17.4801 6.51992Q15.2101 4.25 12 4.25Q8.78984 4.25 6.51992 6.51992Q4.25 8.78984 4.25 12Q4.25 15.2102 6.51992 17.4801Q8.78984 19.75 12 19.75Q15.2102 19.75 17.4801 17.4801Q19.75 15.2102 19.75 12Q19.75 8.78984 17.4801 6.51992ZM7.58058 7.58058Q9.41117 5.75 12 5.75Q14.5888 5.75 16.4194 7.58058Q18.25 9.41117 18.25 12Q18.25 14.5888 16.4194 16.4194Q14.5888 18.25 12 18.25Q9.41116 18.25 7.58058 16.4194Q5.75 14.5888 5.75 12Q5.75 9.41116 7.58058 7.58058Z</StreamGeometry>
+    <!-- IconFreeText: drawn -->
+    <StreamGeometry x:Key="IconFreeText">F1 M0,0 L0,0 M24,24 L24,24 M20.75 3.25L3.25 3.25L3.25 20.75L20.75 20.75L20.75 3.25ZM4.75 4.75L19.25 4.75L19.25 19.25L4.75 19.25L4.75 4.75ZM11.25 7.25L7.25 7.25L7.25 8.75L11.25 8.75L11.25 17.75L12.75 17.75L12.75 8.75L16.75 8.75L16.75 7.25L11.25 7.25Z</StreamGeometry>
+    <!-- IconStamp: workbench:rubber-stamp -->
+    <StreamGeometry x:Key="IconStamp">F1 M0,0 L0,0 M24,24 L24,24 M9.25,4.5 Q9.25,1.75 12,1.75 Q14.75,1.75 14.75,4.5 Q14.75,7.25 12,7.25 Q9.25,7.25 9.25,4.5 Z M10.75,4.5 Q10.75,5.75 12,5.75 Q13.25,5.75 13.25,4.5 Q13.25,3.25 12,3.25 Q10.75,3.25 10.75,4.5 Z M12.75,6.5 L12.75,11.25 L11.25,11.25 L11.25,5.75 L12.75,5.75 Z M5.25,9.75 L18.75,9.75 L18.75,15.75 L5.25,15.75 Z M6.75,11.25 L6.75,14.25 L17.25,14.25 L17.25,11.25 Z M4.25,14.25 L19.75,14.25 L19.75,17.75 L4.25,17.75 Z M5.75,15.75 L5.75,16.25 L18.25,16.25 L18.25,15.75 Z M6,20.25 L18.75,20.25 L18.75,21.75 L5.25,21.75 L5.25,20.25 Z</StreamGeometry>
+    <!-- IconImageStamp: workbench:image -->
+    <StreamGeometry x:Key="IconImageStamp">F1 M0,0 L0,0 M24,24 L24,24 M21.75,3.25 L21.75,18.689 L22.061,19 L21.75,19.311 L21.75,20.75 L2.25,20.75 L2.25,17.311 L1.939,17 L2.25,16.689 L2.25,3.25 L21.75,3.25 Z M20.25,17.189 L20.25,4.75 L3.75,4.75 L3.75,15.189 L8,10.939 L12,14.939 L15,11.939 L20.25,17.189 Z M3.75,17.311 L3.75,19.25 L20.189,19.25 L15,14.061 L12,17.061 L8,13.061 L3.75,17.311 Z M13.25,8.5 Q13.25,6.25 15.5,6.25 Q17.75,6.25 17.75,8.5 Q17.75,10.75 15.5,10.75 Q13.25,10.75 13.25,8.5 Z M14.75,8.5 Q14.75,9.25 15.5,9.25 Q16.25,9.25 16.25,8.5 Q16.25,7.75 15.5,7.75 Q14.75,7.75 14.75,8.5 Z</StreamGeometry>
+    <!-- IconInk: workbench:edit -->
+    <StreamGeometry x:Key="IconInk">F1 M0,0 L0,0 M24,24 L24,24 M3.265,19.853 L4.309,14.63 L11.939,7 L13,5.939 L16,2.939 L21.061,8 L18.061,11 L17,12.061 L9.37,19.691 L3.044,20.956 Z M13,8.061 L5.691,15.37 L4.956,19.044 L8.63,18.309 L15.939,11 L13,8.061 Z M17,9.939 L18.939,8 L16,5.061 L14.061,7 L17,9.939 Z</StreamGeometry>
+    <!-- IconAnnotationLine: drawn -->
+    <StreamGeometry x:Key="IconAnnotationLine">F1 M0,0 L0,0 M24,24 L24,24 M4.46967 18.4697L19 3.93934L20.0607 5L5 20.0607L3.93934 19L4.46967 18.4697Z</StreamGeometry>
+    <!-- IconArrow: drawn -->
+    <StreamGeometry x:Key="IconArrow">F1 M0,0 L0,0 M24,24 L24,24 M17.1893 5.75L4.46967 18.4697L3.93934 19L5 20.0607L18.25 6.81066L18.25 14.75L19.75 14.75L19.75 5.31066L20.0607 5L19.75 4.68934L19.75 4.25L19.3107 4.25L19 3.93934L18.6893 4.25L9.25 4.25L9.25 5.75L17.1893 5.75Z</StreamGeometry>
+    <!-- IconPolygon: drawn -->
+    <StreamGeometry x:Key="IconPolygon">F1 M0,0 L0,0 M24,24 L24,24 M21.3774 9.7268L12 2.55584L2.62259 9.7268L6.20513 20.75L17.7949 20.75L21.3774 9.7268ZM12 4.44416L19.6226 10.2732L16.7051 19.25L7.29487 19.25L4.37741 10.2732L12 4.44416Z</StreamGeometry>
+    <!-- IconPolyLine: drawn -->
+    <StreamGeometry x:Key="IconPolyLine">F1 M0,0 L0,0 M24,24 L24,24 M7.82726 8.7666L2.34438 18.6358L1.98015 19.2914L3.29139 20.0199L8.17274 11.2334L14.1576 17.2183L22.0257 3.73007L20.7301 2.97426L13.8424 14.7817L7.82726 8.7666Z</StreamGeometry>
 </ResourceDictionary>
