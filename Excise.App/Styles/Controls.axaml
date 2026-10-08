@@ -126,38 +126,76 @@
     </Style>
 
 
+    <!-- Type scale per platform (#2003): Windows uses the Fluent ramp (Body 14,
+         Caption 12, Subtitle 20); macOS and Linux the Apple HIG sizes (Body 13,
+         Subheadline 11, Headline 13, Title 3 15). -->
     <Style Selector="TextBlock.dialog-title">
-        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontSize">
+            <OnPlatform x:TypeArguments="x:Double" Default="15" Windows="20"/>
+        </Setter>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
 
     <Style Selector="TextBlock.field-label">
-        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontSize">
+            <OnPlatform x:TypeArguments="x:Double" Default="13" Windows="14"/>
+        </Setter>
         <Setter Property="FontWeight" Value="Medium"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
 
     <Style Selector="TextBlock.help">
-        <Setter Property="FontSize" Value="11.5"/>
+        <Setter Property="FontSize">
+            <OnPlatform x:TypeArguments="x:Double" Default="11.5" Windows="12"/>
+        </Setter>
         <Setter Property="LineHeight" Value="16"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
         <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
     </Style>
 
     <Style Selector="TextBlock.warning">
-        <Setter Property="FontSize" Value="11.5"/>
+        <Setter Property="FontSize">
+            <OnPlatform x:TypeArguments="x:Double" Default="11.5" Windows="12"/>
+        </Setter>
         <Setter Property="TextWrapping" Value="Wrap"/>
         <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
     </Style>
 
 
     <Style Selector="TextBlock.error">
-        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontSize">
+            <OnPlatform x:TypeArguments="x:Double" Default="11.5" Windows="12"/>
+        </Setter>
         <Setter Property="TextWrapping" Value="Wrap"/>
         <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}"/>
     </Style>
 
+
+    <!-- Compact form labels beside their field (#2003): right-aligned on macOS
+         and Linux (HIG), left-aligned on Windows. Stacked forms put the label
+         above the field on every platform instead. -->
+    <Style Selector="TextBlock.form-label">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalAlignment">
+            <OnPlatform x:TypeArguments="HorizontalAlignment" Default="Right" Windows="Left"/>
+        </Setter>
+        <Setter Property="FontSize">
+            <OnPlatform x:TypeArguments="x:Double" Default="13" Windows="14"/>
+        </Setter>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    </Style>
+
+    <!-- Settings inputs are sized to their content, not stretched across the
+         window (#2003). -->
+    <Style Selector="Border.settings-card ComboBox">
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="MinWidth" Value="260"/>
+    </Style>
+    <Style Selector="Border.settings-card NumericUpDown">
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="MinWidth" Value="160"/>
+    </Style>
 
     <Style Selector="Border.settings-card">
         <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
@@ -169,7 +207,9 @@
 
     <Style Selector="TextBlock.settings-card-title">
         <Setter Property="Margin" Value="0,0,0,4"/>
-        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontSize">
+            <OnPlatform x:TypeArguments="x:Double" Default="13" Windows="14"/>
+        </Setter>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
