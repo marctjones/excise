@@ -1078,20 +1078,27 @@ internal partial class RenderContext
     /// Arabic (plus Syriac, Thaana, N'Ko and the Arabic presentation forms),
     /// the Indic and Brahmi-derived blocks through Sinhala, and the South-East
     /// Asian scripts with reordering vowels — Thai, Lao, Tibetan, Myanmar and
-    /// Khmer. Latin Extended, Greek, Cyrillic, Armenian, Georgian, CJK, Hangul
+    /// Khmer, plus the supplementary-plane Arabic-family scripts Hanifi
+    /// Rohingya, Adlam and Arabic Mathematical Alphabetic Symbols (#1958).
+    /// Latin Extended, Greek, Cyrillic, Armenian, Georgian, CJK, Hangul
     /// and Kana are all one-glyph-per-code-point and fall through to be drawn.
     /// </remarks>
-    private static bool RequiresComplexShaping(string text)
+    internal static bool RequiresComplexShaping(string text)
     {
-        foreach (var ch in text)
+        // Scalar values, not UTF-16 chars: a supplementary-plane script is a
+        // surrogate pair, which no BMP range can match (#1958).
+        foreach (var rune in text.EnumerateRunes())
         {
-            if (ch is (>= '\u0590' and <= '\u08FF')   // Hebrew, Arabic, Syriac, Thaana, N'Ko
-                   or (>= '\u0900' and <= '\u0DFF')   // Devanagari through Sinhala
-                   or (>= '\u0E00' and <= '\u0FFF')   // Thai, Lao, Tibetan
-                   or (>= '\u1000' and <= '\u109F')   // Myanmar
-                   or (>= '\u1780' and <= '\u17FF')   // Khmer
-                   or (>= '\uFB1D' and <= '\uFDFF')   // Hebrew/Arabic presentation forms A
-                   or (>= '\uFE70' and <= '\uFEFE'))  // Arabic presentation forms B
+            if (rune.Value is (>= 0x0590 and <= 0x08FF)   // Hebrew, Arabic, Syriac, Thaana, N'Ko
+                   or (>= 0x0900 and <= 0x0DFF)   // Devanagari through Sinhala
+                   or (>= 0x0E00 and <= 0x0FFF)   // Thai, Lao, Tibetan
+                   or (>= 0x1000 and <= 0x109F)   // Myanmar
+                   or (>= 0x1780 and <= 0x17FF)   // Khmer
+                   or (>= 0xFB1D and <= 0xFDFF)   // Hebrew/Arabic presentation forms A
+                   or (>= 0xFE70 and <= 0xFEFE)   // Arabic presentation forms B
+                   or (>= 0x10D00 and <= 0x10D3F) // Hanifi Rohingya (RTL, joining)
+                   or (>= 0x1E900 and <= 0x1E95F) // Adlam (RTL, joining)
+                   or (>= 0x1EE00 and <= 0x1EEFF)) // Arabic Mathematical Alphabetic Symbols
             {
                 return true;
             }
