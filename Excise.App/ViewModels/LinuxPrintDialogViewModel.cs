@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reactive;
 using Excise.App.Services.Printing;
 using ReactiveUI;
 
@@ -28,6 +29,15 @@ internal sealed class LinuxPrintDialogViewModel : ReactiveObject
     private bool _collate = true;
     private string? _validationError;
 
+    /// <summary>Raised when the dialog should close; the window's code-behind closes it (#1992).</summary>
+    public event EventHandler? CloseRequested;
+
+    /// <summary>Print: validate and close only when the ticket is accepted.</summary>
+    public ReactiveCommand<Unit, Unit> PrintCommand { get; }
+
+    /// <summary>Cancel: close with no ticket.</summary>
+    public ReactiveCommand<Unit, Unit> CancelCommand { get; }
+
     internal LinuxPrintDialogViewModel(IReadOnlyList<CupsPrintQueue> queues, int pageCount)
     {
         ArgumentNullException.ThrowIfNull(queues);
@@ -38,6 +48,15 @@ internal sealed class LinuxPrintDialogViewModel : ReactiveObject
         // The list is already ordered default-first, so the default is
         // preselected without a second search.
         _selectedQueue = Queues.FirstOrDefault(queue => queue.IsDefault) ?? Queues.FirstOrDefault();
+
+        // Print closes only when the ticket validates; a refused entry keeps the
+        // window open with ValidationError shown (#1710).
+        PrintCommand = ReactiveCommand.Create(() =>
+        {
+            if (TryConfirm())
+                CloseRequested?.Invoke(this, EventArgs.Empty);
+        });
+        CancelCommand = ReactiveCommand.Create(() => CloseRequested?.Invoke(this, EventArgs.Empty));
     }
 
     /// <summary>Every queue CUPS reported, the default first.</summary>

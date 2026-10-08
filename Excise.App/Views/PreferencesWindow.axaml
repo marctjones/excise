@@ -7,9 +7,10 @@
         x:Class="Excise.App.Views.PreferencesWindow"
         x:DataType="vm:PreferencesViewModel"
         Title="Preferences"
-        Width="600" Height="500"
+        Width="680" Height="640"
+        MinWidth="560" MinHeight="420"
         WindowStartupLocation="CenterOwner"
-        CanResize="False">
+        CanResize="True">
 
     <Design.DataContext>
         <vm:PreferencesViewModel/>
@@ -21,29 +22,19 @@
                 Background="{DynamicResource SecondaryBackgroundBrush}"
                 BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,0,0,1"
-                Padding="20,15">
-            <TextBlock Text="Preferences"
-                       FontSize="18"
-                       FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                Padding="24,16">
+            <TextBlock Text="Preferences" Classes="dialog-title"/>
         </Border>
 
         <!-- Content -->
-        <ScrollViewer Grid.Row="1" Padding="20">
-            <StackPanel Spacing="20">
+        <ScrollViewer Grid.Row="1" Padding="20,16">
+            <StackPanel Spacing="16">
 
                 <!-- Documents (#1463) -->
-                <Border Background="{DynamicResource CardBrush}"
-                        BorderBrush="{DynamicResource BorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="20">
+                <Border Classes="settings-card">
                     <StackPanel Spacing="8">
-                        <TextBlock Text="Documents"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
-                        <TextBlock Text="Open Documents In" FontWeight="Medium"/>
+                        <TextBlock Text="Documents" Classes="settings-card-title"/>
+                        <TextBlock Text="Open Documents In" Classes="field-label"/>
                         <ComboBox x:Name="DocumentOpenModeComboBox"
                                   ItemsSource="{Binding DocumentOpenModeOptions}"
                                   SelectedItem="{Binding SelectedDocumentOpenMode}"
@@ -51,56 +42,36 @@
                                   AutomationProperties.Name="Open Documents In"
                                   AutomationProperties.HelpText="Where a document opens when the window already shows one."/>
                         <TextBlock Text="Automatic (default): a new window. On macOS, System Settings &gt; Desktop &amp; Dock &gt; Prefer tabs when opening documents decides whether it opens as a tab. NewWindow: always a new window. NewTab: a tab in the current window (Ctrl+Tab switches tabs; right-click a tab to move it to its own window). ReplaceCurrent: replace the document in the current window, as older versions did. A window with no document always takes the file, and a file that is already open is brought to the front."
-                                   FontSize="10"
-                                   Foreground="{DynamicResource TextTertiaryBrush}"
-                                   TextWrapping="Wrap"/>
+                                   Classes="help"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Forms (#1570) -->
-                <Border Background="{DynamicResource CardBrush}"
-                        BorderBrush="{DynamicResource BorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="20">
+                <Border Classes="settings-card">
                     <StackPanel Spacing="8">
-                        <TextBlock Text="Forms"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="Forms" Classes="settings-card-title"/>
                         <CheckBox x:Name="RunFormCalcCheckBox"
                                   Content="Run form calculations (FormCalc)"
                                   IsChecked="{Binding RunFormCalc}"
                                   AutomationProperties.Name="Run Form Calculations"
                                   AutomationProperties.HelpText="Run a dynamic XFA form's FormCalc calculations when it opens."/>
                         <TextBlock Text="On (default): when a dynamic XFA form opens, its FormCalc initialize and calculate scripts run, so totals and fields shown or hidden by a script appear as the form's author meant. Scripts can only change the form's own field values and visibility; they cannot reach files, the network or the rest of your computer, and each one is limited in time and memory. Off: the form shows the values stored in the file. JavaScript never runs. Applies to documents opened after you save."
-                                   FontSize="10"
-                                   Foreground="{DynamicResource TextTertiaryBrush}"
-                                   TextWrapping="Wrap"/>
+                                   Classes="help"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Performance Settings Section -->
-                <Border Background="{DynamicResource CardBrush}"
-                        BorderBrush="{DynamicResource BorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="20">
-                    <StackPanel Spacing="15">
-                        <TextBlock Text="Performance"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <Border Classes="settings-card">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Performance" Classes="settings-card-title"/>
 
                         <TextBlock Text="Trade memory and CPU against how quickly pages you have already seen come back. Saved changes apply at once."
-                                   FontSize="11"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                   TextWrapping="Wrap"/>
+                                   Classes="help"/>
 
                         <Separator/>
 
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Preset" FontWeight="Medium"/>
+                            <TextBlock Text="Preset" Classes="field-label"/>
                             <ComboBox x:Name="PerformancePresetComboBox"
                                       ItemsSource="{Binding PerformancePresetOptions}"
                                       SelectedItem="{Binding SelectedPerformancePreset}"
@@ -108,23 +79,21 @@
                                       AutomationProperties.Name="Performance Preset"
                                       AutomationProperties.HelpText="Choose how much memory and CPU the viewer may use. Changing an advanced value switches this to Custom."/>
                             <TextBlock Text="LowMemory: small caches, no background thumbnail rendering, trims after 15 s idle. Balanced (default): today's behaviour. Fast: large caches, more render threads, no background trims."
-                                       FontSize="10"
-                                       Foreground="{DynamicResource TextTertiaryBrush}"
-                                       TextWrapping="Wrap"/>
+                                       Classes="help"/>
                         </StackPanel>
 
                         <StackPanel x:Name="MemoryReadoutPanel"
                                     Spacing="4"
                                     AutomationProperties.Name="Memory Use"
                                     AutomationProperties.HelpText="Live memory use of excise, refreshed every second while Preferences is open.">
-                            <TextBlock Text="Memory use (live)" FontWeight="Medium"/>
-                            <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <TextBlock Text="Memory use (live)" Classes="field-label"/>
+                            <TextBlock Classes="help">
                                 <Run Text="App working set: "/><Run Text="{Binding WorkingSetText}"/>
                             </TextBlock>
-                            <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <TextBlock Classes="help">
                                 <Run Text="Managed heap: "/><Run Text="{Binding ManagedHeapText}"/>
                             </TextBlock>
-                            <TextBlock FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <TextBlock Classes="help">
                                 <Run Text="Page tile cache: "/><Run Text="{Binding TileCacheText}"/>
                             </TextBlock>
                         </StackPanel>
@@ -134,9 +103,9 @@
                                   HorizontalAlignment="Stretch"
                                   AutomationProperties.Name="Advanced Performance Settings"
                                   AutomationProperties.HelpText="Individual cache, thumbnail, trim and render-thread limits.">
-                            <StackPanel Spacing="10">
+                            <StackPanel Spacing="12" Margin="0,8,0,0">
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="Page tile cache (MB)" FontWeight="Medium"/>
+                                    <TextBlock Text="Page tile cache (MB)" Classes="field-label"/>
                                     <NumericUpDown x:Name="TileCacheBudgetNumericUpDown"
                                                    Value="{Binding TileCacheBudgetMb}"
                                                    Minimum="32" Maximum="1024" Increment="16" FormatString="0"
@@ -146,7 +115,7 @@
                                 </StackPanel>
 
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="Cached pages (single-page view)" FontWeight="Medium"/>
+                                    <TextBlock Text="Cached pages (single-page view)" Classes="field-label"/>
                                     <NumericUpDown x:Name="SinglePageCachedPagesNumericUpDown"
                                                    Value="{Binding SinglePageCachedPages}"
                                                    Minimum="1" Maximum="24" Increment="1" FormatString="0"
@@ -162,7 +131,7 @@
                                           AutomationProperties.HelpText="Pre-render every page thumbnail once the document has been idle for the idle delay below."/>
 
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="Thumbnails kept around the visible ones" FontWeight="Medium"/>
+                                    <TextBlock Text="Thumbnails kept around the visible ones" Classes="field-label"/>
                                     <NumericUpDown x:Name="ThumbnailKeepMarginNumericUpDown"
                                                    Value="{Binding ThumbnailKeepMargin}"
                                                    Minimum="12" Maximum="500" Increment="4" FormatString="0"
@@ -178,7 +147,7 @@
                                           AutomationProperties.HelpText="Drop scroll-back caches when the window is deactivated, minimized, or idle."/>
 
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="Idle delay (seconds)" FontWeight="Medium"/>
+                                    <TextBlock Text="Idle delay (seconds)" Classes="field-label"/>
                                     <!-- #1565: this is now the app's one idle delay. It gates the
                                          background thumbnail pre-render as well as the cache trim,
                                          so it stays editable when soft trims are off. -->
@@ -191,7 +160,7 @@
                                 </StackPanel>
 
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="Render threads" FontWeight="Medium"/>
+                                    <TextBlock Text="Render threads" Classes="field-label"/>
                                     <NumericUpDown x:Name="RenderThreadsNumericUpDown"
                                                    Value="{Binding RenderThreads}"
                                                    Minimum="1" Maximum="{Binding MaxRenderThreads}" Increment="1" FormatString="0"
@@ -205,26 +174,17 @@
                 </Border>
 
                 <!-- Text Selection Settings Section (#774) -->
-                <Border Background="{DynamicResource CardBrush}"
-                        BorderBrush="{DynamicResource BorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="20">
-                    <StackPanel Spacing="15">
-                        <TextBlock Text="Text Selection"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <Border Classes="settings-card">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Text Selection" Classes="settings-card-title"/>
 
                         <TextBlock Text="How copied text is ordered when you select across the page"
-                                   FontSize="11"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                   TextWrapping="Wrap"/>
+                                   Classes="help"/>
 
                         <Separator/>
 
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Reading Order" FontWeight="Medium"/>
+                            <TextBlock Text="Reading Order" Classes="field-label"/>
                             <ComboBox x:Name="ReadingOrderStrategyComboBox"
                                       ItemsSource="{Binding ReadingOrderStrategyOptions}"
                                       SelectedItem="{Binding SelectedReadingOrderStrategy}"
@@ -232,13 +192,11 @@
                                       AutomationProperties.Name="Reading Order Strategy"
                                       AutomationProperties.HelpText="How selected text is ordered when copied."/>
                             <TextBlock Text="ColumnAware (default): reads each column top-to-bottom before the next. Simple: geometric top-to-bottom, left-to-right (interleaves columns). RawStream: the PDF's stored text order."
-                                       FontSize="10"
-                                       Foreground="{DynamicResource TextTertiaryBrush}"
-                                       TextWrapping="Wrap"/>
+                                       Classes="help"/>
                         </StackPanel>
 
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Whitespace" FontWeight="Medium"/>
+                            <TextBlock Text="Whitespace" Classes="field-label"/>
                             <ComboBox x:Name="WhitespaceModeComboBox"
                                       ItemsSource="{Binding WhitespaceModeOptions}"
                                       SelectedItem="{Binding SelectedWhitespaceMode}"
@@ -246,34 +204,23 @@
                                       AutomationProperties.Name="Copy Whitespace Mode"
                                       AutomationProperties.HelpText="How blank lines and list indentation are added to copied text."/>
                             <TextBlock Text="Smart (default): inserts a blank line at detected paragraph breaks and keeps bullet/numbered lists indented. LineFaithful: one line break per visual line, no paragraph or list detection."
-                                       FontSize="10"
-                                       Foreground="{DynamicResource TextTertiaryBrush}"
-                                       TextWrapping="Wrap"/>
+                                       Classes="help"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
 
                 <!-- Redaction carrier policy (#1188/#1169) -->
-                <Border Background="{DynamicResource SecondaryBackgroundBrush}"
-                        BorderBrush="{DynamicResource BorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="20">
-                    <StackPanel Spacing="15">
-                        <TextBlock Text="Redaction"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <Border Classes="settings-card">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Redaction" Classes="settings-card-title"/>
 
                         <TextBlock Text="A PDF repeats page text in places you never see — link targets and document metadata. Cutting the redacted word out of one of those can REVEAL it: remove 'your' from https://www.irs.gov/your-account and the leftover https://www.irs.gov/-account tells anyone who knows the site what was removed."
-                                   FontSize="11"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                   TextWrapping="Wrap"/>
+                                   Classes="help"/>
 
                         <Separator/>
 
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Output Profile" FontWeight="Medium"/>
+                            <TextBlock Text="Output Profile" Classes="field-label"/>
                             <ComboBox x:Name="RedactionProfileComboBox"
                                       ItemsSource="{Binding RedactionProfileOptions}"
                                       SelectedItem="{Binding RedactionPreferences.Profile}"
@@ -281,39 +228,33 @@
                                       AutomationProperties.Name="Redaction Output Profile"
                                       AutomationProperties.HelpText="How much of the PDF's hidden machinery a redaction removes."/>
                             <TextBlock Text="Standard (default): also removes the parts of the PDF that can repeat the page and that cutting a word out cannot make safe — all JavaScript, actions that open files or submit data (page links still work), the producer's private data, page thumbnails, the appearance of hidden fields, content on layers that are switched off, and the document properties and XMP (a PDF/A or PDF/UA marker is kept). Tooltips, alternate text, structure titles, field names, bookmark titles, link targets and signer names are KEPT, with the redacted word cut out. Maximum: all of that, plus the whole value of every kept item is dropped, bookmarks, links, comments and field names are stripped, and forms and annotations are flattened, signatures and their certificates included — THE RESULT IS NO LONGER ACCESSIBLE OR INTERACTIVE, so a screen reader cannot read it properly and forms no longer work."
-                                       FontSize="10"
-                                       Foreground="{DynamicResource TextTertiaryBrush}"
-                                       TextWrapping="Wrap"/>
+                                       Classes="help"/>
                         </StackPanel>
 
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Match Rule" FontWeight="Medium"/>
+                            <TextBlock Text="Match Rule" Classes="field-label"/>
                             <CheckBox x:Name="RedactionWholeWordCheckBox"
                                       Content="Whole words only"
                                       IsChecked="{Binding RedactionPreferences.WholeWord}"
                                       AutomationProperties.Name="Whole Word Redaction"
                                       AutomationProperties.HelpText="Require the redacted term to be bounded by a non-word character on both sides."/>
                             <TextBlock Text="Off (default): the term matches anywhere, so redacting 'Lee' also removes it from 'Sleeman' — right for a case number inside a longer citation, wrong for a name. On: the term must stand alone. Applies to page text and to metadata, outlines and link targets alike."
-                                       FontSize="10"
-                                       Foreground="{DynamicResource TextTertiaryBrush}"
-                                       TextWrapping="Wrap"/>
+                                       Classes="help"/>
                         </StackPanel>
 
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Attachments" FontWeight="Medium"/>
+                            <TextBlock Text="Attachments" Classes="field-label"/>
                             <CheckBox x:Name="RedactionKeepAttachmentsCheckBox"
                                       Content="Keep attachments in redacted copies"
                                       IsChecked="{Binding RedactionPreferences.KeepAttachments}"
                                       AutomationProperties.Name="Keep Attachments When Redacting"
                                       AutomationProperties.HelpText="Keep the PDF's embedded files in a redacted copy instead of removing them."/>
                             <TextBlock Text="Off (default): a redacted copy contains none of the PDF's attached files. On: text attachments (txt, csv, xml, html, json, md) have the redacted text cut out and attached PDFs are redacted too; any other attachment is listed in the report as not checked, because it may still contain the redacted text. A PDF portfolio can only be redacted with this on."
-                                       FontSize="10"
-                                       Foreground="{DynamicResource TextTertiaryBrush}"
-                                       TextWrapping="Wrap"/>
+                                       Classes="help"/>
                         </StackPanel>
 
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Covering Box Width" FontWeight="Medium"/>
+                            <TextBlock Text="Covering Box Width" Classes="field-label"/>
                             <ComboBox x:Name="RedactionWidthPolicyComboBox"
                                       ItemsSource="{Binding WidthPolicyOptions}"
                                       SelectedItem="{Binding RedactionPreferences.Width}"
@@ -321,13 +262,11 @@
                                       AutomationProperties.Name="Redaction Width Policy"
                                       AutomationProperties.HelpText="How the removed text's width is handled."/>
                             <TextBlock Text="For an area redaction the box is the one you dragged; CloseGap, FixedMarker and QuantizeGap close the gap there too, and only FixedMarker draws a box. CollapsePreserveLayout: the box matches the removed text exactly and the page does not reflow — but the box's width then measures how long the removed text was. OvershootPreserveLayout: round the box wider so similar-length words can't be told apart by measuring it. CloseGap: remove the space entirely and draw no box; removes the width from the file itself, at the cost of reflowing the line. FixedMarker (default): like CloseGap, plus a covering box of one fixed size regardless of what was removed — closes the width channel AND stays visibly marked; the line keeps room for the box, so it covers none of the text that follows. QuantizeGap: keep a gap rounded up to a whole em instead of the exact width, and draw no box; weaker than CloseGap, since the rounded gap still narrows the candidates. When redacting text, the three that close the gap also remove an underline, box or highlight drawn to the removed word."
-                                       FontSize="10"
-                                       Foreground="{DynamicResource TextTertiaryBrush}"
-                                       TextWrapping="Wrap"/>
+                                       Classes="help"/>
                         </StackPanel>
 
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Link URLs" FontWeight="Medium"/>
+                            <TextBlock Text="Link URLs" Classes="field-label"/>
                             <ComboBox x:Name="LinkUriCarrierPolicyComboBox"
                                       ItemsSource="{Binding CarrierScrubModeOptions}"
                                       SelectedItem="{Binding RedactionPreferences.LinkUriPolicy}"
@@ -335,13 +274,11 @@
                                       AutomationProperties.Name="Link URL Redaction Policy"
                                       AutomationProperties.HelpText="How a link target containing the redacted text is handled."/>
                             <TextBlock Text="Strip (default): cut the word out of the URL, leaving the rest — and, under the Maximum profile, let that profile's own choice stand. RemoveWhole: drop the entire link target, so no surrounding text survives to infer the word from. ReportOnly: change nothing and list the link in the redaction report for you to decide."
-                                       FontSize="10"
-                                       Foreground="{DynamicResource TextTertiaryBrush}"
-                                       TextWrapping="Wrap"/>
+                                       Classes="help"/>
                         </StackPanel>
 
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Document Metadata" FontWeight="Medium"/>
+                            <TextBlock Text="Document Metadata" Classes="field-label"/>
                             <ComboBox x:Name="MetadataCarrierPolicyComboBox"
                                       ItemsSource="{Binding CarrierScrubModeOptions}"
                                       SelectedItem="{Binding RedactionPreferences.MetadataPolicy}"
@@ -349,38 +286,25 @@
                                       AutomationProperties.Name="Metadata Redaction Policy"
                                       AutomationProperties.HelpText="How document metadata containing the redacted text is handled."/>
                             <TextBlock Text="Applies to the /Info fields (Title, Author, Subject…) and the XMP packet. A templated field narrows a removed value the same way a known URL does."
-                                       FontSize="10"
-                                       Foreground="{DynamicResource TextTertiaryBrush}"
-                                       TextWrapping="Wrap"/>
+                                       Classes="help"/>
                             <TextBlock Text="⚠ ReportOnly leaves the redacted text in the document. The redaction report will say so — act on it before sharing the file."
-                                       FontSize="10"
-                                       Foreground="{DynamicResource TextSecondaryBrush}"
-                                       TextWrapping="Wrap"/>
+                                       Classes="help"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
 
                 <!-- Printing (#1545) -->
-                <Border Background="{DynamicResource CardBrush}"
-                        BorderBrush="{DynamicResource BorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="20">
-                    <StackPanel Spacing="15">
-                        <TextBlock Text="Printing"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <Border Classes="settings-card">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Printing" Classes="settings-card-title"/>
 
                         <TextBlock Text="File &gt; Print opens the system print dialog with the document as currently edited. Pending redactions are applied to the printed copy."
-                                   FontSize="11"
-                                   Foreground="{DynamicResource TextSecondaryBrush}"
-                                   TextWrapping="Wrap"/>
+                                   Classes="help"/>
 
                         <Separator/>
 
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Page Scaling" FontWeight="Medium"/>
+                            <TextBlock Text="Page Scaling" Classes="field-label"/>
                             <ComboBox x:Name="PrintScalingComboBox"
                                       ItemsSource="{Binding PrintScalingOptions}"
                                       SelectedItem="{Binding SelectedPrintScaling}"
@@ -388,9 +312,7 @@
                                       AutomationProperties.Name="Print Page Scaling"
                                       AutomationProperties.HelpText="How printed pages are scaled onto the paper."/>
                             <TextBlock Text="ShrinkOversized (default): pages larger than the paper are scaled down; smaller pages print at actual size. FitToPage: every page is scaled up or down to fill the paper. ActualSize: every page prints at 100%. On macOS pages are drawn by macOS's own PDF renderer, so small differences from the excise viewer are possible; on Windows they are drawn by excise's renderer."
-                                       FontSize="10"
-                                       Foreground="{DynamicResource TextTertiaryBrush}"
-                                       TextWrapping="Wrap"/>
+                                       Classes="help"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -403,31 +325,29 @@
                 Background="{DynamicResource SecondaryBackgroundBrush}"
                 BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,1,0,0"
-                Padding="20,15">
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        Spacing="10">
-                <Button Content="Reset to Defaults"
+                Padding="24,12">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Button Grid.Column="0"
+                        Content="Reset to Defaults"
                         Command="{Binding ResetToDefaultsCommand}"
-                        Classes="modern-button"
+                        Classes="modern-button dialog-button"
                         AutomationProperties.Name="Reset Preferences to Defaults"
-                        AutomationProperties.HelpText="Restore preference values to their defaults."
-                        Padding="15,8"/>
-                <Button Content="Cancel"
-                        Command="{Binding CancelCommand}"
-                        Classes="modern-button"
-                        IsCancel="True"
-                        AutomationProperties.Name="Cancel Preferences"
-                        AutomationProperties.HelpText="Close preferences without saving changes."
-                        Padding="15,8"/>
-                <Button Content="Save"
-                        Command="{Binding SaveCommand}"
-                        Classes="modern-button accent"
-                        IsDefault="True"
-                        AutomationProperties.Name="Save Preferences"
-                        AutomationProperties.HelpText="Save preference changes and close this dialog."
-                        Padding="15,8"/>
-            </StackPanel>
+                        AutomationProperties.HelpText="Restore preference values to their defaults."/>
+                <StackPanel Grid.Column="2" Classes="dialog-footer">
+                    <Button Content="Cancel"
+                            Command="{Binding CancelCommand}"
+                            Classes="modern-button dialog-button"
+                            IsCancel="True"
+                            AutomationProperties.Name="Cancel Preferences"
+                            AutomationProperties.HelpText="Close preferences without saving changes."/>
+                    <Button Content="Save"
+                            Command="{Binding SaveCommand}"
+                            Classes="modern-button dialog-button accent"
+                            IsDefault="True"
+                            AutomationProperties.Name="Save Preferences"
+                            AutomationProperties.HelpText="Save preference changes and close this dialog."/>
+                </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </Window>

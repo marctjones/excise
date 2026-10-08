@@ -2,6 +2,7 @@ using Excise.Core.Editing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive;
 using Excise.App.Services;
 using ReactiveUI;
 
@@ -110,6 +111,25 @@ internal sealed class BatesNumberingDialogViewModel : ReactiveObject
 
     /// <summary>Record the user's confirmation. Called by the dialog.</summary>
     public void Confirm() => Confirmed = true;
+
+    /// <summary>Raised when the dialog should close; the window's code-behind closes it (#1992).</summary>
+    public event EventHandler? CloseRequested;
+
+    /// <summary>Apply: record the confirmation and close.</summary>
+    public ReactiveCommand<Unit, Unit> ConfirmCommand { get; }
+
+    /// <summary>Cancel: close without confirming.</summary>
+    public ReactiveCommand<Unit, Unit> CancelCommand { get; }
+
+    public BatesNumberingDialogViewModel()
+    {
+        ConfirmCommand = ReactiveCommand.Create(() =>
+        {
+            Confirm();
+            CloseRequested?.Invoke(this, EventArgs.Empty);
+        });
+        CancelCommand = ReactiveCommand.Create(() => CloseRequested?.Invoke(this, EventArgs.Empty));
+    }
 
     /// <summary>Translate the dialog's state into service options.</summary>
     public BatesOptions ToOptions() => new()

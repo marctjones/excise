@@ -10,8 +10,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- Custom Color and Brush Resources -->
-                <ResourceInclude Source="/Styles/Colors.axaml"/>
+                <!-- Theme-aware chrome brushes (#1992) -->
                 <ResourceInclude Source="/Styles/Brushes.axaml"/>
             </ResourceDictionary.MergedDictionaries>
 

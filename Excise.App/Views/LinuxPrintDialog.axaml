@@ -4,16 +4,16 @@
         x:Class="Excise.App.Views.LinuxPrintDialog"
         x:DataType="vm:LinuxPrintDialogViewModel"
         Title="Print"
-        Width="440" Height="330"
+        Width="440" SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         CanResize="False">
 
-    <Grid Margin="18" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto">
+    <Grid RowDefinitions="*,Auto">
+      <Grid Margin="24,20,24,16" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*">
 
         <TextBlock Grid.Row="0"
                    Text="Printer"
-                   FontWeight="SemiBold" FontSize="13"
-                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                   Classes="dialog-title"/>
 
         <ComboBox x:Name="LinuxPrintQueueBox" Grid.Row="1"
                   Margin="0,6,0,0"
@@ -46,25 +46,32 @@
                  AutomationProperties.Name="Page range"/>
 
         <TextBlock Grid.Row="5" Margin="0,6,0,0"
-                   TextWrapping="Wrap" FontSize="11"
-                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   Classes="help"
                    Text="Leave empty to print every page, or type page numbers like 1-3,7."/>
 
         <TextBlock x:Name="LinuxPrintValidationText" Grid.Row="6"
                    Margin="0,10,0,0"
                    TextWrapping="Wrap" FontSize="12"
-                   Foreground="#D32F2F"
+                   Foreground="{DynamicResource ErrorTextBrush}"
                    IsVisible="{Binding ValidationError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                    Text="{Binding ValidationError}"/>
+    </Grid>
 
-        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right"
-                    Margin="0,14,0,0" Spacing="8">
-            <Button x:Name="LinuxPrintCancelButton" Content="Cancel" Padding="20,5"
-                    IsCancel="True" Click="OnCancel"
+    <Border Grid.Row="1"
+            Background="{DynamicResource SecondaryBackgroundBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="24,12">
+        <StackPanel Classes="dialog-footer">
+            <Button x:Name="LinuxPrintCancelButton" Content="Cancel"
+                    Classes="modern-button dialog-button"
+                    IsCancel="True" Command="{Binding CancelCommand}"
                     AutomationProperties.Name="Cancel printing"/>
-            <Button x:Name="LinuxPrintConfirmButton" Content="Print" Padding="20,5"
-                    IsDefault="True" Click="OnPrint"
+            <Button x:Name="LinuxPrintConfirmButton" Content="Print"
+                    Classes="modern-button dialog-button accent"
+                    IsDefault="True" Command="{Binding PrintCommand}"
                     AutomationProperties.Name="Send the job to the printer"/>
         </StackPanel>
+    </Border>
     </Grid>
 </Window>

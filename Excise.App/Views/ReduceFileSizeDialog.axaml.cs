@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Excise.App.ViewModels;
 
 namespace Excise.App.Views;
@@ -14,14 +13,14 @@ internal partial class ReduceFileSizeDialog : Window
     public ReduceFileSizeDialog()
     {
         InitializeComponent();
+        DataContextChanged += OnDataContextChanged;
     }
 
-    private void OnContinue(object? sender, RoutedEventArgs e)
+    // Commands live in the view model (#1992); this only turns its
+    // CloseRequested into closing the window, as SecurityDialog does.
+    private void OnDataContextChanged(object? sender, System.EventArgs e)
     {
         if (DataContext is ReduceFileSizeDialogViewModel viewModel)
-            viewModel.Confirm();
-        Close();
+            viewModel.CloseRequested += (_, _) => Close();
     }
-
-    private void OnCancel(object? sender, RoutedEventArgs e) => Close();
 }

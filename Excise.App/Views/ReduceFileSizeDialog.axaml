@@ -4,21 +4,20 @@
         x:Class="Excise.App.Views.ReduceFileSizeDialog"
         x:DataType="vm:ReduceFileSizeDialogViewModel"
         Title="Reduce File Size"
-        Width="460" Height="300"
+        Width="460" SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         CanResize="False">
 
-    <Grid Margin="18" RowDefinitions="Auto,Auto,Auto,*,Auto">
+    <Grid RowDefinitions="*,Auto">
+      <Grid Margin="24,20,24,16" RowDefinitions="Auto,Auto,Auto,*">
 
         <TextBlock Grid.Row="0"
                    Text="Save a smaller copy of this document."
-                   FontWeight="SemiBold" FontSize="13"
-                   Foreground="{DynamicResource TextPrimaryBrush}"/>
+                   Classes="dialog-title"/>
 
         <TextBlock Grid.Row="1"
                    Margin="0,6,0,12"
-                   TextWrapping="Wrap" FontSize="11"
-                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   Classes="help"
                    Text="You choose where the copy goes next. Your original file is never changed."/>
 
         <ComboBox x:Name="ReduceFileSizePresetBox" Grid.Row="2"
@@ -32,15 +31,23 @@
                    TextWrapping="Wrap" FontSize="12"
                    Foreground="{DynamicResource TextPrimaryBrush}"
                    Text="{Binding Selected.Description}"/>
+    </Grid>
 
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right"
-                    Margin="0,14,0,0" Spacing="8">
-            <Button x:Name="ReduceFileSizeCancelButton" Content="Cancel" Padding="20,5"
-                    IsCancel="True" Click="OnCancel"
+    <Border Grid.Row="1"
+            Background="{DynamicResource SecondaryBackgroundBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="24,12">
+        <StackPanel Classes="dialog-footer">
+            <Button x:Name="ReduceFileSizeCancelButton" Content="Cancel"
+                    Classes="modern-button dialog-button"
+                    IsCancel="True" Command="{Binding CancelCommand}"
                     AutomationProperties.Name="Cancel Reduce File Size"/>
-            <Button x:Name="ReduceFileSizeContinueButton" Content="Choose Location..." Padding="20,5"
-                    IsDefault="True" Click="OnContinue"
+            <Button x:Name="ReduceFileSizeContinueButton" Content="Choose Location..."
+                    Classes="modern-button dialog-button accent"
+                    IsDefault="True" Command="{Binding ConfirmCommand}"
                     AutomationProperties.Name="Choose where to save the smaller copy"/>
         </StackPanel>
+    </Border>
     </Grid>
 </Window>

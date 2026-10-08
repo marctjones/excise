@@ -41,43 +41,139 @@
 
     <!-- Toggle Button Active State -->
     <Style Selector="Button.modern-button.toggle.active">
-        <Setter Property="Background" Value="#E3F2FD"/>
-        <Setter Property="BorderBrush" Value="#0078D4"/>
-        <Setter Property="Foreground" Value="#0078D4"/>
+        <Setter Property="Background" Value="{DynamicResource SelectedBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource BrandPrimaryBrush}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
     <Style Selector="Button.modern-button.toggle.active:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#BBDEFB"/>
-        <Setter Property="BorderBrush" Value="#0078D4"/>
-        <Setter Property="Foreground" Value="#0078D4"/>
+        <Setter Property="Background" Value="{DynamicResource SelectedHoverBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource BrandPrimaryBrush}"/>
     </Style>
 
     <!-- Primary Button (Apply Redaction) -->
     <Style Selector="Button.modern-button.primary">
-        <Setter Property="Background" Value="#D32F2F"/>
-        <Setter Property="BorderBrush" Value="#D32F2F"/>
+        <Setter Property="Background" Value="{DynamicResource DangerBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
     <Style Selector="Button.modern-button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#F44336"/>
-        <Setter Property="BorderBrush" Value="#F44336"/>
+        <Setter Property="Background" Value="{DynamicResource DangerHoverBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource DangerHoverBrush}"/>
         <Setter Property="Foreground" Value="White"/>
     </Style>
 
     <Style Selector="Button.modern-button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="#C62828"/>
-        <Setter Property="BorderBrush" Value="#C62828"/>
+        <Setter Property="Background" Value="{DynamicResource DangerPressedBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource DangerPressedBrush}"/>
         <Setter Property="Foreground" Value="White"/>
     </Style>
 
     <Style Selector="Button.modern-button.primary:disabled">
-        <Setter Property="Background" Value="#BDBDBD"/>
-        <Setter Property="BorderBrush" Value="#BDBDBD"/>
-        <Setter Property="Foreground" Value="#757575"/>
+        <Setter Property="Background" Value="{DynamicResource DisabledFillBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource DisabledFillBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
         <Setter Property="Opacity" Value="0.6"/>
+    </Style>
+
+    <!-- Default dialog action (Save, Apply, Print, Start): brand blue. Not .primary,
+         which is red and reserved for Apply Redaction (#1992). -->
+    <Style Selector="Button.modern-button.accent">
+        <Setter Property="Background" Value="{DynamicResource BrandPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style Selector="Button.modern-button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource BrandPrimaryHoverBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryHoverBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+
+    <Style Selector="Button.modern-button.accent:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource BrandPrimaryPressedBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandPrimaryPressedBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+
+    <!-- Dialog chrome (#1992): one footer button size, one help-text size, one
+         field-label weight, so dialogs stop each picking their own. -->
+    <Style Selector="Button.dialog-button">
+        <Setter Property="MinWidth" Value="88"/>
+        <Setter Property="Padding" Value="16,6"/>
+        <Setter Property="Margin" Value="0"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="StackPanel.dialog-footer">
+        <Setter Property="Orientation" Value="Horizontal"/>
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="Spacing" Value="8"/>
+    </Style>
+
+    <Style Selector="TextBlock.dialog-title">
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.field-label">
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.help">
+        <Setter Property="FontSize" Value="11.5"/>
+        <Setter Property="LineHeight" Value="16"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.warning">
+        <Setter Property="FontSize" Value="11.5"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="Foreground" Value="{DynamicResource WarningTextBrush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.success">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.error">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}"/>
+    </Style>
+
+    <Style Selector="Border.error-banner">
+        <Setter Property="Background" Value="{DynamicResource ErrorBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ErrorBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="12,10"/>
+    </Style>
+
+    <Style Selector="Border.settings-card">
+        <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="20,16"/>
+    </Style>
+
+    <Style Selector="TextBlock.settings-card-title">
+        <Setter Property="Margin" Value="0,0,0,4"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
 
     <!-- Shared vector icon affordances. Icons use local StreamGeometry resources
@@ -90,7 +186,7 @@
     </Style>
 
     <Style Selector="Button.modern-button.toggle.active PathIcon.toolbar-icon">
-        <Setter Property="Foreground" Value="#0078D4"/>
+        <Setter Property="Foreground" Value="{DynamicResource BrandPrimaryBrush}"/>
     </Style>
 
     <Style Selector="Button.modern-button.primary PathIcon.toolbar-icon">

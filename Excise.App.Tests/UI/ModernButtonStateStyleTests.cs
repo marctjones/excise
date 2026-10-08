@@ -36,11 +36,9 @@ public class ModernButtonStateStyleTests
     {
         var window = new Window { Width = 300, Height = 200, RequestedThemeVariant = ThemeVariant.Light };
         window.Styles.Add(new FluentAvaloniaTheme());
-        // Application level, Colors before Brushes, exactly as App.axaml merges them (Brushes
-        // resolves Colors statically, which only works from the application's resource chain).
+        // Application level, exactly as App.axaml merges Brushes (its theme dictionaries
+        // resolve against the window's ThemeVariant through the application's resource chain).
         var app = new ResourceDictionary();
-        app.MergedDictionaries.Add(new ResourceInclude(new Uri("avares://Excise.App/"))
-            { Source = new Uri("avares://Excise.App/Styles/Colors.axaml") });
         app.MergedDictionaries.Add(new ResourceInclude(new Uri("avares://Excise.App/"))
             { Source = new Uri("avares://Excise.App/Styles/Brushes.axaml") });
         Application.Current!.Resources.MergedDictionaries.Add(app);

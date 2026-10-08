@@ -1,31 +1,92 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Primary Brushes -->
-    <SolidColorBrush x:Key="BrandPrimaryBrush" Color="{StaticResource BrandPrimary}"/>
-    <SolidColorBrush x:Key="BrandPrimaryHoverBrush" Color="{StaticResource BrandPrimaryHover}"/>
-    <SolidColorBrush x:Key="BrandPrimaryPressedBrush" Color="{StaticResource BrandPrimaryPressed}"/>
+    <!-- App chrome tokens (#1992). Brushes live in ThemeDictionaries so they switch with
+         the window's ThemeVariant; a brush outside them that StaticResources a themed
+         colour would resolve once and never switch. Light is keyed Default so any variant
+         without its own entry falls back to it. The app still pins RequestedThemeVariant
+         to Light; the Dark values are provisional until dark mode ships. -->
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Default">
+            <!-- Brand -->
+            <SolidColorBrush x:Key="BrandPrimaryBrush" Color="#0078D4"/>
+            <SolidColorBrush x:Key="BrandPrimaryHoverBrush" Color="#106EBE"/>
+            <SolidColorBrush x:Key="BrandPrimaryPressedBrush" Color="#005A9E"/>
 
-    <!-- Background Brushes -->
-    <SolidColorBrush x:Key="AppBackgroundBrush" Color="{StaticResource AppBackground}"/>
-    <SolidColorBrush x:Key="SecondaryBackgroundBrush" Color="{StaticResource SecondaryBackground}"/>
-    <SolidColorBrush x:Key="TertiaryBackgroundBrush" Color="{StaticResource TertiaryBackground}"/>
-    <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="{StaticResource SidebarBackground}"/>
-    <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="{StaticResource ToolbarBackground}"/>
-    <SolidColorBrush x:Key="CardBrush" Color="{StaticResource CardBackground}"/>
+            <!-- Backgrounds -->
+            <SolidColorBrush x:Key="AppBackgroundBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="SecondaryBackgroundBrush" Color="#F5F5F5"/>
+            <SolidColorBrush x:Key="TertiaryBackgroundBrush" Color="#FAFAFA"/>
+            <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#F0F0F0"/>
+            <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="CardBrush" Color="#FFFFFF"/>
 
-    <!-- Border and Divider Brushes -->
-    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource Border}"/>
-    <SolidColorBrush x:Key="DividerBrush" Color="{StaticResource Divider}"/>
+            <!-- Borders and dividers -->
+            <SolidColorBrush x:Key="BorderBrush" Color="#E0E0E0"/>
+            <SolidColorBrush x:Key="DividerBrush" Color="#D0D0D0"/>
 
-    <!-- Text Brushes -->
-    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimary}"/>
-    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondary}"/>
-    <SolidColorBrush x:Key="TextTertiaryBrush" Color="{StaticResource TextTertiary}"/>
+            <!-- Text -->
+            <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1F1F1F"/>
+            <SolidColorBrush x:Key="TextSecondaryBrush" Color="#666666"/>
+            <SolidColorBrush x:Key="TextTertiaryBrush" Color="#999999"/>
 
-    <!-- State Brushes -->
-    <SolidColorBrush x:Key="SelectedBrush" Color="{StaticResource Selected}"/>
-    <SolidColorBrush x:Key="HoverBrush" Color="{StaticResource Hover}"/>
-    <SolidColorBrush x:Key="PressedBrush" Color="{StaticResource Pressed}"/>
+            <!-- Interaction states -->
+            <SolidColorBrush x:Key="SelectedBrush" Color="#E3F2FD"/>
+            <SolidColorBrush x:Key="SelectedHoverBrush" Color="#BBDEFB"/>
+            <SolidColorBrush x:Key="HoverBrush" Color="#F0F0F0"/>
+            <SolidColorBrush x:Key="PressedBrush" Color="#E0E0E0"/>
+
+            <!-- Destructive action (Apply Redaction) -->
+            <SolidColorBrush x:Key="DangerBrush" Color="#D32F2F"/>
+            <SolidColorBrush x:Key="DangerHoverBrush" Color="#F44336"/>
+            <SolidColorBrush x:Key="DangerPressedBrush" Color="#C62828"/>
+            <SolidColorBrush x:Key="DisabledFillBrush" Color="#BDBDBD"/>
+            <SolidColorBrush x:Key="DisabledTextBrush" Color="#757575"/>
+
+            <!-- Status -->
+            <SolidColorBrush x:Key="SuccessTextBrush" Color="#1B7F4B"/>
+            <SolidColorBrush x:Key="WarningTextBrush" Color="#8A5300"/>
+            <SolidColorBrush x:Key="ErrorTextBrush" Color="#C62828"/>
+            <SolidColorBrush x:Key="ErrorBackgroundBrush" Color="#FDECEC"/>
+            <SolidColorBrush x:Key="ErrorBorderBrush" Color="#F5C2C2"/>
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="BrandPrimaryBrush" Color="#1A73C7"/>
+            <SolidColorBrush x:Key="BrandPrimaryHoverBrush" Color="#2A83D7"/>
+            <SolidColorBrush x:Key="BrandPrimaryPressedBrush" Color="#155FA6"/>
+
+            <SolidColorBrush x:Key="AppBackgroundBrush" Color="#202020"/>
+            <SolidColorBrush x:Key="SecondaryBackgroundBrush" Color="#2B2B2B"/>
+            <SolidColorBrush x:Key="TertiaryBackgroundBrush" Color="#252525"/>
+            <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#1C1C1C"/>
+            <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#202020"/>
+            <SolidColorBrush x:Key="CardBrush" Color="#2B2B2B"/>
+
+            <SolidColorBrush x:Key="BorderBrush" Color="#3D3D3D"/>
+            <SolidColorBrush x:Key="DividerBrush" Color="#484848"/>
+
+            <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F3F3F3"/>
+            <SolidColorBrush x:Key="TextSecondaryBrush" Color="#C5C5C5"/>
+            <SolidColorBrush x:Key="TextTertiaryBrush" Color="#9A9A9A"/>
+
+            <SolidColorBrush x:Key="SelectedBrush" Color="#1F3A57"/>
+            <SolidColorBrush x:Key="SelectedHoverBrush" Color="#264A70"/>
+            <SolidColorBrush x:Key="HoverBrush" Color="#333333"/>
+            <SolidColorBrush x:Key="PressedBrush" Color="#3D3D3D"/>
+
+            <SolidColorBrush x:Key="DangerBrush" Color="#C62828"/>
+            <SolidColorBrush x:Key="DangerHoverBrush" Color="#D84040"/>
+            <SolidColorBrush x:Key="DangerPressedBrush" Color="#A91F1F"/>
+            <SolidColorBrush x:Key="DisabledFillBrush" Color="#3A3A3A"/>
+            <SolidColorBrush x:Key="DisabledTextBrush" Color="#8A8A8A"/>
+
+            <SolidColorBrush x:Key="SuccessTextBrush" Color="#6CCB8F"/>
+            <SolidColorBrush x:Key="WarningTextBrush" Color="#F2B661"/>
+            <SolidColorBrush x:Key="ErrorTextBrush" Color="#FF8A80"/>
+            <SolidColorBrush x:Key="ErrorBackgroundBrush" Color="#442222"/>
+            <SolidColorBrush x:Key="ErrorBorderBrush" Color="#6B3333"/>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
 
 </ResourceDictionary>

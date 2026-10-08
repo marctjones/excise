@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Excise.App.ViewModels;
 
 namespace Excise.App.Views;
@@ -10,7 +9,7 @@ namespace Excise.App.Views;
 /// <see cref="BatesNumberingDialogViewModel.ToOptions"/> after it closes.
 /// </summary>
 /// <remarks>
-/// No logic here beyond recording which button was pressed — the stamp itself
+/// No logic here beyond closing when the view model asks — the stamp itself
 /// is applied by <c>MainWindowViewModel</c> through
 /// <c>BatesNumberingService</c>.
 /// </remarks>
@@ -19,14 +18,14 @@ internal partial class BatesNumberingDialog : Window
     public BatesNumberingDialog()
     {
         InitializeComponent();
+        DataContextChanged += OnDataContextChanged;
     }
 
-    private void OnApply(object? sender, RoutedEventArgs e)
+    // Commands live in the view model (#1992); this only turns its
+    // CloseRequested into closing the window, as SecurityDialog does.
+    private void OnDataContextChanged(object? sender, System.EventArgs e)
     {
         if (DataContext is BatesNumberingDialogViewModel viewModel)
-            viewModel.Confirm();
-        Close();
+            viewModel.CloseRequested += (_, _) => Close();
     }
-
-    private void OnCancel(object? sender, RoutedEventArgs e) => Close();
 }
