@@ -163,8 +163,68 @@ internal static class RotationProbes
         // same content y would interleave with the first in reading order.
         "probe-r90-textccw" => Write(null, 90, null,
             "BT /F1 18 Tf 0 1 -1 0 300 150 Tm (" + Line1 + ") Tj ET\n"),
+        "probe-form-r0" => WriteForm(null),
+        "probe-form-r90" => WriteForm(90),
         _ => throw new ArgumentException($"No synthetic rotation probe '{id}'.", nameof(id)),
     };
+
+    /// <summary>Text field "name" fill colour in its appearance (0.8 0.9 1), as a renderer draws it.</summary>
+    public static readonly (byte R, byte G, byte B) TextWidgetFill = (204, 230, 255);
+
+    /// <summary>Checkbox "agree" fill colour in both its states (0.8 1 0.8).</summary>
+    public static readonly (byte R, byte G, byte B) CheckWidgetFill = (204, 255, 204);
+
+    /// <summary>
+    /// An AcroForm page (#1986): label "NAME", a text field "name" at [100 640 300 664] and a
+    /// checkbox "agree" at [100 590 120 610] (user space). Each widget's appearance is a
+    /// flat colour so a renderer's pixels say where the widget is displayed. No /MK /R:
+    /// the widgets turn with the page.
+    /// </summary>
+    private static byte[] WriteForm(int? leafRotate)
+    {
+        const string content = "BT /F1 18 Tf 1 0 0 1 100 700 Tm (NAME) Tj ET\n";
+        const string txAp = "0.8 0.9 1 rg 0 0 200 24 re f\n";
+        const string yesAp = "0.8 1 0.8 rg 0 0 20 20 re f 0 g 5 5 10 10 re f\n";
+        const string offAp = "0.8 1 0.8 rg 0 0 20 20 re f\n";
+        string Stream(string dict, string body) =>
+            $"<< {dict} /Length {Encoding.ASCII.GetByteCount(body)} >>\nstream\n{body}endstream";
+        var objects = new[]
+        {
+            "<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [6 0 R 7 0 R] /DA (/Helv 0 Tf 0 g) " +
+                "/DR << /Font << /Helv 4 0 R >> >> >> >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792]" +
+                (leafRotate is { } lr ? $" /Rotate {lr}" : "") +
+                " /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R /Annots [6 0 R 7 0 R] >>",
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+            Stream("", content),
+            "<< /Type /Annot /Subtype /Widget /FT /Tx /T (name) /Rect [100 640 300 664] /F 4 /P 3 0 R " +
+                "/DA (/Helv 12 Tf 0 g) /AP << /N 8 0 R >> >>",
+            "<< /Type /Annot /Subtype /Widget /FT /Btn /T (agree) /Rect [100 590 120 610] /F 4 /P 3 0 R " +
+                "/V /Off /AS /Off /AP << /N << /Yes 9 0 R /Off 10 0 R >> >> >>",
+            Stream("/Type /XObject /Subtype /Form /BBox [0 0 200 24] /Resources << >>", txAp),
+            Stream("/Type /XObject /Subtype /Form /BBox [0 0 20 20] /Resources << >>", yesAp),
+            Stream("/Type /XObject /Subtype /Form /BBox [0 0 20 20] /Resources << >>", offAp),
+        };
+        return Assemble(objects);
+    }
+
+    private static byte[] Assemble(string[] objects)
+    {
+        var sb = new StringBuilder("%PDF-1.7\n");
+        var offsets = new List<int>();
+        for (int i = 0; i < objects.Length; i++)
+        {
+            offsets.Add(Encoding.ASCII.GetByteCount(sb.ToString()));
+            sb.Append(CultureInfo.InvariantCulture, $"{i + 1} 0 obj\n{objects[i]}\nendobj\n");
+        }
+        var xref = Encoding.ASCII.GetByteCount(sb.ToString());
+        sb.Append(CultureInfo.InvariantCulture, $"xref\n0 {objects.Length + 1}\n0000000000 65535 f \n");
+        foreach (var o in offsets) sb.Append(CultureInfo.InvariantCulture, $"{o:D10} 00000 n \n");
+        sb.Append(CultureInfo.InvariantCulture,
+            $"trailer\n<< /Size {objects.Length + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n");
+        return Encoding.ASCII.GetBytes(sb.ToString());
+    }
 
     private static byte[] Write(int? parentRotate, int? leafRotate, string? cropBox, string? text = null)
     {
@@ -183,20 +243,7 @@ internal static class RotationProbes
             "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
             $"<< /Length {Encoding.ASCII.GetByteCount(content)} >>\nstream\n{content}endstream",
         };
-
-        var sb = new StringBuilder("%PDF-1.7\n");
-        var offsets = new List<int>();
-        for (int i = 0; i < objects.Length; i++)
-        {
-            offsets.Add(Encoding.ASCII.GetByteCount(sb.ToString()));
-            sb.Append(CultureInfo.InvariantCulture, $"{i + 1} 0 obj\n{objects[i]}\nendobj\n");
-        }
-        var xref = Encoding.ASCII.GetByteCount(sb.ToString());
-        sb.Append(CultureInfo.InvariantCulture, $"xref\n0 {objects.Length + 1}\n0000000000 65535 f \n");
-        foreach (var o in offsets) sb.Append(CultureInfo.InvariantCulture, $"{o:D10} 00000 n \n");
-        sb.Append(CultureInfo.InvariantCulture,
-            $"trailer\n<< /Size {objects.Length + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n");
-        return Encoding.ASCII.GetBytes(sb.ToString());
+        return Assemble(objects);
     }
 }
 
