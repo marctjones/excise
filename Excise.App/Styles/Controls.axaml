@@ -176,6 +176,13 @@
         </Setter>
     </Style>
 
+    <!-- Keyboard focus (#2007): a number box is one tab stop. Its spinner
+         buttons stay clickable but leave the tab order; Up/Down already step
+         the value, as native number boxes do on Windows and macOS. -->
+    <Style Selector="ButtonSpinner /template/ RepeatButton">
+        <Setter Property="IsTabStop" Value="False"/>
+    </Style>
+
     <!-- Shared vector icon affordances. Icons use local StreamGeometry resources
          so toolbars and menus do not depend on platform emoji fonts. -->
     <Style Selector="PathIcon.toolbar-icon">
