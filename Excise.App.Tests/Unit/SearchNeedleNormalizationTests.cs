@@ -42,7 +42,7 @@ public sealed class SearchNeedleNormalizationTests : IDisposable
     [InlineData("​​")]
     [InlineData("­")]            // soft hyphen
     [InlineData("  ")]                // whitespace only
-    public void NeedleThatFoldsToNothing_TerminatesAndMatchesNothing(string needle)
+    public async Task NeedleThatFoldsToNothing_TerminatesAndMatchesNothing(string needle)
     {
         using var doc = PdfDocument.Open(Fixture());
         var service = Service();
@@ -50,7 +50,9 @@ public sealed class SearchNeedleNormalizationTests : IDisposable
         List<SearchMatch>? hits = null;
         var worker = Task.Run(() => hits = service.SearchInPage(doc.GetPage(1), needle));
 
-        worker.Wait(TimeSpan.FromSeconds(5)).Should().BeTrue("search must terminate on an empty folded needle");
+        var finished = await Task.WhenAny(worker, Task.Delay(TimeSpan.FromSeconds(5)));
+        finished.Should().BeSameAs(worker, "search must terminate on an empty folded needle");
+        await worker;   // surfaces a fault, as Wait() did
         hits.Should().BeEmpty("redaction matches nothing for this needle, so search must show nothing");
     }
 
