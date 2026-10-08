@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1545,
-  "indexedContentSha256": "5393e713401470164d858add1fd1da036c8d240d1daef29b172571a14795d6ff",
+  "indexedFileCount": 1561,
+  "indexedContentSha256": "e4daa425a380b646167876e1948f7231d6a61469d3086029059ddb4b8c55b14c",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -651,6 +651,19 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "header",
+            "structure",
+            "syntax",
+            "pdfdocumentwriter",
+            "pdfobject",
+            "pdfparser",
+            "xref"
+          ]
+        },
+        {
           "path": "tests/code-health/duplication.md",
           "kind": "test",
           "matchedTerms": [
@@ -713,7 +726,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 72
+      "candidateReferenceCount": 73
     },
     {
       "id": "pdf.17.syntax.objects",
@@ -1559,7 +1572,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 211
+      "candidateReferenceCount": 212
     },
     {
       "id": "pdf.17.syntax.filters",
@@ -2320,7 +2333,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 127
+      "candidateReferenceCount": 129
     },
     {
       "id": "pdf.17.syntax.encryption",
@@ -3188,7 +3201,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 126
+      "candidateReferenceCount": 128
     },
     {
       "id": "pdf.17.document.catalog-pages",
@@ -4115,7 +4128,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 201
+      "candidateReferenceCount": 207
     },
     {
       "id": "pdf.17.document.navigation",
@@ -5034,7 +5047,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 177
+      "candidateReferenceCount": 180
     },
     {
       "id": "pdf.17.document.metadata",
@@ -5951,7 +5964,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 129
+      "candidateReferenceCount": 132
     },
     {
       "id": "pdf.17.document.embedded-files",
@@ -6824,7 +6837,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 94
+      "candidateReferenceCount": 95
     },
     {
       "id": "pdf.17.graphics.state",
@@ -7307,6 +7320,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "dictionaries",
+            "resource",
+            "colorspace",
+            "pdfgraphics",
+            "pdfimage",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/format-compatibility-suite.json",
           "kind": "test",
           "matchedTerms": [
@@ -7333,7 +7358,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 48
+      "candidateReferenceCount": 49
     },
     {
       "id": "pdf.17.graphics.paths-painting",
@@ -8162,7 +8187,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 717
+      "candidateReferenceCount": 730
     },
     {
       "id": "pdf.17.graphics.color",
@@ -8981,7 +9006,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 338
+      "candidateReferenceCount": 345
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -9092,9 +9117,31 @@
             "colorspace",
             "skiarenderer"
           ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "patterns",
+            "shadings",
+            "colorspace",
+            "pdfgraphics",
+            "pdfimage",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "patterns",
+            "shadings",
+            "colorspace",
+            "skiarenderer"
+          ]
         }
       ],
-      "candidateReferenceCount": 5
+      "candidateReferenceCount": 7
     },
     {
       "id": "pdf.17.graphics.images",
@@ -9968,7 +10015,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 272
+      "candidateReferenceCount": 275
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -10814,7 +10861,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 203
+      "candidateReferenceCount": 207
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -10921,6 +10968,15 @@
           "matchedTerms": [
             "color",
             "colour"
+          ]
+        },
+        {
+          "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "color",
+            "scan",
+            "skiarenderer"
           ]
         },
         {
@@ -11540,17 +11596,9 @@
             "color",
             "colour"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Redaction/StampedCtmConsumerTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "color",
-            "scan"
-          ]
         }
       ],
-      "candidateReferenceCount": 194
+      "candidateReferenceCount": 200
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -11844,6 +11892,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "limits",
+            "version",
+            "differentialrendering",
+            "performancebenchmark",
+            "renderpage",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/dependencies.md",
           "kind": "test",
           "matchedTerms": [
@@ -11941,7 +12001,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 39
+      "candidateReferenceCount": 40
     },
     {
       "id": "pdf.20.compatibility.deprecated",
@@ -12306,6 +12366,14 @@
         },
         {
           "path": "Excise.Core/Document/SignatureAppearanceAuthoring.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "form",
+            "streams"
+          ]
+        },
+        {
+          "path": "Excise.Core/Editing/PdfTypewriterTextApplier.cs",
           "kind": "source",
           "matchedTerms": [
             "form",
@@ -12867,17 +12935,9 @@
             "xobjects",
             "contentstream"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Document/PdfAnnotationParserTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "form",
-            "streams"
-          ]
         }
       ],
-      "candidateReferenceCount": 189
+      "candidateReferenceCount": 192
     },
     {
       "id": "pdf.20.content.operators",
@@ -13726,7 +13786,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 140
+      "candidateReferenceCount": 141
     },
     {
       "id": "pdf.17.content.text-state",
@@ -14975,6 +15035,28 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "artifacts",
+            "marked",
+            "property",
+            "contentoperator",
+            "contentstream",
+            "textextractor"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "artifacts",
+            "marked",
+            "contentoperator",
+            "contentstream"
+          ]
+        },
+        {
           "path": "tests/code-health/dependencies.md",
           "kind": "test",
           "matchedTerms": [
@@ -15017,25 +15099,9 @@
             "marked",
             "property"
           ]
-        },
-        {
-          "path": "docs/architecture/system-design.md",
-          "kind": "architecture",
-          "matchedTerms": [
-            "artifacts",
-            "property"
-          ]
-        },
-        {
-          "path": "docs/architecture/xfa-rendering.md",
-          "kind": "architecture",
-          "matchedTerms": [
-            "marked",
-            "property"
-          ]
         }
       ],
-      "candidateReferenceCount": 80
+      "candidateReferenceCount": 82
     },
     {
       "id": "pdf.20.content.operator-001",
@@ -22055,9 +22121,20 @@
             "pdf20",
             "syntax"
           ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "syntax",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
         }
       ],
-      "candidateReferenceCount": 2
+      "candidateReferenceCount": 3
     },
     {
       "id": "pdf.20.renderer.requirement-002",
@@ -22269,6 +22346,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "streams",
+            "syntax",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/redaction-hard-cases.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -22293,7 +22382,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 23
+      "candidateReferenceCount": 24
     },
     {
       "id": "pdf.20.renderer.requirement-003",
@@ -22418,9 +22507,20 @@
             "pdf20",
             "tree"
           ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "tree",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
         }
       ],
-      "candidateReferenceCount": 9
+      "candidateReferenceCount": 10
     },
     {
       "id": "pdf.20.renderer.requirement-004",
@@ -22543,9 +22643,20 @@
             "pdf20",
             "requirement-005"
           ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "extgstate",
+            "pdf20",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
         }
       ],
-      "candidateReferenceCount": 1
+      "candidateReferenceCount": 2
     },
     {
       "id": "pdf.20.renderer.requirement-006",
@@ -23289,7 +23400,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 131
+      "candidateReferenceCount": 134
     },
     {
       "id": "pdf.20.renderer.requirement-007",
@@ -23343,8 +23454,20 @@
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "patterns",
+            "pdf20",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-008",
@@ -23407,9 +23530,20 @@
             "pdf20",
             "skiarenderer"
           ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "images",
+            "pdf20",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
         }
       ],
-      "candidateReferenceCount": 1
+      "candidateReferenceCount": 2
     },
     {
       "id": "pdf.20.renderer.requirement-009",
@@ -23481,6 +23615,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "forms",
+            "pdf20",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/redaction-hard-cases.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -23489,7 +23634,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 3
+      "candidateReferenceCount": 4
     },
     {
       "id": "pdf.20.renderer.requirement-010",
@@ -23555,6 +23700,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "fonts",
+            "pdf20",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/redaction-hard-cases.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -23563,7 +23719,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 3
+      "candidateReferenceCount": 4
     },
     {
       "id": "pdf.20.renderer.requirement-011",
@@ -23608,9 +23764,20 @@
             "pdf20",
             "transparency"
           ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "transparency",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
         }
       ],
-      "candidateReferenceCount": 1
+      "candidateReferenceCount": 2
     },
     {
       "id": "pdf.20.renderer.requirement-012",
@@ -23751,6 +23918,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "streams",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/redaction-hard-cases.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -23759,7 +23937,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 4
+      "candidateReferenceCount": 5
     },
     {
       "id": "pdf.20.renderer.requirement-014",
@@ -23806,9 +23984,20 @@
             "pdf20",
             "skiarenderer"
           ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "images",
+            "pdf20",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
         }
       ],
-      "candidateReferenceCount": 1
+      "candidateReferenceCount": 2
     },
     {
       "id": "pdf.20.renderer.requirement-015",
@@ -23995,6 +24184,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "pdf20",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/redaction-hard-cases.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -24003,7 +24203,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 9
+      "candidateReferenceCount": 10
     },
     {
       "id": "pdf.20.renderer.requirement-017",
@@ -24109,6 +24309,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "pdf20",
+            "preservation",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/redaction-hard-cases.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -24125,7 +24337,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 10
+      "candidateReferenceCount": 11
     },
     {
       "id": "pdf.20.renderer.requirement-018",
@@ -24420,6 +24632,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "pdf20",
+            "synthesis",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/milestones-baseline.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -24460,7 +24684,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 31
+      "candidateReferenceCount": 32
     },
     {
       "id": "pdf.20.renderer.requirement-019",
@@ -24618,6 +24842,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "structure",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/redaction-hard-cases.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -24626,7 +24861,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 13
+      "candidateReferenceCount": 14
     },
     {
       "id": "pdf.20.renderer.requirement-020",
@@ -24673,8 +24908,20 @@
           }
         ]
       },
-      "candidateReferences": [],
-      "candidateReferenceCount": 0
+      "candidateReferences": [
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "signatures",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        }
+      ],
+      "candidateReferenceCount": 1
     },
     {
       "id": "pdf.20.renderer.requirement-021",
@@ -29489,9 +29736,20 @@
             "pdf20",
             "requirement-090"
           ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "bdc",
+            "pdf20",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
         }
       ],
-      "candidateReferenceCount": 1
+      "candidateReferenceCount": 2
     },
     {
       "id": "pdf.20.renderer.requirement-091",
@@ -34702,6 +34960,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "jpxdecode",
+            "image",
+            "jbig2",
+            "jpx",
+            "pdfimage"
+          ]
+        },
+        {
           "path": "tests/redaction-visual-gold-set.json",
           "kind": "test",
           "matchedTerms": [
@@ -34711,7 +34981,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 24
+      "candidateReferenceCount": 25
     },
     {
       "id": "pdf.20.image.requirement-015",
@@ -35075,6 +35345,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "jbig2decode",
+            "image",
+            "jbig2",
+            "jpx",
+            "pdfimage"
+          ]
+        },
+        {
           "path": "tests/redaction-visual-gold-set.json",
           "kind": "test",
           "matchedTerms": [
@@ -35084,7 +35366,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 30
+      "candidateReferenceCount": 31
     },
     {
       "id": "pdf.20.image.requirement-016",
@@ -35522,6 +35804,19 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "globals",
+            "image",
+            "jbig2decode",
+            "image",
+            "jbig2",
+            "jpx",
+            "pdfimage"
+          ]
+        },
+        {
           "path": "tests/redaction-visual-gold-set.json",
           "kind": "test",
           "matchedTerms": [
@@ -35540,7 +35835,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 36
+      "candidateReferenceCount": 37
     },
     {
       "id": "pdf.20.image.requirement-017",
@@ -36021,6 +36316,16 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/RotatedMarkupPlacementTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "crypt",
+            "image",
+            "image",
+            "pdfimage"
+          ]
+        },
+        {
           "path": "Excise.Cli.Tests/CorpusScanClassificationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -36046,6 +36351,29 @@
             "crypt",
             "image",
             "image"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "crypt",
+            "image",
+            "image",
+            "jbig2",
+            "jpx",
+            "pdfimage"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "crypt",
+            "image",
+            "image",
+            "jbig2",
+            "jpx"
           ]
         },
         {
@@ -36123,7 +36451,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 53
+      "candidateReferenceCount": 56
     },
     {
       "id": "pdf.20.image.requirement-018",
@@ -37653,7 +37981,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 88
+      "candidateReferenceCount": 90
     },
     {
       "id": "pdf.20.image.requirement-022",
@@ -38472,7 +38800,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 88
+      "candidateReferenceCount": 90
     },
     {
       "id": "pdf.20.image.requirement-023",
@@ -39284,7 +39612,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 204
+      "candidateReferenceCount": 206
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -41959,6 +42287,29 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "devicecmyk",
+            "image",
+            "image",
+            "jbig2",
+            "jpx",
+            "pdfimage"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "devicecmyk",
+            "image",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "tests/corpus-expectations-pdfium.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -41996,7 +42347,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 35
+      "candidateReferenceCount": 37
     },
     {
       "id": "pdf.20.image.requirement-029",
@@ -42209,6 +42560,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "iccbased",
+            "image",
+            "image",
+            "jbig2",
+            "jpx",
+            "pdfimage"
+          ]
+        },
+        {
           "path": "tests/corpus-expectations-verapdf.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -42227,7 +42590,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 18
+      "candidateReferenceCount": 19
     },
     {
       "id": "pdf.20.image.requirement-030",
@@ -43383,7 +43746,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 142
+      "candidateReferenceCount": 148
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -43538,6 +43901,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "separation",
+            "image",
+            "jbig2",
+            "jpx",
+            "pdfimage"
+          ]
+        },
+        {
           "path": "tests/corpus-expectations-isartor.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -43556,7 +43931,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 12
+      "candidateReferenceCount": 13
     },
     {
       "id": "pdf.20.image.requirement-033",
@@ -44283,6 +44658,16 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/RotatedAuthoringPlacementTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "ctm",
+            "image",
+            "image",
+            "pdfimage"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/Unit/CopyReadingOrderTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -44338,6 +44723,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "ctm",
+            "image",
+            "image",
+            "jbig2",
+            "jpx",
+            "pdfimage"
+          ]
+        },
+        {
           "path": "tests/corpus-expectations-pdfium.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -44367,7 +44764,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 62
+      "candidateReferenceCount": 64
     },
     {
       "id": "pdf.20.image.requirement-035",
@@ -44973,7 +45370,8 @@
             "annotation",
             "widget",
             "annotation",
-            "pdfannotation"
+            "pdfannotation",
+            "redact"
           ]
         },
         {
@@ -45352,7 +45750,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 95
+      "candidateReferenceCount": 97
     },
     {
       "id": "pdf.20.annotation.subtype-002",
@@ -46258,7 +46656,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 117
+      "candidateReferenceCount": 118
     },
     {
       "id": "pdf.20.annotation.subtype-003",
@@ -46674,7 +47072,8 @@
             "annotation",
             "freetext",
             "annotation",
-            "pdfannotation"
+            "pdfannotation",
+            "redact"
           ]
         },
         {
@@ -46828,6 +47227,15 @@
             "freetext",
             "annotation",
             "pdfannotation"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/ComplexShapingGateTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "freetext",
+            "annotation"
           ]
         },
         {
@@ -47057,6 +47465,28 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "freetext",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "freetext",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/corpus-expectations-pdfium.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -47136,7 +47566,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 64
+      "candidateReferenceCount": 67
     },
     {
       "id": "pdf.20.annotation.subtype-005",
@@ -47455,7 +47885,8 @@
             "annotation",
             "highlight",
             "annotation",
-            "pdfannotation"
+            "pdfannotation",
+            "redact"
           ]
         },
         {
@@ -47940,6 +48371,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/RotatedMarkupPlacementTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "highlight",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/TextMarkupAnnotationCommandTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -48019,6 +48459,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "highlight",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/corpus-expectations-pdfium.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -48046,28 +48497,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "tests/gui-interaction-registry.json",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "highlight",
-            "annotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "tests/redaction-collateral/baseline.json",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "highlight",
-            "annotation"
-          ]
         }
       ],
-      "candidateReferenceCount": 86
+      "candidateReferenceCount": 88
     },
     {
       "id": "pdf.20.annotation.subtype-006",
@@ -48477,6 +48909,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/TurnedTextMarkupRenderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "underline",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/AnnotationGalleryTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -48523,6 +48964,15 @@
             "underline",
             "annotation",
             "pdfannotation"
+          ]
+        },
+        {
+          "path": "Excise.App.Tests/UI/RotatedMarkupPlacementTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "underline",
+            "annotation"
           ]
         },
         {
@@ -48626,7 +49076,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 42
+      "candidateReferenceCount": 44
     },
     {
       "id": "pdf.20.annotation.subtype-007",
@@ -49015,6 +49465,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/TurnedTextMarkupRenderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "strikeout",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/AnnotationGalleryTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -49061,6 +49520,15 @@
             "strikeout",
             "annotation",
             "pdfannotation"
+          ]
+        },
+        {
+          "path": "Excise.App.Tests/UI/RotatedMarkupPlacementTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "strikeout",
+            "annotation"
           ]
         },
         {
@@ -49145,7 +49613,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 38
+      "candidateReferenceCount": 40
     },
     {
       "id": "pdf.20.annotation.subtype-008",
@@ -49504,6 +49972,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/TurnedTextMarkupRenderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "squiggly",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/AnnotationGalleryTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -49550,6 +50027,15 @@
             "squiggly",
             "annotation",
             "pdfannotation"
+          ]
+        },
+        {
+          "path": "Excise.App.Tests/UI/RotatedMarkupPlacementTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "squiggly",
+            "annotation"
           ]
         },
         {
@@ -49634,7 +50120,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 35
+      "candidateReferenceCount": 37
     },
     {
       "id": "pdf.20.annotation.subtype-009",
@@ -50425,6 +50911,16 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/RotatedAuthoringPlacementTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "square",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/ShapeAnnotationModeWorkflowTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -50496,6 +50992,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "square",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/corpus-expectations-pdfium.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -50543,30 +51050,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "tests/unredaction-failure-modes.json",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "square",
-            "annotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "docs/architecture/main-window-architecture.md",
-          "kind": "architecture",
-          "matchedTerms": [
-            "annotation",
-            "square",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 80
+      "candidateReferenceCount": 82
     },
     {
       "id": "pdf.20.annotation.subtype-010",
@@ -51127,6 +51613,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "circle",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/corpus-expectations.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -51198,7 +51695,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 50
+      "candidateReferenceCount": 51
     },
     {
       "id": "pdf.20.annotation.subtype-011",
@@ -51925,7 +52422,8 @@
             "annotation",
             "line",
             "annotation",
-            "pdfannotation"
+            "pdfannotation",
+            "redact"
           ]
         },
         {
@@ -52135,7 +52633,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 233
+      "candidateReferenceCount": 240
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -52631,6 +53129,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "polygon",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/corpus-expectations-pdfium.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -52701,7 +53210,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 42
+      "candidateReferenceCount": 43
     },
     {
       "id": "pdf.20.annotation.subtype-013",
@@ -54140,7 +54649,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 177
+      "candidateReferenceCount": 178
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -54509,6 +55018,16 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/RotatedAuthoringPlacementTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "popup",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/ShapeAnnotationModeWorkflowTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -54568,6 +55087,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "popup",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/corpus-expectations.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -54598,7 +55128,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 39
+      "candidateReferenceCount": 41
     },
     {
       "id": "pdf.20.annotation.subtype-016",
@@ -55400,7 +55930,8 @@
             "annotation",
             "stamp",
             "annotation",
-            "pdfannotation"
+            "pdfannotation",
+            "redact"
           ]
         },
         {
@@ -55794,6 +56325,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/code-health/dependencies.md",
           "kind": "test",
           "matchedTerms": [
@@ -55902,7 +56444,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 74
+      "candidateReferenceCount": 75
     },
     {
       "id": "pdf.20.annotation.subtype-018",
@@ -56854,6 +57396,17 @@
           ]
         },
         {
+          "path": "Excise.App/Services/PdfSearchService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "redact",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.App/Services/RedactedCopyDialogFormatter.cs",
           "kind": "source",
           "matchedTerms": [
@@ -57056,20 +57609,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "redact",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 203
+      "candidateReferenceCount": 207
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -58000,6 +58542,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/TurnedTextMarkupRenderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "screen",
+            "annotation"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/UnauthoredAnnotationPreservationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -58129,6 +58680,16 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/RotatedAuthoringPlacementTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "screen",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
+        {
           "path": "Excise.App.Tests/UI/SaveReloadKeepsPagesOnScreenTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -58179,6 +58740,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "screen",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "docs/architecture/pdf-viewer-control-architecture.md",
           "kind": "architecture",
           "matchedTerms": [
@@ -58199,7 +58771,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 61
+      "candidateReferenceCount": 64
     },
     {
       "id": "pdf.20.annotation.subtype-023",
@@ -58849,6 +59421,15 @@
           ]
         },
         {
+          "path": "Excise.App.Tests/UI/RotatedMarkupPlacementTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "projection",
+            "annotation"
+          ]
+        },
+        {
           "path": "tests/annotation-support-matrix.json",
           "kind": "test",
           "matchedTerms": [
@@ -58880,7 +59461,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 7
+      "candidateReferenceCount": 8
     },
     {
       "id": "pdf.17.transparency.model",
@@ -59670,7 +60251,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 243
+      "candidateReferenceCount": 247
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -60413,7 +60994,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 107
+      "candidateReferenceCount": 109
     },
     {
       "id": "pdf.17.interactive.annotations",
@@ -61294,7 +61875,8 @@
             "annotation",
             "annotations",
             "action",
-            "annotation"
+            "annotation",
+            "redact"
           ]
         },
         {
@@ -61520,7 +62102,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 227
+      "candidateReferenceCount": 233
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -61959,6 +62541,17 @@
             "annotations",
             "redaction",
             "acroform",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.App/Services/PdfSearchService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotations",
+            "redaction",
             "action",
             "annotation",
             "redact"
@@ -62497,20 +63090,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/UI/AnnotationAuthoringWorkflowTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "redaction",
-            "action",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 111
+      "candidateReferenceCount": 114
     },
     {
       "id": "pdf.17.interactive.redaction-review-drafts",
@@ -63433,7 +64015,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 122
+      "candidateReferenceCount": 124
     },
     {
       "id": "pdf.17.security.redaction-content-removal",
@@ -65398,7 +65980,8 @@
             "forms",
             "widgets",
             "action",
-            "annotation"
+            "annotation",
+            "redact"
           ]
         },
         {
@@ -65444,7 +66027,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 230
+      "candidateReferenceCount": 236
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -66378,7 +66961,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 203
+      "candidateReferenceCount": 204
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -66575,6 +67158,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "applications",
+            "usage",
+            "acroform",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/ghent-conformance-cells.json",
           "kind": "test",
           "matchedTerms": [
@@ -66597,7 +67192,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 14
+      "candidateReferenceCount": 15
     },
     {
       "id": "pdf.17.multimedia.media",
@@ -67170,6 +67765,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/TestSupport/RotationFixtures.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "media",
+            "screen",
+            "media"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -67369,18 +67973,9 @@
             "media",
             "media"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/AppearanceStreamDifferentialTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "media",
-            "media"
-          ]
         }
       ],
-      "candidateReferenceCount": 145
+      "candidateReferenceCount": 150
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -68150,7 +68745,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 96
+      "candidateReferenceCount": 98
     },
     {
       "id": "pdf.17.interchange.tagged-pdf",
@@ -68967,7 +69562,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 434
+      "candidateReferenceCount": 439
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -69716,7 +70311,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 233
+      "candidateReferenceCount": 240
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -70490,7 +71085,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 226
+      "candidateReferenceCount": 228
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -71279,7 +71874,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 781
+      "candidateReferenceCount": 793
     },
     {
       "id": "pdf.20.extension.developer",
@@ -71982,7 +72577,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 170
+      "candidateReferenceCount": 174
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -72732,6 +73327,29 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "conformance",
+            "pdfa",
+            "profile",
+            "conformance",
+            "pdfa",
+            "pdfua"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "conformance",
+            "pdfa",
+            "profile",
+            "conformance",
+            "pdfa"
+          ]
+        },
+        {
           "path": "tests/corpus-expectations-isartor.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -72780,7 +73398,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 76
+      "candidateReferenceCount": 78
     },
     {
       "id": "pdf.20.profile.pdfua",
@@ -73278,6 +73896,29 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "accessibility",
+            "conformance",
+            "pdfua",
+            "profile",
+            "conformance",
+            "pdfa",
+            "pdfua"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "conformance",
+            "profile",
+            "conformance",
+            "pdfa"
+          ]
+        },
+        {
           "path": "tests/corpora.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -73352,7 +73993,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 50
+      "candidateReferenceCount": 52
     },
     {
       "id": "pdf.20.profile.pdfx",
@@ -73543,6 +74184,28 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "conformance",
+            "pdfx",
+            "profile",
+            "conformance",
+            "pdfa",
+            "pdfua"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "conformance",
+            "profile",
+            "conformance",
+            "pdfa"
+          ]
+        },
+        {
           "path": "tests/ghent-conformance-cells.json",
           "kind": "test",
           "matchedTerms": [
@@ -73562,7 +74225,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 19
+      "candidateReferenceCount": 21
     },
     {
       "id": "pdfe.product.safety.limited-editing",
@@ -74402,7 +75065,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 163
+      "candidateReferenceCount": 165
     },
     {
       "id": "pdfe.product.redaction.review-panel",
@@ -75201,7 +75864,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 169
+      "candidateReferenceCount": 171
     },
     {
       "id": "pdfe.product.security.privacy-clean-copy",
@@ -76018,7 +76681,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 171
+      "candidateReferenceCount": 173
     },
     {
       "id": "pdfe.product.security.external-links",
@@ -76231,6 +76894,28 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "activation",
+            "pdfe",
+            "safe",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "safe",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "tests/format-compatibility-suite.json",
           "kind": "test",
           "matchedTerms": [
@@ -76282,7 +76967,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 21
+      "candidateReferenceCount": 23
     },
     {
       "id": "pdfe.product.security.attachments",
@@ -77145,7 +77830,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 152
+      "candidateReferenceCount": 153
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",
@@ -77640,6 +78325,28 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "override",
+            "pdfe",
+            "signature",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "signature",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "tests/milestones-baseline.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -77718,7 +78425,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 53
+      "candidateReferenceCount": 55
     },
     {
       "id": "pdfe.product.ocr.scanned-documents",
@@ -77959,7 +78666,8 @@
           "kind": "source",
           "matchedTerms": [
             "documents",
-            "scanned"
+            "scanned",
+            "redaction"
           ]
         },
         {
@@ -78500,6 +79208,31 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "documents",
+            "ocr",
+            "pdfe",
+            "scanned",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "documents",
+            "ocr",
+            "pdfe",
+            "scanned",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "tests/corpora.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -78509,29 +79242,9 @@
             "ocr",
             "redaction"
           ]
-        },
-        {
-          "path": "tests/format-compatibility-suite.json",
-          "kind": "test",
-          "matchedTerms": [
-            "documents",
-            "pdfe",
-            "redaction"
-          ]
-        },
-        {
-          "path": "tests/gui-interaction-registry.json",
-          "kind": "test",
-          "matchedTerms": [
-            "documents",
-            "ocr",
-            "ocr",
-            "redaction",
-            "security"
-          ]
         }
       ],
-      "candidateReferenceCount": 91
+      "candidateReferenceCount": 93
     },
     {
       "id": "pdfe.product.security.audit-log",
@@ -79259,24 +79972,24 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/TestSupport/RotationFixtures.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "local",
+            "log",
+            "security"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/TestSupport/TestRepoLayoutTests.cs",
           "kind": "test",
           "matchedTerms": [
             "local",
             "pdfe"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/RtlTextExtractionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "local",
-            "log",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 179
+      "candidateReferenceCount": 182
     },
     {
       "id": "pdfe.product.platform.printing",
@@ -79641,6 +80354,27 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "printing",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "printing",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "tests/milestones-baseline.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -79694,7 +80428,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 40
+      "candidateReferenceCount": 42
     },
     {
       "id": "pdfe.product.forms.restricted-javascript-research",
@@ -80128,6 +80862,28 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "forms",
+            "pdfe",
+            "subset",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "subset",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "tests/corpora.tsv",
           "kind": "test",
           "matchedTerms": [
@@ -80273,7 +81029,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 57
+      "candidateReferenceCount": 59
     }
   ],
   "summary": {
