@@ -692,8 +692,9 @@ internal partial class MainWindow : Window
 
         // #917: one document means the viewer's Document reference no
         // longer changes on a structural mutation, so nothing tells the
-        // continuous view to re-lay-out. This does.
-        EventHandler structureChanged = (_, _) => _pdfViewerControl?.RefreshContinuousLayout();
+        // continuous view to re-lay-out, nor the single page to re-render
+        // (#1983: a rotated page kept its old bitmap). This does.
+        EventHandler structureChanged = (_, _) => _pdfViewerControl?.RefreshAfterStructureChange();
         viewModel.DocumentStructureChanged += structureChanged;
         _viewModelUnsubscribers.Add(() => viewModel.DocumentStructureChanged -= structureChanged);
 

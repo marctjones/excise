@@ -375,11 +375,11 @@ internal sealed partial class SinglePageView : TemplatedControl, IPageHitSurface
     /// Image: at a small capacity it is the LRU tail this insert would otherwise dispose before
     /// the Image moves off it.
     /// </summary>
-    internal void AddToCache(int pageNumber, int dpi, WriteableBitmap bitmap, Size dipSize)
+    internal void AddToCache(int pageNumber, int dpi, WriteableBitmap bitmap, Size dipSize, int rotation = 0)
     {
         var shown = PdfImage?.Source as WriteableBitmap;
         _singlePageRenderLifetime.Add(pageNumber, dpi, bitmap, dipSize,
-            keep: b => ReferenceEquals(b, shown));
+            keep: b => ReferenceEquals(b, shown), rotation: rotation);
     }
 
     /// <summary>Drop the cached bitmaps and the render-ahead plan.</summary>

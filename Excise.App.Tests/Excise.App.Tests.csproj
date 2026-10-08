@@ -84,6 +84,8 @@
     <Compile Include="../Excise.Core.Tests/TestSupport/XfaTestForms.cs" Link="TestSupport/XfaTestForms.cs" />
     <!-- ONE fixture/corpus locator, same reasoning (#1527). -->
     <Compile Include="../Excise.Core.Tests/TestSupport/TestRepoLayout.cs" Link="TestSupport/TestRepoLayout.cs" />
+    <!-- #1982: the shared rotation fixtures, scenario table and raw stext/Poppler geometry readers. -->
+    <Compile Include="../Excise.Core.Tests/TestSupport/RotationFixtures.cs" Link="TestSupport/RotationFixtures.cs" />
   </ItemGroup>
 
 </Project>

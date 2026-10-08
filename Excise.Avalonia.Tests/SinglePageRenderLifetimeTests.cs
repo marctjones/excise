@@ -28,6 +28,32 @@ public sealed class SinglePageRenderLifetimeTests
         second.IsCurrent.Should().BeTrue("completing a stale generation must not release the active one");
     }
 
+    /// <summary>
+    /// #1983: a page rotated in place keeps its number and usually its DPI. A cache keyed
+    /// only by (page, dpi) returned the unrotated bitmap under overlays placed for the new
+    /// rotation. Rotation is part of the key; the other rotation's entry is left alone (it
+    /// may be the bitmap still on screen until the new one is published).
+    /// </summary>
+    [Fact]
+    public void TryGet_MissesTheSamePageAndDpi_AtAnotherRotation()
+    {
+        using var lifetime = new SinglePageRenderLifetime<TrackedBitmap>(cacheCapacity: 4);
+        var upright = new TrackedBitmap();
+        lifetime.Add(pageNumber: 1, dpi: 120, upright, new Size(10, 20), rotation: 0);
+
+        lifetime.TryGet(1, 120, out _, out _, rotation: 90).Should().BeFalse("the cached bitmap is the unrotated page");
+        lifetime.Contains(1, 120, rotation: 180).Should().BeFalse();
+
+        var turned = new TrackedBitmap();
+        lifetime.Add(pageNumber: 1, dpi: 120, turned, new Size(20, 10), rotation: 90);
+        upright.IsDisposed.Should().BeFalse("adding another rotation must not dispose the bitmap that may be on screen");
+        lifetime.TryGet(1, 120, out var hit, out var size, rotation: 90).Should().BeTrue();
+        hit.Should().BeSameAs(turned);
+        size.Should().Be(new Size(20, 10));
+        lifetime.TryGet(1, 120, out var back, out _, rotation: 0).Should().BeTrue();
+        back.Should().BeSameAs(upright);
+    }
+
     [Fact]
     public void CancelRender_SupersedesGenerationWithoutReplacement()
     {

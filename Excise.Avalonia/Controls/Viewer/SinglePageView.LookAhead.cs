@@ -111,7 +111,8 @@ internal sealed partial class SinglePageView
     /// <summary>Whether (page, device DPI) is in the single-page cache, without touching LRU order (tests).</summary>
     internal bool SinglePageCacheContainsForTests(int page) =>
         Document is { } doc && page >= 1 && page <= doc.PageCount
-        && _singlePageRenderLifetime.Contains(page, ComputeSinglePageRenderSpec(doc.GetPage(page)).DeviceDpi);
+        && _singlePageRenderLifetime.Contains(page, ComputeSinglePageRenderSpec(doc.GetPage(page)).DeviceDpi,
+            doc.GetPage(page).Rotation);
 
     private void ScheduleSinglePageLookAhead()
     {
@@ -154,7 +155,7 @@ internal sealed partial class SinglePageView
             var spec = ComputeSinglePageRenderSpec(page);
             if (!_singlePageLookAheadAttempted.Add((target, spec.DeviceDpi)))
                 continue;
-            if (_singlePageRenderLifetime.Contains(target, spec.DeviceDpi))
+            if (_singlePageRenderLifetime.Contains(target, spec.DeviceDpi, page.Rotation))
                 continue;
 
             StartSinglePageLookAhead(doc, page, target, spec);
@@ -169,6 +170,7 @@ internal sealed partial class SinglePageView
     {
         var lookAhead = new SinglePageLookAhead(doc, pageNumber, spec.DeviceDpi);
         _singlePageLookAhead = lookAhead;
+        var rotation = page.Rotation;
         long generation = _singlePageLookAheadGeneration;
         var options = SinglePageRenderOptions(spec.DeviceDpi);
         var token = lookAhead.Source.Token;
@@ -198,7 +200,7 @@ internal sealed partial class SinglePageView
                     var bitmap = Imaging.SkiaInterop.ToAvaloniaBitmap(skBitmap);
                     if (bitmap == null)
                         return;
-                    AddToCache(pageNumber, spec.DeviceDpi, bitmap, spec.LayoutSize);
+                    AddToCache(pageNumber, spec.DeviceDpi, bitmap, spec.LayoutSize, rotation);
                     ViewerMetrics.RecordLookAheadRender(watch.Elapsed, spec.DeviceDpi, ViewerMetrics.LookAheadSinglePage);
                     SinglePageLookAheadCompletedCount++;
                     landed = true;

@@ -11,6 +11,9 @@ semantic versioning.
 - Sticky-note and FreeText text in Adlam, Hanifi Rohingya or Arabic Mathematical Alphabetic Symbols is now recognised as needing complex shaping, so the viewer declines to draw it unshaped (with the existing diagnostic) instead of drawing plausible but wrong glyphs (#1958).
 - `excise redact --carrier-policy` now lists, accepts and documents `page-labels`, `name-tree-keys`, `signatures` and `optional-content`, the carriers the engine already scrubbed and reported; help and parser read one table (#1896).
 - Search no longer hangs on a term that folds to nothing (a lone zero-width space or soft hyphen), and surrounding spaces in the term no longer change what it finds, matching what redaction removes (#1848).
+- In single-page view, rotating a page now re-renders it. Previously, at a zoom you had set, or after two quarter turns at fit, the page image stayed at its old rotation while search highlights moved to the new one, so highlights were drawn off the text. The page cache now keys bitmaps by rotation, and a rotation clears any text selection on that page (#1983).
+- Underline, Strikeout and Squiggly now run along text whose baseline is turned in the page's own coordinates, as on a scanned landscape page: the page is rotated 90 degrees and its text turned back, so it reads upright. Previously the line was drawn across the end of the word. The line direction comes from the marked glyphs. Upright text produces the same output as before (#1984).
+- Typewriter text saved on a rotated page now reads upright inside the box drawn on screen. Previously it was laid out in the page's unrotated coordinates, so on a page rotated 90 degrees it ran down the screen and out of the box. Pages that are not rotated produce the same output as before (#1985).
 
 ## [3.17.0] - 2026-10-08
 

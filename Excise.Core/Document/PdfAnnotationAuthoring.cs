@@ -830,6 +830,15 @@ public static class PdfAnnotationAuthoring
 
         var normalized = rect.Normalize();
 
+        // #1984: text whose baseline does not run along +x in user space (the
+        // scanned-landscape shape: a /Rotate 90 page whose text matrix turns the
+        // other way, so it reads upright on screen) gets its line drawn along the
+        // text, on the text's own baseline side, in user space.
+        var (dirX, dirY) = TextDirectionIn(document, pageNumber, normalized);
+        if (dirX != 1 || dirY != 0)
+            return AttachAnnotation(document, pageNumber,
+                TurnedTextMarkup(document, normalized, subtype, contents, author, (red, green, blue), dirX, dirY));
+
         // #1796 follow-up: QuadPoints mark up the SELECTED TEXT — the letter
         // cells ContentStreamWalker hands out run baseline -> baseline+fontSize
         // for every glyph, with no descender allowance (Cell = AxisAlignedBox
@@ -863,6 +872,146 @@ public static class PdfAnnotationAuthoring
         annot["AP"] = ap;
 
         return AttachAnnotation(document, pageNumber, annot);
+    }
+
+    /// <summary>
+    /// The baseline direction, snapped to a quarter turn in user space, of the page's
+    /// text inside <paramref name="rect"/>: a majority vote over the pen advance between
+    /// consecutive letters (content order) whose glyph centres lie in it. Pairs further
+    /// apart than three font sizes (a line break) do not vote. (1, 0) — upright text,
+    /// the path every existing caller takes — when nothing votes or the vote ties.
+    /// </summary>
+    private static (int X, int Y) TextDirectionIn(PdfDocument document, int pageNumber, PdfRectangle rect)
+    {
+        IReadOnlyList<Text.Letter> letters;
+        try { letters = document.GetPage(pageNumber).Letters; }
+        catch (Exception) { return (1, 0); }
+
+        var votes = new Dictionary<(int, int), int>();
+        Text.Letter? previous = null;
+        foreach (var l in letters)
+        {
+            var g = l.GlyphRectangle;
+            double cx = (g.Left + g.Right) / 2, cy = (g.Bottom + g.Top) / 2;
+            if (cx < rect.Left - 0.5 || cx > rect.Right + 0.5 || cy < rect.Bottom - 0.5 || cy > rect.Top + 0.5)
+                continue;
+            if (previous != null)
+            {
+                double dx = l.StartX - previous.StartX, dy = l.StartY - previous.StartY;
+                double reach = 3 * Math.Max(1, Math.Abs(previous.FontSize));
+                if ((Math.Abs(dx) > 1e-6 || Math.Abs(dy) > 1e-6) && Math.Abs(dx) <= reach && Math.Abs(dy) <= reach)
+                {
+                    var key = Math.Abs(dx) >= Math.Abs(dy) ? (Math.Sign(dx), 0) : (0, Math.Sign(dy));
+                    votes[key] = votes.GetValueOrDefault(key) + 1;
+                }
+            }
+            previous = l;
+        }
+        if (votes.Count == 0)
+            return (1, 0);
+        var ranked = votes.OrderByDescending(v => v.Value).ToList();
+        return ranked.Count > 1 && ranked[0].Value == ranked[1].Value ? (1, 0) : ranked[0].Key;
+    }
+
+    /// <summary>
+    /// An Underline/StrikeOut/Squiggly whose text runs along (<paramref name="dirX"/>,
+    /// <paramref name="dirY"/>) in user space rather than +x (#1984). Same geometry as
+    /// <see cref="BuildTextMarkupAppearance"/>, measured in the text's own frame: the
+    /// along extent is the word's length, the cross extent its font-size cell, and the
+    /// baseline is the cell side the text's "down" points to. The appearance is drawn in
+    /// user-space coordinates with its BBox equal to /Rect, so the §12.5.5 BBox-to-Rect
+    /// mapping is the identity. QuadPoints keep the §12.5.6.10 order in the text frame:
+    /// the first edge is the text's top edge in reading direction.
+    /// </summary>
+    private static PdfDictionary TurnedTextMarkup(
+        PdfDocument document, PdfRectangle rect, string subtype, string? contents, string? author,
+        (double R, double G, double B) color, int dirX, int dirY)
+    {
+        // "Down" in the text frame is the reading direction turned a quarter clockwise.
+        int downX = dirY, downY = -dirX;
+        bool vertical = dirX == 0;
+        double along = vertical ? rect.Height : rect.Width;
+        double cross = vertical ? rect.Width : rect.Height;
+
+        // The text frame origin: the start of the text along its direction, on the baseline.
+        double startX = dirX > 0 ? rect.Left : dirX < 0 ? rect.Right : 0;
+        double startY = dirY > 0 ? rect.Bottom : dirY < 0 ? rect.Top : 0;
+        double baseX = downX > 0 ? rect.Right : downX < 0 ? rect.Left : startX;
+        double baseY = downY > 0 ? rect.Top : downY < 0 ? rect.Bottom : startY;
+        if (vertical) baseY = startY; else baseX = startX;
+
+        // Text-frame (t along, s up from the baseline) to user space.
+        (double X, double Y) At(double t, double s) =>
+            (baseX + t * dirX - s * downX, baseY + t * dirY - s * downY);
+
+        bool belowBaseline = subtype is "Underline" or "Squiggly";
+        double pad = belowBaseline ? Math.Max(1.0, cross * 0.15) : 0;
+        double lineWidth = Math.Max(0.5, cross * 0.06);
+        double offset = subtype == "StrikeOut" ? cross * 0.45 : -pad * 0.6;
+
+        var corners = new[] { At(0, -pad), At(along, -pad), At(0, cross), At(along, cross) };
+        var apRect = new PdfRectangle(
+            corners.Min(c => c.X), corners.Min(c => c.Y), corners.Max(c => c.X), corners.Max(c => c.Y));
+
+        var sb = new StringBuilder();
+        sb.Append($"{Num(color.R)} {Num(color.G)} {Num(color.B)} RG\n");
+        sb.Append($"{Num(lineWidth)} w\n");
+        var p0 = At(0, offset);
+        sb.Append($"{Num(p0.X)} {Num(p0.Y)} m\n");
+        if (subtype == "Squiggly")
+        {
+            double amplitude = Math.Max(1, cross * 0.06);
+            double period = Math.Max(2, cross * 0.18);
+            bool up = true;
+            int emitted = 0;
+            for (double t = period; t <= along + period && emitted < 200; t += period, emitted++)
+            {
+                var p = At(Math.Min(t, along), offset + (up ? amplitude : -amplitude));
+                sb.Append($"{Num(p.X)} {Num(p.Y)} l\n");
+                up = !up;
+            }
+            if (emitted == 0)
+            {
+                var p = At(along, offset);
+                sb.Append($"{Num(p.X)} {Num(p.Y)} l\n");
+            }
+        }
+        else
+        {
+            var p1 = At(along, offset);
+            sb.Append($"{Num(p1.X)} {Num(p1.Y)} l\n");
+        }
+        sb.Append("S\n");
+
+        var stream = new PdfStream(Encoding.ASCII.GetBytes(sb.ToString()));
+        stream.SetName("Type", "XObject");
+        stream.SetName("Subtype", "Form");
+        stream.SetInt("FormType", 1);
+        stream["BBox"] = PdfArray.FromRectangle(apRect.Left, apRect.Bottom, apRect.Right, apRect.Top);
+        stream["Resources"] = new PdfDictionary();
+
+        var annot = NewAnnotationDict(subtype, apRect);
+        if (!string.IsNullOrWhiteSpace(contents))
+            annot.SetString("Contents", contents);
+        if (!string.IsNullOrWhiteSpace(author))
+            annot.SetString("T", author);
+        annot.SetString("CreationDate", PdfDate.Format(DateTimeOffset.UtcNow));
+        annot["C"] = new PdfArray(new PdfReal(color.R), new PdfReal(color.G), new PdfReal(color.B));
+
+        var topStart = At(0, cross);
+        var topEnd = At(along, cross);
+        var baseStart = At(0, 0);
+        var baseEnd = At(along, 0);
+        annot["QuadPoints"] = new PdfArray(
+            new PdfReal(topStart.X), new PdfReal(topStart.Y),
+            new PdfReal(topEnd.X), new PdfReal(topEnd.Y),
+            new PdfReal(baseStart.X), new PdfReal(baseStart.Y),
+            new PdfReal(baseEnd.X), new PdfReal(baseEnd.Y));
+
+        var ap = new PdfDictionary();
+        ap["N"] = document.AddIndirectObject(stream);
+        annot["AP"] = ap;
+        return annot;
     }
 
     /// <summary>

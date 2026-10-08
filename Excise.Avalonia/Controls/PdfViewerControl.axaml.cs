@@ -1506,6 +1506,32 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, IViewer
     #region Public Methods
 
     /// <summary>
+    /// The document's page structure changed in place (rotate, move, insert, delete) on
+    /// the same <see cref="Document"/> instance, so no property change tells the views.
+    /// Continuous view rebuilds its layout (<see cref="RefreshContinuousLayout"/>). Single
+    /// page drops the selection, whose letters were mapped for the old geometry, and
+    /// re-renders the displayed page.
+    /// </summary>
+    /// <remarks>
+    /// #1983: single page used to do nothing here. At an unchanged zoom the Image kept the
+    /// pre-rotation bitmap while search highlights were placed for the new rotation, so
+    /// every highlight sat off its text. The re-render cannot reuse the old bitmap because
+    /// the single-page cache is keyed by rotation as well as page and DPI; the bitmap on
+    /// screen is replaced when the new one lands, not disposed first (the hazard the
+    /// view model's reload comment warns about).
+    /// </remarks>
+    public void RefreshAfterStructureChange()
+    {
+        RefreshContinuousLayout();
+        if (Document == null || ViewMode != PdfViewMode.SinglePage)
+            return;
+
+        SinglePagePart.ForgetLetterSelection();
+        ClearSelectionHighlight();
+        _ = RenderCurrentPageAsync();
+    }
+
+    /// <summary>
     /// Navigate to the next page.
     /// </summary>
     public void NextPage()

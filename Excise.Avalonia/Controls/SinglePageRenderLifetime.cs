@@ -65,14 +65,20 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
         }
     }
 
-    internal bool TryGet(int pageNumber, int dpi, out TBitmap? bitmap, out Size dipSize)
+    /// <summary>
+    /// The cached bitmap for (page, dpi, rotation). <paramref name="rotation"/> is the
+    /// page's /Rotate when it was rendered: rotating a page in place keeps its number
+    /// and usually its DPI, and a key without it handed back the unrotated bitmap
+    /// under overlays placed for the new rotation (#1983).
+    /// </summary>
+    internal bool TryGet(int pageNumber, int dpi, out TBitmap? bitmap, out Size dipSize, int rotation = 0)
     {
         lock (_gate)
         {
             ThrowIfDisposed();
             for (var node = _cache.First; node != null; node = node.Next)
             {
-                if (node.Value.PageNumber != pageNumber || node.Value.Dpi != dpi)
+                if (!node.Value.Matches(pageNumber, dpi, rotation))
                     continue;
 
                 _cache.Remove(node);
@@ -96,7 +102,7 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
     /// to decide whether a neighbour needs rendering; that question is not a
     /// display request and must not promote the entry.
     /// </summary>
-    internal bool Contains(int pageNumber, int dpi)
+    internal bool Contains(int pageNumber, int dpi, int rotation = 0)
     {
         lock (_gate)
         {
@@ -104,7 +110,7 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
                 return false;
             foreach (var entry in _cache)
             {
-                if (entry.PageNumber == pageNumber && entry.Dpi == dpi)
+                if (entry.Matches(pageNumber, dpi, rotation))
                     return true;
             }
             return false;
@@ -122,7 +128,8 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
     /// or <see cref="SetCapacity"/>; that matters only at small capacities,
     /// where the entry being replaced on screen is otherwise the LRU tail.
     /// </remarks>
-    internal void Add(int pageNumber, int dpi, TBitmap bitmap, Size dipSize, Func<TBitmap, bool>? keep = null)
+    internal void Add(int pageNumber, int dpi, TBitmap bitmap, Size dipSize, Func<TBitmap, bool>? keep = null,
+        int rotation = 0)
     {
         ArgumentNullException.ThrowIfNull(bitmap);
 
@@ -131,7 +138,7 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
             ThrowIfDisposed();
             for (var node = _cache.First; node != null; node = node.Next)
             {
-                if (node.Value.PageNumber != pageNumber || node.Value.Dpi != dpi)
+                if (!node.Value.Matches(pageNumber, dpi, rotation))
                     continue;
 
                 node.Value.Bitmap.Dispose();
@@ -139,7 +146,7 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
                 break;
             }
 
-            _cache.AddFirst(new CacheEntry(pageNumber, dpi, bitmap, dipSize));
+            _cache.AddFirst(new CacheEntry(pageNumber, dpi, rotation, bitmap, dipSize));
             // The entry being added is never evicted by its own insert.
             TrimToCapacityNoLock(b => ReferenceEquals(b, bitmap) || keep?.Invoke(b) == true);
         }
@@ -312,7 +319,11 @@ internal sealed class SinglePageRenderLifetime<TBitmap> : IDisposable
     private void ThrowIfDisposed()
         => ObjectDisposedException.ThrowIf(_disposed, this);
 
-    private sealed record CacheEntry(int PageNumber, int Dpi, TBitmap Bitmap, Size DipSize);
+    private sealed record CacheEntry(int PageNumber, int Dpi, int Rotation, TBitmap Bitmap, Size DipSize)
+    {
+        public bool Matches(int pageNumber, int dpi, int rotation) =>
+            PageNumber == pageNumber && Dpi == dpi && Rotation == rotation;
+    }
 
     internal readonly record struct CacheDiagnostics(
         int EntryCount,
