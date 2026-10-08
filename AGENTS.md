@@ -5,6 +5,9 @@ for AI assistants lives in [`CLAUDE.md`](CLAUDE.md); read it first.
 The canonical architecture entry point is
 [`docs/architecture/README.md`](docs/architecture/README.md).
 
+For any release readiness, tagging, packaging, publishing, or installation task,
+read and follow [`skills/excise-release/SKILL.md`](skills/excise-release/SKILL.md).
+
 ## Task tracking
 
 This project tracks all work in **GitHub Issues** — bugs, features, tech debt, and

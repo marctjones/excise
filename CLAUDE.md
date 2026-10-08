@@ -178,6 +178,18 @@ official one and breaks Native AOT publishing. `dotnet --info` must show a Base 
 
 ## Tasks, issues, release
 
+### Release scope and stop conditions
+
+For every release task, read and follow the project release skill at
+[`skills/excise-release/SKILL.md`](skills/excise-release/SKILL.md).
+
+- Optimize release work for catching **major regressions users would notice**, then ship. Before testing, agree on the candidate, previous release baseline, and a short list of critical user workflows; reuse current evidence for that exact candidate.
+- Run the smallest checks that cover those workflows, plus the required push gate and package/version checks. Do not run or wait on `full` by default, or expand into benchmarks, corpus investigations, unrelated cleanup, or manual QA that cannot reveal a major regression in the agreed workflows.
+- Redaction is security-critical during redaction changes, but redaction suites are not a general release gate when the candidate does not change redaction behavior. Never change or waive redaction safeguards as part of release shortcuts.
+- A benchmark slowdown alone is not a release blocker while the app remains responsive. Investigate evidence of hangs, input/render stalls, crashes, data loss, corruption, or broken core workflows.
+- Do not turn a test infrastructure or telemetry defect into a product blocker. Identify it once, use valid existing evidence or a focused alternative, record the limitation, and continue. Stop investigating when the result cannot change the ship decision.
+- Stop only for a reproducible major regression or concrete packaging, version, data-integrity, or relevant security failure. Track minor and unrelated findings in GitHub Issues. Once the agreed checks pass, finish the tag, packages, `main` update, publication, and authorized installation without reopening scope.
+
 - GitHub Issues track ALL work. Labels: `gh label list`. Reference issues in code comments
   and commits (`Fixes #17`). Ideas start as Discussions.
 - Backlog and roadmap are live data; never write an issue list or a count into this file.

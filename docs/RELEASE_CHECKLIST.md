@@ -61,32 +61,50 @@ you tag, and look at the results yourself.
 
 ## Validation
 
-Every gate excise runs is a row of `tests/gates.tsv` (`LOCAL_GATES.md`), and
-**the rows a release candidate runs come from the manifest** —
-`scripts/test-tier.sh --list t2` prints them. This document does not repeat
-the list: it drifted every time it did, and the last copy had one row's
-verdict wrong. What is left here is the procedure a human runs, in order, and
-the decisions no row can make.
+### Scope the release gate
 
-1. **`t1` green on the candidate commit.** `t2` is a curated Release-config
-   set, NOT a superset of `t1` — compare `scripts/test-tier.sh --list t1` with
-   `--list t2`. A row that lives only in `t1` is implied neither by a `t2`
-   pass nor by a `full` pass older than the candidate. The blast-radius rule
-   and the tier table are in `CLAUDE.md`, "Test Tiers".
+This checklist is evidence and release mechanics, not a reason to delay
+shipping over every available gate. Agree on the candidate, previous release
+baseline, and critical user workflows before testing. Reuse current evidence
+already collected for that exact candidate. Run the smallest checks that cover
+those workflows and the required push/package/version gates; reserve `full` for
+when a concrete risk or explicit release decision calls for it.
+
+Block only on a reproducible major user-facing regression, a concrete packaging
+or version error, or a data-integrity/security issue in behavior changed by the
+candidate. A benchmark regression alone is not a blocker while the app remains
+responsive. Redaction suites are mandatory when changing redaction code, but are
+not a general release gate for candidates that do not change redaction behavior.
+Treat host/tooling failures as validation limitations, use valid focused evidence
+to answer the release question, and do not spend time repairing unrelated gates.
+Record minor issues in GitHub Issues and proceed once the agreed checks pass.
+
+Every automated gate is declared in `tests/gates.tsv` and described in
+`LOCAL_GATES.md`. Choose checks based on the candidate's changed behavior and
+the major user workflows at risk; the existence of a gate does not make it a
+release blocker.
+
+1. **Check candidate regressions.** Reuse a current passing `t1` run for the
+   exact clean candidate when available. Otherwise run focused tests for the
+   changed critical workflows and the required pre-push `t0`. Run
+   `scripts/test-tier.sh full --fresh` only when a concrete major-risk question
+   cannot be answered by focused checks or the user explicitly requests it.
+   Redaction suites remain mandatory when changing redaction code, not for
+   unrelated releases. Keep the report and state clearly what it proves.
+
+2. **Validate release packages before tagging.** Run the workflow's
+   `workflow_dispatch` dry run on the exact pushed candidate SHA and version.
+   It builds all supported platform packages and validates their AOT payloads
+   and checksums without creating a release. If a local Release-config smoke
+   is useful for an affected packaged-app workflow, select only relevant rows
+   from `scripts/test-tier.sh --list t2`; the release-smoke runner supports
+   `--only` and reports a partial run as such. Do not claim skipped or unrun
+   rows passed.
+
+   Example for a local targeted run (replace `<rows>` with relevant names):
 
    ```bash
-   scripts/test-tier.sh t1
-   ```
-
-2. **Fresh full-tier evidence, then the release-candidate run, on an otherwise idle machine.**
-
-   Run `scripts/test-tier.sh full --fresh` on the same clean candidate; full
-   resumes by default, so `--fresh` is required for new release evidence.
-   Set `EXCISE_ACCESSIBILITY_ALLOW_PLATFORM_PROBE=1` and grant the terminal
-   macOS Accessibility permission for both full and release-smoke runs.
-
-   ```bash
-   scripts/release-smoke.sh --release-tests --visual --package --packaged-gui --aot --version <version>
+   scripts/release-smoke.sh --release-tests --only=<rows> --version <version>
    ```
 
    `scripts/test-tier.sh t2` is `release-smoke.sh --release-tests` and accepts
@@ -98,45 +116,20 @@ the decisions no row can make.
    tier that builds, restores packages so it is reliable after
    configuration-changing package builds, and is never checkpointed.
 
-   The flag-gated rows declare `opt:NAME` as a prerequisite, so a run without
-   `--visual`, `--package`, `--packaged-gui` or `--aot` shows `visual`,
-   `package`, `packaged-gui` and `aot` as **SKIPPED**, never as silence
-   (`--package` implies `aot` unless `--no-aot`). `--quick` skips only the
-   `tests` row, visibly; every other `t2` row still runs. `--only=a,b` runs
-   named rows (a flag-gated row named there runs as if its flag had been
-   passed) and reports the run PARTIAL. Neither is a candidate run.
-
-   Idle machine, because `Excise.App.Tests` is serial by design (SkiaSharp's
-   process-wide native font manager, #363) and its 144-page display sweep is
-   load-sensitive: concurrent work — or a bloated `logs/` + `artifacts/` tree
-   — has produced **false reds** with zero page failures (#619). A DEADLINE
-   from the sweep is a TIME limit, not a correctness failure; shard it rather
-   than ignore it (`scripts/run-gui-display-sweep.sh 4`, tooling, not a row).
-
 3. **Read the report.** Every runner ends with `scripts/report-gates.sh`, and
-   its exit code is the runner's. Re-print the candidate run with every row:
+   its exit code is the runner's. Review every selected row and confirm the
+   evidence covers the agreed user workflows:
 
    ```bash
-   scripts/test-tier.sh --report --latest --full
+   scripts/report-gates.sh <candidate-log-directory> --full
    ```
 
-   The verdict must be bare `PASS`: no NEW red, no STALE acceptance (a
-   `knownIssue` whose GitHub issue has since closed), no NOT RUN (an
-   interrupted run), no SKIPPED. A `visual` group that skipped for a missing
-   prerequisite exits 77, and because the row is `prereqPolicy=skip` that is a
-   visible SKIPPED row, counted as `PASS with N SKIPPED` — not release
-   evidence; the candidate run must show every flag-gated row PASS. The
-   `accessibility` row (tier full,t2) is SKIPPED by default too: its platform
-   probe runs only with `EXCISE_ACCESSIBILITY_ALLOW_PLATFORM_PROBE=1` set AND
-   macOS Accessibility permission granted to the terminal running it (System
-   Settings → Privacy & Security → Accessibility), so set both for the
-   candidate run. A KNOWN
-   row is an accepted, OPEN issue — the current acceptances are the
-   KNOWN-ISSUE column of `--list <tier>`; list each in the release notes as a
-   known limitation. The run directory (`logs/release-smoke_<stamp>/` with
-   `plan.tsv`, `ledger.jsonl`, `report.json` and every row's log) is the
-   release evidence; keep it. Verdicts, exit codes and the report layout:
-   `LOCAL_GATES.md`, "The report".
+   Do not describe SKIPPED, NOT RUN, or incomplete selected evidence as a pass.
+   A relevant row must pass or be resolved with a focused alternative;
+   unrelated rows do not expand the scope. A KNOWN row is an accepted, OPEN
+   issue; list it in release notes when relevant to shipped workflows. Keep
+   the selected run's plan, ledger, report, and logs. See `LOCAL_GATES.md`,
+   "The report" for verdict definitions.
 
 4. **Tag** ("Release" below).
 
