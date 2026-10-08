@@ -891,7 +891,6 @@ namespace Excise.Core.Editing
 {
     public class BatesDocumentResult
     {
-        public BatesDocumentResult() { }
         public string? ErrorMessage { get; }
         public string FileName { get; }
         public string FilePath { get; }
@@ -934,7 +933,6 @@ namespace Excise.Core.Editing
     }
     public class BatesResult
     {
-        public BatesResult() { }
         public System.Collections.Generic.List<Excise.Core.Editing.BatesDocumentResult> Documents { get; }
         public string FirstBatesNumber { get; }
         public string LastBatesNumber { get; }
@@ -1922,7 +1920,6 @@ namespace Excise.Core.Signatures
     }
     public class SignatureVerificationResult
     {
-        public SignatureVerificationResult() { }
         public bool ByteRangeIntegrityChecked { get; }
         public bool ByteRangeIntegrityValid { get; }
         public bool ByteRangeStructureChecked { get; }

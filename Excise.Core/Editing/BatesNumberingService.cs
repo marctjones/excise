@@ -325,6 +325,9 @@ public enum BatesPosition
 /// </summary>
 public class BatesResult
 {
+    // #1836 rule 6: produced by the service, never by a caller.
+    internal BatesResult() { }
+
     public List<BatesDocumentResult> Documents { get; internal set; } = new();
     public string FirstBatesNumber { get; internal set; } = "";
     public string LastBatesNumber { get; internal set; } = "";
@@ -337,6 +340,9 @@ public class BatesResult
 /// </summary>
 public class BatesDocumentResult
 {
+    // #1836 rule 6: produced by the service, never by a caller.
+    internal BatesDocumentResult() { }
+
     public string FilePath { get; internal set; } = "";
     public string FileName { get; internal set; } = "";
     public string OutputPath { get; internal set; } = "";

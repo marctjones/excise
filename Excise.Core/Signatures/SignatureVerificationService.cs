@@ -35,6 +35,9 @@ public enum SignatureVerificationState
 
 public class SignatureVerificationResult
 {
+    // #1836 rule 6: produced by the service, never by a caller.
+    internal SignatureVerificationResult() { }
+
     public string SignatureName { get; internal set; } = string.Empty;
     public bool IsValid { get; internal set; }
     public string SignedBy { get; internal set; } = string.Empty;
