@@ -6,6 +6,8 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.17.0] - 2026-10-08
+
 ### Added
 
 - excise follows the system light or dark appearance and switches live; Preferences ▸ Appearance offers Match system (default), Light or Dark. Pages are never recoloured (#2002).
