@@ -51,6 +51,8 @@ public class SecurityDialogUiTests
         applyButton!.IsEnabled.Should().BeFalse("no password entered yet — nothing to protect");
 
         vm.NewUserPassword = "secret";
+
+        vm.ConfirmNewUserPassword = "secret";
         await KeyboardTestHelpers.FlushDispatcherAsync();
         applyButton.IsEnabled.Should().BeTrue("a password is now entered");
 

@@ -25,7 +25,7 @@
                 <TextBlock Text="Current password" Classes="field-label"/>
                 <TextBox x:Name="CurrentPasswordBox"
                          Text="{Binding CurrentPassword}"
-                         PasswordChar="•"
+                         PasswordChar="{Binding PasswordMaskChar}"
                          PlaceholderText="Required to change or remove protection"
                          AutomationProperties.Name="Current Password"
                          AutomationProperties.HelpText="The password that currently protects this document. Required before applying any change."/>
@@ -37,20 +37,37 @@
                     <TextBlock Text="New user password (required to open)" Classes="field-label"/>
                     <TextBox x:Name="NewUserPasswordBox"
                              Text="{Binding NewUserPassword}"
-                             PasswordChar="•"
+                             PasswordChar="{Binding PasswordMaskChar}"
                              PlaceholderText="Leave blank for no open password"
                              AutomationProperties.Name="New User Password"
                              AutomationProperties.HelpText="Password required to open the document. Leave blank for none."/>
                 </StackPanel>
                 <StackPanel Spacing="4">
+                    <TextBlock Text="Confirm new user password" Classes="field-label"/>
+                    <TextBox x:Name="ConfirmNewUserPasswordBox"
+                             Text="{Binding ConfirmNewUserPassword}"
+                             PasswordChar="{Binding PasswordMaskChar}"
+                             PlaceholderText="Type the new user password again"
+                             AutomationProperties.Name="Confirm New User Password"
+                             AutomationProperties.HelpText="The new user password again. Apply stays disabled until both entries match."/>
+                    <TextBlock Text="{Binding PasswordMismatchMessage}"
+                               Classes="error"
+                               IsVisible="{Binding PasswordMismatchMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                </StackPanel>
+                <StackPanel Spacing="4">
                     <TextBlock Text="New owner password (permissions)" Classes="field-label"/>
                     <TextBox x:Name="NewOwnerPasswordBox"
                              Text="{Binding NewOwnerPassword}"
-                             PasswordChar="•"
+                             PasswordChar="{Binding PasswordMaskChar}"
                              PlaceholderText="Leave blank for no owner password"
                              AutomationProperties.Name="New Owner Password"
                              AutomationProperties.HelpText="Password required to change permissions. Leave blank for none."/>
                 </StackPanel>
+                <CheckBox x:Name="RevealPasswordsCheckBox"
+                          Content="Show passwords"
+                          IsChecked="{Binding RevealPasswords}"
+                          AutomationProperties.Name="Show Passwords"
+                          AutomationProperties.HelpText="Show the typed passwords instead of bullets."/>
                 <StackPanel Spacing="4">
                     <TextBlock Text="Algorithm" Classes="field-label"/>
                     <ComboBox x:Name="AlgorithmComboBox" Classes="enum-labels"

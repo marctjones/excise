@@ -42,10 +42,13 @@ public class SecurityDialogViewModelTests
         ((ICommand)vm.ApplyCommand).CanExecute(null).Should().BeFalse();
 
         vm.NewUserPassword = "secret";
+
+        vm.ConfirmNewUserPassword = "secret";
         vm.CanApply.Should().BeTrue();
         ((ICommand)vm.ApplyCommand).CanExecute(null).Should().BeTrue();
 
         vm.NewUserPassword = "";
+        vm.ConfirmNewUserPassword = "";
         vm.NewOwnerPassword = "owner-only";
         vm.CanApply.Should().BeTrue("an owner-only password is a valid configuration");
     }
@@ -134,6 +137,8 @@ public class SecurityDialogViewModelTests
             });
 
         vm.NewUserPassword = "u-pass";
+
+        vm.ConfirmNewUserPassword = "u-pass";
         vm.NewOwnerPassword = "o-pass";
         vm.Algorithm = PdfEncryptionAlgorithm.Aes128;
 
@@ -151,6 +156,7 @@ public class SecurityDialogViewModelTests
     {
         var vm = Make(isEncrypted: false, apply: (_, _, _) => Task.FromResult<string?>(null));
         vm.NewUserPassword = "secret";
+        vm.ConfirmNewUserPassword = "secret";
 
         await vm.ApplyCommand.Execute();
 
@@ -167,6 +173,7 @@ public class SecurityDialogViewModelTests
             isEncrypted: false,
             apply: (_, _, _) => Task.FromException<string?>(new InvalidOperationException("disk full")));
         vm.NewUserPassword = "secret";
+        vm.ConfirmNewUserPassword = "secret";
 
         await vm.ApplyCommand.Execute();
 
@@ -195,5 +202,53 @@ public class SecurityDialogViewModelTests
         Make(isEncrypted: false).Algorithm.Should().Be(
             PdfEncryptionAlgorithm.Aes256,
             "AES-256 (PDF 2.0 native) is the modern default; AES-128 exists only for older-reader compatibility");
+    }
+
+    // ── #2001: the new open password is typed twice ─────────────────────────
+
+    [Fact]
+    public void NewUserPassword_WithoutMatchingConfirmation_BlocksApplyAndSaysWhy()
+    {
+        var vm = Make(isEncrypted: false);
+
+        vm.NewUserPassword = "secret";
+        vm.CanApply.Should().BeFalse("an unconfirmed open password could lock the user out of the copy");
+        ((ICommand)vm.ApplyCommand).CanExecute(null).Should().BeFalse();
+        vm.PasswordMismatchMessage.Should().BeNull("no message before the confirmation is typed");
+
+        vm.ConfirmNewUserPassword = "secreT";
+        vm.CanApply.Should().BeFalse();
+        vm.PasswordMismatchMessage.Should().NotBeNullOrEmpty();
+
+        vm.ConfirmNewUserPassword = "secret";
+        vm.CanApply.Should().BeTrue();
+        ((ICommand)vm.ApplyCommand).CanExecute(null).Should().BeTrue();
+        vm.PasswordMismatchMessage.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Apply_RefusesMismatchedPasswords_EvenIfInvokedDirectly()
+    {
+        var called = false;
+        var vm = Make(isEncrypted: true, apply: (_, _, _) => { called = true; return Task.FromResult<string?>("/tmp/x.pdf"); });
+        vm.CurrentPassword = "right";
+        vm.NewUserPassword = "one";
+        vm.ConfirmNewUserPassword = "two";
+
+        await vm.ApplyCommand.Execute().Catch(Observable.Return(System.Reactive.Unit.Default));
+
+        called.Should().BeFalse("encryption must never run with a password the user did not type twice");
+    }
+
+    [Fact]
+    public void RevealPasswords_TogglesTheMask()
+    {
+        var vm = Make(isEncrypted: false);
+
+        vm.PasswordMaskChar.Should().Be('•');
+        vm.RevealPasswords = true;
+        vm.PasswordMaskChar.Should().Be('\0', "a zero PasswordChar shows the text");
+        vm.RevealPasswords = false;
+        vm.PasswordMaskChar.Should().Be('•');
     }
 }

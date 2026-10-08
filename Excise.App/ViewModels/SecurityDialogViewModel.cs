@@ -61,9 +61,51 @@ internal sealed class SecurityDialogViewModel : ReactiveObject
         set
         {
             this.RaiseAndSetIfChanged(ref _newUserPassword, value);
+            this.RaisePropertyChanged(nameof(PasswordMismatchMessage));
             UpdateCanExecute();
         }
     }
+
+    private string _confirmNewUserPassword = string.Empty;
+    /// <summary>
+    /// The new open password typed a second time (#2001). A typo in a password
+    /// that is required to open the copy locks the user out of it, so Apply
+    /// waits until both entries match.
+    /// </summary>
+    public string ConfirmNewUserPassword
+    {
+        get => _confirmNewUserPassword;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _confirmNewUserPassword, value);
+            this.RaisePropertyChanged(nameof(PasswordMismatchMessage));
+            UpdateCanExecute();
+        }
+    }
+
+    /// <summary>True when the confirmation equals the new open password (both empty counts).</summary>
+    public bool UserPasswordsMatch => string.Equals(NewUserPassword, ConfirmNewUserPassword, StringComparison.Ordinal);
+
+    /// <summary>Shown once the confirmation has been typed and differs; null otherwise.</summary>
+    public string? PasswordMismatchMessage =>
+        !string.IsNullOrEmpty(ConfirmNewUserPassword) && !UserPasswordsMatch
+            ? "The two new user passwords do not match."
+            : null;
+
+    private bool _revealPasswords;
+    /// <summary>Show password characters instead of bullets (#2001).</summary>
+    public bool RevealPasswords
+    {
+        get => _revealPasswords;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _revealPasswords, value);
+            this.RaisePropertyChanged(nameof(PasswordMaskChar));
+        }
+    }
+
+    /// <summary>The TextBox mask: a bullet, or none while <see cref="RevealPasswords"/> is on.</summary>
+    public char PasswordMaskChar => RevealPasswords ? '\0' : '•';
 
     private string _newOwnerPassword = string.Empty;
     public string NewOwnerPassword
@@ -125,7 +167,7 @@ internal sealed class SecurityDialogViewModel : ReactiveObject
     /// remarks for why this codebase binds <c>IsEnabled</c> directly rather
     /// than relying on ReactiveCommand's implicit CanExecute wiring.
     /// </summary>
-    public bool CanApply => !IsBusy && !IsDone && (IsEncrypted || HasAnyNewPassword);
+    public bool CanApply => !IsBusy && !IsDone && (IsEncrypted || HasAnyNewPassword) && UserPasswordsMatch;
 
     /// <summary>Only meaningful on an already-encrypted document — nothing to remove otherwise.</summary>
     public bool CanRemove => !IsBusy && !IsDone && IsEncrypted;
@@ -202,6 +244,14 @@ internal sealed class SecurityDialogViewModel : ReactiveObject
         if (IsEncrypted && !_verifyCurrentPassword(CurrentPassword))
         {
             ErrorMessage = "Current password is incorrect.";
+            return;
+        }
+
+        // CanApply already requires this; checked again so no caller path can
+        // encrypt with a password the user did not type twice.
+        if (!UserPasswordsMatch)
+        {
+            ErrorMessage = "The two new user passwords do not match.";
             return;
         }
 

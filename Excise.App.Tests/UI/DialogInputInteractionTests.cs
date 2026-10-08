@@ -61,6 +61,9 @@ public class DialogInputInteractionTests
         vm.NewUserPassword.Should().Be("open-sesame",
             "real text input into the user-password field must flow through the binding");
 
+        await TypeInto(window, "ConfirmNewUserPasswordBox", "open-sesame");
+        vm.ConfirmNewUserPassword.Should().Be("open-sesame");
+
         await TypeInto(window, "NewOwnerPasswordBox", "owner-key");
         vm.NewOwnerPassword.Should().Be("owner-key");
 
@@ -80,6 +83,7 @@ public class DialogInputInteractionTests
         appliedAlgo.Should().Be(PdfEncryptionAlgorithm.Aes128, "the chosen algorithm must reach the encrypt delegate");
 
         AssertRecorded("SecurityDialog/TextBox:NewUserPasswordBox");
+        AssertRecorded("SecurityDialog/TextBox:ConfirmNewUserPasswordBox");
         AssertRecorded("SecurityDialog/TextBox:NewOwnerPasswordBox");
         AssertRecorded("SecurityDialog/ComboBox:AlgorithmComboBox");
 
