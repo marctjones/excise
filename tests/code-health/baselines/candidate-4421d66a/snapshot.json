@@ -1,0 +1,34 @@
+{
+  "artifacts": {
+    "dependencies": {
+      "path": "dependencies.json",
+      "sha256": "537ddfeb25ea4ca56ab05b932cd352f63d248462b5496edac60459df959bac77"
+    },
+    "diagnostics": {
+      "path": "diagnostics.json",
+      "sha256": "48722a719bb9ddbe7e77408b94db2facf1a8d69d10a9cb4e4ef91fd91e6134d4"
+    },
+    "duplication": {
+      "path": "duplication.json",
+      "sha256": "999298cd27ae82b36f57529c02c73328ebee0e0b3d0bdfe1a440df52cb3c2ef1"
+    },
+    "inventory": {
+      "path": "inventory.json",
+      "sha256": "61a000efe338111c4a511e9b133577485ec914d4b3c45fbd6db86894c4050cc4"
+    },
+    "structural": {
+      "path": "structural.json",
+      "sha256": "35e08e7c4a597808300b4f35e4b41e7dd4d1a9b1bd72ff04e85045984a7581da"
+    },
+    "testStrength": {
+      "path": "testStrength.json",
+      "sha256": "aadfaa43610ed775021c0127ca7daf5411b22970b15fcf9efb4001e5b7090c62"
+    }
+  },
+  "schemaVersion": 1,
+  "sourceAttestation": {
+    "dependencyInputHash": "18d7e320943d3c7f58bb1b21ffbaebcc3f8b0bbe14a40cd4fad2dc9431cb4f96",
+    "inventorySha256": "61a000efe338111c4a511e9b133577485ec914d4b3c45fbd6db86894c4050cc4",
+    "reviewer": "pending-human-review"
+  }
+}
