@@ -1389,7 +1389,7 @@ fi
 # row actually scanned. --tiny scans a deliberate 10-PDF subset, so coverage is
 # not required there.
 if [[ -n "$EXPECTATION_MANIFEST" && -f "$BIN_DIR/$REPORT_NAME" ]]; then
-    EXP_FAILS=$(TINY="$TINY" python3 - "$BIN_DIR/$REPORT_NAME" "$EXPECTATION_MANIFEST" <<'PYEXP'
+    EXP_FAILS=$(TINY="$TINY" EXCISE_ROOT="$ROOT" python3 - "$BIN_DIR/$REPORT_NAME" "$EXPECTATION_MANIFEST" <<'PYEXP'
 import json, os, sys
 try:
     d = json.load(open(sys.argv[1]))
@@ -1405,25 +1405,11 @@ for r in bad[:20]:
 # Coverage: every manifest row must correspond to a scanned page.
 missing = []
 if os.environ.get("TINY") != "1":
-    scanned = set()
-    for r in rows:
-        p = r.get("path") or r.get("file") or r.get("pdf") or ""
-        scanned.add((p, int(r.get("pageNumber", r.get("page", 1)) or 1)))
+    # One implementation, shared with scripts/test-corpus-coverage.sh (#1972).
+    sys.path.insert(0, os.path.join(os.environ["EXCISE_ROOT"], "scripts"))
+    import corpus_coverage
     try:
-        with open(sys.argv[2]) as mf:
-            for line in mf:
-                line = line.rstrip("\n")
-                if not line.strip() or line.lstrip().startswith("#"):
-                    continue
-                parts = line.split("\t")
-                if len(parts) < 2:
-                    continue
-                try:
-                    key = (parts[0], int(parts[1]))
-                except ValueError:
-                    continue
-                if key not in scanned:
-                    missing.append(key)
+        missing = corpus_coverage.missing_pages(rows, sys.argv[2])
     except OSError:
         pass
     for p, n in missing[:20]:

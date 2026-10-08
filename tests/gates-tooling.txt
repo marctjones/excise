@@ -169,3 +169,4 @@ scripts/download-recap-corpus.sh   # #1603 - RECAP bad-redaction sweep (x-ray-ga
 scripts/run-cold-launch-double-open.sh   # #1629/#1819 - bundle-level cold-launch double-open harness; needs a display and Accessibility permission, steals focus; run by hand, no gate row
 scripts/cold-launch-classify-run.py   # body of run-cold-launch-double-open.sh; re-scores a stored run's evidence
 scripts/ab-render-bench.sh   # per-commit A/B of the CLI render phase (renderMs, peak RSS, PNG bytes) with interleaved runs and a noise floor. NOT a gate: absolute times move with load, so it only ever says which commit moved the number, never pass/fail; reference-performance owns the gated ratio against the oracles
+scripts/corpus_coverage.py   # #1972 body of the corpus-coverage footer and the strict post-scan page check; exercised by row corpus-coverage-selftest

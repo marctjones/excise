@@ -273,27 +273,33 @@ TOTAL="$PLANNED"
 # --- Preflight: refuse a silently partial corpus sweep (#958) -------------
 # Derived from the PLANNED corpus-scan-* rows (their target names the corpus
 # dir and the expectation manifest), so a scan added to tests/gates.tsv is
-# preflighted without a second list. "Pages expected" is the manifest's
-# non-comment line count; "pages present" counts *.pdf files in the corpus
-# dir, which is what --page-mode first turns into pages scanned.
+# preflighted without a second list. Like for like (#1972): the manifest has
+# one row per (PDF, page), and the preflight can only see files, so it compares
+# the manifest's UNIQUE PDF paths against those files on disk
+# (scripts/corpus_coverage.py preflight). It is an observation that refuses a
+# silently short download; PAGE completeness is the gate inside the scan step
+# (run-exploratory-corpus.sh fails on any manifest page that was not scanned).
+# PDFs on disk that the manifest does not list are reported, never counted.
 _missing_corpora=""
 while IFS=$'\t' read -r name kind target _rest; do
     case "$name" in corpus-scan-*) ;; *) continue ;; esac
     _cs_dir="$(printf '%s' "$target" | sed -n 's/.*--corpus \([^ ]*\).*/\1/p')"
     _cs_manifest="$(printf '%s' "$target" | sed -n 's/.*--expectation-manifest \([^ ]*\).*/\1/p')"
     [ -n "$_cs_dir" ] || continue
-    _cs_present=0
-    [ -d "$ROOT/$_cs_dir" ] && _cs_present="$(find "$ROOT/$_cs_dir" -name '*.pdf' 2>/dev/null | wc -l | tr -d ' ')"
-    _cs_expected=0
-    [ -f "$ROOT/$_cs_manifest" ] && _cs_expected="$(grep -vc '^#' "$ROOT/$_cs_manifest" 2>/dev/null | tr -d ' ')"
-    CORPUS_COVERAGE_ROWS+=("$_cs_dir	${_cs_present:-0}	${_cs_expected:-0}")
+    _cs_expected=0; _cs_present=0; _cs_extra=0; _cs_pages=0
+    if [ -f "$ROOT/$_cs_manifest" ]; then
+        # An absent corpus dir yields expected>0, present=0 (the abort below).
+        read -r _cs_expected _cs_present _ _cs_extra _cs_pages \
+            < <(python3 -I "$ROOT/scripts/corpus_coverage.py" preflight "$ROOT/$_cs_dir" "$ROOT/$_cs_manifest" 2>/dev/null || echo "0 0 0 0 0")
+    fi
+    CORPUS_COVERAGE_ROWS+=("$_cs_dir	${_cs_present:-0}	${_cs_expected:-0}	${_cs_extra:-0}	${_cs_pages:-0}")
     if [ "${_cs_present:-0}" = "0" ]; then
         _dl_cmd="scripts/download-test-pdfs.sh"
         case "$name" in
             corpus-scan-pdfjs)  _dl_cmd="scripts/download-pdfjs-corpus.sh" ;;
             corpus-scan-pdfium) _dl_cmd="scripts/download-pdfium-corpus.sh" ;;
         esac
-        _missing_corpora="${_missing_corpora}  $(printf '%-24s' "$_cs_dir") (0/${_cs_expected:-0} pages)  ->  $_dl_cmd\n"
+        _missing_corpora="${_missing_corpora}  $(printf '%-24s' "$_cs_dir") (0/${_cs_expected:-0} PDFs)  ->  $_dl_cmd\n"
     fi
 done < "$PLAN_FILE"
 
@@ -586,22 +592,24 @@ if [ -s "$RUSAGE_TSV" ]; then
     say "  full per-step data: $RUSAGE_TSV"
 fi
 
-# --- corpus coverage (#958) -----------------------------------------------
+# --- corpus coverage (#958, #1972) ----------------------------------------
 # Printed unconditionally when present — not just on the missing/partial
-# branch — so a FULL run states that too, and "pages covered" never has to be
-# taken on faith.
+# branch — so a FULL run states that too, and coverage never has to be taken
+# on faith. Units are PDFs on both sides (unique manifest paths vs files on
+# disk). That is an OBSERVATION; the GATE for pages is the corpus-scan step
+# itself, which fails on any manifest (PDF, page) it did not scan.
 if [ "${#CORPUS_COVERAGE_ROWS[@]}" -gt 0 ]; then
     say ""
-    say "${B}Corpus coverage${N} ${D}(pages present / pages in the expectation manifest)${N}"
+    say "${B}Corpus coverage${N} ${D}(manifest PDFs present on disk / PDFs in the expectation manifest; page completeness is gated by the corpus-scan step)${N}"
     _corpus_partial=0
     for _row in "${CORPUS_COVERAGE_ROWS[@]:-}"; do
         [ -n "$_row" ] || continue
-        IFS=$'\t' read -r _row_dir _row_present _row_expected <<< "$_row"
-        if [ "${_row_present:-0}" = "${_row_expected:-0}" ] && [ "${_row_expected:-0}" != "0" ]; then
-            say "  ${G}$(printf '%-24s %5s / %5s pages' "$_row_dir" "$_row_present" "$_row_expected")${N}"
+        IFS=$'\t' read -r _row_dir _row_present _row_expected _row_extra _row_pages <<< "$_row"
+        if _row_text="$(python3 -I "$ROOT/scripts/corpus_coverage.py" line "$_row_dir" "${_row_present:-0}" "${_row_expected:-0}" "${_row_extra:-0}" "${_row_pages:-0}")"; then
+            say "  ${G}${_row_text}${N}"
         else
             _corpus_partial=1
-            say "  ${Y}$(printf '%-24s %5s / %5s pages' "$_row_dir" "$_row_present" "$_row_expected")${N}"
+            say "  ${Y}${_row_text}${N}"
         fi
     done
     if [ "$_corpus_partial" = "1" ]; then
