@@ -757,6 +757,7 @@ internal partial class MainWindowViewModel
             Title = "Save Flattened Form Copy",
             DefaultExtension = "pdf",
             SuggestedFileName = SuggestFlattenedFormFilename(_currentFilePath),
+            SuggestedStartDirectory = SuggestedStartDirectoryOf(_currentFilePath),
             Filters = new[] { global::Excise.App.Services.Host.FilePickerFilters.Pdf },
         });
 
@@ -789,16 +790,26 @@ internal partial class MainWindowViewModel
         _toastService.ShowSuccess("Flattened form copy saved");
     }
 
-    private static string SuggestFlattenedFormFilename(string currentFilePath)
+    // #1973: a picker's SuggestedFileName is a bare name; the folder travels in
+    // SuggestedStartDirectory. Returning a full path here put the whole path in
+    // the panel's name field.
+    internal static string SuggestFlattenedFormFilename(string currentFilePath)
     {
         if (string.IsNullOrWhiteSpace(currentFilePath))
             return "document_flattened.pdf";
 
-        var directory = Path.GetDirectoryName(currentFilePath);
         var name = Path.GetFileNameWithoutExtension(currentFilePath);
         var extension = Path.GetExtension(currentFilePath);
-        var fileName = $"{name}_flattened{(string.IsNullOrEmpty(extension) ? ".pdf" : extension)}";
-        return string.IsNullOrWhiteSpace(directory) ? fileName : Path.Combine(directory, fileName);
+        return $"{name}_flattened{(string.IsNullOrEmpty(extension) ? ".pdf" : extension)}";
+    }
+
+    /// <summary>The folder of <paramref name="currentFilePath"/>, or null when there is none.</summary>
+    internal static string? SuggestedStartDirectoryOf(string currentFilePath)
+    {
+        if (string.IsNullOrWhiteSpace(currentFilePath))
+            return null;
+        var directory = Path.GetDirectoryName(currentFilePath);
+        return string.IsNullOrWhiteSpace(directory) ? null : directory;
     }
 
     private static string NextUniqueFieldName(PdfDocument doc, PdfFieldType type)

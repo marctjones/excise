@@ -66,6 +66,7 @@ internal partial class MainWindowViewModel
             Title = "Save Smaller Copy",
             DefaultExtension = "pdf",
             SuggestedFileName = SuggestReducedFilename(_currentFilePath),
+            SuggestedStartDirectory = SuggestedStartDirectoryOf(_currentFilePath),
             Filters = new[] { FilePickerFilters.Pdf },
         });
         if (outputPath is not { Length: > 0 })
@@ -180,14 +181,12 @@ internal partial class MainWindowViewModel
         _ => string.Format(CultureInfo.CurrentCulture, "{0} bytes", bytes),
     };
 
-    private static string SuggestReducedFilename(string currentFilePath)
+    // #1973: bare name only; the folder goes in SuggestedStartDirectory.
+    internal static string SuggestReducedFilename(string currentFilePath)
     {
         if (string.IsNullOrWhiteSpace(currentFilePath))
             return "document_reduced.pdf";
 
-        var directory = Path.GetDirectoryName(currentFilePath);
-        var name = Path.GetFileNameWithoutExtension(currentFilePath);
-        var fileName = $"{name}_reduced.pdf";
-        return string.IsNullOrWhiteSpace(directory) ? fileName : Path.Combine(directory, fileName);
+        return $"{Path.GetFileNameWithoutExtension(currentFilePath)}_reduced.pdf";
     }
 }
