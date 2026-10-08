@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reactive;
 using System.Threading.Tasks;
 using Excise.Core.Security;
+using Excise.Ocr;
 
 namespace Excise.App.ViewModels;
 
@@ -45,6 +46,13 @@ internal partial class MainWindowViewModel
     /// </summary>
     public System.Collections.ObjectModel.ObservableCollection<Excise.App.Models.PendingRedaction> PendingRedactions =>
         RedactionWorkflow.PendingRedactions;
+
+    /// <summary>
+    /// What the last scripted text save or flatten reported, one result per
+    /// term (#1501): the verified count, survivors, wrapped-term candidates and
+    /// NOT SCRUBBED carriers, exactly as <c>excise redact</c> reports them.
+    /// </summary>
+    public System.Collections.Generic.IReadOnlyList<TermRedactionResult> LastTextRedactionResults { get; private set; } = [];
 
     // Scripting Commands (exposed to Roslyn scripts as Task-based wrappers)
     // Note: These are NOT ReactiveCommands - they're simple Task-returning methods for scripting
@@ -301,11 +309,16 @@ internal partial class MainWindowViewModel
         if (!_documentService.IsDocumentLoaded || string.IsNullOrWhiteSpace(_currentFilePath))
             throw new InvalidOperationException("No document loaded. Call LoadDocumentCommand first.");
 
-        var result = _redactionService.RedactTextFlattenOcr(_currentFilePath, outputPath, text);
-        if (!result.Success)
-            throw new InvalidOperationException(result.ErrorMessage);
+        // #1501: the CLI's workflow, with the document's own password.
+        var result = TermRedactionRunner.Execute(new TermRedactionRequest(
+            _currentFilePath, outputPath, text, RedactionPreferences.ToOptions() with { CaseSensitive = false })
+        {
+            Password = _documentService.CurrentUserPassword,
+            FlattenOcr = true,
+        });
+        LastTextRedactionResults = [result];
 
-        _logger.LogInformation("[SCRIPT] FlattenOcrRedactCommand wrote image-only copy with {Count} redactions", result.RedactionCount);
+        _logger.LogInformation("[SCRIPT] FlattenOcrRedactCommand wrote image-only copy with {Count} redactions", result.Count);
         await LoadDocumentAsync(outputPath);
     }
 
@@ -409,21 +422,6 @@ internal partial class MainWindowViewModel
                 _logger.LogInformation("[SCRIPT] Applying {Count} text redactions using file-based API",
                     _pendingTextRedactions.Count);
 
-                var requestedRedactions = RedactionWorkflow.PendingRedactions
-                    .Concat(RedactionWorkflow.AppliedRedactions)
-                    .ToList();
-                if (requestedRedactions.Count == 0)
-                {
-                    requestedRedactions = _pendingTextRedactions
-                        .Select(text => new Excise.App.Models.PendingRedaction
-                        {
-                            PageNumber = 1,
-                            PageArea = PdfPageRect.FromContentPoints(1, new PdfRectangle(0, 0, 1, 1)),
-                            PreviewText = text
-                        })
-                        .ToList();
-                }
-
                 // Use sequential file-based redaction (like CLI)
                 var currentInput = _currentFilePath;
                 var tempDir = System.IO.Path.GetTempPath();
@@ -434,6 +432,7 @@ internal partial class MainWindowViewModel
                 // that threw left every intermediate written so far behind
                 // too. Track them all and delete them in a finally.
                 var intermediatePaths = new List<string>();
+                var results = new List<TermRedactionResult>();
 
                 try
                 {
@@ -448,21 +447,22 @@ internal partial class MainWindowViewModel
                         _logger.LogInformation("[SCRIPT] Redacting '{Text}' ({Current}/{Total})",
                             text, i + 1, _pendingTextRedactions.Count);
 
-                        var result = _redactionService.RedactText(
+                        // #1501: the same workflow `excise redact` runs, so the
+                        // result carries the same survivors, wrapped-term
+                        // candidates and NOT SCRUBBED carriers.
+                        var result = TermRedactionRunner.Execute(new TermRedactionRequest(
                             currentInput, currentOutput, text,
-                            RedactionPreferences.ToOptions() with { CaseSensitive = false });
-
-                        if (!result.Success)
+                            RedactionPreferences.ToOptions() with { CaseSensitive = false })
                         {
-                            _logger.LogError("[SCRIPT] Redaction failed for '{Text}': {Error}", text, result.ErrorMessage);
-                            throw new InvalidOperationException($"Redaction failed for '{text}': {result.ErrorMessage}");
-                        }
+                            Password = _documentService.CurrentUserPassword,
+                        });
+                        results.Add(result);
 
                         // #1052: log WHICH RULE RAN, not just the count.
                         _logger.LogInformation(
                             "[SCRIPT] Redacted {Count} occurrences of '{Text}' (wholeWord={WholeWord})",
-                            result.RedactionCount, text, result.WholeWord);
-                        foreach (var warning in result.Warnings)
+                            result.Count, text, result.WholeWord);
+                        foreach (var warning in result.Diagnostics.Concat(result.CarrierNotes))
                             _logger.LogWarning("[SCRIPT] Redaction warning for '{Text}': {Warning}", text, warning);
 
                         currentInput = currentOutput;
@@ -479,27 +479,7 @@ internal partial class MainWindowViewModel
                     }
                 }
 
-                using (var redactedDocument = Excise.Core.Document.PdfDocument.Open(System.IO.File.ReadAllBytes(filePath)))
-                {
-                    var report = RedactedCopySafetyPolicy.Evaluate(
-                        redactedDocument,
-                        RedactedCopySafetyRequest.ForAreas(
-                            requestedRedactions
-                                .Select(redaction => new RedactedCopySafetyArea(
-                                    redaction.PageNumber,
-                                    redaction.PageArea,
-                                    redaction.PreviewText))
-                                .ToArray(),
-                            RedactionPreferences.ToOptions()));
-                    // #643: keep an encrypted source's protection on the final
-                    // scripted output (the intermediate files carried it too —
-                    // see RedactionService.RedactText).
-                    redactedDocument.Save(filePath, _documentService.GetReEncryptionOptions());
-
-                    _logger.LogInformation(
-                        "[SCRIPT] Safe-share scrub and verification completed for text redaction output; warnings: {HasWarnings}",
-                        report.HasWarnings);
-                }
+                LastTextRedactionResults = results;
 
                 // Clear pending text redactions
                 _pendingTextRedactions.Clear();

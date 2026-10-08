@@ -2092,10 +2092,6 @@ namespace Excise.Core.Text.Segmentation
         public int PageNumber { get; init; }
         public override string ToString() { }
     }
-    public static class ObstructionStripper
-    {
-        public static void StripObstructions(Excise.Core.Document.PdfPage page) { }
-    }
     public sealed class PageRedactionResult : System.IEquatable<Excise.Core.Text.Segmentation.PageRedactionResult>
     {
         public PageRedactionResult(int PageNumber, int MatchesLocated, int OccurrencesRemainingAfter, Excise.Core.Text.Segmentation.RedactionOutcome Outcome) { }

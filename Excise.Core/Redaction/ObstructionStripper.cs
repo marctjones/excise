@@ -21,7 +21,7 @@ namespace Excise.Core.Text.Segmentation;
 /// otherwise), plus the path-construction ops that built its path. Image <c>Do</c> invocations also count when
 /// the XObject's <c>/Subtype</c> is <c>/Image</c>.</para>
 /// </remarks>
-public static class ObstructionStripper
+internal static class ObstructionStripper
 {
     /// <summary>
     /// Mutate <paramref name="page"/>'s content stream so that opaque

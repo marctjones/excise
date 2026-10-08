@@ -59,6 +59,9 @@
     <InternalsVisibleTo Include="Excise.Avalonia.Tests" />
     <InternalsVisibleTo Include="Excise.App" />
     <InternalsVisibleTo Include="Excise.App.Tests" />
+    <!-- #1501: TermRedactionRunner opens its input through PdfDocumentLifetime,
+         like every other CLI workflow (#1836 F1836a allows Ocr here). -->
+    <InternalsVisibleTo Include="Excise.Ocr" />
   </ItemGroup>
 
 </Project>

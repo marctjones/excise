@@ -122,7 +122,6 @@ internal static class MainWindowViewModelTestFactory
         var viewModel = new MainWindowViewModel(
             logger,
             documentService,
-            redactionService,
             redactedCopyDialogFormatter,
             redactionWorkflowService,
             textExtractionService,
