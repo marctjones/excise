@@ -37,7 +37,7 @@ internal partial class AboutWindow : Window
 
         if ((sender as ListBox)?.SelectedItem is not ThirdPartyPackage pkg)
         {
-            detail.Children.Add(new TextBlock { Text = "Select a package…", Opacity = 0.6 });
+            detail.Children.Add(Help("Select a package…"));
             return;
         }
 
@@ -49,29 +49,24 @@ internal partial class AboutWindow : Window
         });
 
         if (!string.IsNullOrEmpty(pkg.LicenseName))
-            detail.Children.Add(new TextBlock { Text = $"License: {pkg.LicenseName}", Opacity = 0.85 });
+            detail.Children.Add(Help($"License: {pkg.LicenseName}"));
 
         if (!string.IsNullOrEmpty(pkg.Copyright))
-            detail.Children.Add(new TextBlock { Text = pkg.Copyright, FontSize = 12, Opacity = 0.7 });
+            detail.Children.Add(Help(pkg.Copyright));
         else if (!string.IsNullOrEmpty(pkg.Authors))
-            detail.Children.Add(new TextBlock { Text = $"by {pkg.Authors}", FontSize = 12, Opacity = 0.7 });
+            detail.Children.Add(Help($"by {pkg.Authors}"));
 
         if (pkg.ScancodeMismatch)
         {
-            detail.Children.Add(new TextBlock
+            var warning = new TextBlock
             {
                 Text = "⚠ scancode-toolkit detected a different license than what the package metadata declares — verify before redistributing.",
-                Foreground = new SolidColorBrush(Colors.OrangeRed),
-                FontSize = 11,
-                TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(0, 4, 0, 0),
-            });
+            };
+            warning.Classes.Add("warning");
+            detail.Children.Add(warning);
             if (pkg.ScancodeDetectedSpdx is { Count: > 0 })
-                detail.Children.Add(new TextBlock
-                {
-                    Text = $"scancode detected: {string.Join(", ", pkg.ScancodeDetectedSpdx)}",
-                    FontSize = 11, Opacity = 0.7,
-                });
+                detail.Children.Add(Help($"scancode detected: {string.Join(", ", pkg.ScancodeDetectedSpdx)}"));
         }
 
         if (!string.IsNullOrEmpty(pkg.Description))
@@ -125,4 +120,13 @@ internal partial class AboutWindow : Window
     }
 
     private static void OpenUrl(string? url) => Services.UrlOpener.Open(url);
+
+    // Secondary text takes the shared help style (token colour, platform size)
+    // instead of fading with Opacity (#2006).
+    private static TextBlock Help(string text)
+    {
+        var block = new TextBlock { Text = text };
+        block.Classes.Add("help");
+        return block;
+    }
 }
