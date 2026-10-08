@@ -188,6 +188,14 @@ The decisions no row can make:
 - **The focused tests for the changed area**, ad hoc:
   `scripts/t.sh <project> --filter …`.
 
+### Changed-symbol code-health review (optional, informational)
+
+Not a gate and not in any tier. To see which symbols got worse since a baseline,
+capture the candidate commit and run the review as described in
+`tests/code-health/review-policy.md` ("Baseline candidates and adoption"). Read the
+`reviewRequired` list by rule and symbol; file issues for real findings. Do not
+cite the output as a score or as release approval.
+
 ## Everyday PDF Workbench RC Matrix
 
 This matrix is the final-release gate for issue #490. Every row needs at least

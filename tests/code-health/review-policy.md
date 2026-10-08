@@ -90,3 +90,30 @@ exists. An example entry (not an active allowance):
   "maximum": 12
 }
 ```
+
+## Baseline candidates and adoption
+
+A baseline is a clean-checkout capture that a named human has reviewed. The
+tooling never adopts one. `baselines/candidate-<commit>/` holds the manifest,
+capture record and summary of a clean capture; its `PENDING-REVIEW.md` states
+whether it is adopted. The raw reports are too large to commit, so the manifest
+pins their hashes and the capture command recreates them from the recorded commit
+and SDK. A candidate gates nothing until the issue records who adopted it.
+
+Adoption checklist for the reviewer:
+
+1. Recapture twice from the candidate commit; the manifests must be byte-identical.
+2. Review `summary.json` rankings and the entry-point and duplicate candidates.
+3. Record the decision and the reviewer's name on the issue, then capture again
+   with that name as `--reviewer` and add the new directory. Keep the old one.
+
+Release use (informational, no verdict): after the release commit exists, capture
+it and run `review` against the adopted baseline, or the newest candidate if none
+is adopted. Read `reviewRequired` by rule and symbol. A review request means a
+person reads the symbol; it is not a release blocker by itself and never a score.
+Exit 1 from `review` is expected when a change worsens a measurement.
+
+Verified plant (2026-10-08, base `4421d66a`): nesting five `if` levels and adding a
+defaulted parameter to `DocumentPermissionGuard.Require` made `review` exit 1 with
+nine increases (Cognitive, Cyclomatic, ExecutableLines, MaxNesting, ParameterCount
+on the method and the owning type); the source was then restored.
