@@ -75,7 +75,7 @@ internal static class AttachmentCarrierScrubber
             if (file.NameTreeKey is { } treeKey && file.FileSpec is { } keyedSpec
                 && TermMatch.Holds(treeKey, terms, caseSensitive, wholeWord))
             {
-                writes.Add(() => RemoveFromEmbeddedFilesTree(document, keyedSpec, terms, caseSensitive, wholeWord));
+                writes.Add(() => RemoveFromEmbeddedFilesTree(document, keyedSpec));
                 results.Add((file, Result(AttachmentDisposition.Removed,
                     "removed: its name in the document's attachment list held the term")));
                 continue;
@@ -282,39 +282,21 @@ internal static class AttachmentCarrierScrubber
 
     /// <summary>
     /// Drop <paramref name="fileSpec"/>'s entry from the <c>/EmbeddedFiles</c>
-    /// name tree, strip its embedded data wherever else it is referenced, and
-    /// cut the terms from any <c>/Limits</c> string that repeats the key.
+    /// name tree and strip its embedded data wherever else it is referenced.
+    /// The tree is rewritten as one leaf (<see cref="PdfNameTree.Rewrite"/>), the
+    /// same strategy as the attachments carrier in
+    /// <c>PdfDocumentSanitizer.ScrubEmbeddedFiles</c>, so no old node and no
+    /// <c>/Limits</c> that repeated the removed key survives (#1848).
     /// </summary>
-    private static void RemoveFromEmbeddedFilesTree(
-        PdfDocument document, PdfDictionary fileSpec, IReadOnlyList<string> terms, bool caseSensitive, bool wholeWord)
+    private static void RemoveFromEmbeddedFilesTree(PdfDocument document, PdfDictionary fileSpec)
     {
         var names = ResolveDict(document, document.Catalog.GetOptional("Names"));
         if (ResolveDict(document, names?.GetOptional("EmbeddedFiles")) is not { } root) return;
 
-        foreach (var node in PdfNameTree.Nodes(document, root))
-        {
-            if (document.Resolve(node.GetOptional("Names") ?? PdfNull.Instance) is PdfArray pairs)
-            {
-                for (var i = pairs.Count - 2; i >= 0; i -= 2)
-                {
-                    if (ReferenceEquals(document.Resolve(pairs[i + 1]), fileSpec))
-                    {
-                        pairs.RemoveAt(i + 1);
-                        pairs.RemoveAt(i);
-                    }
-                }
-            }
-
-            if (document.Resolve(node.GetOptional("Limits") ?? PdfNull.Instance) is PdfArray limits)
-            {
-                for (var i = 0; i < limits.Count; i++)
-                {
-                    if (document.Resolve(limits[i]) is not PdfString limit) continue;
-                    if (TermMatch.Mask(limit.Value, terms, caseSensitive, wholeWord) is { } cut)
-                        limits[i] = new PdfString(cut);
-                }
-            }
-        }
+        var pairs = PdfNameTree.Enumerate(document, root).ToList();
+        var kept = pairs.Where(p => !ReferenceEquals(document.Resolve(p.Value), fileSpec)).ToList();
+        if (kept.Count != pairs.Count)
+            PdfNameTree.Rewrite(document, root, kept);
 
         RemoveKey(fileSpec, "EF", null);
         RemoveKey(fileSpec, "RF", null);
