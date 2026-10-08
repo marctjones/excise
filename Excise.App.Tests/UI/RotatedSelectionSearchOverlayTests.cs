@@ -72,16 +72,10 @@ public sealed class RotatedSelectionSearchOverlayTests : IDisposable
         var searchTerm = s.Fixture.IsSynthetic ? RotationProbes.RepeatedWord : s.Fixture.Target!;
         var selectTerm = s.Fixture.IsSynthetic ? RotationProbes.Target : s.Fixture.Target!;
 
-        // issue14497's header is drawn with a 90-degree text matrix; excise extracts it one
-        // glyph per line, so Find and copy cannot see the word (#2008).
-        bool extractionGap = s.FixtureId == "pdfjs-issue14497";
-
         // Search BEFORE the UI turns, so the highlights have to follow the rotation.
-        if (!extractionGap)
-        {
-            vm.SearchText = searchTerm;
-            await WaitAsync(() => vm.SearchMatches.Count > 0, "search results");
-        }
+        // issue14497's header is drawn with a 90-degree text matrix; it is one line (#2008).
+        vm.SearchText = searchTerm;
+        await WaitAsync(() => vm.SearchMatches.Count > 0, "search results");
 
         await RotateAsync(vm, s.UiQuarterTurns);
         if (s.Zoom > 0) vm.ZoomLevel = s.Zoom;
@@ -89,10 +83,6 @@ public sealed class RotatedSelectionSearchOverlayTests : IDisposable
         var oracle = await OracleAsync(vm, s.FinalRotation);
         // The displayed bitmap has MuPDF's aspect and ink where MuPDF draws the target.
         await SinglePageImageAsync(window, viewer, oracle, oracle.Find(selectTerm)[0]);
-        Assert.SkipWhen(extractionGap,
-            "Rotation and rendering were checked against MuPDF (displayed aspect, ink at 'Parklands'). " +
-            "Search and selection are skipped: excise extracts this header one glyph per line, so Find " +
-            "and copy cannot match the word (#2008).");
         await AssertSearchHighlightsAsync(window, viewer, oracle, searchTerm, "after the UI turns");
 
         // Find Next / Previous keep every highlight on its glyphs.
@@ -105,6 +95,13 @@ public sealed class RotatedSelectionSearchOverlayTests : IDisposable
             vm.CurrentSearchMatchIndex.Should().Be(0);
             await AssertSearchHighlightsAsync(window, viewer, oracle, searchTerm, "after Find Previous");
         }
+
+        // On issue14497's A0 page the overlay canvas sits 2-3 px off the page image, so a
+        // drag cannot be placed on MuPDF's glyphs (#2010). Selecting 'Parklands' on this
+        // page is asserted at the engine level by TurnedTextFindAndRedactTests (#2008).
+        Assert.SkipWhen(s.FixtureId == "pdfjs-issue14497",
+            "Search was checked against MuPDF above. The drag selection is skipped: the overlay " +
+            "canvas and the page image disagree by 2-3 px on this A0 page (#2010).");
 
         // Drag from MuPDF's first char centre of the target to its last.
         await SinglePageSelectAsync(window, viewer, vm, oracle, selectTerm);

@@ -60,7 +60,13 @@ internal readonly record struct WalkedGlyph(
     int TjElementIndex,
     // §9.3.6 render mode in force when this glyph was shown. 3 and 7 paint
     // nothing, so a glyph carrying either is extractable and invisible (#1607).
-    int TextRenderMode);
+    int TextRenderMode,
+    // #2008: the user-space direction of a horizontal glyph's advance, in
+    // radians counterclockwise: text space +x (signed by Th) through Tm × CTM
+    // (§9.4.2, §9.4.4). 0 for upright text, including a show with no Tm, Tz
+    // or cm (identity Tm at BT, Th 100, identity CTM). Text a matrix turns
+    // writes its line along this direction, not along user-space x.
+    double BaselineAngle);
 
 /// <summary>
 /// What a <see cref="ContentStreamWalker"/> consumer implements. Implemented by
@@ -1158,12 +1164,17 @@ internal sealed class ContentStreamWalker
             displacementThousandths = charWidth;
         }
 
+        // #2008: the advance direction, from the matrices alone so a zero-width
+        // glyph has one too. A degenerate matrix has none; it reads as upright.
+        var (bx, by) = TransformTextVector(_horizontalScaling < 0 ? -1 : 1, 0);
+        var baselineAngle = bx == 0 && by == 0 ? 0 : Math.Atan2(by, bx);
+
         var glyph = new WalkedGlyph(
             charCode, cid, byteLength, unicode,
             x, y, cell, glyphWidth,
             _fontSize, _fontName,
             displacementThousandths, spacing, _isVerticalWriting, _isCidFont,
-            operandByteOffset, tjElementIndex, _textRenderMode);
+            operandByteOffset, tjElementIndex, _textRenderMode, baselineAngle);
         sink.OnGlyph(in glyph);
 
         // Advance the text position (§9.4.4).

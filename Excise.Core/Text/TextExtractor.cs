@@ -473,16 +473,23 @@ public class TextExtractor
 
             if (prevLetter != null)
             {
+                // #2008: measured in the frame of the line each glyph is written
+                // along. An upright glyph's frame is its user-space box and
+                // baseline, unchanged; a line a matrix turns would otherwise
+                // break between every glyph, its baseline running along y.
+                var (prevBox, prevBaseline) = TextSelectionEngine.LineFrame(prevLetter);
+                var (box, baseline) = TextSelectionEngine.LineFrame(letter);
+
                 // Check for line break
-                var yDiff = Math.Abs(letter.StartY - prevLetter.StartY);
-                if (yDiff > lineGapThreshold)
+                var yDiff = Math.Abs(baseline - prevBaseline);
+                if (TextSelectionEngine.DirectionChanges(prevLetter, letter) || yDiff > lineGapThreshold)
                 {
                     startNewWord = true;
                 }
                 else
                 {
                     // Check for horizontal gap
-                    var gap = letter.GlyphRectangle.Left - prevLetter.GlyphRectangle.Right;
+                    var gap = box.Left - prevBox.Right;
                     if (gap > wordGapThreshold)
                     {
                         startNewWord = true;
@@ -628,6 +635,8 @@ public class TextExtractor
             TextRenderMode = glyph.TextRenderMode,
             IsCidFont = glyph.IsCidFont,
             IsVerticalWriting = glyph.IsVerticalWriting,
+            // #2008: the direction a turned line runs along, for line grouping.
+            BaselineAngle = glyph.BaselineAngle,
             // #776: the innermost enclosing /MCID span, for the a11y bridge.
             MarkedContentId = _currentMcid,
             // #1091/#1092: where this glyph's code lives, for the operand rewrite.

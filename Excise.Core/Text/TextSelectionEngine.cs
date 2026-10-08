@@ -109,12 +109,29 @@ public static class TextSelectionEngine
     /// </summary>
     public static List<Letter> SortReadingOrder(IEnumerable<Letter> letters, ReadingOrderStrategy strategy)
     {
-        return strategy switch
+        if (strategy == ReadingOrderStrategy.RawStream)
+            return letters.ToList();
+
+        // #2008: the geometric sorts read lines along user-space x. A line a
+        // matrix turns runs along another axis, and sorting its glyphs "top to
+        // bottom" spells it backwards or scatters it among the upright lines.
+        // Upright glyphs sort exactly as before; turned glyphs follow them in
+        // producer order, which shows each turned line in its writing order.
+        var all = letters as IReadOnlyList<Letter> ?? letters.ToList();
+        IReadOnlyList<Letter> upright = all;
+        List<Letter>? turned = null;
+        if (all.Any(IsTurned))
         {
-            ReadingOrderStrategy.RawStream => letters.ToList(),
-            ReadingOrderStrategy.Simple => SortSimple(letters),
-            _ => SortColumnAware(letters),
-        };
+            upright = all.Where(letter => !IsTurned(letter)).ToList();
+            turned = all.Where(IsTurned).ToList();
+        }
+
+        var sorted = strategy == ReadingOrderStrategy.Simple
+            ? SortSimple(upright)
+            : SortColumnAware(upright);
+        if (turned != null)
+            sorted.AddRange(turned);
+        return sorted;
     }
 
     /// <summary>
@@ -988,12 +1005,75 @@ public static class TextSelectionEngine
     private static PdfRectangle Frame(Letter l)
     {
         var r = l.GlyphRectangle;
-        return l.IsVerticalWriting ? new PdfRectangle(-r.Top, r.Left, -r.Bottom, r.Right) : r;
+        return l.IsVerticalWriting ? new PdfRectangle(-r.Top, r.Left, -r.Bottom, r.Right) : LineFrame(l).Box;
     }
 
     /// <summary>Glyphs in different writing modes never share a line: their
-    /// frames measure different page axes and can coincide by accident.</summary>
-    private static bool WritingModeChanges(Letter a, Letter b) => a.IsVerticalWriting != b.IsVerticalWriting;
+    /// frames measure different page axes and can coincide by accident. Nor do
+    /// glyphs advancing in different directions (#2008).</summary>
+    internal static bool WritingModeChanges(Letter a, Letter b) =>
+        a.IsVerticalWriting != b.IsVerticalWriting || DirectionChanges(a, b);
+
+    /// <summary>Below this |sin| (and with a positive cos) a glyph's advance is
+    /// user-space +x: upright, read in user space exactly as before #2008.</summary>
+    private const double TurnedSineTolerance = 1e-3;
+
+    /// <summary>Two turned glyphs share a direction within this many radians.
+    /// Glyphs of one string share Tm exactly; at 1000 pt from the origin the
+    /// frames of two glyphs this far apart in angle differ by 0.1 pt.</summary>
+    private const double SameDirectionTolerance = 1e-4;
+
+    /// <summary>
+    /// #2008: a horizontal-writing glyph whose advance a matrix turns off
+    /// user-space +x (Tm or CTM rotation, or a negative Th). Vertical writing
+    /// has its own frame (#1902) and is never "turned".
+    /// </summary>
+    internal static bool IsTurned(Letter l) =>
+        !l.IsVerticalWriting &&
+        (Math.Abs(Math.Sin(l.BaselineAngle)) > TurnedSineTolerance || Math.Cos(l.BaselineAngle) < 0);
+
+    /// <summary>#2008: an upright glyph and a turned one, or two turned glyphs
+    /// with different directions, are on different lines.</summary>
+    internal static bool DirectionChanges(Letter a, Letter b)
+    {
+        bool at = IsTurned(a), bt = IsTurned(b);
+        if (!at && !bt) return false;
+        if (at != bt) return true;
+        var d = Math.Abs(Math.IEEERemainder(a.BaselineAngle - b.BaselineAngle, 2 * Math.PI));
+        return d > SameDirectionTolerance;
+    }
+
+    /// <summary>
+    /// #2008: a horizontal glyph's box in the frame of the line it is written
+    /// along, and its baseline in that frame. X runs along the advance, Y
+    /// across it: user space turned back by <see cref="Letter.BaselineAngle"/>.
+    /// An upright glyph (and every vertical-writing glyph, which
+    /// <see cref="Frame"/> handles) is its <see cref="Letter.GlyphRectangle"/>
+    /// and <see cref="Letter.StartY"/> unchanged, so upright text groups
+    /// exactly as before. A turned glyph's extent along the line is its
+    /// advance (<see cref="Letter.Width"/>); its extent across is the cell
+    /// height, recovered from the user-space bounding box of the turned cell.
+    /// </summary>
+    internal static (PdfRectangle Box, double Baseline) LineFrame(Letter l)
+    {
+        if (!IsTurned(l))
+            return (l.GlyphRectangle, l.StartY);
+
+        double c = Math.Cos(l.BaselineAngle), s = Math.Sin(l.BaselineAngle);
+        double ac = Math.Abs(c), az = Math.Abs(s);
+        var r = l.GlyphRectangle;
+        double boxW = Math.Abs(r.Right - r.Left), boxH = Math.Abs(r.Top - r.Bottom);
+        double w = Math.Abs(l.Width);
+        // The cell is w along the advance and h across it, so its bounding box
+        // is (w·|c| + h·|s|) wide and (w·|s| + h·|c|) tall. Solve on the axis
+        // the height dominates.
+        double h = az >= ac ? (boxW - w * ac) / az : (boxH - w * az) / ac;
+        if (!(h > 1e-6)) h = Math.Max(Math.Min(boxW, boxH), 1e-3);
+
+        double u = c * l.StartX + s * l.StartY;
+        double v = -s * l.StartX + c * l.StartY;
+        return (new PdfRectangle(u, v, u + w, v + h), v);
+    }
 
     private static bool SameLine(Letter a, Letter b) => SameLine(a.GlyphRectangle, b.GlyphRectangle);
 

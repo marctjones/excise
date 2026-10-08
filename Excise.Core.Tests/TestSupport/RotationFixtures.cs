@@ -158,9 +158,8 @@ internal static class RotationProbes
         "probe-crop0" => Write(null, null, "90 250 522 742"),
         "probe-crop90" => Write(null, 90, "90 250 522 742"),
         // The scanned-landscape shape: the page turns 90 clockwise and the text matrix
-        // turns 90 counter-clockwise, so the text reads upright on screen. One line only:
-        // excise extracts such text one glyph per line (#2008), and a second line at the
-        // same content y would interleave with the first in reading order.
+        // turns 90 counter-clockwise, so the text reads upright on screen. One line only,
+        // as recorded when #2008 (a turned line extracted one glyph per line) was found.
         "probe-r90-textccw" => Write(null, 90, null,
             "BT /F1 18 Tf 0 1 -1 0 300 150 Tm (" + Line1 + ") Tj ET\n"),
         "probe-form-r0" => WriteForm(null),

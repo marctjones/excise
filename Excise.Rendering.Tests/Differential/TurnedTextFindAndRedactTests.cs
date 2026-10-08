@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Text;
 using Excise.Core.Text.Segmentation;
 using Excise.Rendering.Differential;
 using Excise.TestSupport;
@@ -137,8 +138,19 @@ public class TurnedTextFindAndRedactTests
         }
 
         using var doc = PdfDocument.Open(pdf);
-        Regex.Replace(doc.GetPage(1).Text, @"\s+", " ").Should().Contain("REFERENCE Parklands Phase 14B",
+        var page = doc.GetPage(1);
+        Regex.Replace(page.Text, @"\s+", " ").Should().Contain("REFERENCE Parklands Phase 14B",
             "MuPDF and Poppler read the header as one line (#2008)");
+
+        // Find reads the page's words; a drag copies a reading-order range.
+        page.GetWords().Select(w => w.Text).Should().ContainInOrder("REFERENCE", "Parklands", "Phase", "14B");
+        var ordered = TextSelectionEngine.SortReadingOrder(page.Letters);
+        var start = ordered.FindIndex(l => l.Value == "P"
+            && string.Concat(ordered.Skip(ordered.IndexOf(l)).Take(Term.Length).Select(x => x.Value)) == Term);
+        start.Should().BeGreaterThanOrEqualTo(0, "the header's glyphs read 'Parklands' in selection order");
+        TextSelectionEngine.JoinText(
+                TextSelectionEngine.RangeBetween(ordered, ordered[start], ordered[start + Term.Length - 1]))
+            .Should().Be(Term, "a drag from the word's first glyph to its last copies exactly the word");
     }
 
     [Fact]
