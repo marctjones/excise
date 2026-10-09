@@ -458,6 +458,50 @@ public class XfaGeneratedWidgetOracleTests : IDisposable
         QpdfReferenceTool.AcroFormWidgets(path)!.Should().BeEmpty("the generated fields were baked into the page");
     }
 
+    /// <summary>
+    /// The flattened-copy paths (GUI Save Flattened Form Copy, <c>fill-form --flatten</c>) stamp the
+    /// generated widgets from their own appearance before <c>FlattenAcroForm</c>: the copy looks
+    /// exactly like the laid-out form and holds no hidden field's value. The planted run (the generic
+    /// flatten alone) shows what the stamp prevents: the hidden value written as clipped page text.
+    /// </summary>
+    [Fact]
+    public void FlattenedFormCopy_StampsGeneratedWidgets_AndKeepsHiddenValuesOut()
+    {
+        RequireTools();
+        const string hiddenOnly = "Unseenvalue";
+        var bytes = XfaTestForms.BuildPdf(
+            XfaTestForms.Template(
+                "<field name=\"FullName\" x=\"1in\" y=\"1in\" w=\"4in\" h=\"0.4in\"><ui><textEdit/></ui></field>"
+                + "<field name=\"Unseen\" presence=\"hidden\" x=\"1in\" y=\"3in\" w=\"4in\" h=\"0.4in\"><ui><textEdit/></ui></field>",
+                layout: "position"),
+            XfaTestForms.Data($"<FullName>Visible Person</FullName><Unseen>{hiddenOnly}</Unseen>"));
+        using var laidOut = LayOut(bytes, emitWidgets: true, out _);
+        var saved = laidOut.SaveToBytes();
+        var before = TempPath("copy-before");
+        File.WriteAllBytes(before, saved);
+
+        // What SaveFlattenedFormCopyAsAsync and FormMutationHandler do.
+        using (var copy = PdfDocument.Open(saved))
+        {
+            PdfXfaLayout.FlattenGeneratedXfaFields(copy, forRedaction: false).Should().NotBeNull();
+            copy.RedactionLedger.XfaRemovals.Should().BeEmpty("a flattened copy is not a redaction");
+            copy.FlattenAcroForm();
+            var path = Save(copy, "copy-flattened");
+
+            MutoolTextExtractor.ExtractPage(path, 1).Should().Contain("Visible Person").And.NotContain(hiddenOnly);
+            SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(path), hiddenOnly).Should().BeEmpty();
+            CompareInk(before, path, Array.Empty<QpdfFieldWidget>(), 1)[0].OutsideDiff.Should().Be(0,
+                "the copy draws each value from the widget's own appearance, where the widget drew it");
+        }
+
+        // The plant: the generic flatten alone redraws every field from /V.
+        using var planted = PdfDocument.Open(saved);
+        planted.FlattenAcroForm();
+        var plantedPath = Save(planted, "copy-plant");
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(plantedPath), hiddenOnly).Should().NotBeEmpty(
+            "without the stamp the hidden field's value becomes clipped page text (mutool does not extract a glyph clipped to nothing; the scanner reads the stream), which the check must see");
+    }
+
     /// <summary>Planted failure: the engine alone, without the orchestration flatten, ships the hidden copy.</summary>
     [Fact]
     public void Planted_AreaRedactionWithoutTheFlatten_LeavesTheHiddenWidgetsCopy()

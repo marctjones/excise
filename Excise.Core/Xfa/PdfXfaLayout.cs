@@ -346,18 +346,23 @@ public static class PdfXfaLayout
     /// Callers are the redaction orchestrators (App <c>RedactionService</c>,
     /// <c>Excise.Ocr.TermRedactionRunner</c>); the engine in <c>Excise.Core/Redaction</c> does not call
     /// it. <c>/XFA</c> stays for the redaction's own decision 5. Returns the report row ("generated XFA
-    /// fields flattened ...") and records it with the document's XFA removals, or null when the
-    /// document carries no generated widget.
+    /// fields flattened ...") and, with <paramref name="forRedaction"/>, records it with the document's
+    /// XFA removals; null when the document carries no generated widget. The flattened-copy paths
+    /// (GUI Save Flattened Form Copy, <c>fill-form --flatten</c>) call it with
+    /// <paramref name="forRedaction"/> false before <see cref="PdfDocument.FlattenAcroForm"/>, which
+    /// would redraw a field from <c>/V</c> and so write a hidden field's value as clipped page text.
     /// </summary>
-    internal static string? FlattenGeneratedXfaFields(PdfDocument document)
+    internal static string? FlattenGeneratedXfaFields(PdfDocument document, bool forRedaction = true)
     {
         ArgumentNullException.ThrowIfNull(document);
         // No /XFA gate: a laid-out copy whose XFA was removed (RemoveXfaForm) still carries the widgets.
         int count = XfaWidgetWriter.Flatten(document);
         if (count == 0)
             return null;
-        var row = $"generated XFA fields flattened ({count} widget{(count == 1 ? string.Empty : "s")} baked into the page content before redaction)";
-        document.RedactionLedger.RecordXfaRemoval(row);
+        var row = $"generated XFA fields flattened ({count} widget{(count == 1 ? string.Empty : "s")} baked into the page content"
+            + (forRedaction ? " before redaction)" : ")");
+        if (forRedaction)
+            document.RedactionLedger.RecordXfaRemoval(row);
         return row;
     }
 

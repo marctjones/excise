@@ -792,6 +792,10 @@ internal partial class MainWindowViewModel
 
         using var flattenedCopy = PdfDocument.Open(document.SaveToBytes());
         ApplyPendingTypewriterText(flattenedCopy);
+        // #2028: fields excise generated for a dynamic XFA form are stamped from their own appearance
+        // first. FlattenAcroForm redraws a field from /V, which would draw a hidden one's value as
+        // clipped (invisible, still extractable) page text.
+        Excise.Core.Xfa.PdfXfaLayout.FlattenGeneratedXfaFields(flattenedCopy, forRedaction: false);
         flattenedCopy.FlattenAcroForm();
         // #643: an encrypted source's flattened copy stays encrypted with the
         // same parameters and password. (The in-memory round-trip above is

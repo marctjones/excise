@@ -24,9 +24,11 @@ named below), not to this page.
    runs in `PdfDocumentService.LoadDocument`, before the view model activates
    the document, so nothing else ever sees the placeholder. The document is not
    marked modified.
-3. **Keep `/XFA` and `/NeedsRendering` on save.** Acrobat and Firefox still
-   regenerate the form from the XFA on a saved file; every other viewer now
-   shows excise's rendition instead of "Please wait".
+3. **Keep `/XFA` and `/NeedsRendering` on save.** Acrobat is expected to regenerate the form
+   from the XFA on a saved file (unverified since #2028; an Acrobat hand-check is on #2028);
+   every other viewer shows excise's rendition instead of "Please wait". Firefox (pdf.js) used
+   the XFA until #2028: it does not once the file carries the generated AcroForm fields of
+   decision 11, and shows excise's rendition instead (#2036).
 4. **Generated pages carry a marker.** Each generated page has
    `/PieceInfo << /Excise << /LastModified (date) /Private << /XfaLayout true >> >> >>`
    (ISO 32000-1 §14.5, the standard place for application-private page data).
@@ -176,8 +178,10 @@ named below), not to this page.
     `PdfXfaLayout.FlattenGeneratedXfaFields` (stamps each shown widget's appearance through the
     AcroForm flatten path, removes the widgets and their fields, records the row with the XFA
     removals) is called by `RedactionService.RedactArea` and `TermRedactionRunner` (CLI and
-    scripting). The engine in `Excise.Core/Redaction` does not call it, so a library caller that
-    redacts a document carrying generated widgets must call it first.
+    scripting), and, without the report row, before `FlattenAcroForm` on the flattened-copy paths
+    (GUI Save Flattened Form Copy, `fill-form --flatten`), which would otherwise redraw a hidden
+    field's `/V` as clipped page text. The engine in `Excise.Core/Redaction` does not call it, so a library caller that
+    redacts a document carrying generated widgets must call it first (#2037).
 18. **Reopening a form whose widgets and datasets disagree.** The datasets hash is stored with
     the layout marker. If the datasets still match it, a widget edit made by another tool is
     newer: it is written into the datasets and reported. If the datasets changed (Acrobat

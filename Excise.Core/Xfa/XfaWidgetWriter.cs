@@ -104,13 +104,36 @@ internal static class XfaWidgetWriter
     /// </summary>
     public static int Flatten(PdfDocument document)
     {
-        var widgets = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+        // Matched by object number where the arrays hold references (they do for everything the
+        // generator wrote): on a reopened file a parsed dictionary can be evicted and re-read between
+        // two resolves, and an instance comparison would then miss it, leaving a widget in /Annots
+        // whose field already left the tree.
+        var widgetNumbers = new HashSet<int>();
+        var widgetInstances = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+        var rootNumbers = new HashSet<int>();
+        var rootInstances = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+        int count = 0;
         foreach (var page in document.Pages)
         {
-            var generated = GeneratedWidgets(document, page);
-            if (generated.Count == 0)
+            if (Record(document, page) is not { } record
+                || document.Resolve(record.GetOptional(WidgetsKey) ?? PdfNull.Instance) is not PdfArray listed
+                || listed.Count == 0)
+            {
                 continue;
-            widgets.UnionWith(generated);
+            }
+
+            var generated = new List<PdfDictionary>();
+            foreach (var item in listed)
+            {
+                if (item is PdfReference r)
+                    widgetNumbers.Add(r.ObjectNum);
+                if (document.Resolve(item) is not PdfDictionary widget)
+                    continue;
+                generated.Add(widget);
+                widgetInstances.Add(widget);
+                AddRoot(document, item, widget, rootNumbers, rootInstances);
+            }
+            count += generated.Count;
 
             var shown = generated
                 .Where(w => (Flags(document, w) & AnnotHidden) == 0 && w.GetOptional("AP") != null)
@@ -121,46 +144,58 @@ internal static class XfaWidgetWriter
             {
                 for (int i = annots.Count - 1; i >= 0; i--)
                 {
-                    if (document.Resolve(annots[i]) is PdfDictionary d && widgets.Contains(d))
-                    {
-                        if (annots[i] is PdfReference r)
-                            document.Pages.RecordRemovedAnnotation(r.ObjectNum);
-                        annots.RemoveAt(i);
-                    }
+                    bool generatedWidget = annots[i] is PdfReference r
+                        ? widgetNumbers.Contains(r.ObjectNum)
+                        : document.Resolve(annots[i]) is PdfDictionary d && widgetInstances.Contains(d);
+                    if (!generatedWidget)
+                        continue;
+                    if (annots[i] is PdfReference removed)
+                        document.Pages.RecordRemovedAnnotation(removed.ObjectNum);
+                    annots.RemoveAt(i);
                 }
                 if (page.Dictionary.GetOptional("Annots") is PdfReference annotsRef)
                     document.ReplaceIndirectObject(annotsRef.ObjectNum, annots);
             }
-            Record(document, page)![WidgetsKey] = new PdfArray();
+            record[WidgetsKey] = new PdfArray();
             // Reassigning marks a parsed page dictionary edited, so the object store keeps these
             // nested edits instead of re-reading the file's original (TryEvictFromCache).
             page.Dictionary["PieceInfo"] = page.Dictionary.GetOptional("PieceInfo")!;
         }
-        if (widgets.Count == 0)
+        if (count == 0)
             return 0;
 
-        // The generated fields: every root reached by climbing /Parent from a generated widget.
-        var roots = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
-        foreach (var widget in widgets)
-        {
-            var node = widget;
-            for (int depth = 0; depth < 64 && document.Resolve(node.GetOptional("Parent") ?? PdfNull.Instance) is PdfDictionary parent; depth++)
-                node = parent;
-            roots.Add(node);
-        }
         if (document.Resolve(document.Catalog.GetOptional("AcroForm") ?? PdfNull.Instance) is PdfDictionary acroForm
             && document.Resolve(acroForm.GetOptional("Fields") ?? PdfNull.Instance) is PdfArray fields)
         {
             for (int i = fields.Count - 1; i >= 0; i--)
             {
-                if (document.Resolve(fields[i]) is PdfDictionary d && roots.Contains(d))
+                bool generatedRoot = fields[i] is PdfReference r
+                    ? rootNumbers.Contains(r.ObjectNum)
+                    : document.Resolve(fields[i]) is PdfDictionary d && rootInstances.Contains(d);
+                if (generatedRoot)
                     fields.RemoveAt(i);
             }
             acroForm["Fields"] = acroForm.GetOptional("Fields")!;   // marks the parsed dictionary edited
             if (fields.ObjectNumber is { } fieldsNumber)
                 document.ReplaceIndirectObject(fieldsNumber, fields);
         }
-        return widgets.Count;
+        return count;
+    }
+
+    /// <summary>The root of a generated widget's field tree (climbing <c>/Parent</c>), by object number and instance.</summary>
+    private static void AddRoot(PdfDocument document, PdfObject entry, PdfDictionary widget, HashSet<int> numbers, HashSet<PdfDictionary> instances)
+    {
+        PdfObject reference = entry;
+        var node = widget;
+        for (int depth = 0; depth < 64 && node.GetOptional("Parent") is { } parentEntry
+             && document.Resolve(parentEntry) is PdfDictionary parent; depth++)
+        {
+            reference = parentEntry;
+            node = parent;
+        }
+        if (reference is PdfReference r)
+            numbers.Add(r.ObjectNum);
+        instances.Add(node);
     }
 
     private static int Flags(PdfDocument document, PdfDictionary widget)
