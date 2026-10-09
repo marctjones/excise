@@ -103,13 +103,17 @@ public sealed class BatesPlacementGeometryTests : IDisposable
             UseShellExecute = false,
         };
         using var process = Process.Start(psi)!;
-        var xml = process.StandardOutput.ReadToEnd();
-        process.StandardError.ReadToEnd();
+        // Drain BOTH pipes concurrently and bound the wait (#1068, #1516): a synchronous
+        // ReadToEnd() on a stuck child blocks forever and xUnit's timeout cannot abort it.
+        var stdout = process.StandardOutput.ReadToEndAsync();
+        var stderr = process.StandardError.ReadToEndAsync();
         if (!process.WaitForExit(30_000))
         {
             process.Kill(entireProcessTree: true);
             throw new TimeoutException("mutool did not exit within 30s; killed it.");
         }
+        var xml = stdout.GetAwaiter().GetResult();
+        stderr.GetAwaiter().GetResult();
 
         var page = XDocument.Parse(xml).Descendants("page").Single();
         var width = double.Parse(page.Attribute("width")!.Value, System.Globalization.CultureInfo.InvariantCulture);
