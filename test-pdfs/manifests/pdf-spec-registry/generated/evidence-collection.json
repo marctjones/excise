@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1614,
-  "indexedContentSha256": "a6f536036825b8572e950c952dc2faac8b2dffe691ca4e00a410509b8b90c09d",
+  "indexedFileCount": 1616,
+  "indexedContentSha256": "52de40b71a6612f44ff6c0ece2ac69bd1f6a4d13c1f5830ebc077ed6fd317126",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -10923,7 +10923,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 210
+      "candidateReferenceCount": 211
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -13627,6 +13627,14 @@
           ]
         },
         {
+          "path": "Excise.App/Services/RedactionService.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "content-stream",
+            "iso"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Conformance/Pdf20RendererRequirementMatrixTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -13857,17 +13865,9 @@
             "content-stream",
             "iso"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Signatures/SignatureVerificationServiceTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "iso",
-            "operators"
-          ]
         }
       ],
-      "candidateReferenceCount": 155
+      "candidateReferenceCount": 156
     },
     {
       "id": "pdf.17.content.text-state",
@@ -56450,6 +56450,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/PdfPageRedactionExtensions.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/Recovery/RestoredCopyBuilder.cs",
           "kind": "source",
           "matchedTerms": [
@@ -57142,7 +57152,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 79
+      "candidateReferenceCount": 80
     },
     {
       "id": "pdf.20.annotation.subtype-018",
@@ -66245,11 +66255,11 @@
             "acroform",
             "forms",
             "policy",
+            "widgets",
             "xfa",
             "acroform",
             "action",
-            "annotation",
-            "redact"
+            "annotation"
           ]
         },
         {
@@ -66274,10 +66284,10 @@
             "fields",
             "forms",
             "policy",
+            "widgets",
             "xfa",
             "acroform",
-            "action",
-            "annotation"
+            "action"
           ]
         },
         {
@@ -66758,7 +66768,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 258
+      "candidateReferenceCount": 260
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -67438,7 +67448,6 @@
           "path": "Excise.Core/Xfa/PdfXfaLayout.cs",
           "kind": "source",
           "matchedTerms": [
-            "actions",
             "javascript",
             "uri",
             "acroform",
@@ -72616,7 +72625,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 821
+      "candidateReferenceCount": 823
     },
     {
       "id": "pdf.20.extension.developer",
@@ -77496,7 +77505,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 178
+      "candidateReferenceCount": 179
     },
     {
       "id": "pdfe.product.security.external-links",
@@ -78665,7 +78674,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 157
+      "candidateReferenceCount": 158
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",
@@ -79518,17 +79527,6 @@
           ]
         },
         {
-          "path": "Excise.Core/Xfa/PdfXfaLayout.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "documents",
-            "ocr",
-            "ocr",
-            "redaction",
-            "security"
-          ]
-        },
-        {
           "path": "Excise.App/Services/AnnotationWorkflowService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -79940,6 +79938,16 @@
             "ocr",
             "ocr",
             "redaction"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/Differential/XfaGeneratedWidgetOracleTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "scanned",
+            "redaction",
+            "security"
           ]
         },
         {
@@ -81512,7 +81520,6 @@
           "matchedTerms": [
             "forms",
             "javascript",
-            "ocr",
             "redaction",
             "security"
           ]
