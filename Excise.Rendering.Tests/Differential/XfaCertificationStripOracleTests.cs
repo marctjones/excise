@@ -180,7 +180,7 @@ public class XfaCertificationStripOracleTests : IDisposable
     // ================================================================ the CLI, out of process
 
     [Fact]
-    public void Cli_FillFormOnACertifiedStaticXfaForm_StripsAndWarnsOnStderr()
+    public async Task Cli_FillFormOnACertifiedStaticXfaForm_StripsAndWarnsOnStderr()
     {
         RequireTools();
         var cli = FindCliAssembly();
@@ -199,10 +199,11 @@ public class XfaCertificationStripOracleTests : IDisposable
         foreach (var argument in new[] { cli!, "fill-form", input, output, "--field", $"{XfaStaticFillFixtures.NamePath}=Grace" })
             start.ArgumentList.Add(argument);
         using var child = System.Diagnostics.Process.Start(start)!;
-        var stdout = child.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
-        var stderr = child.StandardError.ReadToEnd();
+        var stdoutTask = child.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
+        var stderr = await child.StandardError.ReadToEndAsync(TestContext.Current.CancellationToken);
+        var stdout = await stdoutTask;
         child.WaitForExit(120_000).Should().BeTrue();
-        child.ExitCode.Should().Be(0, $"stdout={stdout.Result} stderr={stderr}");
+        child.ExitCode.Should().Be(0, $"stdout={stdout} stderr={stderr}");
 
         stderr.Should().Contain("Warning: The form's certification was removed")
             .And.Contain("Warning: certification removed: /Perms /DocMDP")
