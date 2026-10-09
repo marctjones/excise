@@ -38,8 +38,8 @@
                              canvas stays anchored at the grid's left edge, so highlights,
                              form boxes, and redaction previews land (gridW-imageW)/2 dips
                              left of the text (≈400 dips at 52% zoom: 'highlight very far to
-                             the left'). Centering the wrapper makes it size to content, so
-                             grid == image == overlay origin at every zoom. -->
+                             the left'). Centering the wrapper makes it size to content (up to
+                             device-pixel rounding, see PdfImage below), so grid == image == overlay origin. -->
                         <LayoutTransformControl x:Name="ZoomHost"
                                                 HorizontalAlignment="Center"
                                                 VerticalAlignment="Center">
@@ -48,8 +48,18 @@
                             </LayoutTransformControl.LayoutTransform>
 
                             <Grid x:Name="ContentGrid">
-                                <!-- PDF Page Image (no transform here — the wrapper scales us). -->
-                                <Image x:Name="PdfImage" Stretch="Fill" />
+                                <!-- PDF Page Image (no transform here — the wrapper scales us).
+                                     Top/Left, not the default centring, because the grid can be
+                                     arranged larger than the image (#2010): the wrapper rounds
+                                     its scaled size up to whole device pixels and arranges the
+                                     grid at rounded/scale (5617 dips × 0.2 = 1123.4 → 1124 →
+                                     5620 dips on an A0 page). A centred image then sat 1.5-3
+                                     dips right/down of the overlay canvas, which is anchored at
+                                     the grid origin, so input and highlights were ~1-2 pt off
+                                     the glyphs. Anchoring both at (0,0) puts the sub-pixel
+                                     excess at the right/bottom, where nothing is drawn. -->
+                                <Image x:Name="PdfImage" Stretch="Fill"
+                                       HorizontalAlignment="Left" VerticalAlignment="Top" />
 
                                 <!-- Overlay canvases for annotations. -->
                                 <Canvas x:Name="OverlayCanvas"

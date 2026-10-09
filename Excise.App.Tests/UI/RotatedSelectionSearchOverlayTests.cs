@@ -96,13 +96,6 @@ public sealed class RotatedSelectionSearchOverlayTests : IDisposable
             await AssertSearchHighlightsAsync(window, viewer, oracle, searchTerm, "after Find Previous");
         }
 
-        // On issue14497's A0 page the overlay canvas sits 2-3 px off the page image, so a
-        // drag cannot be placed on MuPDF's glyphs (#2010). Selecting 'Parklands' on this
-        // page is asserted at the engine level by TurnedTextFindAndRedactTests (#2008).
-        Assert.SkipWhen(s.FixtureId == "pdfjs-issue14497",
-            "Search was checked against MuPDF above. The drag selection is skipped: the overlay " +
-            "canvas and the page image disagree by 2-3 px on this A0 page (#2010).");
-
         // Drag from MuPDF's first char centre of the target to its last.
         await SinglePageSelectAsync(window, viewer, vm, oracle, selectTerm);
 
