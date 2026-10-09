@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "e866d2f0173a8b4a32f82386b96cfd9a1797d4200a842873151f112565d4eace",
+  "sourceFingerprint": "7277c6bd171ba90b7d792cef83ecb59b48836c9d78df99d853a7b1dc80369f36",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -6609,6 +6609,26 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Xfa/XfaFieldMap.cs",
+      "path": "Excise.Core/Xfa/XfaFieldMap.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Xfa/XfaFormSom.cs",
+      "path": "Excise.Core/Xfa/XfaFormSom.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Xfa/XfaImage.cs",
       "path": "Excise.Core/Xfa/XfaImage.cs",
       "kind": "source-file",
@@ -11726,7 +11746,7 @@
     }
   ],
   "summary": {
-    "records": 593,
+    "records": 595,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 20,
@@ -11734,7 +11754,7 @@
       "fonts": 34,
       "forms": 11,
       "images": 40,
-      "product-integration-general": 340,
+      "product-integration-general": 342,
       "redaction": 83,
       "safe-save-and-metadata": 20,
       "security-and-encryption": 24,
@@ -11813,7 +11833,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 24,
       "pdfe.product.security.signature-and-permission-warning:write": 24
     },
-    "fallbackRecords": 340,
+    "fallbackRecords": 342,
     "allRecordsMapped": true
   }
 }
