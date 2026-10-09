@@ -1389,7 +1389,7 @@ steps stop editing the registry per file.
 |---|---|---|
 | `_windowSettings` load/apply (ctor 122–124), `PersistWindowStateOnClose` (210–228) | stays, but through `ISettingsStore` injected into the window (constructor parameter or `App`-set property) | window geometry capture/apply is view state; the store must be fakeable so tests stop writing `window.json` |
 | `OnWindowClosing`, `PromptThenCloseAsync`, `_closeApproved` (156–208) | stays | cancelling a routed window event and re-issuing `Close()` is view mechanics; the decision is `Session.ConfirmDiscardUnsavedChangesAsync` |
-| `ConfigurePlatformMenu`, `SchedulePlatformMenuConfigure`, native-menu fields, `Opened` hook, macOS `MainMenuBar`/`TitleBarAppLabel` tweaks (115–119, 143–147, 361–412) | stays | platform exporter timing; `MacNativeMenuBuilder` keeps reading shell property names |
+| `ConfigurePlatformMenu`, `SchedulePlatformMenuConfigure`, native-menu fields, `Opened` hook, macOS `MainMenuBar` tweaks (115–119, 143–147, 361–412) | stays | platform exporter timing; `MacNativeMenuBuilder` keeps reading shell property names |
 | `CacheTrimTarget`, `CacheTrimPolicyChanged`, `CacheTrimPolicyFor` (49–69) | stays | reports the viewer to `App` for #1478 wiring |
 | `OnPerformanceSettingsApplied` (75–86), the `PerformanceSettingsApplied` subscription and `ViewerTileCacheResidentBytesProvider` (302–305) | `ViewerPerformanceBinder` + a bound `PerformanceSettings` property | removes an event and a control-capturing callback from the VM |
 | Preference application in `OnDataContextChanged` (288–299) | `App` (or the window) passes `ISettingsStore` to the shell; the shell's `PreferencesFacade` loads on construction | the VM should not need the view to tell it its own persisted preferences |
