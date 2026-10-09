@@ -268,12 +268,21 @@ internal static class RedactCommand
                 ? Excise.Core.Text.Segmentation.RedactionProfile.Maximum
                 : Excise.Core.Text.Segmentation.RedactionProfile.Standard;
 
+            // An explicit --carrier-policy overrides only the carriers it names; every other
+            // carrier keeps the PROFILE's mode. With no spec at all the request carries no
+            // policy, and the handler uses the profile's whole policy. Passing the parse of an
+            // empty spec list (all Strip) made `--profile maximum` run the Standard-strength
+            // carrier policy (#2046).
             var carrierPolicySpecs = parseResult.GetValue(carrierPolicyOption) ?? Array.Empty<string>();
-            if (!TryParseCarrierPolicy(carrierPolicySpecs, out var carrierPolicy, out var policyError))
+            if (!TryParseCarrierPolicy(
+                    carrierPolicySpecs, out var parsedCarrierPolicy, out var policyError,
+                    Excise.Core.Text.Segmentation.RedactionOptions.ForProfile(profile).CarrierPolicy))
             {
                 Console.Error.WriteLine($"Invalid --carrier-policy: {policyError}");
                 return 1;
             }
+            Excise.Core.Operations.CarrierScrubPolicy? carrierPolicy =
+                carrierPolicySpecs.Any(spec => !string.IsNullOrWhiteSpace(spec)) ? parsedCarrierPolicy : null;
 
             (double R, double G, double B)? boxColor = null;
             if (boxColorSpec != null && !TryParseBoxColor(boxColorSpec, out boxColor, out var colorError))
@@ -359,14 +368,17 @@ internal static class RedactCommand
     /// <see cref="Excise.Core.Operations.CarrierScrubPolicy"/> (#1188/#1169).
     /// An unrecognised carrier or mode is an ERROR, never a silently ignored
     /// spec: a user who thinks they asked for remove-whole and got strip has a
-    /// leak they cannot see.
+    /// leak they cannot see. <paramref name="baseline"/> is what an unnamed
+    /// carrier keeps: the output profile's policy, so naming one carrier under
+    /// <c>--profile maximum</c> does not quietly downgrade the others (#2046).
     /// </summary>
     internal static bool TryParseCarrierPolicy(
         IReadOnlyList<string> specs,
         out Excise.Core.Operations.CarrierScrubPolicy policy,
-        out string? error)
+        out string? error,
+        Excise.Core.Operations.CarrierScrubPolicy? baseline = null)
     {
-        policy = Excise.Core.Operations.CarrierScrubPolicy.Default;
+        policy = baseline ?? Excise.Core.Operations.CarrierScrubPolicy.Default;
         error = null;
 
         foreach (var raw in specs)
