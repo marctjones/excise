@@ -36,13 +36,44 @@ internal static class FormFieldInputFactory
         return input;
     }
 
-    /// <summary>Order fields the way a person reads a form: top to bottom, then left to right.</summary>
-    internal static List<PdfField> OrderFormFieldsForTabbing(IEnumerable<PdfField> fields) => fields
-        .Where(field => field.Rect.HasValue)
-        .OrderByDescending(field => field.Rect!.Value.Top)
-        .ThenBy(field => field.Rect!.Value.Left)
-        .ThenBy(field => field.FullName, StringComparer.Ordinal)
-        .ToList();
+    /// <summary>
+    /// Order fields the way a person reads a form: top to bottom, then left to right.
+    /// </summary>
+    /// <remarks>
+    /// "Top to bottom" is by ROW, not by the exact top edge: two fields on one printed row whose
+    /// tops differ by a few hundredths of a point (every real form has them) were visited right to
+    /// left, Middle name before First name (#2056). A field joins the row of the highest field in
+    /// it when the two overlap vertically by at least half of the smaller height; a row is then
+    /// walked left to right. Measured against the order the form's author listed the widgets in
+    /// (/Annots), this follows it on the passport forms where the exact-top sort followed a third.
+    /// </remarks>
+    internal static List<PdfField> OrderFormFieldsForTabbing(IEnumerable<PdfField> fields)
+    {
+        var rows = new List<List<PdfField>>();
+        foreach (var field in fields
+                     .Where(f => f.Rect.HasValue)
+                     .OrderByDescending(f => f.Rect!.Value.Top)
+                     .ThenBy(f => f.Rect!.Value.Left)
+                     .ThenBy(f => f.FullName, StringComparer.Ordinal))
+        {
+            var rect = field.Rect!.Value;
+            var row = rows.FirstOrDefault(r =>
+            {
+                var anchor = r[0].Rect!.Value;
+                var overlap = Math.Min(rect.Top, anchor.Top) - Math.Max(rect.Bottom, anchor.Bottom);
+                return overlap >= 0.5 * Math.Min(rect.Height, anchor.Height);
+            });
+            if (row == null) rows.Add(new List<PdfField> { field });
+            else row.Add(field);
+        }
+
+        return rows
+            .SelectMany(r => r
+                .OrderBy(f => f.Rect!.Value.Left)
+                .ThenByDescending(f => f.Rect!.Value.Top)
+                .ThenBy(f => f.FullName, StringComparer.Ordinal))
+            .ToList();
+    }
 
     /// <summary>Names and rectangles only: a typed value must not look like a changed page.</summary>
     internal static int FormFieldSetSignature(IEnumerable<PdfField> fields)
