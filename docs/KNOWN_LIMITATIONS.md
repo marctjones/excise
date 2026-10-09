@@ -116,3 +116,6 @@ release notes:
   and ratchet; regenerate with `scripts/check-extraction-parity.sh --update`
   (requires `mutool`), and see #645/#513. Re-run the gate before restating any
   of these numbers.
+  The smoke corpus has no dynamic XFA form; `--xfa` grades those pages (laid out
+  with generated widgets, plus a synthetic filled form) against
+  `tests/extraction-parity/xfa-baseline.json` (#2039).

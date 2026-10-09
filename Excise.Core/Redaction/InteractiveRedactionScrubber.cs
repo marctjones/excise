@@ -161,6 +161,77 @@ internal static class InteractiveRedactionScrubber
         return changed;
     }
 
+    /// <summary>
+    /// #2039 — a choice field names its selection by the SAVE value of an
+    /// <c>[save display]</c> option pair (§12.7.4.4; XFA 3.3 p758-760): <c>/V</c>
+    /// "CAN" while the widget shows "Canada". Cutting the term out of the value
+    /// strings cannot reach that: "CAN" does not contain "Canada", yet it says
+    /// which option was chosen as plainly as the display text did. So for every
+    /// pair whose display text holds the term, its save value is blanked and
+    /// any <c>/V</c> or <c>/DV</c> selecting it is removed, with <c>/I</c> (the
+    /// selected indices, which point at the same option) when the selection
+    /// changed. Pairs whose display does not hold the term are left alone.
+    /// </summary>
+    private static bool RedactChoiceSelection(
+        PdfDocument document,
+        PdfDictionary field,
+        string term,
+        bool caseSensitive,
+        HashSet<int> pruneCandidates,
+        bool wholeWord)
+    {
+        if (document.Resolve(field.GetOptional("Opt") ?? PdfNull.Instance) is not PdfArray options)
+            return false;
+
+        var saves = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var item in options)
+        {
+            if (document.Resolve(item) is not PdfArray { Count: >= 2 } pair
+                || document.Resolve(pair[0]) is not PdfString save
+                || document.Resolve(pair[1]) is not PdfString display
+                || !TermMatch.Holds(display.Value, [term], caseSensitive, wholeWord))
+                continue;
+            saves.Add(save.Value);
+            pair[0] = new PdfString(string.Empty);
+        }
+        if (saves.Count == 0)
+            return false;
+        CaptureObjectGraph(document, field.GetOptional("Opt"), pruneCandidates);
+
+        var selectionChanged = false;
+        foreach (var key in new[] { "V", "DV" })
+        {
+            var raw = field.GetOptional(key);
+            switch (raw == null ? null : document.Resolve(raw))
+            {
+                case PdfString s when saves.Contains(s.Value):
+                    CaptureObjectGraph(document, raw, pruneCandidates);
+                    field.Remove(key);
+                    selectionChanged = true;
+                    break;
+
+                case PdfArray values:
+                    var kept = new PdfArray();
+                    foreach (var v in values)
+                    {
+                        if (document.Resolve(v) is PdfString s2 && saves.Contains(s2.Value))
+                            continue;
+                        kept.Add(v);
+                    }
+                    if (kept.Count != values.Count)
+                    {
+                        CaptureObjectGraph(document, raw, pruneCandidates);
+                        field[key] = kept;
+                        selectionChanged = true;
+                    }
+                    break;
+            }
+        }
+        if (selectionChanged)
+            field.Remove("I");
+        return true;
+    }
+
     private static bool ScrubFormFields(
         PdfPage page,
         PdfRectangle area,
@@ -275,10 +346,17 @@ internal static class InteractiveRedactionScrubber
             // /Opt carries the same risk even though it isn't rendered as
             // extractable text today.
             if (field.FieldType == PdfFieldType.Choice)
+            {
+                // #2039: before the display strings are cut, so the options
+                // whose display holds the term can still be told apart.
+                if (term != null)
+                    changed |= RedactChoiceSelection(
+                        page.Document, field.RawDictionary, term, caseSensitive, pruneCandidates, wholeWord);
                 changed |= term != null
                     ? RedactOptionList(
                         page.Document, field.RawDictionary, term, caseSensitive, pruneCandidates, wholeWord)
                     : field.RawDictionary.Remove("Opt");
+            }
 
             foreach (var widget in field.WidgetDictionaries)
             {

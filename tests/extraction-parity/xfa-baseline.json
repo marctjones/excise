@@ -1,0 +1,236 @@
+{
+  "aggregateCoverage": 1.0016,
+  "generatedUtc": "2026-10-09T06:39:20.5146470Z",
+  "mutoolVersion": "mutool version 1.28.5",
+  "pageCount": 57,
+  "pages": {
+    "test-pdfs/pdfium/bug_1055869.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/bug_1058653.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/bug_1301.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/bug_1301.pdf#2": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/bug_306123.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/bug_306123.pdf#2": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/bug_504416752.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/javascript/xfa_specific/resolve_nodes_1.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 0.9294
+    },
+    "test-pdfs/pdfium/javascript/xfa_specific/resolve_nodes_2.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 0.9294
+    },
+    "test-pdfs/pdfium/pixel/xfa_specific/barcode_test.pdf#1": {
+      "coverageFloor": 1.625,
+      "similarityFloor": 0.7317
+    },
+    "test-pdfs/pdfium/pixel/xfa_specific/dynamic_list_box_allow_multiple_selection.pdf#1": {
+      "coverageFloor": 1.1359,
+      "similarityFloor": 0.8727
+    },
+    "test-pdfs/pdfium/pixel/xfa_specific/dynamic_password_field_background_fill.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/pixel/xfa_specific/dynamic_table_color_and_width.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/pixel/xfa_specific/resolve_nodes_0.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 0.9294
+    },
+    "test-pdfs/pdfium/pixel/xfa_specific/xfa_node_caption.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/pixel/xfa_specific/xfa_node_caption.pdf#2": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/simple_xfa.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/xfa/email_recommended.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/xfa/xfa_break_before_after.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/xfa/xfa_break_before_after.pdf#10": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/xfa/xfa_break_before_after.pdf#2": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/xfa/xfa_break_before_after.pdf#3": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/xfa/xfa_break_before_after.pdf#4": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/xfa/xfa_break_before_after.pdf#5": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/xfa/xfa_break_before_after.pdf#6": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/xfa/xfa_break_before_after.pdf#7": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/xfa/xfa_break_before_after.pdf#8": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/xfa/xfa_break_before_after.pdf#9": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/xfa/xfa_combobox.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/xfa/xfa_date_time_edit.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/xfa/xfa_image_edit.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfium/xfa/xfa_multiline_textfield.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/pdfjs/issue14130.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/hsbc-cloture-compte.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/hsbc-cloture-compte.pdf#2": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/hsbc-cloture-compte.pdf#3": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/hsbc-cloture-compte.pdf#4": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/imm1295e.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/imm1295e.pdf#2": {
+      "coverageFloor": 1.0032,
+      "similarityFloor": 0.997
+    },
+    "test-pdfs/xfa-real/imm1295e.pdf#3": {
+      "coverageFloor": 1.0039,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/imm1295e.pdf#4": {
+      "coverageFloor": 1.0033,
+      "similarityFloor": 0.9968
+    },
+    "test-pdfs/xfa-real/imm1295e.pdf#5": {
+      "coverageFloor": 1.0016,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/imm5257e.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/imm5257e.pdf#2": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/imm5257e.pdf#3": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/imm5257e.pdf#4": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/imm5257e.pdf#5": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/ohio-expense-report.pdf#1": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/ohio-expense-report.pdf#2": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/ohio-expense-report.pdf#3": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/ohio-expense-report.pdf#4": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/ohio-expense-report.pdf#5": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/ohio-expense-report.pdf#6": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/ohio-expense-report.pdf#7": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/ohio-expense-report.pdf#8": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "test-pdfs/xfa-real/ohio-expense-report.pdf#9": {
+      "coverageFloor": 1,
+      "similarityFloor": 1
+    },
+    "xfa-synthetic/filled.pdf#1": {
+      "coverageFloor": 1.0769,
+      "similarityFloor": 0.9872
+    }
+  }
+}

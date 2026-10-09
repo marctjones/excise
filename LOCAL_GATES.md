@@ -458,8 +458,9 @@ corpora resolve, or FAIL before any oracle row can skip its way green),
 2026-09-04; that failure, #1180's test, passes since #1361 — re-measured
 2026-09-09 — and the row's `knownIssue` is `-`, so ANY failure there blocks),
 `app-oracles` (13/13), `core-oracles` (14/14), each with a `*-floor`
-row, plus the parity ratchets `extraction-parity`, `copy-whitespace-parity`
-and `advance-parity`.
+row, plus the parity ratchets `extraction-parity`, `extraction-parity-xfa`
+(the same ratchet over dynamic XFA forms laid out with generated widgets, #2039),
+`copy-whitespace-parity` and `advance-parity`.
 
 **Why the floors.** `dotnet test` exits 0 when every test skipped and 0 when
 every test passed. These tests gate on `Assert.SkipUnless(IsAvailable)`, so a

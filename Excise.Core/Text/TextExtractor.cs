@@ -123,13 +123,35 @@ public class TextExtractor
     }
 
     /// <summary>
-    /// Walk the page's AcroForm fields and emit synthetic Letters for any with
-    /// a string value (/V) and a widget rectangle. Positions are an estimate
-    /// based on the widget rect — the real glyph layout would require parsing
-    /// the field's appearance stream, which the read-only AcroForm slice
-    /// deliberately defers. For search and redaction the rect-based positions
-    /// are precise enough: the redaction rectangle still encloses the value,
-    /// and search just needs the text content present.
+    /// Walk the page's AcroForm fields and emit their text: what each widget's
+    /// appearance DRAWS, and, where that does not already read as the field's
+    /// value carriers, synthetic letters for those carriers.
+    ///
+    /// <para><b>The appearance (#2039).</b> A widget's <c>/AP /N</c> is the ink
+    /// every reader paints (ISO 32000-2 12.5.5) when <c>/NeedAppearances</c> is
+    /// not asking it to redraw. Its glyphs are walked through the one
+    /// content-stream walk, from the default graphics and text state, with the
+    /// form-to-page transform of Algorithm 8.1 (<see cref="AppearanceMapping"/>),
+    /// so each letter sits where its glyph is drawn. The text can differ from
+    /// <c>/V</c>: a choice field's <c>/V</c> is its SAVE value (§12.7.4.4; XFA
+    /// 3.3 p758-760) while the widget shows the display text ("CAN" against
+    /// "Canada"), and a producer may format a value it draws. Reading only
+    /// <c>/V</c> left the shown text unfindable, so a redaction of it removed
+    /// nothing and reported success. The letters carry the "AcroForm:" font
+    /// prefix so a match routes to <see cref="Segmentation.InteractiveRedactionScrubber"/>,
+    /// which rewrites the appearance and the value carriers; no page operand
+    /// backs them (<see cref="Letter.OperandByteOffset"/> -1).</para>
+    ///
+    /// <para><b>The carriers.</b> <c>/V</c> (or <c>/DV</c>), and a list box's
+    /// option list (#661), are text the file holds and a reader honouring
+    /// <c>/NeedAppearances</c> draws. Each is emitted as before, as synthetic
+    /// letters placed by estimate inside <c>/Rect</c>, UNLESS a search of the
+    /// appearance letters already finds it (a value drawn as written is read
+    /// once, not twice) or, for a choice field, the appearance draws the
+    /// display text of the option whose save value it is. Anything else (no
+    /// appearance, an appearance that draws no text or a stale value, a font
+    /// with no usable Unicode mapping, a comb whose cells read apart) keeps the
+    /// synthetic letters, so nothing findable before is unfindable now.</para>
     /// </summary>
     private void EmitFormFieldLetters()
     {
@@ -137,58 +159,47 @@ public class TextExtractor
         try { fields = _page.GetFormFields(); }
         catch (Exception __ex) when (__ex is not OutOfMemoryException) { return; }
 
+        var pageWidgets = PageWidgetSet();
         foreach (var field in fields)
         {
             if (field.Rect == null) continue;
+            var fontName = $"AcroForm:{field.FieldType}";
 
-            // List box (Choice, non-combo): the widget visually renders its
-            // ENTIRE /Opt option list, with the current selection
-            // highlighted — that's how list boxes work, unlike a closed
-            // combo box which shows only the selected value. mutool
-            // (render-based) sees every option string across all of a
-            // page's list-box widgets; before this, excise only emitted the
-            // selected /V, systematically under-extracting them (#661).
-            // Combo boxes deliberately stay on the /V-only path below —
-            // confirmed against mutool that a closed combo box renders
-            // only its selected value, never its option list.
+            var drawn = ReadFieldAppearanceLetters(field, pageWidgets, fontName, out var hidden);
+            _letters.AddRange(drawn);
+
+            // Signature (#669: a "Digitally signed by…" block) and Button
+            // (#1760: a pushbutton's caption; a checkbox's /V is a state name)
+            // have no text carrier: what the appearance draws is all there is.
+            // A hidden widget's appearance text is read as before #2039: its
+            // text, laid out by estimate in /Rect.
+            if (field.FieldType is PdfFieldType.Signature or PdfFieldType.Button)
+            {
+                foreach (var widget in hidden)
+                {
+                    var text = ExtractWidgetAppearanceText(widget);
+                    if (!string.IsNullOrEmpty(text))
+                        EmitMultiLineLettersInRect(text, field.Rect.Value, fontName);
+                }
+                continue;
+            }
+
+            // List box (Choice, non-combo): the widget renders its option list,
+            // not only the selection (#661). Options the appearance does not
+            // draw (scrolled out of view, or no appearance) are still in the
+            // file. A combo box shows only its value: the /V path below.
             if (field.FieldType == PdfFieldType.Choice && !field.IsComboBox &&
                 field.Options is { Count: > 0 } options)
             {
-                EmitMultiLineLettersInRect(
-                    string.Join("\n", options), field.Rect.Value, $"AcroForm:{field.FieldType}");
-                continue;
-            }
-
-            // Signature fields have no string /V (it's a signature dictionary,
-            // not text) but their /AP/N appearance stream commonly draws real,
-            // visible text — a "Digitally signed by X, date, reason" block
-            // (#669). That text lives in a nested Form XObject the appearance
-            // invokes, not anywhere EmitFormFieldLetters otherwise looks.
-            if (field.FieldType == PdfFieldType.Signature)
-            {
-                EmitAppearanceStreamLetters(field);
-                continue;
-            }
-
-            // #1760: /V on a Button holds an on/off STATE NAME
-            // (checkbox/radio) or is absent (pushbutton) — never human
-            // -readable text on its own. But a PUSHBUTTON's /AP/N commonly
-            // draws a CUSTOM CAPTION as real, visible text (issue15053: "This
-            // Button can be toggled", no /V at all), the exact same shape
-            // #669 fixed for Signature fields above. Route through the same
-            // appearance-text extraction rather than skipping the field
-            // outright — the old blanket skip meant a pushbutton's caption
-            // was invisible to search AND redaction while mutool rendered it
-            // plainly, so `excise redact ... toggled` reported success with
-            // the caption fully intact.
-            if (field.FieldType == PdfFieldType.Button)
-            {
-                EmitAppearanceStreamLetters(field);
+                var missing = options.Where(o => !AppearanceReads(drawn, o)).ToList();
+                if (missing.Count > 0)
+                    EmitMultiLineLettersInRect(string.Join("\n", missing), field.Rect.Value, fontName);
                 continue;
             }
 
             var value = field.Value ?? field.DefaultValue;
             if (string.IsNullOrEmpty(value)) continue;
+            if (AppearanceReads(drawn, value) || AppearanceReadsChoiceDisplay(field, drawn, value)) continue;
 
             // Plain multiline text fields (/Ff bit 12) can hold far more than
             // fits on one line — the same reasoning as the Choice-listbox
@@ -196,38 +207,202 @@ public class TextExtractor
             // single-line EmitLettersInRect silently truncates to whatever
             // fits the rect's width, which is wrong for one long line.
             if (field.IsMultiline)
-                EmitMultiLineLettersInRect(value, field.Rect.Value, $"AcroForm:{field.FieldType}");
+                EmitMultiLineLettersInRect(value, field.Rect.Value, fontName);
             else
-                EmitLettersInRect(value, field.Rect.Value, $"AcroForm:{field.FieldType}");
+                EmitLettersInRect(value, field.Rect.Value, fontName);
         }
     }
 
-    /// <summary>
-    /// Emit synthetic Letters for a field's rendered appearance text — a
-    /// Signature's "Digitally signed by…" block (#669) or a pushbutton's
-    /// custom caption (#1760). Both have no ORDINARY string value to read
-    /// (a signature widget's <c>/V</c> is a signature dictionary; a button's
-    /// is an on/off state name or absent entirely), so the normal
-    /// value-based path above never applies — but the widget's <c>/AP/N</c>
-    /// appearance stream frequently draws real text that mutool's renderer
-    /// (and a human) sees, which excise was blind to entirely before this.
-    /// Font-name prefix is still "AcroForm:" (not a new prefix) so
-    /// <c>PdfDocumentRedactionExtensions.IsInteractiveOnlyMatch</c> already
-    /// routes a match here through <see cref="InteractiveRedactionScrubber"/>
-    /// with no changes needed there beyond no longer skipping these field
-    /// types when scrubbing (see that class).
-    /// </summary>
-    private void EmitAppearanceStreamLetters(PdfField field)
+    // The walk for widget appearances: one per extraction, so its font caches
+    // serve every widget, and never the page's own walker, whose graphics and
+    // text state are whatever the page content left (an appearance starts from
+    // the defaults, §12.5.5 and §8.4.1). RunNested restores this walker's
+    // default state after each appearance.
+    private ContentStreamWalker? _appearanceWalker;
+
+    // While an appearance is walked: the "AcroForm:" font name its letters
+    // carry (see AddLetter). Null on every other walk.
+    private string? _appearanceFontName;
+
+    /// <summary>The widget annotations in this page's <c>/Annots</c>.</summary>
+    private HashSet<PdfDictionary> PageWidgetSet()
     {
-        if (field.Rect == null) return;
-
-        foreach (var widget in field.WidgetDictionaries)
+        var set = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+        if (_page.Document.Resolve(_page.Dictionary.GetOptional("Annots") ?? PdfNull.Instance) is not PdfArray annots)
+            return set;
+        foreach (var item in annots)
         {
-            var text = ExtractWidgetAppearanceText(widget);
-            if (string.IsNullOrEmpty(text)) continue;
-
-            EmitMultiLineLettersInRect(text, field.Rect.Value, $"AcroForm:{field.FieldType}");
+            if (_page.Document.Resolve(item) is PdfDictionary annot && annot.GetNameOrNull("Subtype") == "Widget")
+                set.Add(annot);
         }
+        return set;
+    }
+
+    /// <summary>
+    /// The letters a field's widgets on this page draw, at their drawn
+    /// positions. A single-widget field is on this page by construction
+    /// (<see cref="PdfPage.GetFormFields"/>); a widget of a multi-widget field
+    /// must be in this page's <c>/Annots</c>.
+    /// </summary>
+    /// <remarks>
+    /// A widget flagged Hidden or NoView (§12.5.3 Table 167) paints nothing on
+    /// screen, so its appearance is not page text; it is listed in
+    /// <paramref name="hidden"/> and keeps the reading it had before #2039. Its
+    /// appearance is a carrier the redaction profile removes and reports
+    /// (<c>RemoveHiddenAnnotationAppearances</c>, #1581). A widget of a
+    /// multi-widget field that is not in this page's <c>/Annots</c> is listed
+    /// there too.
+    /// </remarks>
+    private List<Letter> ReadFieldAppearanceLetters(
+        PdfField field, HashSet<PdfDictionary> pageWidgets, string fontName, out List<PdfDictionary> hidden)
+    {
+        var letters = new List<Letter>();
+        hidden = new List<PdfDictionary>();
+        var widgets = field.WidgetDictionaries;
+        foreach (var widget in widgets)
+        {
+            if (widgets.Count > 1 && !pageWidgets.Contains(widget))
+            {
+                // Not painted on this page: the pre-#2039 reading, as for a
+                // hidden widget (a field's other pages are #2040).
+                hidden.Add(widget);
+                continue;
+            }
+            if (_page.Document.Resolve(widget.GetOptional("F") ?? PdfNull.Instance) is PdfObject f
+                && f.TryGetNumber(out var flags) && ((int)flags & (AnnotationFlagHidden | AnnotationFlagNoView)) != 0)
+            {
+                hidden.Add(widget);
+                continue;
+            }
+            letters.AddRange(ReadWidgetAppearanceLetters(widget, fontName));
+        }
+        return letters;
+    }
+
+    private const int AnnotationFlagHidden = 1 << 1;
+    private const int AnnotationFlagNoView = 1 << 5;
+
+    /// <summary>
+    /// Walk one widget's normal appearance (by <c>/AS</c> for a state
+    /// dictionary) and return its letters in page space: Algorithm 8.1's
+    /// <c>Matrix × A</c> is the walk's starting CTM, so the walker itself puts
+    /// every glyph, nested forms included, where the page draws it.
+    /// </summary>
+    private List<Letter> ReadWidgetAppearanceLetters(PdfDictionary widget, string fontName)
+    {
+        var result = new List<Letter>();
+        if (ResolveNormalAppearance(widget) is not { } appearance)
+            return result;
+        if (_page.Document.Resolve(widget.GetOptional("Rect") ?? PdfNull.Instance) is not PdfArray rectArray
+            || !AppearanceMapping.TryGetNumbers(_page.Document, rectArray, 4, out var r)
+            || !AppearanceMapping.TryFormToPage(_page.Document, appearance,
+                new PdfRectangle(r[0], r[1], r[2], r[3]), out var formToPage))
+            return result;
+
+        var start = _letters.Count;
+        // Marked content of the page does not enclose an annotation: the walk
+        // starts outside every span the page left open, and leaves none.
+        var savedHidden = _hiddenOptionalContentDepth;
+        var savedUnscoped = _unscopedHiddenDepth;
+        var savedUnscopedCount = _unscopedHiddenStack.Count;
+        var savedMcid = _currentMcid;
+        _hiddenOptionalContentDepth = 0;
+        _unscopedHiddenDepth = 0;
+        _appearanceFontName = fontName;
+        try
+        {
+            RunFormXObject(_appearanceWalker ??= CreateWalker(Array.Empty<byte>()), appearance,
+                fromIdentityCtm: true, matrixOverride: formToPage);
+        }
+        finally
+        {
+            _appearanceFontName = null;
+            while (_unscopedHiddenStack.Count > savedUnscopedCount)
+                _unscopedHiddenStack.Pop();
+            _hiddenOptionalContentDepth = savedHidden;
+            _unscopedHiddenDepth = savedUnscoped;
+            _currentMcid = savedMcid;
+        }
+
+        result.AddRange(_letters.Skip(start));
+        _letters.RemoveRange(start, _letters.Count - start);
+        // An appearance is a content stream like any other: RTL runs in it
+        // are in visual order (#632).
+        BidiReorderer.ReorderVisualRtlRuns(result);
+        return result;
+    }
+
+    /// <summary>A widget's <c>/AP /N</c> form, by <c>/AS</c> for a state dictionary (first entry when <c>/AS</c> is absent or names none).</summary>
+    private PdfStream? ResolveNormalAppearance(PdfDictionary widget)
+    {
+        if (widget.GetOptional("AP") is not { } apObj || _page.Document.Resolve(apObj) is not PdfDictionary ap)
+            return null;
+        if (ap.GetOptional("N") is not { } nObj)
+            return null;
+        var resolved = _page.Document.Resolve(nObj);
+        if (resolved is not PdfStream && resolved is PdfDictionary states)
+        {
+            var asName = widget.GetNameOrNull("AS");
+            var chosen = (asName != null ? states.GetOptional(asName) : null) ?? states.Values.FirstOrDefault();
+            resolved = chosen != null ? _page.Document.Resolve(chosen) : null;
+        }
+        return resolved is PdfStream stream && stream.GetNameOrNull("Subtype") == "Form" ? stream : null;
+    }
+
+    /// <summary>
+    /// True when a search of <paramref name="drawn"/> finds <paramref name="text"/>
+    /// as typed: the whole of it, or else every word of it. The search is the
+    /// one search and redaction use, so "reads" means "a user searching for it
+    /// finds it here"; a comb whose cells read as separate words does not.
+    /// </summary>
+    private static bool AppearanceReads(List<Letter> drawn, string text)
+    {
+        if (drawn.Count == 0) return false;
+        var words = text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+        if (words.Length == 0) return true;
+
+        var glyphs = new StringBuilder();
+        foreach (var letter in drawn)
+            foreach (var ch in letter.Value)
+                if (!char.IsWhiteSpace(ch)) glyphs.Append(ch);
+        // In order: "Smith, John" drawn does not read as "John Smith", which a
+        // search for the value would then miss.
+        var all = glyphs.ToString();
+        var from = 0;
+        foreach (var word in words)
+        {
+            var at = all.IndexOf(word, from, StringComparison.Ordinal);
+            if (at < 0) return false;
+            from = at + word.Length;
+        }
+
+        if (Find(string.Join(' ', words)))
+            return true;
+        return words.Distinct(StringComparer.Ordinal).All(Find);
+
+        bool Find(string term) =>
+            Segmentation.PdfDocumentRedactionExtensions.FindTextMatches(drawn, term, caseSensitive: true).Count > 0;
+    }
+
+    /// <summary>
+    /// A choice field's <c>/V</c> is a save value; the widget shows the display
+    /// text of the <c>[save display]</c> option pair (§12.7.4.4) whose save
+    /// value it is. True when the appearance reads that display text.
+    /// </summary>
+    private bool AppearanceReadsChoiceDisplay(PdfField field, List<Letter> drawn, string value)
+    {
+        if (field.FieldType != PdfFieldType.Choice || drawn.Count == 0) return false;
+        if (_page.Document.Resolve(field.RawDictionary.GetOptional("Opt") ?? PdfNull.Instance) is not PdfArray opt)
+            return false;
+        foreach (var item in opt)
+        {
+            if (_page.Document.Resolve(item) is PdfArray { Count: >= 2 } pair
+                && _page.Document.Resolve(pair[0]) is PdfString save && save.Value == value
+                && _page.Document.Resolve(pair[1]) is PdfString display
+                && AppearanceReads(drawn, display.Value))
+                return true;
+        }
+        return false;
     }
 
     /// <summary>
@@ -241,6 +416,9 @@ public class TextExtractor
     /// before reaching the actual <c>Tj</c> calls).
     /// </summary>
     /// <remarks>
+    /// Used for non-widget annotations (#1428) and hidden widgets. A shown
+    /// widget's appearance is read at its drawn glyphs instead
+    /// (<see cref="ReadWidgetAppearanceLetters"/>, #2039).
     /// Deliberately does NOT try to map the appearance's own coordinate
     /// space (its <c>/BBox</c>/<c>/Matrix</c>) into the widget's <c>/Rect</c>
     /// — that mapping is real work with its own edge cases and buys nothing
@@ -612,6 +790,10 @@ public class TextExtractor
     /// </summary>
     private void AddLetter(in WalkedGlyph glyph)
     {
+        // #2039: a widget appearance's glyph is the field's text, not page
+        // content: it carries the "AcroForm:" font name redaction routes by, no
+        // page operand offset, and no page structure MCID.
+        var appearanceFont = _appearanceFontName;
         _letters.Add(new Letter(
             // #1485: letters are retained for the document's lifetime, and a
             // per-page /ToUnicode map gives each page its own copy of every
@@ -619,7 +801,7 @@ public class TextExtractor
             GlyphUnicodeDecoder.ShareSingleChar(glyph.Unicode),
             glyph.Cell,
             glyph.FontSize,
-            glyph.FontName,
+            appearanceFont ?? glyph.FontName,
             glyph.X,
             glyph.Y,
             glyph.Width,
@@ -638,10 +820,10 @@ public class TextExtractor
             // #2008: the direction a turned line runs along, for line grouping.
             BaselineAngle = glyph.BaselineAngle,
             // #776: the innermost enclosing /MCID span, for the a11y bridge.
-            MarkedContentId = _currentMcid,
+            MarkedContentId = appearanceFont == null ? _currentMcid : null,
             // #1091/#1092: where this glyph's code lives, for the operand rewrite.
-            OperandByteOffset = glyph.OperandByteOffset,
-            TjElementIndex = glyph.TjElementIndex,
+            OperandByteOffset = appearanceFont == null ? glyph.OperandByteOffset : -1,
+            TjElementIndex = appearanceFont == null ? glyph.TjElementIndex : -1,
             // #1091 advance compensation: the FULL §9.4.4 advance in TJ-number
             // units, so -sum over a removed run restores the exact pen movement
             // and following text does not shift. w0 alone misses the spacing
@@ -722,7 +904,11 @@ public class TextExtractor
     /// graphics and text state afterwards — belong to the walker; the depth
     /// bound and the cycle set are policy and belong here.
     /// </summary>
-    private void RunFormXObject(ContentStreamWalker walker, PdfStream stream, bool fromIdentityCtm)
+    /// <param name="matrixOverride">The form-to-page transform to use in place
+    /// of the stream's own <c>/Matrix</c>: an annotation appearance's
+    /// Algorithm 8.1 <c>Matrix × A</c>, which already contains it.</param>
+    private void RunFormXObject(ContentStreamWalker walker, PdfStream stream, bool fromIdentityCtm,
+        double[]? matrixOverride = null)
     {
         if (_formXObjectDepth >= MaxFormXObjectDepth)
             return;
@@ -748,9 +934,10 @@ public class TextExtractor
             if (resourcesObj != null)
                 resources = _page.Document.Resolve(resourcesObj) as PdfDictionary;
 
-            var matrix = TryReadMatrix(stream.GetOptional("Matrix"), out var m)
-                ? new[] { m.a, m.b, m.c, m.d, m.e, m.f }
-                : null;
+            var matrix = matrixOverride
+                ?? (TryReadMatrix(stream.GetOptional("Matrix"), out var m)
+                    ? new[] { m.a, m.b, m.c, m.d, m.e, m.f }
+                    : null);
 
             var sink = new LetterSink(this, walker);
             walker.RunNested(stream.DecodedData, resources, matrix, fromIdentityCtm, ref sink);
