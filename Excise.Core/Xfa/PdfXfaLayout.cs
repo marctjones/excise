@@ -305,15 +305,24 @@ public static class PdfXfaLayout
     }
 
     /// <summary>
-    /// The redaction rule for XFA documents (decision 5 in
-    /// docs/architecture/xfa-rendering.md): once a document is being redacted,
-    /// its XFA packet goes, whatever the caller's carrier scope. Returns the
-    /// carrier-row text describing what was removed, or null when the document
-    /// has no XFA form. The removal is also recorded on the document's
-    /// redaction ledger for reports that run afterwards.
+    /// The redaction rule for XFA documents, run by the engine at the start of every redaction
+    /// (<c>RedactArea</c>/<c>RedactAreas</c> and their report variants, <c>RedactText</c>), before
+    /// anything reads or rewrites page content. Two steps, in this order:
+    /// <list type="number">
+    /// <item>Decision 17 (#2028, moved into the engine by #2037): the AcroForm widgets the layout
+    /// generated are baked into their pages and removed with their fields
+    /// (<see cref="FlattenGeneratedXfaFields"/>). This runs FIRST, so the stamped appearance glyphs
+    /// are ordinary page content that the glyph-level pipeline then removes; a flatten after the
+    /// removal would put the value back. It runs whether or not <c>/XFA</c> is still present: a
+    /// laid-out copy whose XFA was removed still carries the widgets. On a document with no
+    /// generated widget it reads one <c>/PieceInfo</c> entry per page and writes nothing.</item>
+    /// <item>Decision 5: the XFA packet goes, whatever the caller's carrier scope.</item>
+    /// </list>
+    /// Returns the carrier-row texts, flatten first, empty when neither step applied. Each row is
+    /// also recorded on the document's redaction ledger for reports that run afterwards.
     /// </summary>
     /// <remarks>
-    /// <para>#1547 phase 2 applied this to forms excise laid out itself. #1574
+    /// <para>#1547 phase 2 applied decision 5 to forms excise laid out itself. #1574
     /// extends it to every document with <c>/AcroForm /XFA</c>: a static XFA
     /// form restates each field value in its <c>datasets</c> packet, Acrobat
     /// merges those values back onto the page when it opens the file, and an
@@ -321,10 +330,14 @@ public static class PdfXfaLayout
     /// AcroForm fields, which every non-XFA viewer already uses, so what is
     /// lost is the XFA behaviour (scripts, dynamic layout) in Acrobat.</para>
     /// </remarks>
-    internal static string? RemoveXfaFormForRedaction(PdfDocument document)
+    internal static IReadOnlyList<string> RemoveXfaFormForRedaction(PdfDocument document)
     {
+        var rows = new List<string>(2);
+        if (FlattenGeneratedXfaFields(document) is { } flattened)
+            rows.Add(flattened);
+
         if (!HasXfaEntry(document))
-            return null;
+            return rows;
 
         var kind = document.HasXfaLayoutPages()
             ? "the form excise laid out into these pages"
@@ -332,22 +345,26 @@ public static class PdfXfaLayout
                 ? "static XFA form; the AcroForm fields remain"
                 : "dynamic XFA form excise did not lay out; only the pages already in the file remain";
         if (!document.RemoveXfaForm())
-            return null;
+            return rows;
 
         var row = $"/XFA ({kind}; removed whole)";
         document.RedactionLedger.RecordXfaRemoval(row);
-        return row;
+        rows.Add(row);
+        return rows;
     }
+
+    /// <summary>The start of <see cref="FlattenGeneratedXfaFields"/>'s report row ("generated XFA fields flattened (...)").</summary>
+    internal const string GeneratedFieldsFlattenedRow = "generated XFA fields flattened";
 
     /// <summary>
     /// Decision 17 (#2028): bake the AcroForm widgets the layout generated into their pages and remove
     /// them and their fields, before a redaction runs. Hidden and duplicate (<c>match="global"</c>)
     /// generated widgets would otherwise keep a value an area redaction removed from the visible field.
-    /// Callers are the redaction orchestrators (App <c>RedactionService</c>,
-    /// <c>Excise.Ocr.TermRedactionRunner</c>); the engine in <c>Excise.Core/Redaction</c> does not call
-    /// it. <c>/XFA</c> stays for the redaction's own decision 5. Returns the report row ("generated XFA
-    /// fields flattened ...") and, with <paramref name="forRedaction"/>, records it with the document's
-    /// XFA removals; null when the document carries no generated widget. The flattened-copy paths
+    /// The redaction engine calls it through <see cref="RemoveXfaFormForRedaction"/> at the start of
+    /// every redaction (#2037), so no caller can skip it; <c>/XFA</c> stays for decision 5, which runs
+    /// next. Returns the report row ("generated XFA fields flattened ...") and, with
+    /// <paramref name="forRedaction"/>, records it with the document's XFA removals; null when the
+    /// document carries no generated widget (a second call finds nothing). The flattened-copy paths
     /// (GUI Save Flattened Form Copy, <c>fill-form --flatten</c>) call it with
     /// <paramref name="forRedaction"/> false before <see cref="PdfDocument.FlattenAcroForm"/>, which
     /// would redraw a field from <c>/V</c> and so write a hidden field's value as clipped page text.
@@ -359,7 +376,7 @@ public static class PdfXfaLayout
         int count = XfaWidgetWriter.Flatten(document);
         if (count == 0)
             return null;
-        var row = $"generated XFA fields flattened ({count} widget{(count == 1 ? string.Empty : "s")} baked into the page content"
+        var row = $"{GeneratedFieldsFlattenedRow} ({count} widget{(count == 1 ? string.Empty : "s")} baked into the page content"
             + (forRedaction ? " before redaction)" : ")");
         if (forRedaction)
             document.RedactionLedger.RecordXfaRemoval(row);

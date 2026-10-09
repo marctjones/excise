@@ -181,14 +181,15 @@ public static class TermRedactionRunner
             cancellationToken.ThrowIfCancellationRequested();
         }
 
-        // #2028, decision 17: AcroForm widgets excise generated for a dynamic XFA form are baked into
-        // their pages first, so no hidden or duplicate widget keeps a value the redaction removes.
-        var generatedXfaFlattened = Excise.Core.Xfa.PdfXfaLayout.FlattenGeneratedXfaFields(document);
-
         // #1089/#1187: report verified removals and use the unified Core
         // redaction surface.
         var options = request.Options;
         var redaction = document.RedactText(request.Text, options, guardedProgress);
+        // #2028 decision 17: the engine baked the AcroForm widgets excise generated for a dynamic XFA
+        // form into their pages before it located anything (#2037); its report names the flatten.
+        var generatedXfaFlattened = redaction.Carriers
+            .FirstOrDefault(c => c.Carrier.StartsWith(Excise.Core.Xfa.PdfXfaLayout.GeneratedFieldsFlattenedRow, StringComparison.Ordinal))
+            ?.Carrier;
 
         // #916/#905: collect carriers the surgical term policy could not
         // examine before saving, while the document still reflects the output.

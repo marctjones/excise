@@ -16,11 +16,12 @@ namespace Excise.App.Tests.Unit;
 
 /// <summary>
 /// #2028 (XFA Phase 3 S1) at the orchestration layer. Decision 17: the AcroForm widgets excise
-/// generated for a dynamic XFA form are baked into their pages BEFORE a redaction runs, by the
+/// generated for a dynamic XFA form are baked into their pages BEFORE a redaction runs. Since #2037
+/// the engine does it (<c>PdfXfaLayout.RemoveXfaFormForRedaction</c>), so these check that the
 /// orchestrators (<see cref="RedactionService"/> for areas, <see cref="TermRedactionRunner"/> for
-/// terms, which the CLI also runs), never by the engine. And the form overlay leaves the generated
-/// fields alone: S1 is display only. Independent-tool checks of the same rules (mutool, qpdf) are in
-/// Excise.Rendering.Tests (XfaGeneratedWidgetOracleTests).
+/// terms, which the CLI also runs) still get it and still tell the user. And the form overlay leaves
+/// the generated fields alone: S1 is display only. Independent-tool checks of the same rules (mutool,
+/// qpdf) are in Excise.Rendering.Tests (XfaGeneratedWidgetOracleTests).
 /// </summary>
 public sealed class XfaGeneratedWidgetOrchestrationTests : IDisposable
 {
@@ -65,7 +66,7 @@ public sealed class XfaGeneratedWidgetOrchestrationTests : IDisposable
             "decision 17's report row reaches the redacted-copy report");
         (document.GetAcroForm()?.Fields ?? Array.Empty<PdfField>()).Should().BeEmpty();
         SavedPdfLeakScanner.FindTerm(document.SaveToBytes(), Secret).Should().BeEmpty(
-            "without the flatten the hidden widget's /V keeps the value (planted in XfaGeneratedWidgetOracleTests)");
+            "without the flatten the hidden widget's /V keeps the value (planted runs recorded on #2037)");
     }
 
     [Fact]

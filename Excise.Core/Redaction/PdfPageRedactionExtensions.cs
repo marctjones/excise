@@ -211,7 +211,13 @@ public static class PdfPageRedactionExtensions
         // of a form excise laid out, and every field of a static form — and
         // XFA viewers put them back on the page. Redacting the page while that
         // packet survives would be undone by the next viewer, so it goes
-        // whatever the carrier scope.
+        // whatever the carrier scope. #2037 (decision 17): first, the AcroForm
+        // widgets excise generated for the form are stamped into their pages
+        // (every page, not only this one) and removed. That must precede every
+        // read of this page's content below: the stamped value is then
+        // ordinary page content the glyph pass removes, and no hidden or
+        // duplicate widget elsewhere keeps a copy of it. The rows go on the
+        // redaction ledger; RedactAreasWithReport reports them.
         Excise.Core.Xfa.PdfXfaLayout.RemoveXfaFormForRedaction(page.Document);
 
         // #1572: an area has no term to test an attachment with, so every
@@ -337,11 +343,16 @@ public static class PdfPageRedactionExtensions
         // before #1499's per-widget appearance decision reads TargetsPdfA.
         var metadataRow = RedactionFeatureStripper.ApplyMetadataStrip(page.Document, options);
         var list = areas.Select(a => a.Normalize()).ToList();
+        var xfaRowsBefore = page.Document.RedactionLedger.XfaRemovals.Count;
         var imageCounts = page.RedactAreasInternal(list, list, options.Strategy,
             options.ScrubDocumentCarriers, options.Width,
             removeAttachments: !options.KeepAttachments,
             markerIsArea: true);
         var carriers = new System.Collections.Generic.List<CarrierResult>();
+        // #2037: what this call's XFA pass did (decision 17's flatten, decision 5's removal), as
+        // RedactText reports it; a library caller has no other way to learn of it.
+        foreach (var xfaRow in page.Document.RedactionLedger.XfaRemovals.Skip(xfaRowsBefore))
+            carriers.Add(new CarrierResult(xfaRow, true, null));
         var removals = RedactionFeatureStripper.Apply(page.Document, options, carriers);
         // #1834: RedactText's box rule. A closed gap reflows the rest of the
         // line into the area, so only FixedMarker still draws there.
@@ -459,7 +470,7 @@ public static class PdfPageRedactionExtensions
                 strategy, scrubDocumentCarriers, width, removeAttachments, markerIsArea, removeWordDecorations);
         }
 
-        // #1572/#1547/#1574 — see RedactAreaInternal.
+        // #1572/#1547/#1574/#2037 — see RedactAreaInternal.
         if (removeAttachments)
             Excise.Core.Document.PdfAttachmentGraph.ThrowIfPortfolio(page.Document);
         Excise.Core.Xfa.PdfXfaLayout.RemoveXfaFormForRedaction(page.Document);

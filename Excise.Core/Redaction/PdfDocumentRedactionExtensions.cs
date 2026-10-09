@@ -128,8 +128,11 @@ public static class PdfDocumentRedactionExtensions
         // excise laid out, every field value of a static form — and XFA viewers
         // put it back on the page. It goes before anything else, whatever the
         // carrier scope: a surviving packet would undo this redaction in the
-        // next viewer.
-        if (Excise.Core.Xfa.PdfXfaLayout.RemoveXfaFormForRedaction(document) is { } xfaRow)
+        // next viewer. #2037 (decision 17): first, the AcroForm widgets excise
+        // generated for the form are stamped into their pages and removed, so a
+        // hidden or duplicate widget keeps no copy of a value, and the stamped
+        // glyphs are page content the page loop below locates and removes.
+        foreach (var xfaRow in Excise.Core.Xfa.PdfXfaLayout.RemoveXfaFormForRedaction(document))
             carrierResults.Add(new CarrierResult(xfaRow, true, null));
 
         if (!options.KeepAttachments)

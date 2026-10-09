@@ -443,7 +443,7 @@ public class XfaGeneratedWidgetOracleTests : IDisposable
         document.GetAcroForm()!.FindField("form1[0].Shadow[0]")!.Value.Should().Be($"Jane {Secret}",
             "fixture sanity: the hidden field's widget holds the value (K.2)");
 
-        // What App RedactionService.RedactArea does before the engine runs (decision 17).
+        // An explicit flatten first, as S1 orchestrators did: the engine's own flatten (#2037) then finds nothing.
         var row = PdfXfaLayout.FlattenGeneratedXfaFields(document);
         document.Pages[0].RedactArea(FullNameBox, RedactionOptions.Default with { DrawBox = false });
         var path = Save(document, "area");
@@ -502,18 +502,220 @@ public class XfaGeneratedWidgetOracleTests : IDisposable
             "without the stamp the hidden field's value becomes clipped page text (mutool does not extract a glyph clipped to nothing; the scanner reads the stream), which the check must see");
     }
 
-    /// <summary>Planted failure: the engine alone, without the orchestration flatten, ships the hidden copy.</summary>
+    // ================================================================ #2037: the flatten is the engine's
+
+    /// <summary>
+    /// Two pages. Page 1: FullName shows the secret; Shadow and Echo (hidden, <c>dataRef</c> to the
+    /// same data node) are hidden generated copies of it. Page 2: City, and a <c>match="global"</c>
+    /// copy of FullName, hidden or (with <paramref name="visibleCopyOnPage2"/>) visible. Hidden fields'
+    /// zero-size widgets sit on the first page; page 2's widgets prove the engine's walk is
+    /// document-wide, not the redacted page's.
+    /// </summary>
+    private static byte[] TwoPageCopiesForm(bool visibleCopyOnPage2) => XfaTestForms.BuildPdf(
+        XfaTestForms.Template(
+            "<subform layout=\"position\" w=\"8in\" h=\"10in\">"
+            + "<field name=\"FullName\" x=\"1in\" y=\"1in\" w=\"4in\" h=\"0.4in\"><ui><textEdit/></ui>"
+            + "<caption reserve=\"1in\"><value><text>Name</text></value></caption></field>"
+            + "<field name=\"Shadow\" presence=\"hidden\" x=\"1in\" y=\"3in\" w=\"4in\" h=\"0.4in\"><ui><textEdit/></ui>"
+            + "<bind match=\"dataRef\" ref=\"$record.FullName\"/></field>"
+            + "<field name=\"Echo\" presence=\"hidden\" x=\"1in\" y=\"4in\" w=\"4in\" h=\"0.4in\"><ui><textEdit/></ui>"
+            + "<bind match=\"dataRef\" ref=\"$record.FullName\"/></field>"
+            + "</subform>"
+            + "<subform layout=\"position\" w=\"8in\" h=\"10in\"><breakBefore targetType=\"pageArea\"/>"
+            + "<field name=\"City\" x=\"1in\" y=\"5in\" w=\"4in\" h=\"0.4in\"><ui><textEdit/></ui></field>"
+            + "<field name=\"FullName\"" + (visibleCopyOnPage2 ? string.Empty : " presence=\"hidden\"")
+            + " x=\"1in\" y=\"1in\" w=\"4in\" h=\"0.4in\"><ui><textEdit/></ui><bind match=\"global\"/></field>"
+            + "</subform>",
+            layout: "tb"),
+        XfaTestForms.Data($"<FullName>Jane {Secret}</FullName><City>Springfield</City>"));
+
+    /// <summary>How the laid-out document reaches the redaction: in memory, or saved and reopened.</summary>
+    public static TheoryData<string> Sources => new() { "in-memory", "bytes", "stream", "path", "path-xfa-removed" };
+
+    private PdfDocument Source(bool visibleCopyOnPage2, string source)
+    {
+        var laidOut = LayOut(TwoPageCopiesForm(visibleCopyOnPage2), emitWidgets: true, out var result);
+        laidOut.PageCount.Should().Be(2, "fixture sanity: the second subform breaks to page 2");
+        var copies = laidOut.GetAcroForm()!.Fields.Where(f => f.Value == $"Jane {Secret}").Select(f => f.FullName).ToList();
+        _out.WriteLine("fields holding the value: " + string.Join(", ", copies));
+        copies.Should().HaveCount(4, "fixture sanity: FullName, Shadow, Echo and the global copy each hold the value (K.2)");
+        if (source == "in-memory")
+            return laidOut;
+
+        if (source == "path-xfa-removed")
+            laidOut.RemoveXfaForm().Should().BeTrue("fixture sanity: the XFA form is removed before the save");
+        var path = Save(laidOut, "source-" + source);
+        laidOut.Dispose();
+        return source switch
+        {
+            "bytes" => PdfDocument.Open(File.ReadAllBytes(path)),
+            "stream" => PdfDocument.Open(new MemoryStream(File.ReadAllBytes(path))),
+            _ => PdfDocument.Open(path),
+        };
+    }
+
+    private const string FlattenRow = "generated XFA fields flattened";
+
+    /// <summary>
+    /// Positive control for every check below: before any redaction, the scanner and qpdf find the
+    /// value in the generated widgets, and the page content does not hold it (the widgets draw it).
+    /// </summary>
+    /// <remarks>
+    /// The ordering (flatten, then parse/filter/rebuild) is proven by planted runs of the #2037 tests
+    /// below, recorded on #2037: with the flatten skipped inside
+    /// <c>PdfXfaLayout.RemoveXfaFormForRedaction</c> every one of them fails on the inflating scanner;
+    /// with the flatten moved after the content rewrite (end of <c>RedactAreasWithReport</c> and of
+    /// <c>RedactText</c>'s page loop) the area tests fail on the scanner and the term tests on qpdf's
+    /// decoded dump, because the stamp puts the value back. Excise's own located counts are NOT a
+    /// witness: <c>RedactText</c> reports the value located and removed on both pages without the
+    /// flatten too.
+    /// </remarks>
     [Fact]
-    public void Planted_AreaRedactionWithoutTheFlatten_LeavesTheHiddenWidgetsCopy()
+    public void PositiveControl_BeforeRedaction_TheOraclesSeeTheCopies_AndThePagesDoNotHoldTheValue()
     {
         RequireTools();
-        using var document = LayOut(HiddenCopyForm(), emitWidgets: true, out _);
-        document.Pages[0].RedactArea(FullNameBox, RedactionOptions.Default with { DrawBox = false });
-        var path = Save(document, "area-plant");
+        using var document = Source(visibleCopyOnPage2: true, "in-memory");
+        for (int p = 1; p <= document.PageCount; p++)
+            Encoding.Latin1.GetString(document.GetPage(p).GetContentStreamBytes()).Should().NotContain(Secret,
+                "the value lives only in the generated widgets (their /V and /AP), not in the page content");
+        var path = Save(document, "control");
 
-        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(path), Secret).Should().NotBeEmpty(
-            "the check must catch the leak decision 17 exists for: the hidden widget's /V");
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(path), Secret).Should().NotBeEmpty("the scanner sees the widgets' copies");
         Encoding.Latin1.GetString(QpdfReferenceTool.DecodedObjectDump(path)!).Should().Contain(Secret);
+        QpdfReferenceTool.AcroFormWidgets(path)!.Count(w => w.Value == $"Jane {Secret}").Should().Be(4,
+            "qpdf reads the visible field, both hidden dataRef copies and the global copy");
+    }
+
+    private void AssertNothingLeftAnywhere(string path, string term, int pages, string? password = null)
+    {
+        var scanned = path;
+        if (password != null)
+        {
+            // The scanner cannot read encrypted streams (it skips them), so it reads qpdf's decrypted copy.
+            scanned = TempPath("decrypted");
+            QpdfReferenceTool.Decrypt(path, scanned, password).Should().BeTrue("qpdf decrypts the redacted file");
+        }
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(scanned), term).Should().BeEmpty("no carrier keeps the value, hidden widgets included");
+        var dump = Encoding.Latin1.GetString(QpdfReferenceTool.DecodedObjectDump(path, password)!);
+        dump.Should().NotContain(term, "qpdf's decoded dump of every object holds no /V, /AP or stream with the value");
+        dump.Should().NotContain("/Widget", "no generated widget, reachable or not, is left in the file");
+        for (int p = 1; p <= pages; p++)
+            MutoolTextExtractor.ExtractPage(path, p, password).Should().NotContain(term, $"mutool reads no value on page {p}");
+        QpdfReferenceTool.XfaPacketObjects(path, password).Should().BeNull("decision 5: no /XFA after a redaction");
+    }
+
+    /// <summary>
+    /// #2037: a library caller that runs <c>page.RedactAreaWithReport</c> itself, with no orchestrator,
+    /// gets the decision-17 flatten from the engine: nothing of the value is left, the hidden dataRef
+    /// copies and the hidden global copy on page 2 included, and the report names the flatten. The page
+    /// object and its letters are read BEFORE the redaction (as the GUI does), so a stale page cache
+    /// cannot hide an ordering fault.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(Sources))]
+    public void DirectAreaRedaction_EngineFlattensFirst_LeavesNoCopyOfTheValue(string source)
+    {
+        RequireTools();
+        using var document = Source(visibleCopyOnPage2: false, source);
+        var page = document.GetPage(1);
+        _ = page.Letters;
+
+        var report = page.RedactAreaWithReport(FullNameBox, RedactionOptions.Default with { DrawBox = false });
+        var path = Save(document, "direct-area-" + source);
+
+        AssertNothingLeftAnywhere(path, Secret, pages: 2);
+        report.Carriers.Should().Contain(c => c.Carrier.StartsWith(FlattenRow, StringComparison.Ordinal) && c.Scrubbed,
+            "the engine's report names the flatten; a library caller has no other way to learn of it");
+        document.RedactionLedger.XfaRemovals.Should().ContainSingle(r => r.StartsWith(FlattenRow, StringComparison.Ordinal));
+        using var raster = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
+        InkFractionIn(raster!, new PdfRectangle(FullNameBox.Left + 75, FullNameBox.Bottom + 2, FullNameBox.Right - 2, FullNameBox.Top - 2))
+            .Should().BeLessThan(0.001, "the value's ink is gone from the box");
+        MutoolTextExtractor.ExtractPage(path, 2).Should().Contain("Springfield",
+            "page 2's generated widget was flattened by a redaction of page 1, and its value still shows");
+        QpdfReferenceTool.AcroFormWidgets(path)!.Should().BeEmpty("every generated field, page 2's included, was baked into its page");
+    }
+
+    /// <summary>
+    /// #2037: <c>document.RedactText</c> called directly, with no orchestrator. The engine stamps the
+    /// widgets into the pages before it reads them; nothing of the value is left (the hidden dataRef
+    /// copies, and page 2's visible global copy, included), and the report names the flatten before
+    /// the <c>/XFA</c> removal.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(Sources))]
+    public void DirectTermRedaction_EngineFlattensFirst_LocatesTheStampedValues_AndLeavesNoCopy(string source)
+    {
+        RequireTools();
+        using var document = Source(visibleCopyOnPage2: true, source);
+        _ = document.GetPage(1).Letters;
+        _ = document.GetPage(2).Letters;
+
+        var report = document.RedactText(Secret, RedactionOptions.Default);
+        var path = Save(document, "direct-term-" + source);
+
+        foreach (var p in report.Pages)
+            _out.WriteLine($"page {p.PageNumber}: located {p.MatchesLocated}, remaining {p.OccurrencesRemainingAfter}, {p.Outcome}");
+        AssertNothingLeftAnywhere(path, Secret, pages: 2);
+        report.Pages.Where(p => p.MatchesLocated > 0 && p.OccurrencesRemainingAfter == 0).Select(p => p.PageNumber).Should().BeEquivalentTo(new[] { 1, 2 },
+            "the value is located and removed on both pages");
+        report.Survived.Should().Be(0);
+        var rows = report.Carriers.Select(c => c.Carrier).ToList();
+        var flattenAt = rows.FindIndex(r => r.StartsWith(FlattenRow, StringComparison.Ordinal));
+        flattenAt.Should().BeGreaterThanOrEqualTo(0, "the report names the flatten");
+        if (source != "path-xfa-removed")
+            rows.FindIndex(r => r.StartsWith("/XFA", StringComparison.Ordinal)).Should().BeGreaterThan(flattenAt,
+                "decision 17's flatten runs before decision 5's removal");
+        MutoolTextExtractor.ExtractPage(path, 1).Should().Contain("Jane");
+        MutoolTextExtractor.ExtractPage(path, 2).Should().Contain("Springfield").And.Contain("Jane");
+    }
+
+    /// <summary>
+    /// #2037 on an encrypted laid-out form: opened with its user password, redacted directly, saved
+    /// encrypted again. The scanner reads qpdf's decrypted copy; qpdf and mutool read with the password.
+    /// </summary>
+    [Fact]
+    public void DirectAreaRedaction_OnAnEncryptedForm_LeavesNoCopyOfTheValue()
+    {
+        RequireTools();
+        const string password = "s2037-pass";
+        string encrypted;
+        using (var laidOut = LayOut(TwoPageCopiesForm(visibleCopyOnPage2: false), emitWidgets: true, out _))
+            encrypted = Save(laidOut, "enc-source", new PdfEncryptionOptions { UserPassword = password });
+        QpdfReferenceTool.IsEncrypted(encrypted).Should().BeTrue("fixture sanity");
+
+        using var document = PdfDocument.Open(encrypted, new PdfOpenOptions { UserPassword = password });
+        document.IsEncrypted.Should().BeTrue();
+        var report = document.GetPage(1).RedactAreaWithReport(FullNameBox, RedactionOptions.Default with { DrawBox = false });
+        var path = Save(document, "enc-redacted", document.GetReEncryptionOptions(password));
+
+        QpdfReferenceTool.IsEncrypted(path).Should().BeTrue("a document opened encrypted saves encrypted");
+        AssertNothingLeftAnywhere(path, Secret, pages: 2, password);
+        report.Carriers.Should().Contain(c => c.Carrier.StartsWith(FlattenRow, StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// #2037: redactions in sequence. The first flattens; later ones find nothing to flatten, so they
+    /// report no flatten and record no second row, and the first's stamped content is ordinary page
+    /// content a later term redaction locates.
+    /// </summary>
+    [Fact]
+    public void SequentialRedactions_LaterOnesAreANoOpForTheFlatten()
+    {
+        RequireTools();
+        using var document = Source(visibleCopyOnPage2: false, "path");
+        document.GetPage(1).RedactAreaWithReport(FullNameBox, RedactionOptions.Default with { DrawBox = false });
+
+        var second = document.GetPage(1).RedactAreaWithReport(new PdfRectangle(500, 50, 560, 80), RedactionOptions.Default with { DrawBox = false });
+        var term = document.RedactText("Springfield", RedactionOptions.Default);
+        var path = Save(document, "sequential");
+
+        AssertNothingLeftAnywhere(path, Secret, pages: 2);
+        AssertNothingLeftAnywhere(path, "Springfield", pages: 2);
+        second.Carriers.Should().NotContain(c => c.Carrier.StartsWith(FlattenRow, StringComparison.Ordinal), "nothing is left to flatten");
+        term.Carriers.Should().NotContain(c => c.Carrier.StartsWith(FlattenRow, StringComparison.Ordinal));
+        document.RedactionLedger.XfaRemovals.Count(r => r.StartsWith(FlattenRow, StringComparison.Ordinal)).Should().Be(1);
+        term.Pages.Single(p => p.PageNumber == 2).MatchesLocated.Should().Be(1,
+            "the City value the first redaction stamped onto page 2 is page content");
     }
 
     [Fact]
