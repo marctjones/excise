@@ -145,6 +145,45 @@ public class DocumentPermissionEnforcementTests : IDisposable
         return (vm, toasts);
     }
 
+    // ---- form filling (#1635) ----------------------------------------------
+
+    private string SaveFormWithPermissions(long permissions)
+    {
+        var plainPath = Path.Combine(_tempDir, "form-for-encrypt.pdf");
+        using (var plain = Excise.Core.Document.PdfDocument.CreateNew())
+        {
+            plain.Pages.AddBlank();
+            plain.AddTextField(1, new PdfRectangle(72, 600, 300, 624), "Applicant");
+            plain.Save(plainPath);
+        }
+        return Encrypt(plainPath, permissions);
+    }
+
+    [FixedAvaloniaFact]
+    public async Task FormFieldEditGate_FormFillForbidden_RefusesWithAToastThatNamesTheAction()
+    {
+        // Bits 6 (annotate / fill forms) and 9 (fill forms) cleared: the document grants no form filling.
+        var (vm, toasts) = await CreateViewModelWithRestrictedFixtureAsync(
+            SaveFormWithPermissions(-4 & ~(32L | 256L)));
+
+        vm.FormFieldEditGate().Should().BeFalse("the viewer asks this BEFORE a field stores the edit (#1874)");
+
+        toasts.Should().ContainSingle(t => t.Message.Contains("Blocked by document permissions") &&
+                                           (t.Details ?? "").Contains("Filling form fields"),
+            "the refusal must say what was refused, not silently no-op");
+    }
+
+    [FixedAvaloniaFact]
+    public async Task FormFieldEditGate_FormFillAllowedButModifyForbidden_Admits()
+    {
+        // Bit 4 (modify contents) cleared, bit 9 (fill forms) kept: filling is exactly what this grants.
+        var (vm, toasts) = await CreateViewModelWithRestrictedFixtureAsync(
+            SaveFormWithPermissions(-4 & ~8L));
+
+        vm.FormFieldEditGate().Should().BeTrue();
+        toasts.Should().BeEmpty();
+    }
+
     // ---- copy ------------------------------------------------------------
 
     [FixedAvaloniaFact]
