@@ -266,8 +266,10 @@ public sealed class PdfField
     /// is stored as a PDF name (e.g. "Yes" / "Off") and each widget annotation's
     /// /AS appearance state is updated to match.
     ///
-    /// Sets /NeedAppearances=true on the AcroForm dictionary so PDF readers
-    /// regenerate the visual appearance from the new value. Callers who want
+    /// Redraws each text or choice widget's appearance for the new value, or,
+    /// where it cannot, removes the stale appearance and sets
+    /// /NeedAppearances=true so PDF readers regenerate it (#2017: the old
+    /// appearance never survives a change). Callers who want
     /// to bake the value into static page content should call
     /// <see cref="PdfDocument.FlattenAcroForm"/> after setting all values.
     ///
@@ -348,32 +350,70 @@ public sealed class PdfField
     }
 
     /// <summary>
-    /// #1444: redraw the appearance of widgets excise authored in this session;
-    /// for any other widget (every document opened from bytes, including one
-    /// excise authored earlier) set NeedAppearances as before, so the reader
-    /// regenerates it.
-    ///
-    /// <para>⚠️ On a PDF/A document that fallback costs conformance
-    /// (ISO 19005-2 6.4.1#3, ISO 19005-1 6.9#1) — tracked by #1508. #1499 fixed
-    /// the same fallback in the REDACTION scrub by substituting an empty
-    /// appearance, and deliberately did not do that here: a redacted field has
-    /// nothing it is entitled to draw, a filled one does, and an empty
-    /// appearance here would be silent data loss. The real fix is to regenerate
-    /// from the widget's own <c>/DA</c> and the AcroForm <c>/DR</c> so no
-    /// session state is needed at all (#1508).</para>
+    /// Bring every widget's appearance in line with the new value.
+    /// <list type="bullet">
+    /// <item>A widget excise authored in this session is redrawn with its
+    /// authored font (#1444).</item>
+    /// <item>Any other text or choice widget (every document opened from a file,
+    /// including one Acrobat filled) has its old <c>/AP</c> detached, because it
+    /// draws the OLD value (#2017), and is redrawn from its <c>/DA</c> and the
+    /// AcroForm <c>/DR</c> font by <see cref="FieldAppearanceRegenerator"/>.
+    /// When that cannot be done faithfully the widget keeps no <c>/AP</c> and
+    /// NeedAppearances is set, so the reader regenerates it from <c>/V</c>.</item>
+    /// <item>A button keeps its <c>/AP</c>; <c>/AS</c> selects the state. A
+    /// button value naming no authored state sets NeedAppearances.</item>
+    /// </list>
+    /// <para>⚠️ NeedAppearances costs PDF/A conformance (ISO 19005-2 6.4.1#3,
+    /// ISO 19005-1 6.9#1, #1508); it is now set only for the widgets the
+    /// regenerator refuses.</para>
     /// </summary>
     private void RefreshAppearances(string? value)
     {
+        // #2017: a rich-text value (/RV, §12.7.4.3) is the OLD value in markup;
+        // a plain /V replaces it, so it must not survive the change.
+        if (FieldType == PdfFieldType.Text && RawDictionary.ContainsKey("RV"))
+            RawDictionary.Remove("RV");
+
         IReadOnlyList<PdfDictionary> widgets = WidgetDictionaries.Count > 0
             ? WidgetDictionaries
             : new[] { RawDictionary };
 
         var allRedrawn = true;
         foreach (var widget in widgets)
-            allRedrawn &= AcroFormAuthoring.TryRegenerateAppearance(_document, widget, value);
+        {
+            if (AcroFormAuthoring.TryRegenerateAppearance(_document, widget, value))
+                continue;
+
+            if (FieldType != PdfFieldType.Button)
+            {
+                // #2017: the existing appearance draws the OLD value. Detach it
+                // first, unconditionally, so it is neither drawn by a reader that
+                // ignores NeedAppearances nor saved: replacing the widget's own
+                // /AP entry never edits an /AP or stream another widget shares,
+                // and the writer saves only what is still reachable. Then redraw
+                // from /DA and /DR where that can be done faithfully; otherwise
+                // the widget is left with no /AP and the reader regenerates it.
+                var previousResources = PreviousAppearanceResources(widget);
+                widget.Remove("AP");
+                if (FieldAppearanceRegenerator.TryRegenerate(_document, this, widget, value, previousResources))
+                    continue;
+            }
+
+            // Buttons keep their /AP: /AS selects among fixed on/off states that
+            // carry no value text.
+            allRedrawn = false;
+        }
 
         if (!allRedrawn)
             _document.SetAcroFormNeedAppearances();
+    }
+
+    /// <summary>The <c>/Resources</c> of the widget's current <c>/AP /N</c> stream, read before it is detached.</summary>
+    private PdfDictionary? PreviousAppearanceResources(PdfDictionary widget)
+    {
+        if (widget.GetOptional("AP") is not { } apObj || _document.Resolve(apObj) is not PdfDictionary ap) return null;
+        if (ap.GetOptional("N") is not { } normalObj || _document.Resolve(normalObj) is not PdfStream normal) return null;
+        return normal.GetOptional("Resources") is { } res ? _document.Resolve(res) as PdfDictionary : null;
     }
 
     /// <summary>

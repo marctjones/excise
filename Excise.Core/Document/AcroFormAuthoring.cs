@@ -359,10 +359,12 @@ public static class AcroFormAuthoring
 
     /// <summary>
     /// Redraw the appearance of a widget authored by this class in this session
-    /// for a new <paramref name="value"/>. Returns false — the caller then falls
-    /// back to NeedAppearances — for a widget excise did not author here (no font
-    /// to encode the value with; this includes an authored document reopened from
-    /// bytes) or a checkbox value that names no appearance state.
+    /// for a new <paramref name="value"/>. Returns false for a widget excise did
+    /// not author here (this includes an authored document reopened from bytes) or
+    /// a checkbox value that names no appearance state; for a text or choice
+    /// widget the caller then redraws from <c>/DA</c> and <c>/DR</c> through
+    /// <see cref="FieldAppearanceRegenerator"/> (#2017), otherwise it falls back to
+    /// NeedAppearances.
     /// </summary>
     internal static bool TryRegenerateAppearance(PdfDocument document, PdfDictionary widget, string? value)
     {

@@ -284,4 +284,53 @@ public class FillFormCommandTests : IDisposable
         exitCode.Should().Be(0);
         capturedErr.ToString().Should().Contain("Warning: XFA datasets not updated");
     }
+
+    /// <summary>
+    /// #2017: fill-form on a form whose widgets carry appearances excise did not
+    /// author (Acrobat's) must not save the old appearance, which draws the old
+    /// value. Each old stream carries a unique marker so the check does not
+    /// depend on how the old text was written (kerned TJ here); the scanner
+    /// inflates every stream itself.
+    /// </summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RunAsync_FillForm_ForeignAppearance_OldAppearanceIsNotSaved(bool clear)
+    {
+        var input = TempPath(".pdf");
+        var output = TempPath(".pdf");
+        File.WriteAllBytes(input, Excise.TestSupport.StaleAppearanceFixtures.Build(Excise.TestSupport.OldAppearanceText.KernedTj));
+
+        var args = new List<string> { "fill-form", input, output };
+        foreach (var field in Excise.TestSupport.StaleAppearanceFixtures.Changed)
+        {
+            // An empty value is not one of a choice field's options, so the
+            // choice fields change instead of clearing.
+            var isChoice = field == Excise.TestSupport.StaleAppearanceFixtures.Pick
+                || field == Excise.TestSupport.StaleAppearanceFixtures.List;
+            args.Add("--field");
+            args.Add($"{field.Name}={(clear && !isChoice ? "" : field.NewValue)}");
+        }
+
+        var prevOut = Console.Out;
+        Console.SetOut(new StringWriter());
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(args.ToArray());
+        }
+        finally
+        {
+            Console.SetOut(prevOut);
+        }
+
+        exitCode.Should().Be(0);
+        var saved = File.ReadAllBytes(output);
+        foreach (var marker in Excise.TestSupport.StaleAppearanceFixtures.RemovedMarkers())
+            Excise.TestSupport.SavedPdfLeakScanner.FindTerm(saved, marker).Should().BeEmpty(
+                $"the old appearance {marker} must not be saved");
+        foreach (var field in new[] { Excise.TestSupport.StaleAppearanceFixtures.Name, Excise.TestSupport.StaleAppearanceFixtures.Notes })
+            Excise.TestSupport.SavedPdfLeakScanner.FindTerm(saved, field.OldValue).Should().BeEmpty(
+                $"{field.Name}'s old value must not be saved");
+    }
 }

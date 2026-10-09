@@ -921,4 +921,32 @@ public class PdfDocumentServiceTests : IDisposable
     }
 
     #endregion
+
+    /// <summary>
+    /// #2017 through the app's open and save (the file-backed OpenCurrent and
+    /// SaveDocument the Save / Save Filled Copy commands call): changing a field
+    /// whose widget carries an appearance excise did not author must not save
+    /// the old appearance. Each old stream carries a unique marker, so the check
+    /// holds whether or not the old text is contiguous (kerned TJ here).
+    /// </summary>
+    [Fact]
+    public void SaveDocument_AfterChangingAFieldWithAForeignAppearance_OldAppearanceIsNotSaved()
+    {
+        var input = CreateTestFile("foreign-ap.pdf", path =>
+            File.WriteAllBytes(path, Excise.TestSupport.StaleAppearanceFixtures.Build(Excise.TestSupport.OldAppearanceText.KernedTj)));
+        var output = Path.Combine(_tempDir, "filled-copy.pdf");
+
+        _service.LoadDocument(input);
+        var form = _service.GetCurrentDocument()!.GetAcroForm()!;
+        foreach (var field in Excise.TestSupport.StaleAppearanceFixtures.Changed)
+            form.FindField(field.Name)!.SetValue(field.NewValue);
+        _service.SaveDocument(output);
+
+        var saved = File.ReadAllBytes(output);
+        foreach (var marker in Excise.TestSupport.StaleAppearanceFixtures.RemovedMarkers())
+            Excise.TestSupport.SavedPdfLeakScanner.FindTerm(saved, marker).Should().BeEmpty(
+                $"the old appearance {marker} must not be saved");
+        Excise.TestSupport.SavedPdfLeakScanner.FindTerm(saved, Excise.TestSupport.StaleAppearanceFixtures.Name.OldValue)
+            .Should().BeEmpty("the old value must not be saved");
+    }
 }

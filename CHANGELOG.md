@@ -12,6 +12,7 @@ semantic versioning.
 
 ### Fixed
 
+- **Privacy:** changing or clearing a form field that another program (such as Acrobat) had filled no longer keeps the old value in the saved file. The field's old appearance, which drew the old value, used to be saved unchanged, and viewers that do not redraw fields showed the old value. excise now redraws text fields and drop-down lists from the field's own font and size (alignment, comb, multiline and password fields included); a list box or a rotated field instead loses its old appearance and is redrawn by the viewer. A rich-text value is removed with the old value (#2017).
 - Sticky-note and FreeText text in Adlam, Hanifi Rohingya or Arabic Mathematical Alphabetic Symbols is now recognised as needing complex shaping, so the viewer declines to draw it unshaped (with the existing diagnostic) instead of drawing plausible but wrong glyphs (#1958).
 - `excise redact --carrier-policy` now lists, accepts and documents `page-labels`, `name-tree-keys`, `signatures` and `optional-content`, the carriers the engine already scrubbed and reported; help and parser read one table (#1896).
 - Search no longer hangs on a term that folds to nothing (a lone zero-width space or soft hyphen), and surrounding spaces in the term no longer change what it finds, matching what redaction removes (#1848).

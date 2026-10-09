@@ -28,6 +28,7 @@
     <Compile Include="../Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs" Link="TestSupport/SavedPdfLeakScanner.cs" />
     <Compile Include="../Excise.Core.Tests/TestSupport/CarrierTrapFixtures.cs" Link="TestSupport/CarrierTrapFixtures.cs" />
     <Compile Include="../Excise.Core.Tests/TestSupport/XfaStaticFillFixtures.cs" Link="TestSupport/XfaStaticFillFixtures.cs" />
+    <Compile Include="../Excise.Core.Tests/TestSupport/StaleAppearanceFixtures.cs" Link="TestSupport/StaleAppearanceFixtures.cs" />
   </ItemGroup>
 
   <ItemGroup>

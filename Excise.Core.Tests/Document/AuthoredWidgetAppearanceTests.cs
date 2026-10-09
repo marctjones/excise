@@ -115,12 +115,15 @@ public class AuthoredWidgetAppearanceTests
     }
 
     /// <summary>
-    /// The documented limit: a reopened document has no font object excise can
-    /// encode a new value with, so SetValue keeps the NeedAppearances fallback.
+    /// #2017 (and the first half of #1508): a reopened document has no session
+    /// font, so SetValue redraws the appearance from the widget's /DA and the
+    /// AcroForm /DR. Before, it kept the old appearance and set NeedAppearances.
     /// </summary>
     [Fact]
-    public void SetValue_AfterReopening_FallsBackToNeedAppearances()
+    public void SetValue_AfterReopening_RedrawsFromDaAndDr_WithoutNeedAppearances()
     {
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+
         byte[] saved;
         using (var authored = NewDocumentWithEveryFieldKind())
             saved = authored.SaveToBytes();
@@ -129,7 +132,10 @@ public class AuthoredWidgetAppearanceTests
         doc.GetAcroForm()!.FindField("name")!.SetValue("Grace Hopper");
 
         var acroForm = (PdfDictionary)doc.Resolve(doc.Catalog.GetOptional("AcroForm")!);
-        acroForm.GetBool("NeedAppearances").Should().BeTrue(
-            "excise cannot redraw an appearance it did not author in this session");
+        acroForm.GetBool("NeedAppearances").Should().BeFalse("the /Helv appearance was regenerated from /DA and /DR");
+
+        var text = MutoolTextOracle.ExtractAllPages(doc.SaveToBytes());
+        text.Should().Contain("Grace Hopper", "the regenerated appearance shows the new value");
+        text.Should().NotContain("Ada Lovelace", "the old value's appearance is gone");
     }
 }
