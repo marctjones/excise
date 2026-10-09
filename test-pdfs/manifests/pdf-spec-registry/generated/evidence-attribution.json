@@ -43880,6 +43880,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/StaleFieldAppearanceTests.cs::StaleFieldAppearanceTests.SetValue_FontWithoutEncoding_RedrawsOnlyWhatStandardEncodingCanShow",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_OverEveryTaggedFixture_EqualsTheLetterScan",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -44784,15 +44791,6 @@
         },
         {
           "test": "Excise.Core.Tests/Fonts/StandardFontUpperWidthTests.cs::StandardFontUpperWidthTests.TryGetWidthByGlyphName_ResolvesLatinAndCourier",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Fonts/StandardFontUpperWidthTests.cs::StandardFontUpperWidthTests.TryGetWidthByGlyphName_FailsClosedOffTheLatinFaces",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -45329,6 +45327,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/StaleFieldAppearanceTests.cs::StaleFieldAppearanceTests.SetValue_FontWithoutEncoding_RedrawsOnlyWhatStandardEncodingCanShow",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_OverEveryTaggedFixture_EqualsTheLetterScan",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -46233,15 +46238,6 @@
         },
         {
           "test": "Excise.Core.Tests/Fonts/StandardFontUpperWidthTests.cs::StandardFontUpperWidthTests.TryGetWidthByGlyphName_ResolvesLatinAndCourier",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Fonts/StandardFontUpperWidthTests.cs::StandardFontUpperWidthTests.TryGetWidthByGlyphName_FailsClosedOffTheLatinFaces",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -46760,6 +46756,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/StaleFieldAppearanceTests.cs::StaleFieldAppearanceTests.SetValue_FontWithoutEncoding_RedrawsOnlyWhatStandardEncodingCanShow",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_OverEveryTaggedFixture_EqualsTheLetterScan",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -47664,15 +47667,6 @@
         },
         {
           "test": "Excise.Core.Tests/Fonts/StandardFontUpperWidthTests.cs::StandardFontUpperWidthTests.TryGetWidthByGlyphName_ResolvesLatinAndCourier",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Fonts/StandardFontUpperWidthTests.cs::StandardFontUpperWidthTests.TryGetWidthByGlyphName_FailsClosedOffTheLatinFaces",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -99240,7 +99234,7 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_AfterReopening_FallsBackToNeedAppearances",
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_AfterReopening_RedrawsFromDaAndDr_WithoutNeedAppearances",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -100243,6 +100237,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/StaleFieldAppearanceTests.cs::StaleFieldAppearanceTests.SetValue_EveryWidgetRegenerated_DoesNotSetNeedAppearances",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_EmbedsNoBase14FontForTheWidgetAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -100253,15 +100254,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_WidgetDefaultAppearanceNamesTheEmbeddedFont",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_EmbedsTheFontProgramOnlyOnce",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -100696,7 +100688,7 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_AfterReopening_FallsBackToNeedAppearances",
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_AfterReopening_RedrawsFromDaAndDr_WithoutNeedAppearances",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -101699,6 +101691,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/StaleFieldAppearanceTests.cs::StaleFieldAppearanceTests.SetValue_EveryWidgetRegenerated_DoesNotSetNeedAppearances",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_EmbedsNoBase14FontForTheWidgetAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -101709,15 +101708,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_WidgetDefaultAppearanceNamesTheEmbeddedFont",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_EmbedsTheFontProgramOnlyOnce",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -102173,7 +102163,7 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_AfterReopening_FallsBackToNeedAppearances",
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_AfterReopening_RedrawsFromDaAndDr_WithoutNeedAppearances",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -103176,6 +103166,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/StaleFieldAppearanceTests.cs::StaleFieldAppearanceTests.SetValue_EveryWidgetRegenerated_DoesNotSetNeedAppearances",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_EmbedsNoBase14FontForTheWidgetAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -103186,15 +103183,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_WidgetDefaultAppearanceNamesTheEmbeddedFont",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_EmbedsTheFontProgramOnlyOnce",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -103590,7 +103578,7 @@
           "recordedOutcomes": []
         },
         {
-          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_AfterReopening_FallsBackToNeedAppearances",
+          "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_AfterReopening_RedrawsFromDaAndDr_WithoutNeedAppearances",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -104593,6 +104581,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/StaleFieldAppearanceTests.cs::StaleFieldAppearanceTests.SetValue_EveryWidgetRegenerated_DoesNotSetNeedAppearances",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_EmbedsNoBase14FontForTheWidgetAppearance",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -104603,15 +104598,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_WidgetDefaultAppearanceNamesTheEmbeddedFont",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_EmbedsTheFontProgramOnlyOnce",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112636,8 +112622,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 8423,
-    "testMethodsWithCapabilityCandidate": 5443,
+    "testMethods": 8439,
+    "testMethodsWithCapabilityCandidate": 5453,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

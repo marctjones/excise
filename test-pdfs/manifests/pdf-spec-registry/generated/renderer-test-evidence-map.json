@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "872797bcc5c480d523672c687ee18258f6777706b3ea9c62b57f19dc4d8b64fc",
+  "sourceFingerprint": "24a524e6d399158833946b0465df1e56d099529c31e601bf792b415567bc2a56",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -25668,6 +25668,123 @@
           "capability": "pdf.17.transparency.model",
           "modes": [
             "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/StaleFieldAppearanceOracleTests.cs::StaleFieldAppearanceOracleTests.ChangeOrClear_ThenSave_NoOldAppearanceInTheFile",
+      "path": "Excise.Rendering.Tests/Differential/StaleFieldAppearanceOracleTests.cs",
+      "class": "StaleFieldAppearanceOracleTests",
+      "method": "ChangeOrClear_ThenSave_NoOldAppearanceInTheFile",
+      "line": 66,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/StaleFieldAppearanceOracleTests.cs::StaleFieldAppearanceOracleTests.Fixture_OldAppearanceDraws_WhenNeedAppearancesIsAbsent",
+      "path": "Excise.Rendering.Tests/Differential/StaleFieldAppearanceOracleTests.cs",
+      "class": "StaleFieldAppearanceOracleTests",
+      "method": "Fixture_OldAppearanceDraws_WhenNeedAppearancesIsAbsent",
+      "line": 120,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/StaleFieldAppearanceOracleTests.cs::StaleFieldAppearanceOracleTests.AcrobatFilledW9_ChangeName_OldValueAndAppearanceGone",
+      "path": "Excise.Rendering.Tests/Differential/StaleFieldAppearanceOracleTests.cs",
+      "class": "StaleFieldAppearanceOracleTests",
+      "method": "AcrobatFilledW9_ChangeName_OldValueAndAppearanceGone",
+      "line": 138,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
             "render"
           ]
         }
@@ -53734,11 +53851,11 @@
     }
   ],
   "summary": {
-    "testMethods": 1479,
+    "testMethods": 1482,
     "facets": {
       "content-streams": 424,
       "content-strings-and-text": 9,
-      "differential-rendering": 867,
+      "differential-rendering": 870,
       "fonts": 266,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 320,
@@ -53751,7 +53868,7 @@
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 9,
       "pdf.17.content.streams:parse": 431,
-      "pdf.17.content.streams:render": 1024,
+      "pdf.17.content.streams:render": 1027,
       "pdf.17.content.text-state:extract": 9,
       "pdf.17.content.text-state:parse": 9,
       "pdf.17.content.text-state:render": 9,
@@ -53759,10 +53876,10 @@
       "pdf.17.graphics.color:render": 53,
       "pdf.17.graphics.fonts:extract": 266,
       "pdf.17.graphics.fonts:parse": 266,
-      "pdf.17.graphics.fonts:render": 1017,
+      "pdf.17.graphics.fonts:render": 1020,
       "pdf.17.graphics.images:extract": 249,
       "pdf.17.graphics.images:parse": 249,
-      "pdf.17.graphics.images:render": 1028,
+      "pdf.17.graphics.images:render": 1031,
       "pdf.17.graphics.paths-painting:parse": 320,
       "pdf.17.graphics.paths-painting:render": 320,
       "pdf.17.graphics.patterns-shadings:parse": 53,
@@ -53770,7 +53887,7 @@
       "pdf.17.graphics.state:parse": 320,
       "pdf.17.graphics.state:render": 320,
       "pdf.17.transparency.model:parse": 95,
-      "pdf.17.transparency.model:render": 910
+      "pdf.17.transparency.model:render": 913
     },
     "unclassified": 43,
     "allTestsMapped": true
