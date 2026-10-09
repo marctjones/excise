@@ -56,10 +56,12 @@ internal sealed record XfaFieldInfo
     public required XfaFormNode Node { get; init; }
 
     /// <summary>
-    /// Full SOM name, resolvable by <see cref="XfaFormSom.ResolveChain"/> for fields of the form body:
-    /// segments indexed among same-named siblings, unnamed containers as <c>#subform[n]</c>,
-    /// <c>scope="none"</c> subforms looked through, no leading <c>form.</c>. Page-area content is named
-    /// <c>root[0].#pageSet[0].PageArea[k]...</c> with k the page area's occurrence.
+    /// Full SOM name (the rule is on <see cref="XfaFormSom"/>, #2035), resolvable by
+    /// <see cref="XfaFormSom.ResolveChain"/> for fields of the form body: named objects indexed among
+    /// same-named SOM siblings, transparent objects (nameless subforms and exclusion groups, areas,
+    /// <c>scope="none"</c>) not written, nameless or dotted objects by class (<c>#field[n]</c>), no
+    /// leading <c>form.</c>. Page-area content is named <c>root[0].#pageSet[0].PageArea[k]...</c> with
+    /// k the page area's occurrence. It is also the generated AcroForm field's full name (#2028).
     /// </summary>
     public required string SomPath { get; init; }
 
@@ -148,10 +150,12 @@ internal sealed record XfaFieldInfo
 
     /// <summary>
     /// A user may set this value: access open, no calculation that refuses user values, a binding, no
-    /// bind picture excise cannot apply, no XML signature, and not page-area content (which excise's
-    /// merge never binds). Whether the widget kind takes input at all (buttons, barcodes...) is S1's.
+    /// bind picture excise cannot apply, no XML signature, not page-area content (which excise's
+    /// merge never binds), and a widget that takes a value from the user: buttons, barcodes,
+    /// signatures and image fields never do here (#2035).
     /// </summary>
     public bool Editable => Access == XfaAccess.Open
+        && UiKind is not ("button" or "barcode" or "signature" or "imageEdit")
         && !CalculateBlocksUserValue
         && Binding != XfaBindingKind.None
         && !HasBindPicture
@@ -205,10 +209,13 @@ internal static class XfaFieldMap
             if (area.Fixed?.Node is not { } areaNode)
                 continue;
 
-            var areaPaths = XfaFormSom.Paths(areaNode, budget);
+            var areaPaths = XfaFormSom.Paths(areaNode, budget, rootIsEntered: true);
             var areaRoot = areaPaths[areaNode];
-            var areaKey = area.Element.Attr("name") is { Length: > 0 } n ? n : "#pageArea";
-            var prefix = $"{rootPath}.#pageSet[0].{areaKey.Replace(".", "\\.", StringComparison.Ordinal)}[{k.ToString(CultureInfo.InvariantCulture)}]";
+            // A nameless or dotted page area is written by class, as XfaFormSom writes any object the
+            // normal syntax cannot reach (#2035); the page set is always written by class.
+            var areaKey = area.Element.Attr("name") is { Length: > 0 } n && !n.Contains('.', StringComparison.Ordinal) ? n : "#pageArea";
+            var prefix = (rootPath.Length == 0 ? string.Empty : rootPath + ".")
+                + $"#pageSet[0].{areaKey}[{k.ToString(CultureInfo.InvariantCulture)}]";
             var rebased = new Dictionary<XfaFormNode, string>(ReferenceEqualityComparer.Instance);
             foreach (var (node, path) in areaPaths)
                 rebased[node] = prefix + path[areaRoot.Length..];

@@ -117,6 +117,20 @@ named below), not to this page.
     the layout will emit the widgets, the datasets stay the stored value, and `/V` and `/AP`
     are regenerated from it on every layout (#1547, plan revision 2). Widget `/Rect` serves
     non-XFA viewers only: an XFA processor places a field by the template (p74).
+    **Names (#2035).** The full name is the field's SOM expression in the normal syntax: each
+    named object `name[i]`, indexed among the same-named objects its SOM parent sees (p73-74);
+    transparent objects are not written, namely nameless subforms and exclusion groups, areas even
+    when named (p95) and `scope="none"` subforms (p849), so their children count as the parent's
+    (p95). An object the normal syntax cannot reach (a nameless field, a name containing a dot,
+    which XML allows, p75) is written by class, `#field[n]`, `n` counting every true sibling of
+    that class, named or not (p96 note, p119-120), with its transparent ancestors up to the nearest
+    written one by class too. No leading `form.`. Each segment is one partial name of a
+    hierarchical field, so no partial name holds a dot (ISO 32000-2 §12.7.4.2); p73 would allow a
+    dotted global name for an XFA pointer field, so dot-free partial names are a project rule. The
+    static write-back resolves another producer's names leniently: a `#class[n]` index read both
+    among all siblings (p96) and among the nameless ones (excise's count before #2035; Designer's
+    count is unverified, no corpus file has a `#` segment) is accepted when both readings agree or
+    only one resolves, and refused when they name different objects.
 12. **A filled save strips `/Perms /DocMDP` and `/Perms /UR3` with their signatures, and
     reports it.** A full rewrite re-serialises the XFA stream, which can void a PDF signature over
     it (XFA 3.3 p557-558), and excise has no incremental writer. Keeping a certification valid
