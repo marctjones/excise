@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Excise.Core.Document;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
@@ -29,6 +31,11 @@ internal partial class MainWindowViewModel
     internal const string IncompleteXfaNoticeTitle = "This XFA form may be incomplete.";
     internal const string IncompleteXfaNoticeMessage =
         "excise detected layout omissions or failed calculations. Content may be missing, clipped, or moved between pages. Do not rely on this view as the complete form; verify it in Adobe Acrobat Reader or Firefox. JavaScript and button scripts don't run and its fields can't be filled here yet.";
+    /// <summary>#2024: appended when the laid-out form is certified; every save removes the certification.</summary>
+    internal const string CertifiedXfaNoticeSuffix =
+        " This form is certified by its author. A copy excise saves is a new file that can't keep that certification or the Adobe Reader features it enables, so saving removes them.";
+    /// <summary>#2024: the toast after a save that removed a certification.</summary>
+    internal const string CertificationRemovedToastTitle = "Certification removed from the saved copy";
     internal const string StaticXfaNoticeTitle = "This form also contains XFA data.";
     internal const string StaticXfaNoticeMessage =
         "excise fills the standard form fields. Adobe Acrobat may show the XFA copy of the values instead.";
@@ -37,6 +44,7 @@ internal partial class MainWindowViewModel
     private bool _isXfaFormLaidOut;
     private bool _isXfaNoticeOpen;
     private bool _hasXfaLayoutWarnings;
+    private bool _xfaCertificationRemovedOnSave;
 
     /// <summary>The open document's XFA classification.</summary>
     public PdfXfaFormKind XfaFormKind
@@ -98,12 +106,14 @@ internal partial class MainWindowViewModel
 
     public string XfaNoticeMessage => _xfaFormKind switch
     {
-        PdfXfaFormKind.Dynamic when _isXfaFormLaidOut && _hasXfaLayoutWarnings => IncompleteXfaNoticeMessage,
-        PdfXfaFormKind.Dynamic when _isXfaFormLaidOut => LaidOutXfaNoticeMessage,
+        PdfXfaFormKind.Dynamic when _isXfaFormLaidOut && _hasXfaLayoutWarnings => IncompleteXfaNoticeMessage + CertifiedSuffix,
+        PdfXfaFormKind.Dynamic when _isXfaFormLaidOut => LaidOutXfaNoticeMessage + CertifiedSuffix,
         PdfXfaFormKind.Dynamic => DynamicXfaNoticeMessage,
         PdfXfaFormKind.Static => StaticXfaNoticeMessage,
         _ => string.Empty,
     };
+
+    private string CertifiedSuffix => _xfaCertificationRemovedOnSave ? CertifiedXfaNoticeSuffix : string.Empty;
 
     public FAInfoBarSeverity XfaNoticeSeverity => _xfaFormKind == PdfXfaFormKind.Dynamic
         && (!_isXfaFormLaidOut || _hasXfaLayoutWarnings)
@@ -131,14 +141,34 @@ internal partial class MainWindowViewModel
             && _documentService.XfaLayout is { ShowsForm: true };
         HasXfaLayoutWarnings = IsXfaFormLaidOut && _documentService.XfaLayout is { } layout
             && (layout.Omissions.Count > 0 || layout.ScriptFailures.Count > 0);
+        _xfaCertificationRemovedOnSave = IsXfaFormLaidOut
+            && _documentService.XfaLayout is { CertificationRemovedOnSave: true };
+        this.RaisePropertyChanged(nameof(XfaNoticeMessage));
         XfaFormKind = kind;
         IsXfaNoticeOpen = kind != PdfXfaFormKind.None;
         if (kind != PdfXfaFormKind.None)
             _logger.LogInformation("Document is a {Kind} XFA form", kind);
     }
 
+    /// <summary>
+    /// #2024: say what a save removed of the form's certification (the strip runs inside the save,
+    /// see <see cref="Excise.Core.Signatures.CertificationStripper"/>). Nothing when nothing was removed.
+    /// </summary>
+    private void ReportCertificationRemovals(IReadOnlyList<string>? removals)
+    {
+        var lines = Excise.Core.Signatures.CertificationStripper.Describe(removals).ToList();
+        if (lines.Count == 0)
+            return;
+        // The document on screen, reloaded or stripped in place, is no longer certified.
+        _xfaCertificationRemovedOnSave = false;
+        this.RaisePropertyChanged(nameof(XfaNoticeMessage));
+        _logger.LogInformation("Save removed the certification: {Removals}", string.Join("; ", lines.Skip(1)));
+        _toastService.ShowWarning(CertificationRemovedToastTitle, string.Join(Environment.NewLine, lines));
+    }
+
     private void ClearXfaNotice()
     {
+        _xfaCertificationRemovedOnSave = false;
         IsXfaFormLaidOut = false;
         HasXfaLayoutWarnings = false;
         XfaFormKind = PdfXfaFormKind.None;

@@ -107,6 +107,13 @@ internal sealed record QpdfFieldWidget(
 /// them, with the outcome that produced them (#1527 — see
 /// <see cref="QpdfStreamDataStatus"/>).
 /// </summary>
+/// <summary>See <see cref="QpdfReferenceTool.CertificationView"/> (#2024).</summary>
+internal sealed record QpdfCertificationView(
+    IReadOnlyList<string> PermsKeys,
+    bool HasLegal,
+    int? SigFlags,
+    IReadOnlyList<string> SignatureObjects);
+
 internal sealed record QpdfFilteredStream(QpdfStreamDataStatus Status, byte[] Bytes, string Diagnostics)
 {
     /// <summary>True only when qpdf actually decoded the stream.</summary>
@@ -625,6 +632,158 @@ internal static class QpdfReferenceTool
         }
         catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException
                                        or FormatException or IndexOutOfRangeException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// What a file still says about signatures and certification, read by qpdf's own parser (JSON v2
+    /// <c>qpdf</c> key, every object the file holds, referenced or not; #2024): the keys of the
+    /// catalog's <c>/Perms</c> (empty when there is none), whether the catalog has <c>/Legal</c>, the
+    /// AcroForm <c>/SigFlags</c> (null when absent), and every object that is or holds a dictionary
+    /// with <c>/ByteRange</c>, which only a signature or document time-stamp dictionary has
+    /// (ISO 32000-2 Table 255), by its qpdf key. Null when qpdf cannot be asked.
+    /// </summary>
+    public static QpdfCertificationView? CertificationView(
+        string pdfPath, string? password = null, int timeoutMs = 60_000)
+    {
+        var args = new List<string> { "--json=2", "--json-key=qpdf" };
+        if (!string.IsNullOrEmpty(password)) args.Add($"--password={password}");
+        args.Add(pdfPath);
+        var result = Run(args.ToArray(), timeoutMs);
+        if (result == null || result.ExitCode is not (0 or 3)) return null;
+
+        try
+        {
+            var json = result.Output;
+            var end = json.LastIndexOf('}');
+            using var doc = JsonDocument.Parse(end >= 0 ? json[..(end + 1)] : json);
+            var objects = doc.RootElement.GetProperty("qpdf")[1];
+
+            JsonElement? Value(JsonElement element)
+            {
+                if (element.ValueKind == JsonValueKind.String
+                    && element.GetString() is { } text && text.EndsWith(" R", StringComparison.Ordinal))
+                {
+                    if (!objects.TryGetProperty("obj:" + text, out var target)) return null;
+                    if (target.TryGetProperty("value", out var value)) return value;
+                    if (target.TryGetProperty("stream", out var stream)) return stream.GetProperty("dict");
+                    return null;
+                }
+                return element;
+            }
+
+            static bool HoldsByteRange(JsonElement element) => element.ValueKind switch
+            {
+                JsonValueKind.Object => element.TryGetProperty("/ByteRange", out _)
+                    || element.EnumerateObject().Any(p => HoldsByteRange(p.Value)),
+                JsonValueKind.Array => element.EnumerateArray().Any(HoldsByteRange),
+                _ => false,
+            };
+
+            var signatures = objects.EnumerateObject()
+                .Where(o => o.Name.StartsWith("obj:", StringComparison.Ordinal) && HoldsByteRange(o.Value))
+                .Select(o => o.Name)
+                .ToList();
+
+            var catalog = Value(objects.GetProperty("trailer").GetProperty("value").GetProperty("/Root"))!.Value;
+            var perms = catalog.TryGetProperty("/Perms", out var permsEntry) && Value(permsEntry) is { ValueKind: JsonValueKind.Object } p
+                ? p.EnumerateObject().Select(e => e.Name).ToList()
+                : new List<string>();
+            int? sigFlags = null;
+            if (catalog.TryGetProperty("/AcroForm", out var acroFormEntry)
+                && Value(acroFormEntry) is { ValueKind: JsonValueKind.Object } acroForm
+                && acroForm.TryGetProperty("/SigFlags", out var flags)
+                && Value(flags) is { ValueKind: JsonValueKind.Number } number)
+            {
+                sigFlags = number.GetInt32();
+            }
+            return new QpdfCertificationView(perms, catalog.TryGetProperty("/Legal", out _), sigFlags, signatures);
+        }
+        catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException
+                                       or FormatException or IndexOutOfRangeException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// The terminal field dictionaries under each fully qualified name, walking
+    /// <c>/Root /AcroForm /Fields</c> and <c>/Kids</c> in qpdf's object table (JSON v2 <c>qpdf</c>
+    /// key; #2024). Unlike qpdf's <c>acroform</c> view, which starts from page annotations, this sees a
+    /// field whose widget no page lists. A partial name joins the parent's with a period (ISO 32000-2
+    /// §12.7.4.2); a kid without <c>/T</c> is a widget of its field. A name held by two terminal field
+    /// dictionaries maps to two objects. Null when qpdf cannot be asked.
+    /// </summary>
+    public static IReadOnlyDictionary<string, IReadOnlySet<string>>? FieldObjectsByName(
+        string pdfPath, string? password = null, int timeoutMs = 60_000)
+    {
+        var args = new List<string> { "--json=2", "--json-key=qpdf" };
+        if (!string.IsNullOrEmpty(password)) args.Add($"--password={password}");
+        args.Add(pdfPath);
+        var result = Run(args.ToArray(), timeoutMs);
+        if (result == null || result.ExitCode is not (0 or 3)) return null;
+
+        try
+        {
+            var json = result.Output;
+            var end = json.LastIndexOf('}');
+            using var doc = JsonDocument.Parse(end >= 0 ? json[..(end + 1)] : json);
+            var objects = doc.RootElement.GetProperty("qpdf")[1];
+
+            JsonElement? Value(JsonElement element)
+            {
+                if (element.ValueKind == JsonValueKind.String
+                    && element.GetString() is { } text && text.EndsWith(" R", StringComparison.Ordinal))
+                {
+                    if (!objects.TryGetProperty("obj:" + text, out var target)) return null;
+                    return target.TryGetProperty("value", out var value) ? value : null;
+                }
+                return element;
+            }
+
+            static string? Text(JsonElement dict)
+                => dict.TryGetProperty("/T", out var t) && t.GetString() is { } s
+                    ? s.StartsWith("u:", StringComparison.Ordinal) || s.StartsWith("b:", StringComparison.Ordinal) ? s[2..] : s
+                    : null;
+
+            var byName = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+            var visited = new HashSet<string>(StringComparer.Ordinal);
+            void Walk(JsonElement node, string prefix, int depth)
+            {
+                if (depth > 64 || node.ValueKind != JsonValueKind.String || !visited.Add(node.GetString()!)
+                    || Value(node) is not { ValueKind: JsonValueKind.Object } dict)
+                    return;
+                var partial = Text(dict);
+                var name = partial == null ? prefix : prefix.Length == 0 ? partial : prefix + "." + partial;
+                var kids = dict.TryGetProperty("/Kids", out var k) && Value(k) is { ValueKind: JsonValueKind.Array } array
+                    ? array.EnumerateArray().ToList()
+                    : new List<JsonElement>();
+                var fieldKids = kids.Where(kid => Value(kid) is { ValueKind: JsonValueKind.Object } d && Text(d) != null).ToList();
+                if (fieldKids.Count == 0)
+                {
+                    if (!byName.TryGetValue(name, out var set))
+                        byName[name] = set = new HashSet<string>(StringComparer.Ordinal);
+                    set.Add(node.GetString()!);
+                    return;
+                }
+                foreach (var kid in fieldKids)
+                    Walk(kid, name, depth + 1);
+            }
+
+            var catalog = Value(objects.GetProperty("trailer").GetProperty("value").GetProperty("/Root"))!.Value;
+            if (catalog.TryGetProperty("/AcroForm", out var acroFormEntry)
+                && Value(acroFormEntry) is { ValueKind: JsonValueKind.Object } acroForm
+                && acroForm.TryGetProperty("/Fields", out var fieldsEntry)
+                && Value(fieldsEntry) is { ValueKind: JsonValueKind.Array } fields)
+            {
+                foreach (var field in fields.EnumerateArray())
+                    Walk(field, string.Empty, 0);
+            }
+            return byName.ToDictionary(kv => kv.Key, kv => (IReadOnlySet<string>)kv.Value, StringComparer.Ordinal);
+        }
+        catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException)
         {
             return null;
         }

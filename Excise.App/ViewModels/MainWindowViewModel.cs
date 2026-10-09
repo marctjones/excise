@@ -1267,6 +1267,7 @@ internal partial class MainWindowViewModel : ViewModelBase
 
             _logger.LogInformation("Document saved successfully");
             _toastService.ShowSuccess("Document saved");
+            ReportCertificationRemovals(_documentService.LastSaveCertificationRemovals);
         }
         catch (Exception ex)
         {
@@ -2285,6 +2286,7 @@ internal partial class MainWindowViewModel : ViewModelBase
             this.RaisePropertyChanged(nameof(StatusBarText));
             ShowSavedDocument(keepPagesOnScreen: !flattenedTypewriter && !flushedStickyNote);
             _logger.LogInformation("Document saved successfully to: {FilePath}", filePath);
+            ReportCertificationRemovals(_documentService.LastSaveCertificationRemovals);
         }
         catch (Exception ex)
         {

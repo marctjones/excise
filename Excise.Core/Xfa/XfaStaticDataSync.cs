@@ -148,7 +148,11 @@ internal sealed class XfaStaticDataSync
         }
 
         if (changed)
+        {
             _snapshot.Store(document, Note);
+            // #2024, decision 12: a filled save strips the certification and says so.
+            Excise.Core.Signatures.CertificationStripper.StripOnEverySave(document);
+        }
     }
 
     private void Note(string line)

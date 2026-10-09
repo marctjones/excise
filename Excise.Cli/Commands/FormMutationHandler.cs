@@ -56,7 +56,10 @@ internal static class FormMutationHandler
         cancellationToken.ThrowIfCancellationRequested();
         SavePreservingEncryption(document, outputPath);
         // #2013: fields whose static-XFA datasets value could not be updated.
-        var xfaNotes = document.XfaStaticDataSync?.Notes.ToArray() ?? Array.Empty<string>();
+        // #2024 (decision 12): what the filled save removed of the form's certification.
+        var xfaNotes = (document.XfaStaticDataSync?.Notes ?? (IEnumerable<string>)Array.Empty<string>())
+            .Concat(Excise.Core.Signatures.CertificationStripper.Describe(document.CertificationRemovals))
+            .ToArray();
         return new FillFormResult(input.FullName, outputPath, updated, request.Flatten, xfaNotes);
     }
 

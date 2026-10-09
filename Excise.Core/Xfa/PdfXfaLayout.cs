@@ -1,6 +1,7 @@
 using System.Xml.Linq;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
+using Excise.Core.Signatures;
 
 namespace Excise.Core.Xfa;
 
@@ -95,6 +96,14 @@ public sealed class XfaLayoutResult
     /// <summary>AcroForm fields generated for <see cref="Fields"/> (#2028); 0 when none were.</summary>
     internal int GeneratedFieldCount { get; init; }
 
+    /// <summary>
+    /// True when the form is certified (catalog <c>/Perms</c> names a DocMDP or UR3 signature) and
+    /// every save of the laid-out document therefore removes that certification (#2024, decision 19
+    /// of docs/architecture/xfa-rendering.md). What a save removed is in
+    /// <see cref="PdfDocument.CertificationRemovals"/>.
+    /// </summary>
+    internal bool CertificationRemovedOnSave { get; init; }
+
     /// <summary>True when the document's pages now show the XFA form.</summary>
     public bool ShowsForm => Status is XfaLayoutStatus.LaidOut or XfaLayoutStatus.AlreadyLaidOut;
 }
@@ -136,7 +145,15 @@ public static class PdfXfaLayout
             return new XfaLayoutResult { Status = XfaLayoutStatus.NotDynamicXfa, PageCount = document.PageCount };
 
         if (document.HasXfaLayoutPages())
-            return new XfaLayoutResult { Status = XfaLayoutStatus.AlreadyLaidOut, PageCount = document.PageCount };
+        {
+            // A copy an earlier excise saved is a laid-out form too: its saves strip what it still certifies.
+            return new XfaLayoutResult
+            {
+                Status = XfaLayoutStatus.AlreadyLaidOut,
+                PageCount = document.PageCount,
+                CertificationRemovedOnSave = StripCertificationOnSave(document),
+            };
+        }
 
         var budget = new XfaBudget(options.TimeLimit, cancellationToken);
         var report = new XfaReport();
@@ -221,10 +238,12 @@ public static class PdfXfaLayout
             }
         }
         writer.Finish(taken.Contains);
+        var certified = StripCertificationOnSave(document);
 
         return new XfaLayoutResult
         {
             Status = XfaLayoutStatus.LaidOut,
+            CertificationRemovedOnSave = certified,
             PageCount = document.PageCount,
             Omissions = report.Notes,
             ScriptsNotRun = new Dictionary<string, int>(report.ScriptEvents),
@@ -391,6 +410,21 @@ public static class PdfXfaLayout
     {
         ArgumentNullException.ThrowIfNull(page);
         return new HashSet<PdfDictionary>(XfaWidgetWriter.GeneratedWidgets(page.Document, page), ReferenceEqualityComparer.Instance);
+    }
+
+    /// <summary>
+    /// #2024, decision 19: every save of a laid-out dynamic form strips the form's certification
+    /// (<c>/Perms</c> DocMDP and UR3, the signatures they name, <c>/Legal</c>) and records it. The
+    /// pages excise wrote are not the bytes the author signed, and a full rewrite voids every
+    /// <c>/ByteRange</c> anyway; a copy that still names the signatures claims a certification it
+    /// does not have, and Acrobat then ignores the XFA form. Registered after the #2012 page cut,
+    /// so the certification field whose widget sat on a placeholder page is already pruned when the
+    /// strip runs. Returns whether the document is certified now.
+    /// </summary>
+    private static bool StripCertificationOnSave(PdfDocument document)
+    {
+        CertificationStripper.StripOnEverySave(document);
+        return CertificationStripper.HasCertification(document);
     }
 
     /// <summary>SHA-256 of the datasets packet as parsed (no formatting), recorded with the widgets (#2028).</summary>

@@ -144,9 +144,12 @@ internal partial class MainWindowViewModel
         _logger.LogInformation(
             "Reduce File Size ({Preset}): {Before} -> {After} bytes",
             preset, beforeBytes, result.OutputSizeBytes);
-        await _dialogService.ShowMessageAsync(
-            "Reduce File Size",
-            DescribeReduceFileSizeResult(outputPath, beforeBytes, result));
+        var summary = DescribeReduceFileSizeResult(outputPath, beforeBytes, result);
+        // #2024: the in-memory save above strips a laid-out form's certification; say so here too.
+        var certification = Excise.Core.Signatures.CertificationStripper.Describe(document.CertificationRemovals).ToList();
+        if (certification.Count > 0)
+            summary += Environment.NewLine + Environment.NewLine + string.Join(Environment.NewLine, certification);
+        await _dialogService.ShowMessageAsync("Reduce File Size", summary);
         return result;
     }
 

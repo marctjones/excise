@@ -81,6 +81,7 @@ partial class Program
                 var output = Path.Combine(outDir, $"{parent}__{name}.pdf");
                 document.Save(output);
                 row["output"] = output;
+                row["certificationRemoved"] = document.CertificationRemovals ?? new List<string>();   // #2024
             }
         }
         catch (Exception ex)

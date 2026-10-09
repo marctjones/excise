@@ -66,6 +66,7 @@
          Precedent: the Inconsolata.cff link in Excise.Rendering.Tests. -->
     <Compile Include="../Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs" Link="TestSupport/SavedPdfLeakScanner.cs" />
     <Compile Include="../Excise.Core.Tests/TestSupport/XfaTestForms.cs" Link="TestSupport/XfaTestForms.cs" />
+    <Compile Include="../Excise.Core.Tests/TestSupport/CertifiedFormFixtures.cs" Link="TestSupport/CertifiedFormFixtures.cs" />
     <Compile Include="../Excise.Core.Tests/TestSupport/XfaStaticFillFixtures.cs" Link="TestSupport/XfaStaticFillFixtures.cs" />
     <Compile Include="../Excise.Core.Tests/TestSupport/CarrierTrapFixtures.cs" Link="TestSupport/CarrierTrapFixtures.cs" />
     <Compile Include="../Excise.Core.Tests/TestSupport/RemovedPageFixtures.cs" Link="TestSupport/RemovedPageFixtures.cs" />
