@@ -49,11 +49,12 @@ public class VerticalWritingTextOracleTests
     /// <summary>
     /// Identity-V Type0 font, /ToUnicode /Identity-H so codes decode as
     /// UTF-16BE, and a FontDescriptor so independent tools accept the font.
+    /// The second column stands <paramref name="secondColumnX"/> across the page.
     /// </summary>
-    private static byte[] TwoColumnIdentityVPdf()
+    internal static byte[] TwoColumnIdentityVPdf(int secondColumnX = 200)
     {
-        const string content =
-            "BT /F0 24 Tf 1 0 0 1 300 700 Tm <65E5672C8A9E> Tj 1 0 0 1 200 700 Tm <6F225B573001> Tj ET";
+        var content =
+            $"BT /F0 24 Tf 1 0 0 1 300 700 Tm <65E5672C8A9E> Tj 1 0 0 1 {secondColumnX} 700 Tm <6F225B573001> Tj ET";
         var sb = new StringBuilder("%PDF-1.7\n");
         var offsets = new int[6];
         void Obj(int n, string body) { offsets[n] = sb.Length; sb.Append($"{n} 0 obj {body} endobj\n"); }
