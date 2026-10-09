@@ -52,7 +52,16 @@ internal partial class MainWindowViewModel
     /// term (#1501): the verified count, survivors, wrapped-term candidates and
     /// NOT SCRUBBED carriers, exactly as <c>excise redact</c> reports them.
     /// </summary>
-    public System.Collections.Generic.IReadOnlyList<TermRedactionResult> LastTextRedactionResults { get; private set; } = [];
+    public System.Collections.Generic.IReadOnlyList<TermRedactionResult> LastTextRedactionResults
+    {
+        // No initializer: `= []` would make the constructor instantiate a collection of an
+        // Excise.Ocr type and load the OCR assembly (it shells out to tesseract) while the view
+        // model is built. The empty list is created only when a script reads the property.
+        get => _lastTextRedactionResults ?? System.Array.Empty<TermRedactionResult>();
+        private set => _lastTextRedactionResults = value;
+    }
+
+    private System.Collections.Generic.IReadOnlyList<TermRedactionResult>? _lastTextRedactionResults;
 
     // Scripting Commands (exposed to Roslyn scripts as Task-based wrappers)
     // Note: These are NOT ReactiveCommands - they're simple Task-returning methods for scripting
