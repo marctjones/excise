@@ -570,6 +570,7 @@ internal static class SavedPdfLeakScanner
             }
             catch (InvalidDataException) { /* not this encoding, or truncated: keep what inflated */ }
             catch (NotSupportedException) { }
+            catch (IOException) { /* zlib reports corrupt or non-zlib bytes (encrypted streams are random) as IOException: not inflatable */ }
             if (output.Length > 0) return output.ToArray();
         }
 
