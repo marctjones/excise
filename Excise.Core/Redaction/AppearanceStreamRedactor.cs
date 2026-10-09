@@ -82,11 +82,11 @@ internal static class AppearanceStreamRedactor
         catch { return null; }
         if (parsed.Operators.Count == 0 || letters.Count == 0) return null;
 
-        var matches = PdfDocumentRedactionExtensions.FindTextMatches(letters, term, caseSensitive, wholeWord);
+        var matches = PdfDocumentRedactionExtensions.FindTextMatchLines(letters, term, caseSensitive, wholeWord);
         if (matches.Count == 0) return null;
 
         // One box per line of a match that wraps (#1791).
-        var areas = matches.SelectMany(PdfDocumentRedactionExtensions.LinesOf)
+        var areas = matches.SelectMany(m => m.Lines)
             .Select(PdfDocumentRedactionExtensions.BoundingBoxOf).ToList();
 
         byte[] newBytes;

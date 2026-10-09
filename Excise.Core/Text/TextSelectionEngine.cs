@@ -1001,8 +1001,11 @@ public static class TextSelectionEngine
     /// unchanged. A vertical-writing glyph (§9.7.4.3) advances DOWN a column
     /// and columns follow right-to-left, so its along-axis is −y and its
     /// across-axis is x: a column joins as one line and a new column breaks.
+    /// A horizontal glyph a matrix turns is read along its turned line (#2008).
+    /// The ONE line frame: the redaction matcher's line model reads glyphs in
+    /// it too (#2011), so Find, copy and redaction agree on what a line is.
     /// </summary>
-    private static PdfRectangle Frame(Letter l)
+    internal static PdfRectangle Frame(Letter l)
     {
         var r = l.GlyphRectangle;
         return l.IsVerticalWriting ? new PdfRectangle(-r.Top, r.Left, -r.Bottom, r.Right) : LineFrame(l).Box;
@@ -1021,7 +1024,7 @@ public static class TextSelectionEngine
     /// <summary>Two turned glyphs share a direction within this many radians.
     /// Glyphs of one string share Tm exactly; at 1000 pt from the origin the
     /// frames of two glyphs this far apart in angle differ by 0.1 pt.</summary>
-    private const double SameDirectionTolerance = 1e-4;
+    internal const double SameDirectionTolerance = 1e-4;
 
     /// <summary>
     /// #2008: a horizontal-writing glyph whose advance a matrix turns off

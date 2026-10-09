@@ -187,7 +187,7 @@ public static class PdfDocumentRedactionExtensions
                 if (searchLetters.Count == 0) break;
 
                 var searchTextSnapshot = string.Concat(searchLetters.Select(l => l.Value));
-                var matches = FindTextMatches(searchLetters, text, options.CaseSensitive, options.WholeWord);
+                var matches = FindTextMatchLines(searchLetters, text, options.CaseSensitive, options.WholeWord);
                 if (matches.Count == 0) break;
 
                 // #1090: a stalled page STOPS. It used to fall back to
@@ -225,7 +225,7 @@ public static class PdfDocumentRedactionExtensions
                     var interactiveAreas = new List<PdfRectangle>();
                     var drawingWidgets = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
                     var unattributedAreas = new List<PdfRectangle>();
-                    foreach (var matchLetters in matches)
+                    foreach (var (matchLetters, matchLines) in matches)
                     {
                         var bbox = BoundingBoxOf(matchLetters);
 
@@ -282,7 +282,7 @@ public static class PdfDocumentRedactionExtensions
                         // #1791: one set of boxes per LINE of the match. A match
                         // that wraps spans two lines, and one box around it covers
                         // everything between them (#942).
-                        foreach (var line in LinesOf(matchLetters))
+                        foreach (var line in matchLines)
                         {
                             var lineBox = BoundingBoxOf(line);
                             if (!interactiveOnly)
@@ -841,11 +841,27 @@ public static class PdfDocumentRedactionExtensions
     /// </remarks>
     internal static List<List<Letter>> FindTextMatches(
         IReadOnlyList<Letter> letters, string searchText, bool caseSensitive,
-        bool wholeWord = false)   // #1052
+        bool wholeWord = false) =>   // #1052
+        FindTextMatchLines(letters, searchText, caseSensitive, wholeWord).Select(m => m.Letters).ToList();
+
+    /// <summary>
+    /// <see cref="FindTextMatches"/>, each match with its lines
+    /// (<see cref="LinesOf"/>) for removal, split by the same line model that
+    /// matched it.
+    /// </summary>
+    internal static List<(List<Letter> Letters, List<List<Letter>> Lines)> FindTextMatchLines(
+        IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, bool wholeWord = false)
     {
         if (string.IsNullOrEmpty(searchText) || letters.Count == 0)
-            return new List<List<Letter>>();
+            return new List<(List<Letter>, List<List<Letter>>)>();
         var lines = new PageLines(letters);
+        return MatchesOn(lines, letters, searchText, caseSensitive, wholeWord)
+            .Select(m => (m, LinesOf(m, lines))).ToList();
+    }
+
+    private static List<List<Letter>> MatchesOn(
+        PageLines lines, IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, bool wholeWord)
+    {
         var matches = Locate(letters, BuildSearchText(lines, lines.StreamOrder, joinEveryLineChange: false),
                 searchText, caseSensitive, wholeWord, slice => IsSpatiallyCoherent(lines, slice))
             .Select(m => m.Letters).ToList();
@@ -1266,15 +1282,15 @@ public static class PdfDocumentRedactionExtensions
     /// <para>#1882: every predicate is read in the glyph's own writing
     /// direction, so text rotated by its matrix (landscape content drawn on a
     /// portrait page with <c>0 1 -1 0 612 0 cm</c>) has lines, word gaps and
-    /// wraps exactly as upright text does. A glyph's direction is its shown
-    /// string's: the line from the string's first glyph origin to its last,
-    /// along which every §9.4.4 advance lies whatever the CTM and text matrix.
-    /// It is snapped to a quarter turn and the glyph's box is read in a frame
-    /// turned back by that much, which for an axis-aligned box is exact. A
-    /// string of one glyph takes the direction the pen travelled to the next
-    /// glyph when that is one advance; one that gives no direction (or a
-    /// synthetic form letter, or a run the bidi pass reversed) takes an
-    /// adjacent string's, else it is upright. An upright glyph's box is its <see cref="Letter.GlyphRectangle"/>
+    /// wraps exactly as upright text does. #2011: the direction is the one the
+    /// content-stream walker computed from Tm × CTM and the sign of Th
+    /// (<see cref="Letter.BaselineAngle"/>), at its exact angle, and each box is
+    /// read in <see cref="TextSelectionEngine.Frame"/>, the line frame page
+    /// text, Find and selection read. Glyphs share a line only when
+    /// <see cref="TextSelectionEngine.WritingModeChanges"/> says they share a
+    /// direction. Inferring the direction from glyph origins snapped to a
+    /// quarter turn left a wrap in text turned 30 or 45 degrees unremoved
+    /// (#1891). An upright glyph's box is its <see cref="Letter.GlyphRectangle"/>
     /// unchanged, so an ordinary page reads exactly as it did.</para>
     ///
     /// <para>#1883: wraps are found by geometry, not by stream order. A page
@@ -1308,11 +1324,8 @@ public static class PdfDocumentRedactionExtensions
         /// this break is reported, never removed.</summary>
         public List<(List<int> Letters, int Break)> GapWraps { get; } = new();
 
-        // Quarter turns counterclockwise, only for glyphs that are not upright.
-        private readonly Dictionary<Letter, int> _turns = new(ReferenceEqualityComparer.Instance);
-
-        // Per view letter, its quarter turns and its box in its line's frame.
-        private readonly int[] _turnsAt;
+        // Per view letter, its direction (DirectionsOf) and its box in its line's frame.
+        private readonly int[] _dirAt;
         private readonly PdfRectangle[] _rectAt;
 
         // Every copy of a wrapping line's last glyph, and of the first glyph of
@@ -1330,16 +1343,12 @@ public static class PdfDocumentRedactionExtensions
 
         public PageLines(IReadOnlyList<Letter> letters)
         {
-            AssignTurns(letters);
             (View, SpanStart, SpanEnd) = CollapseOverprintedGlyphs(letters);
             StreamOrder = Enumerable.Range(0, View.Count).ToList();
-            _turnsAt = new int[View.Count];
+            _dirAt = DirectionsOf(View);
             _rectAt = new PdfRectangle[View.Count];
             for (var v = 0; v < View.Count; v++)
-            {
-                _turnsAt[v] = Turns(View[v]);
-                _rectAt[v] = RectIn(View[v], _turnsAt[v]);
-            }
+                _rectAt[v] = FrameOf(View[v]);
 
             var advances = new List<double>();
             for (var k = 1; k < View.Count; k++)
@@ -1355,46 +1364,51 @@ public static class PdfDocumentRedactionExtensions
             LinkWraps(letters);
         }
 
-        private void AssignTurns(IReadOnlyList<Letter> letters)
+        /// <summary>
+        /// #2011: per letter, a number shared by the letters written in one
+        /// direction: 0 upright, 1 vertical writing, and from 2 one per direction
+        /// a matrix turns text to, as <see cref="TextSelectionEngine.DirectionChanges"/>
+        /// tells directions apart. Bucketed by angle, so a page of text on a
+        /// curve (a direction per glyph) costs one lookup per glyph, not one per
+        /// direction seen.
+        /// </summary>
+        private static int[] DirectionsOf(List<Letter> view)
         {
-            var from = new List<int>();
-            var turns = new List<int>();
-            for (var start = 0; start < letters.Count;)
+            const double tolerance = TextSelectionEngine.SameDirectionTolerance;
+            var buckets = (long)Math.Ceiling(2 * Math.PI / tolerance);
+            var first = new List<Letter>();
+            var byBucket = new Dictionary<long, List<int>>();
+            var directions = new int[view.Count];
+            for (var v = 0; v < view.Count; v++)
             {
-                var end = start;
-                while (end + 1 < letters.Count && OneString(letters[end], letters[end + 1])) end++;
-                from.Add(start);
-                turns.Add(TurnsAlong(letters[start], letters[end]));
-                start = end + 1;
+                var letter = view[v];
+                if (letter.IsVerticalWriting) { directions[v] = 1; continue; }
+                if (!TextSelectionEngine.IsTurned(letter)) continue;
+
+                var angle = letter.BaselineAngle % (2 * Math.PI);
+                if (angle < 0) angle += 2 * Math.PI;
+                var bucket = (long)Math.Floor(angle / tolerance) % buckets;
+                var found = -1;
+                // Two directions within the tolerance are at most one bucket apart.
+                for (var d = -1; d <= 1 && found < 0; d++)
+                    if (byBucket.TryGetValue((bucket + d + buckets) % buckets, out var near))
+                        foreach (var g in near)
+                            if (!TextSelectionEngine.DirectionChanges(first[g], letter)) { found = g; break; }
+                if (found < 0)
+                {
+                    found = first.Count;
+                    first.Add(letter);
+                    if (!byBucket.TryGetValue(bucket, out var list)) byBucket[bucket] = list = new List<int>();
+                    list.Add(found);
+                }
+                directions[v] = 2 + found;
             }
-            from.Add(letters.Count);
-
-            // A string of one glyph shown where the last one left the pen (one
-            // Tj per glyph) travels one advance: that is its direction. Not a
-            // right-to-left run, which the bidi pass has put in reading order.
-            for (var r = 0; r + 1 < turns.Count; r++)
-            {
-                var (a, b) = (letters[from[r + 1] - 1], letters[from[r + 1]]);
-                var travel = Math.Sqrt(Math.Pow(b.StartX - a.StartX, 2) + Math.Pow(b.StartY - a.StartY, 2));
-                if (turns[r] < 0 && a.OperandByteOffset == 0 && b.OperandByteOffset == 0
-                    && !TextSelectionEngine.ContainsStrongRtl(a.Value) && !TextSelectionEngine.ContainsStrongRtl(b.Value)
-                    && travel >= 0.8 * a.Width && travel <= 1.25 * a.Width)
-                    turns[r] = TurnsAlong(a, b);
-            }
-
-            // A string with no direction of its own takes a neighbouring
-            // string's when it continues that string's line: forward, then back.
-            for (var r = 1; r < turns.Count; r++)
-                if (turns[r] < 0 && turns[r - 1] >= 0 && Continues(letters[from[r] - 1], letters[from[r]], turns[r - 1]))
-                    turns[r] = turns[r - 1];
-            for (var r = turns.Count - 2; r >= 0; r--)
-                if (turns[r] < 0 && turns[r + 1] >= 0 && Continues(letters[from[r + 1] - 1], letters[from[r + 1]], turns[r + 1]))
-                    turns[r] = turns[r + 1];
-
-            for (var r = 0; r < turns.Count; r++)
-                if (turns[r] > 0)
-                    for (var i = from[r]; i < from[r + 1]; i++) _turns[letters[i]] = turns[r];
+            return directions;
         }
+
+        /// <summary>The glyph box in its line's frame, x along the line and y up
+        /// the glyph: the frame Find and selection read (#2011).</summary>
+        private static PdfRectangle FrameOf(Letter letter) => TextSelectionEngine.Frame(letter).Normalize();
 
         /// <summary>A line of the stream: view letters <see cref="Start"/> to
         /// <see cref="End"/> (trailing blanks included), <see cref="First"/> and
@@ -1548,8 +1562,7 @@ public static class PdfDocumentRedactionExtensions
         private sealed class Heads
         {
             private readonly PageLines _page;
-            private readonly List<(double Centre, int Line)>[] _byTurns =
-                [new(), new(), new(), new()];
+            private readonly Dictionary<int, List<(double Centre, int Line)>> _byDirection = new();
             private readonly double _reach;
 
             public Heads(PageLines page, List<Line> lines)
@@ -1558,17 +1571,19 @@ public static class PdfDocumentRedactionExtensions
                 for (var l = 0; l < lines.Count; l++)
                 {
                     var head = lines[l].First;
-                    _byTurns[page._turnsAt[head]].Add((page.CentreAt(head), l));
+                    if (!_byDirection.TryGetValue(page._dirAt[head], out var list))
+                        _byDirection[page._dirAt[head]] = list = new List<(double, int)>();
+                    list.Add((page.CentreAt(head), l));
                     _reach = Math.Max(_reach, 2.5 * page.SizeAt(head));
                 }
-                foreach (var list in _byTurns) list.Sort();
+                foreach (var list in _byDirection.Values) list.Sort();
             }
 
             /// <summary>Lines whose first glyph lies above (or below) view letter
             /// <paramref name="glyph"/>, within the farthest a line can wrap.</summary>
             public IEnumerable<int> Near(int glyph, bool above)
             {
-                var list = _byTurns[_page._turnsAt[glyph]];
+                if (!_byDirection.TryGetValue(_page._dirAt[glyph], out var list)) yield break;
                 var centre = _page.CentreAt(glyph);
                 var (lo, hi) = above ? (centre, centre + _reach) : (centre - _reach, centre);
                 var i = list.BinarySearch((lo, int.MinValue));
@@ -1603,58 +1618,14 @@ public static class PdfDocumentRedactionExtensions
         /// height, because a unit font scaled by <c>Tm</c> reports a size of 1.</summary>
         private double SizeAt(int v) => Math.Max(View[v].FontSize, _rectAt[v].Height);
 
-        /// <summary>Whether two stream-adjacent glyphs lie next to each other on one line turned by <paramref name="turns"/>.</summary>
-        private static bool Continues(Letter a, Letter b, int turns)
-        {
-            var ra = RectIn(a, turns);
-            var rb = RectIn(b, turns);
-            return Adjacent(a, b)
-                && Math.Abs((ra.Bottom + ra.Top) / 2 - (rb.Bottom + rb.Top) / 2) <= 0.5 * Math.Max(a.FontSize, b.FontSize);
-        }
-
-        /// <summary>Whether <paramref name="b"/> is the glyph after <paramref name="a"/> in one
-        /// shown string: the next code of the same string, or the first of a later
-        /// string of the same <c>TJ</c> array.</summary>
-        private static bool OneString(Letter a, Letter b) =>
-            a.OperandByteOffset >= 0 && b.OperandByteOffset >= 0
-            && (b.TjElementIndex == a.TjElementIndex
-                ? b.OperandByteOffset == a.OperandByteOffset + a.CodeByteLength
-                : a.TjElementIndex >= 0 && b.TjElementIndex > a.TjElementIndex && b.OperandByteOffset == 0);
-
-        /// <summary>Quarter turns from +x to the pen's travel between two origins; -1 when it did not move.</summary>
-        private static int TurnsAlong(Letter first, Letter last)
-        {
-            var dx = last.StartX - first.StartX;
-            var dy = last.StartY - first.StartY;
-            if (Math.Max(Math.Abs(dx), Math.Abs(dy)) < 1e-6) return -1;
-            return Math.Abs(dx) >= Math.Abs(dy) ? (dx > 0 ? 0 : 2) : (dy > 0 ? 1 : 3);
-        }
-
-        private int Turns(Letter letter) => _turns.Count > 0 && _turns.TryGetValue(letter, out var turns) ? turns : 0;
-
-        /// <summary>The glyph box in its line's frame: x along the writing direction, y up the glyph.</summary>
-        private static PdfRectangle RectIn(Letter letter, int turns)
-        {
-            var r = letter.GlyphRectangle.Normalize();
-            return turns switch
-            {
-                1 => new PdfRectangle(r.Bottom, -r.Right, r.Top, -r.Left),
-                2 => new PdfRectangle(-r.Right, -r.Top, -r.Left, -r.Bottom),
-                3 => new PdfRectangle(-r.Top, r.Left, -r.Bottom, r.Right),
-                _ => r,
-            };
-        }
-
         /// <summary>Do the two glyphs sit on one line: one direction, centres within half a font size.</summary>
-        public bool SameLine(Letter a, Letter b)
-        {
-            var turns = Turns(a);
-            return turns == Turns(b) && OneLine(RectIn(a, turns), RectIn(b, turns), Math.Max(a.FontSize, b.FontSize));
-        }
+        public bool SameLine(Letter a, Letter b) =>
+            !TextSelectionEngine.WritingModeChanges(a, b)
+            && OneLine(FrameOf(a), FrameOf(b), Math.Max(a.FontSize, b.FontSize));
 
         /// <summary><see cref="SameLine"/> for two view letters.</summary>
         public bool SameLineAt(int a, int b) =>
-            _turnsAt[a] == _turnsAt[b] && OneLine(_rectAt[a], _rectAt[b], Math.Max(View[a].FontSize, View[b].FontSize));
+            _dirAt[a] == _dirAt[b] && OneLine(_rectAt[a], _rectAt[b], Math.Max(View[a].FontSize, View[b].FontSize));
 
         private static bool OneLine(PdfRectangle a, PdfRectangle b, double fontSize) =>
             !(Math.Abs((a.Bottom + a.Top) / 2 - (b.Bottom + b.Top) / 2) > 0.5 * fontSize);
@@ -1673,7 +1644,7 @@ public static class PdfDocumentRedactionExtensions
         /// </remarks>
         private bool IsLineWrapAt(int last, int next)
         {
-            if (_turnsAt[last] != _turnsAt[next]) return false;
+            if (_dirAt[last] != _dirAt[next]) return false;
             var size = Math.Max(SizeAt(last), SizeAt(next));
             var drop = CentreAt(last) - CentreAt(next);
             return drop > 0.5 * size && drop <= 2.5 * size && _rectAt[next].Right <= _rectAt[last].Left;
@@ -1781,23 +1752,31 @@ public static class PdfDocumentRedactionExtensions
     }
 
     /// <summary>
-    /// #1791: a match split into its runs of adjacent glyphs — one per line of
-    /// a match that wraps — so each gets its own removal box. One box around a
-    /// match on two lines covers everything between them, which is #942. A run
-    /// of whitespace alone is dropped: there is nothing in it to remove.
+    /// #1791: a match split into its lines, so each gets its own removal box.
+    /// One box around a match on two lines covers everything between them,
+    /// which is #942. A line ends where the line model says the match wraps
+    /// (#2011), or where the next glyph is not adjacent: two vertical columns
+    /// a column pitch apart are adjacent glyph to glyph, and one box across
+    /// both took the glyph after the term. A run of whitespace alone is
+    /// dropped: there is nothing in it to remove.
     /// </summary>
-    internal static IEnumerable<List<Letter>> LinesOf(IReadOnlyList<Letter> match)
+    private static List<List<Letter>> LinesOf(IReadOnlyList<Letter> match, PageLines lines)
     {
+        var result = new List<List<Letter>>();
         var run = new List<Letter>();
+        Letter? ink = null;
         foreach (var letter in match)
         {
-            if (run.Count > 0 && !Adjacent(run[^1], letter))
+            var blank = string.IsNullOrWhiteSpace(letter.Value);
+            if (run.Count > 0 && (!Adjacent(run[^1], letter) || (!blank && ink != null && lines.IsWrap(ink, letter))))
             {
-                if (run.Exists(l => !string.IsNullOrWhiteSpace(l.Value))) yield return run;
+                if (run.Exists(l => !string.IsNullOrWhiteSpace(l.Value))) result.Add(run);
                 run = new List<Letter>();
             }
             run.Add(letter);
+            if (!blank) ink = letter;
         }
-        if (run.Exists(l => !string.IsNullOrWhiteSpace(l.Value))) yield return run;
+        if (run.Exists(l => !string.IsNullOrWhiteSpace(l.Value))) result.Add(run);
+        return result;
     }
 }
