@@ -182,6 +182,186 @@ public class WordWrapRedactionTests
         }
     }
 
+    /// <summary>#1891: the turn of a block of text by an angle that is not a
+    /// multiple of 90 degrees, about the block's middle so every glyph stays on
+    /// the page.</summary>
+    private static double[] TurnedAboutTheBlock(int degrees)
+    {
+        var r = degrees * Math.PI / 180;
+        var (c, s) = (Math.Round(Math.Cos(r), 6), Math.Round(Math.Sin(r), 6));
+        const double cx = 200, cy = 493, px = 306, py = 396;
+        return [c, s, -s, c, Math.Round(px - (c * cx - s * cy), 4), Math.Round(py - (s * cx + c * cy), 4)];
+    }
+
+    public static TheoryData<int, Shape, bool, string, int> ObliqueWraps()
+    {
+        var data = new TheoryData<int, Shape, bool, string, int>();
+        foreach (var degrees in new[] { 2, 30, 45, 135, 315 })
+            foreach (var shape in new[] { Shape.Tj, Shape.KernedTj, Shape.TrailingSpace, Shape.TjPerWord, Shape.TjPerGlyph })
+                foreach (var viaTm in new[] { false, true })
+                {
+                    data.Add(degrees, shape, viaTm, "Quentin Barnaby Holloway", 2);
+                    data.Add(degrees, shape, viaTm, "Quentin A Holloway", 2);
+                    data.Add(degrees, shape, viaTm, "Quentin A Holloway", 1);
+                }
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(ObliqueWraps))]
+    public void ANameWrappedInTextTurnedByANonRightAngle_IsRemovedFromBothLines(
+        int degrees, Shape shape, bool viaTm, string name, int wrapAfter)
+    {
+        // #1891 / #2011: the line model read a turned line in the quarter turn
+        // nearest its direction, so at 30 or 45 degrees consecutive glyphs of
+        // one line sat on different "lines" and a wrapped name was reported,
+        // not removed. The direction is the walker's, exact at any angle.
+        // 2 degrees is the OCR layer of a skewed scan (Tesseract writes one
+        // turned Tm per block), which the quarter-turn snap read as upright.
+        RequireOracles();
+        Assert.SkipUnless(MutoolStextGeometry.IsAvailable, "mutool not installed [requires: tool:mutool]");
+        var words = name.Split(' ');
+        var pdf = ObliqueWrap(degrees, shape, viaTm, name, wrapAfter);
+
+        // The count to meet is MuPDF's, from the input; Poppler reads text off a
+        // quarter turn in fragments (TurnedTextFindAndRedactTests), so it only
+        // judges the output.
+        var input = Path.Combine(Path.GetTempPath(), $"excise-1891-in-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(input, pdf);
+        var outputs = new List<string> { input };
+        try
+        {
+            var mutoolInput = Regex.Replace(MutoolTextExtractor.ExtractPage(input, 1) ?? "", @"\s+", " ");
+            var occurrences = Regex.Matches(mutoolInput, Regex.Escape(name)).Count;
+            occurrences.Should().Be(1, $"fixture sanity: MuPDF reads the name once across the break:\n{mutoolInput}");
+
+            var stext = MutoolStextGeometry.Read(pdf, 1);
+            var quads = words.Where(w => w.Length >= 3).SelectMany(w =>
+            {
+                var hits = stext.FindChars(w);
+                hits.Should().HaveCount(1, $"fixture sanity: MuPDF places '{w}' once");
+                return hits[0];
+            }).ToList();
+            quads.Should().OnlyContain(q => q.Left >= 0 && q.Top >= 0 && q.Right <= stext.Width && q.Bottom <= stext.Height,
+                "fixture sanity: the turned block lies on the page");
+            using (var before = MutoolReferenceRenderer.RenderPage(input, 1, 72))
+                TurnedTextFindAndRedactTests.InkIn(before!, quads).Should().BeGreaterThan(0.05, "fixture sanity: the name is drawn");
+            foreach (var word in words.Where(w => w.Length >= 3))
+                SavedPdfLeakScanner.FindTerm(pdf, word).Should().NotBeEmpty($"fixture sanity: the scanner finds '{word}' in the input");
+
+            var (report, saved, output) = Redact(pdf, name);
+            outputs.Add(output);
+            report.MatchesLocated.Should().Be(occurrences, $"every occurrence MuPDF reads is matched ({report})");
+            report.VerifiedRemovals.Should().Be(occurrences, report.ToString());
+            report.WordWrapCandidates.Should().BeEmpty("a confirmed wrap is removed, not merely reported");
+            report.IsCleanSuccess.Should().BeTrue(report.ToString());
+
+            foreach (var word in words.Where(w => w.Length >= 3))
+                SavedPdfLeakScanner.FindTerm(saved, word).Should().BeEmpty($"'{word}' of the name must leave the file");
+            foreach (var (tool, text) in Readings(output))
+            {
+                text.Should().NotContain(name, $"{tool} must not read the name across the break");
+                foreach (var word in words.Where(w => w.Length >= 3))
+                    text.Should().NotMatchRegex($@"\b{Regex.Escape(word)}\b", $"{tool} must not read '{word}'");
+            }
+
+            // No covering box and no width closing: the pixels inside the name's
+            // own glyph quads show what glyph removal alone left there.
+            using (var doc = PdfDocument.Open(pdf))
+            {
+                doc.RedactText(name, RedactionOptions.Default with { DrawBox = false, Width = WidthPolicy.CollapsePreserveLayout });
+                var pixelOutput = Path.Combine(Path.GetTempPath(), $"excise-1891-px-{Guid.NewGuid():N}.pdf");
+                doc.Save(pixelOutput);
+                outputs.Add(pixelOutput);
+                using var after = MutoolReferenceRenderer.RenderPage(pixelOutput, 1, 72);
+                TurnedTextFindAndRedactTests.InkIn(after!, quads).Should().BeLessThan(0.001, "no ink is left inside the name's glyph quads");
+            }
+        }
+        finally
+        {
+            foreach (var path in outputs)
+                File.Delete(path);
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(ObliqueWraps))]
+    public void ANameWrappedInTextTurnedByANonRightAngle_KeepsTheNeighbouringLines(
+        int degrees, Shape shape, bool viaTm, string name, int wrapAfter)
+    {
+        Assert.SkipWhen(degrees != 2,
+            "#2055: removal boxes are axis-aligned; at an oblique angle they take glyphs of the neighbouring lines");
+        RequireOracles();
+        var (_, _, output) = Redact(ObliqueWrap(degrees, shape, viaTm, name, wrapAfter), name);
+        try
+        {
+            var mutool = Regex.Replace(MutoolTextExtractor.ExtractPage(output, 1) ?? "", @"\s+", " ");
+            foreach (var neighbour in new[] { "signed by", "on behalf of the company" })
+                mutool.Should().Contain(neighbour, $"MuPDF must still read the neighbouring text '{neighbour}'");
+        }
+        finally
+        {
+            File.Delete(output);
+        }
+    }
+
+    /// <summary>#1891: <paramref name="name"/> wrapped after <paramref name="wrapAfter"/>
+    /// words in a block turned <paramref name="degrees"/> about its middle.</summary>
+    private static byte[] ObliqueWrap(int degrees, Shape shape, bool viaTm, string name, int wrapAfter)
+    {
+        var words = name.Split(' ');
+        return BuildPdf(shape, TurnedAboutTheBlock(degrees), viaTm,
+            (72, 500, $"{Lead} {string.Join(' ', words.Take(wrapAfter))}"),
+            (72, 486, $"{string.Join(' ', words.Skip(wrapAfter))} {Tail}"));
+    }
+
+    [Fact]
+    public void ATermInVerticalWriting_WrappedOntoTheNextColumn_IsRemovedFromBothColumns()
+    {
+        // #1902 / #2011: Identity-V writing runs down a column and wraps onto
+        // the next column to the left. The line model reads it in the vertical
+        // frame, so the column change is a wrap like a line change in upright
+        // text, and a term across it is removed from both columns.
+        Assert.SkipUnless(PdftotextTextExtractor.IsAvailable, "pdftotext not installed [requires: tool:pdftotext]");
+        const string term = "日本語 漢字";
+        var pdf = VerticalWritingTextOracleTests.TwoColumnIdentityVPdf(secondColumnX: 270);
+        var input = Path.Combine(Path.GetTempPath(), $"excise-2011-v-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(input, pdf);
+        string? output = null;
+        try
+        {
+            // Poppler reads a column as a line: the independent count of the term.
+            var popplerInput = Regex.Replace(PdftotextTextExtractor.ExtractPage(input, 1) ?? "", @"\s+", " ");
+            var occurrences = Regex.Matches(popplerInput, Regex.Escape(term)).Count;
+            occurrences.Should().Be(1, $"fixture sanity: pdftotext reads the term across the column change:\n{popplerInput}");
+
+            // The scanner reads these Identity codes as UTF-16BE strings.
+            foreach (var part in new[] { "日本語", "漢字" })
+                SavedPdfLeakScanner.FindTerm(pdf, part).Should().NotBeEmpty($"fixture sanity: the scanner finds '{part}' in the input");
+
+            RedactionReport report;
+            byte[] saved;
+            (report, saved, output) = Redact(pdf, term);
+            report.MatchesLocated.Should().Be(occurrences, report.ToString());
+            report.VerifiedRemovals.Should().Be(occurrences, report.ToString());
+            report.WordWrapCandidates.Should().BeEmpty("a confirmed column wrap is removed, not merely reported");
+            report.IsCleanSuccess.Should().BeTrue(report.ToString());
+
+            foreach (var part in new[] { "日本語", "漢字" })
+                SavedPdfLeakScanner.FindTerm(saved, part).Should().BeEmpty($"'{part}' must leave the file");
+            var popplerOutput = PdftotextTextExtractor.ExtractPage(output, 1);
+            popplerOutput.Should().NotBeNull();
+            popplerOutput.Should().NotContain("日").And.NotContain("本").And.NotContain("語")
+                .And.NotContain("漢").And.NotContain("字");
+            popplerOutput.Should().Contain("、", "the glyph after the term in the second column stays");
+        }
+        finally
+        {
+            File.Delete(input);
+            if (output != null) File.Delete(output);
+        }
+    }
+
     [Fact]
     public void RotatedText_TwoSequentialRedactions_WithACurlyQuoteADollarAndParentheses()
     {

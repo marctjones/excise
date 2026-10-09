@@ -333,10 +333,9 @@ public class PdfDocumentRedactionExtensionsTests
         // between them (#942).
         var letters = WrappedMaryJaneSmith();
 
-        var match = PdfDocumentRedactionExtensions.FindTextMatches(letters, term, caseSensitive: false)
-            .Should().ContainSingle().Subject;
+        var lines = PdfDocumentRedactionExtensions.FindTextMatchLines(letters, term, caseSensitive: false)
+            .Should().ContainSingle().Subject.Lines;
 
-        var lines = PdfDocumentRedactionExtensions.LinesOf(match).ToList();
         lines.Should().HaveCount(2, "the match is on two lines and gets one box on each");
         lines[0].Should().OnlyContain(l => l.StartY == 700);
         lines[1].Should().OnlyContain(l => l.StartY == 686);
@@ -372,9 +371,9 @@ public class PdfDocumentRedactionExtensionsTests
         // becomes unmatchable.
         var letters = new[] { L("A", 100, 700, 8), L("B", 100, 688, 8), L("C", 100, 676, 8) };
 
-        var match = PdfDocumentRedactionExtensions.FindTextMatches(letters, "ABC", caseSensitive: false)
+        var match = PdfDocumentRedactionExtensions.FindTextMatchLines(letters, "ABC", caseSensitive: false)
             .Should().ContainSingle().Subject;
-        PdfDocumentRedactionExtensions.LinesOf(match).Should().ContainSingle("the glyphs are adjacent");
+        match.Lines.Should().ContainSingle("the glyphs are adjacent");
     }
 
     [Fact]

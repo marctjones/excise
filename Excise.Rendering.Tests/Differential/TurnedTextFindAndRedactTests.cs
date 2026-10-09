@@ -219,7 +219,7 @@ public class TurnedTextFindAndRedactTests
     /// Fraction of inked pixels inside the glyph boxes, each shrunk by a fifth
     /// of its size so a turned box's corners do not reach a neighbour's ink.
     /// </summary>
-    private static double InkIn(SKBitmap bmp, IReadOnlyList<VisualRegion> boxes)
+    internal static double InkIn(SKBitmap bmp, IReadOnlyList<VisualRegion> boxes)
     {
         const double scale = Dpi / 72.0;
         int ink = 0, total = 0;
