@@ -59,6 +59,8 @@ internal static class FillFormCommand
                     ignorePermissions));
                 Console.WriteLine($"Set {result.UpdatedFieldCount} field value(s){(flatten ? " (flattened)" : "")}");
                 Console.WriteLine($"Output: {result.OutputPath}");
+                foreach (var note in result.XfaNotes)
+                    Console.Error.WriteLine($"Warning: {note}");
                 return 0;
             }
             catch (Exception ex)

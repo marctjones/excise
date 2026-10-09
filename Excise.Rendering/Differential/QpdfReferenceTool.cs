@@ -547,6 +547,109 @@ internal static class QpdfReferenceTool
         return new QpdfFilteredStream(QpdfStreamDataStatus.Ok, result.Output, result.Diagnostics.Trim());
     }
 
+    /// <summary>
+    /// The object number of each <c>/AcroForm /XFA</c> packet stream, by packet
+    /// name, as qpdf's own parser follows trailer → <c>/Root</c> →
+    /// <c>/AcroForm</c> → <c>/XFA</c> (JSON v2). A single-stream <c>/XFA</c>
+    /// comes back as the one key <c>"xdp"</c>. Pair it with
+    /// <see cref="FilteredStreamData"/> to read a packet without excise's
+    /// parser, decoder or decryption (#2013). Null when qpdf is unavailable,
+    /// fails, or the file has no <c>/XFA</c>.
+    /// </summary>
+    public static IReadOnlyDictionary<string, int>? XfaPacketObjects(
+        string pdfPath, string? password = null, int timeoutMs = 30_000)
+    {
+        var args = new List<string> { "--json=2", "--json-key=qpdf" };
+        if (!string.IsNullOrEmpty(password)) args.Add($"--password={password}");
+        args.Add(pdfPath);
+        var result = Run(args.ToArray(), timeoutMs);
+        if (result == null || result.ExitCode is not (0 or 3)) return null;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(result.Output);
+            var objects = doc.RootElement.GetProperty("qpdf")[1];
+
+            JsonElement? Value(JsonElement element)
+            {
+                if (element.ValueKind == JsonValueKind.String
+                    && element.GetString() is { } text && text.EndsWith(" R", StringComparison.Ordinal)
+                    && objects.TryGetProperty("obj:" + text, out var target))
+                {
+                    if (target.TryGetProperty("value", out var value)) return value;
+                    if (target.TryGetProperty("stream", out var stream)) return stream.GetProperty("dict");
+                    return null;
+                }
+                return element;
+            }
+
+            static int ObjectNumber(JsonElement reference)
+                => int.Parse(reference.GetString()!.Split(' ')[0], System.Globalization.CultureInfo.InvariantCulture);
+
+            var trailer = objects.GetProperty("trailer").GetProperty("value");
+            if (Value(trailer.GetProperty("/Root")) is not { } catalog
+                || !catalog.TryGetProperty("/AcroForm", out var acroFormEntry)
+                || Value(acroFormEntry) is not { } acroForm
+                || !acroForm.TryGetProperty("/XFA", out var xfa))
+            {
+                return null;
+            }
+
+            var packets = new Dictionary<string, int>(StringComparer.Ordinal);
+            if (xfa.ValueKind == JsonValueKind.String)
+            {
+                packets["xdp"] = ObjectNumber(xfa);
+                return packets;
+            }
+            for (int i = 0; i + 1 < xfa.GetArrayLength(); i += 2)
+            {
+                var name = xfa[i].GetString() ?? string.Empty;
+                packets[name.StartsWith("u:", StringComparison.Ordinal) ? name[2..] : name] = ObjectNumber(xfa[i + 1]);
+            }
+            return packets;
+        }
+        catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException
+                                       or FormatException or IndexOutOfRangeException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Every AcroForm field's value as qpdf reads it (JSON v2 <c>acroform</c>
+    /// key), by fully qualified name: a text string decoded (qpdf's
+    /// <c>u:</c> prefix removed), a name with its slash (<c>/Off</c>), or null
+    /// when the field has no <c>/V</c>. Null when qpdf cannot be asked.
+    /// </summary>
+    public static IReadOnlyDictionary<string, string?>? AcroFormFieldValues(
+        string pdfPath, string? password = null, int timeoutMs = 30_000)
+    {
+        var args = new List<string> { "--json=2", "--json-key=acroform" };
+        if (!string.IsNullOrEmpty(password)) args.Add($"--password={password}");
+        args.Add(pdfPath);
+        var result = Run(args.ToArray(), timeoutMs);
+        if (result == null || result.ExitCode is not (0 or 3)) return null;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(result.Output);
+            var values = new Dictionary<string, string?>(StringComparer.Ordinal);
+            foreach (var field in doc.RootElement.GetProperty("acroform").GetProperty("fields").EnumerateArray())
+            {
+                var name = field.GetProperty("fullname").GetString() ?? string.Empty;
+                var value = field.GetProperty("value");
+                values[name] = value.ValueKind == JsonValueKind.String
+                    ? value.GetString() is { } text && text.StartsWith("u:", StringComparison.Ordinal) ? text[2..] : value.GetString()
+                    : null;
+            }
+            return values;
+        }
+        catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
     private sealed record BinaryProcessResult(int ExitCode, byte[] Output, string Diagnostics);
 
     /// <summary>

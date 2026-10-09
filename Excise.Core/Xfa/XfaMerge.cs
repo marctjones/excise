@@ -50,6 +50,20 @@ internal sealed class XfaFormNode
     public bool TakesNoSpace => Presence is "hidden" or "inactive";
 
     public bool IsContainer => Kind is XfaNodeKind.Subform or XfaNodeKind.Area or XfaNodeKind.ExclGroup;
+
+    /// <summary>
+    /// Containers: the data group this instance's children bind within (the
+    /// merge scope). Null when there is no data, or a named subform found no
+    /// data group to bind to. Static-XFA write-back (#2013) reads it.
+    /// </summary>
+    public XElement? DataScope { get; set; }
+
+    /// <summary>
+    /// Fields and exclusion groups: the data node the merge bound this object
+    /// to, or null when nothing bound (no data, <c>match="none"</c>, or no
+    /// matching node). Static-XFA write-back (#2013) writes the value here.
+    /// </summary>
+    public XElement? BoundData { get; set; }
 }
 
 /// <summary>
@@ -77,7 +91,7 @@ internal sealed class XfaMerge
 
     public XfaFormNode Merge(XElement rootSubform)
     {
-        var root = new XfaFormNode(XfaNodeKind.Subform, rootSubform);
+        var root = new XfaFormNode(XfaNodeKind.Subform, rootSubform) { DataScope = _dataRoot };
         CountScripts(rootSubform);
         BuildChildren(root, rootSubform, _dataRoot, depth: 1);
         return root;
@@ -146,7 +160,7 @@ internal sealed class XfaMerge
 
                 case "area":
                 {
-                    var area = new XfaFormNode(XfaNodeKind.Area, child);
+                    var area = new XfaFormNode(XfaNodeKind.Area, child) { DataScope = scope };
                     BuildChildren(area, child, scope, depth + 1);
                     parent.Children.Add(area);
                     break;
@@ -228,7 +242,7 @@ internal sealed class XfaMerge
     {
         _budget.CountInstance();
         CountScripts(subform);
-        var node = new XfaFormNode(XfaNodeKind.Subform, subform);
+        var node = new XfaFormNode(XfaNodeKind.Subform, subform) { DataScope = scope };
         BuildChildren(node, subform, scope, depth + 1);
         return node;
     }
@@ -236,10 +250,11 @@ internal sealed class XfaMerge
     private XfaFormNode BuildExclGroup(XElement group, XElement? scope, int depth)
     {
         CountScripts(group);
-        var node = new XfaFormNode(XfaNodeKind.ExclGroup, group);
+        var node = new XfaFormNode(XfaNodeKind.ExclGroup, group) { DataScope = scope };
         BuildChildren(node, group, scope, depth + 1);
 
         var bound = Bind(group, scope);
+        node.BoundData = bound;
         if (bound == null)
             return node;
 
@@ -259,6 +274,7 @@ internal sealed class XfaMerge
         XfaValues.ReadTemplateValue(field, node);
 
         var bound = Bind(field, scope);
+        node.BoundData = bound;
         if (bound != null)
         {
             if (XfaRichText.FindXhtmlBody(bound) is { } body)

@@ -289,6 +289,10 @@ public sealed class PdfField
             throw new InvalidOperationException(
                 $"Field '{FullName}' is a Signature field. Use the signing API to populate signatures.");
 
+        // #2013: a static XFA form keeps a second copy of each value in its
+        // datasets packet. Refuse a value XML cannot carry before /V changes.
+        Excise.Core.Xfa.XfaStaticDataSync.EnsureValueWritable(_document, value, FullName);
+
         if (value == null)
         {
             RawDictionary.Remove("V");
@@ -296,6 +300,7 @@ public sealed class PdfField
             if (FieldType == PdfFieldType.Button)
                 SetButtonAppearanceState("Off");
             RefreshAppearances(null);
+            Excise.Core.Xfa.XfaStaticDataSync.Apply(_document, this, null);
             return;
         }
 
@@ -335,6 +340,11 @@ public sealed class PdfField
         }
 
         RefreshAppearances(value);
+
+        // ISO 32000-2 Annex K.2: the XFA field values shall be consistent with
+        // the AcroForm /V. Writes the same value into the datasets of a static
+        // XFA form; a no-op for any other document (#2013).
+        Excise.Core.Xfa.XfaStaticDataSync.Apply(_document, this, value);
     }
 
     /// <summary>

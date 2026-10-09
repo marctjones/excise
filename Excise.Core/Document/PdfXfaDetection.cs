@@ -28,8 +28,10 @@ public enum PdfXfaFormKind
 
 /// <summary>
 /// Detects XFA forms (#1547, phase 1). A dynamic form is laid out by
-/// <c>Excise.Core.Xfa.PdfXfaLayout.ApplyXfaLayout</c> (phase 2); excise does
-/// not fill XFA forms or run their scripts.
+/// <c>Excise.Core.Xfa.PdfXfaLayout.ApplyXfaLayout</c> (phase 2). A static
+/// form is filled through its AcroForm fields, and
+/// <see cref="PdfField.SetValue(string?)"/> also writes each value into its
+/// XFA datasets (#2013). excise does not fill dynamic XFA forms.
 /// </summary>
 public static class PdfXfaDetection
 {

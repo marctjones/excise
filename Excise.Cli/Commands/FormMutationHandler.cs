@@ -50,7 +50,9 @@ internal static class FormMutationHandler
             document.FlattenAcroForm();
         cancellationToken.ThrowIfCancellationRequested();
         SavePreservingEncryption(document, outputPath);
-        return new FillFormResult(input.FullName, outputPath, updated, request.Flatten);
+        // #2013: fields whose static-XFA datasets value could not be updated.
+        var xfaNotes = document.XfaStaticDataSync?.Notes.ToArray() ?? Array.Empty<string>();
+        return new FillFormResult(input.FullName, outputPath, updated, request.Flatten, xfaNotes);
     }
 
     internal static AddFieldResult AddField(
@@ -204,7 +206,8 @@ internal sealed record FillFormResult(
     string InputPath,
     string OutputPath,
     int UpdatedFieldCount,
-    bool Flattened);
+    bool Flattened,
+    IReadOnlyList<string> XfaNotes);
 
 internal readonly record struct AddFieldRequest(
     string InputPath,

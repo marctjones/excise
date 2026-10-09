@@ -220,4 +220,67 @@ public class FillFormCommandTests : IDisposable
 
         capturedErr.ToString().Should().Contain("--field");
     }
+
+    /// <summary>
+    /// #2013: fill-form on a STATIC XFA form writes the value into the datasets
+    /// packet as well as /V (ISO 32000-2 Annex K.2), through the same
+    /// PdfField.SetValue the GUI uses. The CLI reports a field it could not map.
+    /// </summary>
+    [Fact]
+    public void RunFillForm_StaticXfa_DatasetsFollowV_AndUnmappedFieldIsReported()
+    {
+        var input = TempPath(".pdf");
+        var output = TempPath(".pdf");
+        File.WriteAllBytes(input, Excise.TestSupport.XfaStaticFillFixtures.Build());
+
+        var result = FormMutationHandler.Fill(new FillFormRequest(
+            input,
+            output,
+            new[]
+            {
+                $"{Excise.TestSupport.XfaStaticFillFixtures.NamePath}=Cli & <Value>",
+                $"{Excise.TestSupport.XfaStaticFillFixtures.AgreePath}=Y",
+                $"{Excise.TestSupport.XfaStaticFillFixtures.StrayPath}=nowhere",
+            },
+            Flatten: false,
+            IgnorePermissions: false));
+
+        result.UpdatedFieldCount.Should().Be(3);
+        result.XfaNotes.Should().ContainSingle(n => n.Contains(Excise.TestSupport.XfaStaticFillFixtures.StrayPath));
+
+        var saved = File.ReadAllBytes(output);
+        Excise.TestSupport.SavedPdfLeakScanner.FindTerm(saved, Excise.TestSupport.XfaStaticFillFixtures.OriginalName)
+            .Should().BeEmpty("the datasets no longer hold the pre-fill value");
+        using var doc = PdfDocument.Open(saved);
+        var data = Excise.TestSupport.XfaStaticFillFixtures.DataRoot(doc);
+        data.Element("Name")!.Value.Should().Be("Cli & <Value>");
+        data.Element("Agree")!.Value.Should().Be("Y");
+    }
+
+    [Fact]
+    public async Task RunAsync_FillForm_StaticXfa_UnmappedFieldWarnsOnStderr()
+    {
+        var input = TempPath(".pdf");
+        var output = TempPath(".pdf");
+        File.WriteAllBytes(input, Excise.TestSupport.XfaStaticFillFixtures.Build());
+
+        var prevErr = Console.Error;
+        var capturedErr = new StringWriter();
+        Console.SetError(capturedErr);
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[]
+            {
+                "fill-form", input, output, "--field", $"{Excise.TestSupport.XfaStaticFillFixtures.StrayPath}=x",
+            });
+        }
+        finally
+        {
+            Console.SetError(prevErr);
+        }
+
+        exitCode.Should().Be(0);
+        capturedErr.ToString().Should().Contain("Warning: XFA datasets not updated");
+    }
 }

@@ -116,6 +116,11 @@ public partial class PdfDocument : IDisposable
         [System.Diagnostics.CodeAnalysis.MaybeNullWhen(false)] out AuthoredWidgetAppearance appearance)
         => _authoredWidgetAppearances.TryGetValue(widget, out appearance);
 
+    // #2013: the parsed XFA datasets and merged form of a static XFA form,
+    // kept between PdfField.SetValue calls so filling N fields parses the
+    // template once. Null until the first field value is set.
+    internal Excise.Core.Xfa.XfaStaticDataSync? XfaStaticDataSync { get; set; }
+
     /// <summary>
     /// Overwrite the content of an already-registered indirect object.
     /// </summary>
