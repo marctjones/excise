@@ -365,9 +365,16 @@ public class TextExtractor
         foreach (var letter in drawn)
             foreach (var ch in letter.Value)
                 if (!char.IsWhiteSpace(ch)) glyphs.Append(ch);
+        // In order: "Smith, John" drawn does not read as "John Smith", which a
+        // search for the value would then miss.
         var all = glyphs.ToString();
-        if (words.Any(w => !all.Contains(w, StringComparison.Ordinal)))
-            return false;
+        var from = 0;
+        foreach (var word in words)
+        {
+            var at = all.IndexOf(word, from, StringComparison.Ordinal);
+            if (at < 0) return false;
+            from = at + word.Length;
+        }
 
         if (Find(string.Join(' ', words)))
             return true;

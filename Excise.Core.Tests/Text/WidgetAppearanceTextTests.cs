@@ -92,6 +92,16 @@ public class WidgetAppearanceTextTests
     }
 
     [Fact]
+    public void AnAppearanceDrawingTheWordsReordered_KeepsTheValueFindable()
+    {
+        var bytes = System.Text.Encoding.Latin1.GetBytes(System.Text.Encoding.Latin1.GetString(F.Build())
+            .Replace($"({F.TextValue}) Tj", "(Lovelace Ada) Tj"));
+        using var document = PdfDocument.Open(bytes);
+        PdfDocumentRedactionExtensions.FindTextMatches(document.GetPage(1).Letters, F.TextValue, caseSensitive: true)
+            .Should().NotBeEmpty("/V reads 'Ada Lovelace'; a drawn 'Lovelace Ada' (same length, so offsets hold) does not stand in for it");
+    }
+
+    [Fact]
     public void AnAppearanceThatDrawsNoText_FallsBackToTheValue()
     {
         using var document = Open();
