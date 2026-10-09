@@ -125,10 +125,13 @@ internal sealed class XfaStaticDataSync
             }
         }
 
-        var chain = XfaFormSom.ResolveChain(_snapshot.Form, field.FullName);
+        var chain = XfaFormSom.ResolveChainLenient(_snapshot.Form, field.FullName, out var ambiguous);
         if (chain == null)
         {
-            Note($"XFA datasets not updated for '{field.FullName}': no XFA template field has that SOM name.");
+            Note(ambiguous
+                ? $"XFA datasets not updated for '{field.FullName}': its #class index names a different template " +
+                  "object counted among all siblings of the class (XFA 3.3 p96) than among the nameless ones."
+                : $"XFA datasets not updated for '{field.FullName}': no XFA template field has that SOM name.");
             return;
         }
 
@@ -403,8 +406,8 @@ internal sealed class XfaStaticDataSync
 
                 var name = container.Element.Attr("name");
                 var match = BindMatch(container.Element);
-                if (string.IsNullOrEmpty(name) || match is "none" or "global")
-                    continue;   // transparent to data (XfaMerge.ExpandSubform)
+                if (string.IsNullOrEmpty(name) || match is "none" or "global" || container.Element.Attr("scope") == "none")
+                    continue;   // transparent to data (XfaMerge.ExpandSubform; scope="none", p849)
 
                 if (container.DataScope != null)
                 {

@@ -500,6 +500,10 @@ internal static class XfaValues
     public static string OnValue(XElement field)
         => ItemTexts(field.ChildrenNamed("items").FirstOrDefault()).FirstOrDefault() ?? "1";
 
+    /// <summary>A check button holds its on value (drawn with its mark).</summary>
+    public static bool IsOn(XfaFormNode node)
+        => node.Value != null && node.Value == OnValue(node.Element);
+
     /// <summary>
     /// The check button's off value: its second <c>items</c> entry. When <c>items</c> is present
     /// without one, the spec default is the null string (XFA 3.3 p759, #2016). With no <c>items</c>

@@ -24,9 +24,11 @@ named below), not to this page.
    runs in `PdfDocumentService.LoadDocument`, before the view model activates
    the document, so nothing else ever sees the placeholder. The document is not
    marked modified.
-3. **Keep `/XFA` and `/NeedsRendering` on save.** Acrobat and Firefox still
-   regenerate the form from the XFA on a saved file; every other viewer now
-   shows excise's rendition instead of "Please wait".
+3. **Keep `/XFA` and `/NeedsRendering` on save.** Acrobat is expected to regenerate the form
+   from the XFA on a saved file (unverified since #2028; an Acrobat hand-check is on #2028);
+   every other viewer shows excise's rendition instead of "Please wait". Firefox (pdf.js) used
+   the XFA until #2028: it does not once the file carries the generated AcroForm fields of
+   decision 11, and shows excise's rendition instead (#2036).
 4. **Generated pages carry a marker.** Each generated page has
    `/PieceInfo << /Excise << /LastModified (date) /Private << /XfaLayout true >> >> >>`
    (ISO 32000-1 §14.5, the standard place for application-private page data).
@@ -54,7 +56,7 @@ named below), not to this page.
    under decision 11 a dynamic form's will too. Removing `/XFA` does not touch those; the
    `form-fields` carrier does, for the widgets a redaction reaches. Generated widgets of a
    dynamic form add hidden and duplicate (`match="global"`) copies that an area redaction does
-   not reach; the plan on #1547 proposes flattening them before redaction. The `form` packet
+   not reach; decision 17 flattens them before the redaction. The `form` packet
    (decision 14) is removed with `/XFA`.
 6. **Only FormCalc `initialize` and `calculate` run (#1570); JavaScript never does.** The
    interpreter is a tree-walker over our own AST under `Excise.Core/Xfa/FormCalc/`
@@ -73,9 +75,11 @@ named below), not to this page.
    sources and fails on a new caller). `XfaLayoutOptions.RunFormCalc` turns it off; in the app,
    Preferences > Forms sets it (`WindowSettings.RunFormCalc`, `PdfDocumentService.XfaLayoutOptionsForOpen`).
    Not run: JavaScript (#1571), `validate`, `click`, `docReady` and every other event.
-7. **A laid-out dynamic form is display only.** Its values are drawn as page
-   content, not as AcroForm widgets, so nothing on those pages can be filled.
-   Static XFA forms are fillable: their AcroForm fields are edited as usual and
+7. **A laid-out dynamic form is display only.** Its values are drawn by AcroForm
+   widgets the layout generates (decision 11, #2028), and every generated field is
+   read-only (`/Ff` bit 1) until the datasets write-back (#2029) exists: an edit to `/V`
+   alone would break K.2. The GUI form overlay leaves generated fields out
+   (`MainWindowViewModel.OverlayFields`). Static XFA forms are fillable: their AcroForm fields are edited as usual and
    `PdfField.SetValue` writes the same value into the datasets
    (`XfaStaticDataSync`, #2013). Filling a dynamic form is #1547 phase 3
    (decision 11; not built). Converting to AcroForm (#1569) is closed. A
@@ -104,8 +108,8 @@ named below), not to this page.
     `readOnly`/`protected`/`nonInteractive` edits), the 1.5pt red outline of a
     field with `validate nullTest="error"`, and a closed drop-down's arrow are
     pdf.js viewer chrome, not template content: pdf.js drops the tint and the
-    arrow when printing. Decision 7 leaves no
-    widget for a viewer to highlight, so they are drawn into the page, and a
+    arrow when printing. They stay in the page content when the value moves into a
+    generated widget (decision 11), and a
     saved or printed rendition carries them. A `checkButton` inside an `exclGroup` with no `shape` is a circle, as
     pdf.js renders it (a radio button); an explicit `shape` is honoured.
 11. **AcroForm widgets and the datasets are kept consistent (ISO 32000-2 Annex K.2).** A
@@ -113,10 +117,34 @@ named below), not to this page.
     field, named by its XFA-SOM path (XFA 3.3 p72-74), with `/V` consistent with the XFA value
     and no `/A` or `/AA` on widgets whose actions the XFA specifies. A datasets-only design does not
     conform. Static forms: done (`XfaStaticDataSync`, called from `PdfField.SetValue`, the
-    setter behind `fill-form`, Save Filled Copy and the GUI overlay). Dynamic forms: not built;
-    the layout will emit the widgets, the datasets stay the stored value, and `/V` and `/AP`
-    are regenerated from it on every layout (#1547, plan revision 2). Widget `/Rect` serves
+    setter behind `fill-form`, Save Filled Copy and the GUI overlay). Dynamic forms (#2028):
+    `ApplyXfaLayout` generates one field per field-map entry (`XfaWidgetWriter`): `/FT` by ui
+    kind (text, numeric, date, password and barcode `Tx`; `choiceList` `Ch` with `/Opt [save
+    display]`; `checkButton` a checkbox and a named `exclGroup` a radio field whose kids are the
+    members, appearance states named by the on values; `signature` an unsigned `Sig`; `button`
+    and `imageEdit` push buttons), `/V` the form value (none for a password, ISO 32000-2 Table
+    231), `/MaxLen`, `Comb` and `Multiline` from the template, `/DA /Helv 0 Tf 0 g`, never
+    `/NeedAppearances`. The value the layout drew moves from the page into the widget's `/AP`,
+    a form XObject whose `/BBox` equals `/Rect`, so it draws exactly where the page did. A field
+    not drawn gets one hidden zero-size widget on the first page, so the #2012 cut keeps it.
+    Each page's `/PieceInfo /Excise /Private` records its generated widgets (`/XfaWidgets`), the
+    page ordinal, the layout-engine version and the datasets hash. The datasets stay the stored
+    value; S2 (#2029) writes through them. Widget `/Rect` serves
     non-XFA viewers only: an XFA processor places a field by the template (p74).
+    **Names (#2035).** The full name is the field's SOM expression in the normal syntax: each
+    named object `name[i]`, indexed among the same-named objects its SOM parent sees (p73-74);
+    transparent objects are not written, namely nameless subforms and exclusion groups, areas even
+    when named (p95) and `scope="none"` subforms (p849), so their children count as the parent's
+    (p95). An object the normal syntax cannot reach (a nameless field, a name containing a dot,
+    which XML allows, p75) is written by class, `#field[n]`, `n` counting every true sibling of
+    that class, named or not (p96 note, p119-120), with its transparent ancestors up to the nearest
+    written one by class too. No leading `form.`. Each segment is one partial name of a
+    hierarchical field, so no partial name holds a dot (ISO 32000-2 §12.7.4.2); p73 would allow a
+    dotted global name for an XFA pointer field, so dot-free partial names are a project rule. The
+    static write-back resolves another producer's names leniently: a `#class[n]` index read both
+    among all siblings (p96) and among the nameless ones (excise's count before #2035; Designer's
+    count is unverified, no corpus file has a `#` segment) is accepted when both readings agree or
+    only one resolves, and refused when they name different objects.
 12. **A filled save strips `/Perms /DocMDP` and `/Perms /UR3` with their signatures, and
     reports it.** A full rewrite re-serialises the XFA stream, which can void a PDF signature over
     it (XFA 3.3 p557-558), and excise has no incremental writer. Keeping a certification valid
@@ -146,7 +174,14 @@ named below), not to this page.
     and duplicate widgets can hold a value that an area redaction removed from a visible field,
     so the generated fields are baked into the page content, then the normal parse, filter,
     rebuild pipeline runs, then decision 5 removes the datasets. The redaction report says
-    "generated XFA fields flattened". Not built; Phase 3 slices S1 and S2 (#1547).
+    "generated XFA fields flattened". Built in S1 (#2028) at the orchestration layer:
+    `PdfXfaLayout.FlattenGeneratedXfaFields` (stamps each shown widget's appearance through the
+    AcroForm flatten path, removes the widgets and their fields, records the row with the XFA
+    removals) is called by `RedactionService.RedactArea` and `TermRedactionRunner` (CLI and
+    scripting), and, without the report row, before `FlattenAcroForm` on the flattened-copy paths
+    (GUI Save Flattened Form Copy, `fill-form --flatten`), which would otherwise redraw a hidden
+    field's `/V` as clipped page text. The engine in `Excise.Core/Redaction` does not call it, so a library caller that
+    redacts a document carrying generated widgets must call it first (#2037).
 18. **Reopening a form whose widgets and datasets disagree.** The datasets hash is stored with
     the layout marker. If the datasets still match it, a widget edit made by another tool is
     newer: it is written into the datasets and reported. If the datasets changed (Acrobat
@@ -301,7 +336,10 @@ Each page becomes `Pages.AddBlank(medium)` plus one content stream:
   document's `/Names /XFAImages` tree; nothing is fetched.
 
 After the new pages are written, the placeholder pages are removed and the new
-pages are marked.
+pages are marked. Then the AcroForm fields are generated from the field map (decision 11); a
+value no widget takes (the map or the generation failed) is drawn on its page, so a failure
+costs the widgets, never a value. `XfaLayoutOptions.EmitWidgets = false` (internal) keeps the
+Phase 2 pages, which the S1 oracles compare against.
 
 ### What is reported, not drawn
 

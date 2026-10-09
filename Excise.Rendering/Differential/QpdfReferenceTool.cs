@@ -88,6 +88,21 @@ internal enum QpdfStreamDataStatus
 }
 
 /// <summary>
+/// One AcroForm field widget as qpdf reads it (<see cref="QpdfReferenceTool.AcroFormWidgets"/>).
+/// <see cref="Rect"/> is the widget's <c>/Rect</c> as written (four numbers, or empty).
+/// </summary>
+internal sealed record QpdfFieldWidget(
+    string FullName,
+    string FieldType,
+    int FieldFlags,
+    string? Value,
+    int Page,
+    int AnnotationFlags,
+    double[] Rect,
+    bool HasAction,
+    bool HasAdditionalActions);
+
+/// <summary>
 /// The decoded bytes of one stream object as qpdf's own filter chain produced
 /// them, with the outcome that produced them (#1527 — see
 /// <see cref="QpdfStreamDataStatus"/>).
@@ -647,6 +662,89 @@ internal static class QpdfReferenceTool
         catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException)
         {
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Every AcroForm field widget as qpdf reads it (JSON v2 <c>acroform</c>, with the annotation
+    /// dictionary looked up in the <c>qpdf</c> object table): full name, field type, inherited field
+    /// flags, value (text decoded, a name with its slash), page, annotation flags, <c>/Rect</c>, and
+    /// whether the widget carries <c>/A</c> or <c>/AA</c> (#2028). Null when qpdf cannot be asked.
+    /// </summary>
+    public static IReadOnlyList<QpdfFieldWidget>? AcroFormWidgets(
+        string pdfPath, string? password = null, int timeoutMs = 60_000)
+    {
+        var args = new List<string> { "--json=2", "--json-key=acroform", "--json-key=qpdf" };
+        if (!string.IsNullOrEmpty(password)) args.Add($"--password={password}");
+        args.Add(pdfPath);
+        var result = Run(args.ToArray(), timeoutMs);
+        if (result == null || result.ExitCode is not (0 or 3)) return null;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(result.Output);
+            var objects = doc.RootElement.GetProperty("qpdf")[1];
+            var widgets = new List<QpdfFieldWidget>();
+            foreach (var field in doc.RootElement.GetProperty("acroform").GetProperty("fields").EnumerateArray())
+            {
+                var value = field.GetProperty("value");
+                string? text = value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+                if (text != null && text.StartsWith("u:", StringComparison.Ordinal))
+                    text = text[2..];
+
+                var annotation = field.GetProperty("annotation");
+                var objectKey = "obj:" + annotation.GetProperty("object").GetString();
+                double[] rect = Array.Empty<double>();
+                bool hasA = false, hasAA = false;
+                if (objects.TryGetProperty(objectKey, out var entry) && entry.TryGetProperty("value", out var dict))
+                {
+                    if (dict.TryGetProperty("/Rect", out var r) && r.ValueKind == JsonValueKind.Array)
+                        rect = r.EnumerateArray().Select(n => n.GetDouble()).ToArray();
+                    hasA = dict.TryGetProperty("/A", out _);
+                    hasAA = dict.TryGetProperty("/AA", out _);
+                }
+
+                widgets.Add(new QpdfFieldWidget(
+                    field.GetProperty("fullname").GetString() ?? string.Empty,
+                    field.GetProperty("fieldtype").GetString() ?? string.Empty,
+                    field.GetProperty("fieldflags").GetInt32(),
+                    text,
+                    field.GetProperty("pageposfrom1").GetInt32(),
+                    annotation.GetProperty("annotationflags").GetInt32(),
+                    rect,
+                    hasA,
+                    hasAA));
+            }
+            return widgets;
+        }
+        catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException
+                                       or FormatException or IndexOutOfRangeException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// qpdf's own full rewrite with every stream decoded and no object streams
+    /// (<c>--qdf --object-streams=disable --decode-level=all</c>): every object the file holds,
+    /// reachable or not, as bytes a caller can search. Null when qpdf cannot be asked.
+    /// </summary>
+    public static byte[]? DecodedObjectDump(string pdfPath, string? password = null, int timeoutMs = 60_000)
+    {
+        var output = Path.Combine(Path.GetTempPath(), $"excise-qpdf-dump-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            var args = new List<string> { "--qdf", "--object-streams=disable", "--decode-level=all", "--preserve-unreferenced" };
+            if (!string.IsNullOrEmpty(password)) args.Add($"--password={password}");
+            args.Add(pdfPath);
+            args.Add(output);
+            var result = Run(args.ToArray(), timeoutMs);
+            if (result == null || result.ExitCode is not (0 or 3) || !File.Exists(output)) return null;
+            return File.ReadAllBytes(output);
+        }
+        finally
+        {
+            try { File.Delete(output); } catch (IOException) { }
         }
     }
 

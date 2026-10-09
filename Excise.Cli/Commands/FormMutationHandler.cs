@@ -47,7 +47,12 @@ internal static class FormMutationHandler
         }
 
         if (request.Flatten)
+        {
+            // #2028: fields excise generated for a dynamic XFA form are stamped from their own
+            // appearance first; FlattenAcroForm would redraw a hidden one's /V as clipped page text.
+            Excise.Core.Xfa.PdfXfaLayout.FlattenGeneratedXfaFields(document, forRedaction: false);
             document.FlattenAcroForm();
+        }
         cancellationToken.ThrowIfCancellationRequested();
         SavePreservingEncryption(document, outputPath);
         // #2013: fields whose static-XFA datasets value could not be updated.

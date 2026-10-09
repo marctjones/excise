@@ -46,10 +46,10 @@ public class XfaFieldMapTests
     private static string Text(string name, string extra = "") =>
         $"<field name=\"{name}\" w=\"2in\" h=\"0.3in\"><ui><textEdit/></ui>{extra}</field>";
 
-    // ------------------------------------------------------------ SOM names (p72-74, p849)
+    // ------------------------------------------------------------ SOM names (p72-74, p95-96, p849; #2035)
 
     [Fact]
-    public void SomPaths_IndexSameNamedSiblings_NameUnnamedContainersByClass_AndLookThroughScopeNone()
+    public void SomPaths_IndexSameNamedSiblings_AndLookThroughTransparentObjects()
     {
         var result = LayOut(
             "<subform name=\"Page1\" layout=\"tb\">" + Text("A") + Text("A") + "</subform>"
@@ -61,11 +61,118 @@ public class XfaFieldMapTests
         result.Fields.Select(f => f.SomPath).Should().Equal(
             "form1[0].Page1[0].A[0]",
             "form1[0].Page1[0].A[1]",
-            "form1[0].#subform[0].B[0]",
-            "form1[0].#subform[1].C[0]",
+            "form1[0].B[0]",          // p95: a nameless subform is transparent; its children are the parent's
+            "form1[0].C[0]",
             "form1[0].D[0]",          // scope="none" takes no part in SOM names (p849)
             "form1[0].Row[0].E[0]",
             "form1[0].Row[1].E[0]");
+    }
+
+    [Fact]
+    public void SomPaths_CountSameNamedObjectsAcrossTransparentWrappers()
+    {
+        // p94-95, Example 3.12: Description in the first and second nameless detail subforms is
+        // Receipt.Description[0] and Receipt.Description[1]; the three Total_Price fields are siblings.
+        var detail = "<subform layout=\"tb\">" + Text("Description") + Text("Total_Price") + "</subform>";
+        var result = LayOut("<subform name=\"Receipt\" layout=\"tb\">" + detail + detail + Text("Total_Price") + "</subform>");
+
+        result.Fields.Select(f => f.SomPath).Should().Equal(
+            "form1[0].Receipt[0].Description[0]",
+            "form1[0].Receipt[0].Total_Price[0]",
+            "form1[0].Receipt[0].Description[1]",
+            "form1[0].Receipt[0].Total_Price[1]",
+            "form1[0].Receipt[0].Total_Price[2]");
+    }
+
+    [Fact]
+    public void SomPaths_AnAreaIsTransparentEvenWhenNamed()
+    {
+        // p95 "Area Objects Are Always Transparent" (IMM 1295e has a named area).
+        var result = LayOut("<subform name=\"S\" layout=\"position\"><area name=\"Box\">" + Text("Inside") + "</area>"
+            + Text("Outside") + "</subform>");
+
+        result.Fields.Select(f => f.SomPath).Should().Equal("form1[0].S[0].Inside[0]", "form1[0].S[0].Outside[0]");
+    }
+
+    [Fact]
+    public void SomPaths_ANamelessField_IsWrittenByClass_IndexedAmongAllFieldSiblings()
+    {
+        // p96 note and p119-120: the #class index counts every true sibling of the class, named or not.
+        // A nameless field inside a nameless subform needs that subform written by class too.
+        var result = LayOut(
+            "<subform name=\"S\" layout=\"tb\">" + Text("Named")
+            + "<field w=\"1in\" h=\"0.3in\"><ui><textEdit/></ui></field>"
+            + "<subform name=\"Inner\" layout=\"tb\">" + Text("X") + "</subform>"
+            + "<subform layout=\"tb\"><field w=\"1in\" h=\"0.3in\"><ui><textEdit/></ui></field></subform>"
+            + "</subform>");
+
+        result.Fields.Select(f => f.SomPath).Should().Equal(
+            "form1[0].S[0].Named[0]",
+            "form1[0].S[0].#field[1]",
+            "form1[0].S[0].Inner[0].X[0]",
+            "form1[0].S[0].#subform[1].#field[0]");
+    }
+
+    [Fact]
+    public void SomPaths_ANameWithADot_IsWrittenByClass_SoNoPartialNameHoldsADot()
+    {
+        // p75: an XFA name is an XML name, which may contain '.'. An AcroForm partial name may not
+        // (ISO 32000-2 §12.7.4.2), so such an object is reached by class (p96).
+        var result = LayOut("<subform name=\"a.b\" layout=\"tb\">" + Text("c.d") + Text("e") + "</subform>");
+
+        result.Fields.Select(f => f.SomPath).Should().Equal(
+            "form1[0].#subform[0].#field[0]",
+            "form1[0].#subform[0].e[0]");
+    }
+
+    [Fact]
+    public void Resolver_AcceptsTheClassSyntax_AndRefusesANameTheTwoClassCountsReadDifferently()
+    {
+        // Address (named) then a nameless subform holding Code: p96 makes the nameless one #subform[1];
+        // excise's pre-#2035 count (nameless siblings only) made it #subform[0].
+        var body = "<subform name=\"P\" layout=\"tb\">"
+            + "<subform name=\"Address\" layout=\"tb\">" + Text("City") + "</subform>"
+            + "<subform layout=\"tb\">" + Text("Code") + "</subform>"
+            + "<subform layout=\"tb\">" + Text("Zip") + "</subform>"
+            + "</subform>";
+        var root = Merge(body);
+
+        XfaFormSom.ResolveChain(root, "form1[0].P[0].Code[0]")![^1].Element.Attr("name").Should().Be("Code", "normal syntax, p95");
+        XfaFormSom.ResolveChain(root, "form.form1[0].P[0].Code[0]")![^1].Element.Attr("name").Should().Be("Code", "leading form., p72");
+        XfaFormSom.ResolveChain(root, "form1[0].P[0].#subform[1].Code[0]")![^1].Element.Attr("name").Should().Be("Code", "class syntax, p96");
+        XfaFormSom.ResolveChain(root, "form1[0].P[0].#subform[0].Code[0]").Should().BeNull("#subform[0] is Address (p96)");
+
+        // A name only the old count resolves is still read (a static form's /T from another producer).
+        XfaFormSom.ResolveChainLenient(root, "form1[0].P[0].#subform[0].Code[0]", out var ambiguous)![^1]
+            .Element.Attr("name").Should().Be("Code");
+        ambiguous.Should().BeFalse();
+
+        // #subform[1] is the Code subform to the spec and the Zip subform to the old count: refused.
+        XfaFormSom.ResolveChainLenient(root, "form1[0].P[0].#subform[1]", out ambiguous).Should().BeNull();
+        ambiguous.Should().BeTrue("the two class counts name different subforms; writing either could fill the wrong field");
+    }
+
+    [Theory]
+    [InlineData("<button/>", false)]
+    [InlineData("<barcode type=\"code128\"/>", false)]
+    [InlineData("<signature/>", false)]
+    [InlineData("<imageEdit/>", false)]
+    [InlineData("<textEdit/>", true)]
+    public void Editable_IsGatedByTheWidgetKind(string widget, bool editable)
+    {
+        // #2035 item 5: buttons, barcodes, signatures and image fields take no value from the user here.
+        var result = LayOut($"<field name=\"W\" w=\"2in\" h=\"0.3in\"><ui>{widget}</ui></field>",
+            XfaTestForms.Data("<W>v</W>"));
+
+        Single(result, "form1[0].W[0]").Editable.Should().Be(editable);
+    }
+
+    private static XfaFormNode Merge(string body, string? data = null)
+    {
+        var budget = new XfaBudget(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+        var report = new XfaReport();
+        return new XfaMerge(budget, report, data == null ? null : XElement.Parse(data))
+            .Merge(new XfaTemplate(XElement.Parse(XfaTestForms.Template(body)), budget, report).Root);
     }
 
     [Fact]
@@ -95,7 +202,7 @@ public class XfaFieldMapTests
             chain[^1].Value.Should().Be(field.Node.Value, field.SomPath);
         }
         Single(result, "form1[0].P[0].A[1]").Value.Should().Be("second");
-        Single(result, "form1[0].P[0].#subform[0].B[0]").Value.Should().Be("bee");
+        Single(result, "form1[0].P[0].B[0]").Value.Should().Be("bee");
     }
 
     // ------------------------------------------------------------ geometry
@@ -368,7 +475,7 @@ public class XfaFieldMapTests
         var byRef = Single(result, "form1[0].S[0].Ref[0]");
         (byRef.Binding, byRef.CreatablePath).Should().Be((XfaBindingKind.DataRef, "$record.Other.Value"));
 
-        var nameless = Single(result, "form1[0].S[0].#field[0]");
+        var nameless = Single(result, "form1[0].S[0].#field[4]");   // p96: among all five field siblings
         nameless.Binding.Should().Be(XfaBindingKind.None, "a nameless object does not correspond to data (p95)");
         nameless.Editable.Should().BeFalse();
     }
