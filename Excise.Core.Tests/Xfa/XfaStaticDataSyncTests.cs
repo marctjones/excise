@@ -127,6 +127,25 @@ public class XfaStaticDataSyncTests
         DataValue(cleared, "Sex").Should().Be(string.Empty);
     }
 
+    /// <summary>
+    /// Long exclusion format (XFA 3.3 p196-197): the group's data node holds one data value per
+    /// member, and each member binds its own. Selecting a member writes its on value there and the
+    /// other member's off value (the null string, p759) to the other; the group node keeps no text.
+    /// </summary>
+    [Fact]
+    public void ExclusionGroup_LongFormat_EachMemberNodeTakesItsOnOrOffValue()
+    {
+        var saved = Fill(F.Build(sexData: "<Sex><M/><F/></Sex>"), (F.SexPath, "F"));
+
+        DataValue(saved, "Sex", "M").Should().Be(string.Empty);
+        DataValue(saved, "Sex", "F").Should().Be("F");
+        Data(saved).Element("Sex")!.Elements().Select(e => e.Name.LocalName).Should().Equal("M", "F");
+
+        var switched = Fill(saved, (F.SexPath, "M"));
+        DataValue(switched, "Sex", "M").Should().Be("M");
+        DataValue(switched, "Sex", "F").Should().Be(string.Empty);
+    }
+
     [Fact]
     public void ChoiceList_DisplayTextMapsToSavedValue()
     {

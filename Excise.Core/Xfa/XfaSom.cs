@@ -4,10 +4,11 @@ using System.Xml.Linq;
 namespace Excise.Core.Xfa;
 
 /// <summary>
-/// A small subset of XFA SOM expressions for <c>bind match="dataRef"</c>:
-/// <c>$</c> (current data scope), <c>$record</c> (the root data group),
-/// <c>$data</c> (its parent), <c>!</c> (the datasets packet), dotted names,
-/// <c>..</c> for descendants, and <c>[n]</c> / <c>[*]</c> indexes.
+/// A small subset of XFA SOM expressions for <c>bind match="dataRef"</c> and
+/// <c>bindItems</c>: <c>$</c> (current data scope), <c>$record</c> (the root
+/// data group), <c>$data</c> (its parent), <c>!</c> or <c>xfa.datasets.</c>
+/// (the datasets packet), dotted names, <c>..</c> for descendants, and
+/// <c>[n]</c> / <c>[*]</c> indexes.
 /// </summary>
 /// <remarks>
 /// Anything else (predicates, <c>$template</c>, script calls) resolves to
@@ -15,7 +16,12 @@ namespace Excise.Core.Xfa;
 /// </remarks>
 internal static class XfaSom
 {
-    public static List<XElement> Evaluate(string? expression, XElement? scope, XElement dataRoot, XfaBudget budget)
+    /// <param name="datasets">
+    /// The <c>&lt;xfa:datasets&gt;</c> element that <c>!</c> and <c>xfa.datasets</c> start from; when
+    /// null, the grandparent of <paramref name="dataRoot"/>.
+    /// </param>
+    public static List<XElement> Evaluate(
+        string? expression, XElement? scope, XElement? dataRoot, XfaBudget budget, XElement? datasets = null)
     {
         var empty = new List<XElement>();
         if (string.IsNullOrWhiteSpace(expression) || expression.Length > 1024)
@@ -25,14 +31,21 @@ internal static class XfaSom
         List<XElement> current;
         string rest;
 
+        // "!" is the short form of "xfa.datasets." (XFA 3.3 p125); IRCC's bindItems use the long one.
+        const string datasetsPrefix = "xfa.datasets.";
+        if (expr.StartsWith(datasetsPrefix, StringComparison.Ordinal))
+            expr = "!" + expr[datasetsPrefix.Length..];
+
         if (expr.StartsWith("$record", StringComparison.Ordinal))
         {
+            if (dataRoot == null)
+                return empty;
             current = new List<XElement> { dataRoot };
             rest = expr["$record".Length..];
         }
         else if (expr.StartsWith("$data", StringComparison.Ordinal))
         {
-            if (dataRoot.Parent is not { } data)
+            if (dataRoot?.Parent is not { } data)
                 return empty;
             current = new List<XElement> { data };
             rest = expr["$data".Length..];
@@ -48,9 +61,9 @@ internal static class XfaSom
         }
         else if (expr.StartsWith('!'))
         {
-            if (dataRoot.Parent?.Parent is not { } datasets)
+            if ((datasets ?? dataRoot?.Parent?.Parent) is not { } root)
                 return empty;
-            current = new List<XElement> { datasets };
+            current = new List<XElement> { root };
             rest = "." + expr[1..];
         }
         else
@@ -132,5 +145,33 @@ internal static class XfaSom
         }
 
         return current;
+    }
+
+    /// <summary>
+    /// The text of the data value <paramref name="relative"/> names inside <paramref name="node"/>, for
+    /// <c>bindItems labelRef</c> and <c>valueRef</c> (XFA 3.3 p212, p624). <c>$</c> is the node itself.
+    /// A plain name may be an XML attribute: the data loader loads attributes as data values by default
+    /// and places them before the element's content (p142), so an attribute wins over a same-named
+    /// child element. Null when nothing matches.
+    /// </summary>
+    public static string? ItemText(XElement node, string? relative, XfaBudget budget)
+    {
+        if (string.IsNullOrWhiteSpace(relative))
+            return null;
+        var expr = relative.Trim();
+        if (expr == "$")
+            return node.Value;
+        if (expr.StartsWith("$.", StringComparison.Ordinal))
+            expr = expr[2..];
+
+        bool plainName = expr.Length > 0 && expr.IndexOfAny(new[] { '.', '[', '$', '!', '#' }) < 0;
+        if (plainName)
+        {
+            if (node.Attributes().FirstOrDefault(a => a.Name.NamespaceName.Length == 0 && a.Name.LocalName == expr) is { } attribute)
+                return attribute.Value;
+            return node.Elements().FirstOrDefault(e => e.Name.LocalName == expr)?.Value;
+        }
+
+        return Evaluate(expr, node, dataRoot: null, budget).FirstOrDefault()?.Value;
     }
 }

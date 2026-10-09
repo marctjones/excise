@@ -18,11 +18,28 @@ internal sealed class XfaPackets
     private const string TemplateNamespacePrefix = "http://www.xfa.org/schema/xfa-template/";
     private const string DataNamespacePrefix = "http://www.xfa.org/schema/xfa-data/";
 
-    private XfaPackets(XElement template, XElement? dataRoot)
+    private const string XmlDsigNamespace = "http://www.w3.org/2000/09/xmldsig#";
+
+    private XfaPackets(XElement template, XElement? dataRoot, XElement? datasets, bool hasXmlSignature)
     {
         Template = template;
         DataRoot = dataRoot;
+        Datasets = datasets;
+        HasXmlSignature = hasXmlSignature;
     }
+
+    /// <summary>
+    /// The <c>&lt;xfa:datasets&gt;</c> element, whose children other than <c>xfa:data</c> (IRCC's
+    /// <c>LOVFile</c>) feed <c>bindItems</c> (XFA 3.3 p212, p624). Null when there is no datasets packet.
+    /// </summary>
+    public XElement? Datasets { get; }
+
+    /// <summary>
+    /// The form carries an XML digital signature (XFA 3.3 p559-562): a <c>signature</c> packet, or an
+    /// XML-DSig <c>Signature</c> element in the datasets. Respecting the signed state means changing no
+    /// data it covers, so no field is editable (#2027).
+    /// </summary>
+    public bool HasXmlSignature { get; }
 
     /// <summary>The <c>&lt;template&gt;</c> packet root.</summary>
     public XElement Template { get; }
@@ -74,12 +91,14 @@ internal sealed class XfaPackets
 
         XElement? template = null;
         XElement? dataRoot = null;
+        XElement? datasets = null;
+        bool signed = false;
 
         // The usual shape: one XDP document split over the streams.
         if (XfaXmlCarrier.TryLoadXml(XfaXmlCarrier.Concatenate(streams), out var combined, out _)
             && combined.Root is { } root)
         {
-            Collect(root, ref template, ref dataRoot);
+            Collect(root, ref template, ref dataRoot, ref datasets, ref signed);
         }
         else
         {
@@ -89,7 +108,7 @@ internal sealed class XfaPackets
                 if (XfaXmlCarrier.TryLoadXml(stream.DecodedData, out var packet, out _)
                     && packet.Root is { } packetRoot)
                 {
-                    Collect(packetRoot, ref template, ref dataRoot);
+                    Collect(packetRoot, ref template, ref dataRoot, ref datasets, ref signed);
                 }
             }
         }
@@ -100,11 +119,12 @@ internal sealed class XfaPackets
             return false;
         }
 
-        packets = new XfaPackets(template, dataRoot);
+        packets = new XfaPackets(template, dataRoot, datasets, signed);
         return true;
     }
 
-    private static void Collect(XElement root, ref XElement? template, ref XElement? dataRoot)
+    private static void Collect(
+        XElement root, ref XElement? template, ref XElement? dataRoot, ref XElement? datasets, ref bool signed)
     {
         // A packet is the root itself (single-packet stream) or a child of
         // <xdp:xdp>. Look no deeper: packets do not nest.
@@ -121,13 +141,22 @@ internal sealed class XfaPackets
             {
                 template = packet;
             }
-            else if (dataRoot == null
+            else if (datasets == null
                 && packet.Name.LocalName == "datasets"
                 && ns.StartsWith(DataNamespacePrefix, StringComparison.Ordinal))
             {
+                datasets = packet;
                 var data = packet.Elements().FirstOrDefault(e =>
                     e.Name.LocalName == "data" && e.Name.NamespaceName == ns);
                 dataRoot = data?.Elements().FirstOrDefault();
+                // An XML signature enveloped in the data (XFA 3.3 p559-562).
+                if (packet.Descendants().Any(e => e.Name.NamespaceName == XmlDsigNamespace && e.Name.LocalName == "Signature"))
+                    signed = true;
+            }
+            else if (ns == XmlDsigNamespace)
+            {
+                // The detached-signature packet, <signature xmlns="...xmldsig#"> (XFA 3.3 p1040).
+                signed = true;
             }
         }
     }

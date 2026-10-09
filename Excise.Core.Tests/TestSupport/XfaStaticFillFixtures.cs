@@ -58,15 +58,16 @@ internal static class XfaStaticFillFixtures
         + Field("Total", "<textEdit/>", "<bind match=\"global\"/>")
         + "</subform></subform></template>";
 
-    public static string DataXml() =>
+    /// <param name="sex">The Sex data node; the default is the empty short-format value.</param>
+    public static string DataXml(string sex = "<Sex/>") =>
         "<form1>"
         + $"<Name>{OriginalName}</Name>"
         + "<Address><City>OldCity</City><Total>1</Total></Address>"
-        + "<Code/><Agree>N</Agree><Solo/><Sex/><Country/><Unbound>KEEPUNBOUND</Unbound>"
+        + "<Code/><Agree>N</Agree><Solo/>" + sex + "<Country/><Unbound>KEEPUNBOUND</Unbound>"
         + "</form1>";
 
-    public static string Datasets() =>
-        $"<xfa:datasets xmlns:xfa=\"{DataNamespace}\"><xfa:data>{DataXml()}</xfa:data></xfa:datasets>";
+    public static string Datasets(string sex = "<Sex/>") =>
+        $"<xfa:datasets xmlns:xfa=\"{DataNamespace}\"><xfa:data>{DataXml(sex)}</xfa:data></xfa:datasets>";
 
     private static string Field(string name, string ui, string extra = "")
         => $"<field name=\"{name}\" x=\"1in\" y=\"1in\" w=\"3in\" h=\"0.3in\"><ui>{ui}</ui>{extra}</field>";
@@ -88,12 +89,15 @@ internal static class XfaStaticFillFixtures
     /// Build the form. <paramref name="formPacket"/> is the <c>form</c> packet
     /// body (null = none). <paramref name="needsRendering"/> makes it a
     /// DYNAMIC form with the same widgets, which the write-back must not touch.
+    /// <paramref name="sexData"/> replaces the exclusion group's data node
+    /// (for the long format, XFA 3.3 p196-197).
     /// </summary>
     public static byte[] Build(
         Shape shape = Shape.PacketArray,
         string? formPacket = null,
         bool needsRendering = false,
-        string version = "1.7")
+        string version = "1.7",
+        string sexData = "<Sex/>")
     {
         var objects = new List<string>();
         int Add(string body)
@@ -178,16 +182,16 @@ internal static class XfaStaticFillFixtures
         switch (shape)
         {
             case Shape.SingleStream:
-                xfa = $"{Add(RawStream("", open + Template() + Datasets() + form + close))} 0 R";
+                xfa = $"{Add(RawStream("", open + Template() + Datasets(sexData) + form + close))} 0 R";
                 break;
             default:
             {
                 var parts = new List<(string Name, string Xml)> { ("preamble", open), ("template", Template()) };
                 if (shape == Shape.PacketArray)
-                    parts.Add(("datasets", Datasets()));
+                    parts.Add(("datasets", Datasets(sexData)));
                 else if (shape == Shape.SplitDatasets)
                 {
-                    var datasets = Datasets();
+                    var datasets = Datasets(sexData);
                     var cut = datasets.IndexOf("<Address>", StringComparison.Ordinal);
                     parts.Add(("datasets", datasets[..cut]));
                     parts.Add(("datasets2", datasets[cut..]));

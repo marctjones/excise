@@ -125,7 +125,7 @@ internal sealed class XfaStaticDataSync
             }
         }
 
-        var chain = ResolveChain(_snapshot.Form, field.FullName);
+        var chain = XfaFormSom.ResolveChain(_snapshot.Form, field.FullName);
         if (chain == null)
         {
             Note($"XFA datasets not updated for '{field.FullName}': no XFA template field has that SOM name.");
@@ -152,119 +152,6 @@ internal sealed class XfaStaticDataSync
     {
         if (!_notes.Contains(line))
             _notes.Add(line);
-    }
-
-    // ---------------------------------------------------------------- SOM
-
-    /// <summary>
-    /// Resolve an AcroForm full name (<c>root[0].Page1[0].f1_01[0]</c>, an
-    /// optional leading <c>form.</c>) to the chain of merged form nodes from
-    /// the root to the field. Unnamed containers are addressed by class
-    /// (<c>#subform[0]</c>); a subform with <c>scope="none"</c> takes no part
-    /// in SOM names (XFA 3.3 p849) and is looked through. Null when any
-    /// segment does not resolve.
-    /// </summary>
-    internal static List<XfaFormNode>? ResolveChain(XfaFormNode root, string fullName)
-    {
-        var segments = SplitSom(fullName);
-        if (segments == null || segments.Count == 0)
-            return null;
-
-        int i = 0;
-        var rootName = root.Element.Attr("name");
-        if (segments[0].Name == "form" && rootName != "form" && segments.Count > 1)
-            i = 1;   // "form.root.page.field" (XFA 3.3 p72-73)
-
-        if (segments[i].Index != 0 || !Matches(root, segments[i].Name))
-            return null;
-
-        var chain = new List<XfaFormNode> { root };
-        var current = root;
-        for (i++; i < segments.Count; i++)
-        {
-            var (name, index) = segments[i];
-            int seen = 0;
-            XfaFormNode? next = null;
-            foreach (var child in SomChildren(current))
-            {
-                if (!Matches(child, name))
-                    continue;
-                if (seen++ == index)
-                {
-                    next = child;
-                    break;
-                }
-            }
-            if (next == null)
-                return null;
-            chain.Add(next);
-            current = next;
-        }
-        return chain;
-    }
-
-    private static IEnumerable<XfaFormNode> SomChildren(XfaFormNode node)
-    {
-        foreach (var child in node.Children)
-        {
-            if (child.Kind == XfaNodeKind.Subform && child.Element.Attr("scope") == "none")
-            {
-                foreach (var inner in SomChildren(child))
-                    yield return inner;
-            }
-            else
-            {
-                yield return child;
-            }
-        }
-    }
-
-    private static bool Matches(XfaFormNode node, string segment)
-    {
-        var name = node.Element.Attr("name");
-        if (segment.StartsWith('#'))
-            return string.IsNullOrEmpty(name) && node.Element.Name.LocalName == segment[1..];
-        return name == segment;
-    }
-
-    /// <summary>Split on unescaped dots; <c>\.</c> is a literal dot in a name.</summary>
-    private static List<(string Name, int Index)>? SplitSom(string fullName)
-    {
-        var result = new List<(string, int)>();
-        var current = new StringBuilder();
-        for (int i = 0; i <= fullName.Length; i++)
-        {
-            if (i < fullName.Length && fullName[i] == '\\' && i + 1 < fullName.Length && fullName[i + 1] == '.')
-            {
-                current.Append('.');
-                i++;
-                continue;
-            }
-            if (i < fullName.Length && fullName[i] != '.')
-            {
-                current.Append(fullName[i]);
-                continue;
-            }
-
-            var segment = current.ToString();
-            current.Clear();
-            int index = 0;
-            int open = segment.LastIndexOf('[');
-            if (open >= 0 && segment.EndsWith(']'))
-            {
-                if (!int.TryParse(segment.AsSpan(open + 1, segment.Length - open - 2),
-                        System.Globalization.NumberStyles.None,
-                        System.Globalization.CultureInfo.InvariantCulture, out index))
-                {
-                    return null;
-                }
-                segment = segment[..open];
-            }
-            if (segment.Length == 0)
-                return null;
-            result.Add((segment, index));
-        }
-        return result;
     }
 
     // ---------------------------------------------------------------- writing
@@ -561,19 +448,8 @@ internal sealed class XfaStaticDataSync
     /// <summary>The on value: the first <c>items</c> entry, else "1" (as <see cref="XfaValues.OnValue"/>).</summary>
     private static string OnValue(XElement field) => XfaValues.OnValue(field);
 
-    /// <summary>
-    /// The off value: the second <c>items</c> entry. When <c>items</c> is
-    /// present without one, the spec default is the null string (XFA 3.3
-    /// p759) — not the "0" <see cref="XfaValues.OffValue"/> returns, see
-    /// #2016. With no <c>items</c> at all, "0" as the merge reads it.
-    /// </summary>
-    private static string OffValue(XElement field)
-    {
-        var items = field.ChildrenNamed("items").FirstOrDefault();
-        if (items == null)
-            return "0";
-        return items.Elements().Skip(1).FirstOrDefault()?.Value ?? string.Empty;
-    }
+    /// <summary>The off value (XFA 3.3 p759), as <see cref="XfaValues.OffValue"/>.</summary>
+    private static string OffValue(XElement field) => XfaValues.OffValue(field);
 
     /// <summary>
     /// A choice list with a display column and a <c>save="1"</c> column stores

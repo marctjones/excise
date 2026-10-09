@@ -64,6 +64,32 @@ internal sealed class XfaFormNode
     /// matching node). Static-XFA write-back (#2013) writes the value here.
     /// </summary>
     public XElement? BoundData { get; set; }
+
+    /// <summary>
+    /// Choice-list items resolved from <c>bindItems</c> (XFA 3.3 p212, p624), which replace the
+    /// template's <c>items</c> for this instance; null when the field has none. Kept on the node
+    /// because the template element is shared by every instance.
+    /// </summary>
+    public IReadOnlyList<XfaItem>? BoundItems { get; set; }
+
+    /// <summary>Exclusion groups: how the data supplied the selection (XFA 3.3 p196-197).</summary>
+    public XfaExclGroupFormat Format { get; set; }
+}
+
+/// <summary>One choice-list item: the text shown and the value saved (XFA 3.3 p758-760).</summary>
+internal readonly record struct XfaItem(string Display, string Save);
+
+/// <summary>How an exclusion group's selection is held in the data (XFA 3.3 p196-197).</summary>
+internal enum XfaExclGroupFormat
+{
+    /// <summary>Nothing in the data selects a member (no data, or none bound).</summary>
+    Unbound,
+
+    /// <summary>The group binds one data value holding the selected member's on value.</summary>
+    Short,
+
+    /// <summary>Each member binds its own data value.</summary>
+    Long,
 }
 
 /// <summary>
@@ -80,13 +106,16 @@ internal sealed class XfaMerge
     private readonly XfaBudget _budget;
     private readonly XfaReport _report;
     private readonly XElement? _dataRoot;
+    private readonly XElement? _datasets;
     private readonly HashSet<XElement> _consumed = new();
 
-    public XfaMerge(XfaBudget budget, XfaReport report, XElement? dataRoot)
+    /// <param name="datasets">The <c>&lt;xfa:datasets&gt;</c> element, for <c>bindItems</c>; null when absent.</param>
+    public XfaMerge(XfaBudget budget, XfaReport report, XElement? dataRoot, XElement? datasets = null)
     {
         _budget = budget;
         _report = report;
         _dataRoot = dataRoot;
+        _datasets = datasets ?? dataRoot?.Parent?.Parent;
     }
 
     public XfaFormNode Merge(XElement rootSubform)
@@ -251,12 +280,31 @@ internal sealed class XfaMerge
     {
         CountScripts(group);
         var node = new XfaFormNode(XfaNodeKind.ExclGroup, group) { DataScope = scope };
-        BuildChildren(node, group, scope, depth + 1);
 
+        // XFA 3.3 p196-197. Short format: the named group binds a data value and its members stay
+        // unbound. Long format: the members bind their own data values, inside the group's data
+        // group when it has one, else (an unnamed group, or no data for the group) in the parent's
+        // scope as before.
         var bound = Bind(group, scope);
-        node.BoundData = bound;
-        if (bound == null)
+        if (bound != null && bound.Elements().Any())
+        {
+            node.DataScope = bound;
+            node.Format = XfaExclGroupFormat.Long;
+            BuildChildren(node, group, bound, depth + 1);
             return node;
+        }
+
+        if (bound == null)
+        {
+            BuildChildren(node, group, scope, depth + 1);
+            if (node.Children.Any(c => c.Kind == XfaNodeKind.Field && c.BoundData != null))
+                node.Format = XfaExclGroupFormat.Long;
+            return node;
+        }
+
+        BuildChildren(node, group, scope: null, depth + 1);
+        node.BoundData = bound;
+        node.Format = XfaExclGroupFormat.Short;
 
         var selected = DataText(bound);
         foreach (var member in node.Children.Where(c => c.Kind == XfaNodeKind.Field))
@@ -277,7 +325,14 @@ internal sealed class XfaMerge
         node.BoundData = bound;
         if (bound != null)
         {
-            if (XfaRichText.FindXhtmlBody(bound) is { } body)
+            if (IsMultiSelect(field) && bound.Elements().Any())
+            {
+                // XFA 3.3 p198: a multi-select choice list binds a data GROUP; its value is the
+                // values of all the group's children, newline-separated.
+                node.RichValue = null;
+                node.Value = string.Join("\n", bound.Elements().Select(DataText));
+            }
+            else if (XfaRichText.FindXhtmlBody(bound) is { } body)
             {
                 node.RichValue = body;
                 node.Value = XfaRichText.PlainText(body);
@@ -288,7 +343,56 @@ internal sealed class XfaMerge
                 node.Value = DataText(bound);
             }
         }
+
+        BindItems(field, node);
         return node;
+    }
+
+    private static bool IsMultiSelect(XElement field)
+        => field.Child("ui")?.Child("choiceList")?.Attr("open") == "multiSelect";
+
+    /// <summary>
+    /// <c>bindItems</c> (XFA 3.3 p212, p624): the choice list's items come from a set of data nodes,
+    /// each giving a value (<c>valueRef</c>) and a label (<c>labelRef</c>, else the value), and they
+    /// replace the template's <c>items</c>. <c>ref</c> is evaluated from the field's bound data node.
+    /// Only the datasets-internal form is resolved: a <c>connection</c> (a web service) is never
+    /// contacted. Check buttons and radio buttons may also take bindItems; none in the corpus does,
+    /// and only choice lists are resolved here.
+    /// </summary>
+    private void BindItems(XElement field, XfaFormNode node)
+    {
+        var bindItems = field.ChildrenNamed("bindItems").ToList();
+        if (bindItems.Count == 0 || field.Child("ui")?.Child("choiceList") == null)
+            return;
+
+        var items = new List<XfaItem>();
+        bool any = false;
+        foreach (var bind in bindItems)
+        {
+            if (!string.IsNullOrEmpty(bind.Attr("connection")))
+            {
+                _report.Note("bindItems from a connection not resolved (no web service is contacted)");
+                continue;
+            }
+            var reference = bind.Attr("ref");
+            if (string.IsNullOrWhiteSpace(reference))
+                continue;
+            any = true;
+            foreach (var member in XfaSom.Evaluate(reference, node.BoundData, _dataRoot, _budget, _datasets))
+            {
+                _budget.Tick();
+                if (_datasets != null && !member.AncestorsAndSelf().Contains(_datasets))
+                    continue;   // p212: the ref names data nodes
+                var value = XfaSom.ItemText(member, bind.Attr("valueRef"), _budget);
+                if (value == null)
+                    continue;
+                var label = XfaSom.ItemText(member, bind.Attr("labelRef"), _budget) ?? value;
+                items.Add(new XfaItem(label, value));
+            }
+        }
+
+        if (any)
+            node.BoundItems = items;
     }
 
     private XfaFormNode BuildDraw(XElement draw)
@@ -396,8 +500,40 @@ internal static class XfaValues
     public static string OnValue(XElement field)
         => ItemTexts(field.ChildrenNamed("items").FirstOrDefault()).FirstOrDefault() ?? "1";
 
+    /// <summary>
+    /// The check button's off value: its second <c>items</c> entry. When <c>items</c> is present
+    /// without one, the spec default is the null string (XFA 3.3 p759, #2016). With no <c>items</c>
+    /// at all, "0": the pages read for #2016 (p650-651, p758-760) state no default for that case.
+    /// </summary>
     public static string OffValue(XElement field)
-        => ItemTexts(field.ChildrenNamed("items").FirstOrDefault()).Skip(1).FirstOrDefault() ?? "0";
+    {
+        var items = field.ChildrenNamed("items").FirstOrDefault();
+        if (items == null)
+            return "0";
+        return ItemTexts(items).Skip(1).FirstOrDefault() ?? string.Empty;
+    }
+
+    /// <summary>
+    /// A choice list's items as (display, save) pairs: the resolved <c>bindItems</c> when there are
+    /// any, else the template's <c>items</c>. With one <c>items</c> list the displayed text is also
+    /// what is saved; with two, the save column is the first flagged <c>save="1"</c> and the other
+    /// is displayed (XFA 3.3 p758, p760).
+    /// </summary>
+    public static IReadOnlyList<XfaItem> ChoiceItems(XfaFormNode node)
+    {
+        if (node.BoundItems != null)
+            return node.BoundItems;
+
+        var lists = node.Element.ChildrenNamed("items").ToList();
+        var saveList = lists.FirstOrDefault(l => l.Attr("save") == "1");
+        var displayList = lists.FirstOrDefault(l => l.Attr("save") != "1") ?? lists.FirstOrDefault();
+        var display = ItemTexts(displayList);
+        var save = saveList != null ? ItemTexts(saveList) : display;
+        var result = new List<XfaItem>(display.Count);
+        for (int i = 0; i < display.Count; i++)
+            result.Add(new XfaItem(display[i], i < save.Count ? save[i] : display[i]));
+        return result;
+    }
 
     public static List<string> ItemTexts(XElement? items)
         => items == null
