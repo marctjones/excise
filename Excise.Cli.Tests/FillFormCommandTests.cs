@@ -243,7 +243,8 @@ public class FillFormCommandTests : IDisposable
                 $"{Excise.TestSupport.XfaStaticFillFixtures.StrayPath}=nowhere",
             },
             Flatten: false,
-            IgnorePermissions: false));
+            IgnorePermissions: false),
+            TestContext.Current.CancellationToken);
 
         result.UpdatedFieldCount.Should().Be(3);
         result.XfaNotes.Should().ContainSingle(n => n.Contains(Excise.TestSupport.XfaStaticFillFixtures.StrayPath));
