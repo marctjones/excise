@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Excise.App.Services;
+using ReactiveUI;
 
 namespace Excise.App.ViewModels;
 
@@ -41,6 +43,28 @@ internal partial class MainWindowViewModel
     /// </remarks>
     public bool HasUnsavedDocumentChanges =>
         _documentService.IsDocumentLoaded && FileState.HasUnsavedChanges;
+
+    /// <summary>
+    /// The text of the system title bar (#1664, #1552/#1553): the document's
+    /// name, marked when it has unsaved edits in the way each platform does
+    /// (see <see cref="Workspace.DocumentWindowTitle"/>); the app name with no
+    /// document. The window binds to this.
+    /// </summary>
+    public string WindowTitle => Workspace.DocumentWindowTitle.For(
+        IsDocumentLoaded ? DocumentName : null,
+        HasUnsavedDocumentChanges);
+
+    private void RaiseWindowTitleWithDocumentState(object? sender, PropertyChangedEventArgs e)
+    {
+        // Dirty-state changes raise SaveButtonText; a null name means "all".
+        if (e.PropertyName is null
+            or nameof(DocumentName)
+            or nameof(IsDocumentLoaded)
+            or nameof(SaveButtonText))
+        {
+            this.RaisePropertyChanged(nameof(WindowTitle));
+        }
+    }
 
     /// <summary>
     /// An in-process answer to the unsaved-changes prompt, used instead of the

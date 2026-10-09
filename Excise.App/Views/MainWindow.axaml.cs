@@ -166,11 +166,7 @@ internal partial class MainWindow : Window
         if (OperatingSystem.IsMacOS())
         {
             MainMenuBar.IsVisible = false;
-            TitleBarAppLabel.Margin = new Thickness(86, 0, 10, 0);
         }
-
-        // #1643: make the custom title row behave like a title bar.
-        TitleBarArea.PointerPressed += OnTitleBarPointerPressed;
 
         // Load and apply window settings (Issue #23)
         _windowSettings = _settingsStore.Load();
@@ -717,16 +713,6 @@ internal partial class MainWindow : Window
                 UpdateRedactionOverlays();
             }
 
-            // #1552/#1553: the title names the document (and says when it has
-            // unsaved edits); dirty-state changes raise SaveButtonText.
-            if (args.PropertyName is null
-                or nameof(viewModel.DocumentName)
-                or nameof(viewModel.IsDocumentLoaded)
-                or nameof(viewModel.SaveButtonText))
-            {
-                UpdateTitle(viewModel);
-            }
-
             // #1794: the card's overlay must track the note's on-screen
             // rect exactly, not just appear/disappear — a zoom change (or the
             // page navigation already covered by the unconditional `null`
@@ -739,7 +725,6 @@ internal partial class MainWindow : Window
                 RepositionStickyNotePopup(viewModel);
             }
         };
-        UpdateTitle(viewModel);
         viewModel.PropertyChanged += pageChanged;
         _viewModelUnsubscribers.Add(() => viewModel.PropertyChanged -= pageChanged);
 
@@ -790,13 +775,6 @@ internal partial class MainWindow : Window
             viewModel.ViewerTileCacheResidentBytesProvider = null;
         if (viewModel.ViewerMostVisiblePageProvider == (Func<int?>)MostVisibleViewerPage)
             viewModel.ViewerMostVisiblePageProvider = null;
-    }
-
-    private void UpdateTitle(MainWindowViewModel viewModel)
-    {
-        Title = Excise.App.Workspace.DocumentWindowTitle.For(
-            viewModel.IsDocumentLoaded ? viewModel.DocumentName : null,
-            viewModel.HasUnsavedDocumentChanges);
     }
 
     // ── #1554: in-app document tabs ─────────────────────────────────────────
@@ -926,48 +904,6 @@ internal partial class MainWindow : Window
 
         e.Handled = true;
         (step > 0 ? tabs.SelectNextTabCommand : tabs.SelectPreviousTabCommand).Execute().Subscribe();
-    }
-
-    /// <summary>
-    /// The left inset of the title row that belongs to the system window
-    /// buttons on macOS — the same 86 px the app label is pushed past.
-    /// </summary>
-    internal const double MacWindowButtonInset = 86;
-
-    /// <summary>
-    /// Whether a press at <paramref name="x"/> in the title row should start a
-    /// window drag (#1643).
-    /// </summary>
-    /// <remarks>
-    /// Pure so the rule can be asserted without a window manager: BeginMoveDrag
-    /// hands the gesture to the OS, and nothing in a headless test can observe
-    /// what the OS then does with it.
-    /// </remarks>
-    internal static bool IsWindowDragPoint(double x, bool isMacOS) =>
-        !isMacOS || x >= MacWindowButtonInset;
-
-    private void OnTitleBarPointerPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
-            return;
-        if (!IsWindowDragPoint(e.GetPosition(TitleBarArea).X, OperatingSystem.IsMacOS()))
-            return;
-
-        // Double-click zooms, which is what macOS does by default and what
-        // Windows and most Linux shells do too.
-        if (e.ClickCount == 2)
-        {
-            WindowState = WindowState == WindowState.Maximized
-                ? WindowState.Normal
-                : WindowState.Maximized;
-            e.Handled = true;
-            return;
-        }
-
-        // Hand the gesture to the window manager. Everything the user expects
-        // from a title bar — moving, edge snapping, Spaces, Stage Manager —
-        // is the OS's to do once it has the drag.
-        BeginMoveDrag(e);
     }
 
     private long? TileCacheResidentBytes() => _pdfViewerControl?.ContinuousTileCacheResidentBytes;

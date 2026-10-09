@@ -11,10 +11,10 @@ using Xunit;
 namespace Excise.App.Tests.UI;
 
 /// <summary>
-/// The toast, XFA and attachments notice bars must open below the toolbar. The window extends
-/// its client area into the title bar (ExtendClientAreaToDecorationsHint), so a
-/// bar placed above the custom title row is drawn under the macOS window buttons
-/// and pushes the title and toolbar down. The #1547 live check found exactly that.
+/// The toast, XFA and attachments notice bars must open below the toolbar, which
+/// itself sits directly under the system title bar (#1664). Before that the window
+/// drew its own title row, and a bar placed above it was drawn under the macOS
+/// window buttons (#1547).
 /// </summary>
 [Collection("AvaloniaTests")]
 public class NoticeBarPlacementTests
@@ -111,7 +111,7 @@ public class NoticeBarPlacementTests
             {
                 var top = bar.TranslatePoint(new Point(0, 0), window)!.Value.Y;
                 top.Should().BeGreaterThanOrEqualTo(toolbarBottom,
-                    $"{bar.Name} must not sit in the title-bar area above the toolbar");
+                    $"{bar.Name} must not sit above the toolbar");
             }
 
             // Opening the bars must not move the toolbar down.

@@ -22,7 +22,7 @@
     the optional annotation toolbar row already use. This window carries no
     command logic of its own; MainWindow's code-behind owns it as view
     mechanics (create/position/show/hide/close), the same way it owns
-    BeginMoveDrag for the main window's custom title bar. Its DataContext is
+    the document-tab switch. Its DataContext is
     set to the active session's MainWindowViewModel by MainWindow, and kept in
     sync across a document-tab switch — this XAML never sets its own
     DataContext.

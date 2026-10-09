@@ -6,6 +6,10 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- The window now uses the operating system's own title bar on every platform instead of drawing a 40-pixel one of its own. Dragging, snapping, double-click zoom, full screen and the macOS proxy icon are the system's; the title shows the document name, with the unsaved-changes mark each platform uses.
+
 ### Fixed
 
 - Sticky-note and FreeText text in Adlam, Hanifi Rohingya or Arabic Mathematical Alphabetic Symbols is now recognised as needing complex shaping, so the viewer declines to draw it unshaped (with the existing diagnostic) instead of drawing plausible but wrong glyphs (#1958).
