@@ -149,8 +149,9 @@ named below), not to this page.
     reports it.** A full rewrite re-serialises the XFA stream, which can void a PDF signature over
     it (XFA 3.3 p557-558), and excise has no incremental writer. Keeping a certification valid
     needs an incremental fill-in save, which is a separate issue and is never used in a session
-    that contains a redaction. Built (#2024) for the static fill path: once `XfaStaticDataSync`
-    has changed the datasets, every save runs `CertificationStripper` (a pre-save action). It
+    that contains a redaction. Built (#2024) for the static fill path: once a field of a static
+    XFA form is set (`XfaStaticDataSync`, whether or not its datasets value could be written),
+    every save runs `CertificationStripper` (a pre-save action). It
     removes the catalog's `/Perms /DocMDP` and `/Perms /UR3` (and `/Perms` when nothing else is
     in it), the signature dictionaries they name, `/Legal` when a DocMDP signature went
     (ISO 32000-2 §12.8.7), and AppendOnly from `/SigFlags` when no signed field remains. The
