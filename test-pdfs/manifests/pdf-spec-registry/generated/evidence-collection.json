@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1607,
-  "indexedContentSha256": "1f7546d671e5b5ab65e328941401ca9c0352ed50aed3001056d0587b6f0a66fe",
+  "indexedFileCount": 1609,
+  "indexedContentSha256": "e88341e8d7e2b1c08ad60f15d1b94e8e8a6e30530140661d2956ab53d6771cb1",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -1588,7 +1588,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 220
+      "candidateReferenceCount": 221
     },
     {
       "id": "pdf.17.syntax.filters",
@@ -2349,7 +2349,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 132
+      "candidateReferenceCount": 133
     },
     {
       "id": "pdf.17.syntax.encryption",
@@ -8219,7 +8219,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 744
+      "candidateReferenceCount": 745
     },
     {
       "id": "pdf.17.graphics.color",
@@ -10062,7 +10062,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 280
+      "candidateReferenceCount": 282
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -12995,7 +12995,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 200
+      "candidateReferenceCount": 201
     },
     {
       "id": "pdf.20.content.operators",
@@ -14214,6 +14214,7 @@
           "kind": "test",
           "matchedTerms": [
             "character",
+            "positioning",
             "showing"
           ]
         },
@@ -14270,6 +14271,14 @@
             "character",
             "showing",
             "contentstream"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScannerShownTextTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "positioning",
+            "showing"
           ]
         },
         {
@@ -14400,7 +14409,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 43
+      "candidateReferenceCount": 44
     },
     {
       "id": "pdf.17.content.marked",
@@ -22365,6 +22374,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScannerShownTextTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "streams",
+            "syntax"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Writing/PdfA1ObjectStreamSuppressionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -22472,7 +22489,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 26
+      "candidateReferenceCount": 27
     },
     {
       "id": "pdf.20.renderer.requirement-003",
@@ -31041,6 +31058,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -31070,6 +31096,15 @@
         },
         {
           "path": "Excise.Core.Tests/Text/Segmentation/ImageRedactorTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScannerShownTextTests.cs",
           "kind": "test",
           "matchedTerms": [
             "flatedecode",
@@ -31307,7 +31342,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 50
+      "candidateReferenceCount": 52
     },
     {
       "id": "pdf.20.image.requirement-004",
@@ -31602,6 +31637,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -31631,6 +31675,15 @@
         },
         {
           "path": "Excise.Core.Tests/Text/Segmentation/ImageRedactorTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScannerShownTextTests.cs",
           "kind": "test",
           "matchedTerms": [
             "flatedecode",
@@ -31871,7 +31924,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 50
+      "candidateReferenceCount": 52
     },
     {
       "id": "pdf.20.image.requirement-005",
@@ -32176,6 +32229,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -32205,6 +32267,15 @@
         },
         {
           "path": "Excise.Core.Tests/Text/Segmentation/ImageRedactorTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/SavedPdfLeakScannerShownTextTests.cs",
           "kind": "test",
           "matchedTerms": [
             "flatedecode",
@@ -32455,7 +32526,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 52
+      "candidateReferenceCount": 54
     },
     {
       "id": "pdf.20.image.requirement-006",
@@ -37988,6 +38059,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -38295,18 +38375,9 @@
             "mask",
             "image"
           ]
-        },
-        {
-          "path": "Excise.Cli.Tests/RedactCommandTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "mask",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 92
+      "candidateReferenceCount": 93
     },
     {
       "id": "pdf.20.image.requirement-022",
@@ -38808,6 +38879,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -39114,18 +39194,9 @@
             "mask",
             "image"
           ]
-        },
-        {
-          "path": "Excise.Cli.Tests/RedactCommandTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "mask",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 92
+      "candidateReferenceCount": 93
     },
     {
       "id": "pdf.20.image.requirement-023",
@@ -39937,7 +40008,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 208
+      "candidateReferenceCount": 210
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -43180,6 +43251,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "indexed",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/ColorKeyMaskDifferentialTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -43302,7 +43382,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 30
+      "candidateReferenceCount": 31
     },
     {
       "id": "pdf.20.image.requirement-031",
@@ -44907,6 +44987,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "ctm",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Writing/PdfDocumentOptimizerTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -45166,7 +45255,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 66
+      "candidateReferenceCount": 67
     },
     {
       "id": "pdf.20.image.requirement-035",
@@ -72388,7 +72477,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 814
+      "candidateReferenceCount": 815
     },
     {
       "id": "pdf.20.extension.developer",

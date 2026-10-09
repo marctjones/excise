@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "5ac7c171e76f70059fd2ce1059fc5bfeb6c3eb0fd3897bb8b31f885b2fc2a45d",
+  "sourceFingerprint": "abd8013296b264cb7bc9d7e67c095e2b83079d4588c24e471d646528561b8595",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -17413,6 +17413,132 @@
         {
           "capability": "pdf.17.content.streams",
           "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/QpdfDumpShownTextTests.cs::QpdfDumpShownTextTests.AKernedTjValue_IsInTheDump",
+      "path": "Excise.Rendering.Tests/Differential/QpdfDumpShownTextTests.cs",
+      "class": "QpdfDumpShownTextTests",
+      "method": "AKernedTjValue_IsInTheDump",
+      "line": 28,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "content-streams",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/QpdfDumpShownTextTests.cs::QpdfDumpShownTextTests.OneGlyphPerTj_IsInTheDump",
+      "path": "Excise.Rendering.Tests/Differential/QpdfDumpShownTextTests.cs",
+      "class": "QpdfDumpShownTextTests",
+      "method": "OneGlyphPerTj_IsInTheDump",
+      "line": 34,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "content-streams",
+        "fonts",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/QpdfDumpShownTextTests.cs::QpdfDumpShownTextTests.TextOnTwoLines_IsNotJoinedInTheDump",
+      "path": "Excise.Rendering.Tests/Differential/QpdfDumpShownTextTests.cs",
+      "class": "QpdfDumpShownTextTests",
+      "method": "TextOnTwoLines_IsNotJoinedInTheDump",
+      "line": 40,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "content-streams",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
             "render"
           ]
         },
@@ -53929,12 +54055,12 @@
     }
   ],
   "summary": {
-    "testMethods": 1484,
+    "testMethods": 1487,
     "facets": {
-      "content-streams": 424,
+      "content-streams": 427,
       "content-strings-and-text": 9,
-      "differential-rendering": 872,
-      "fonts": 266,
+      "differential-rendering": 875,
+      "fonts": 267,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 320,
       "images": 249,
@@ -53945,19 +54071,19 @@
     },
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 9,
-      "pdf.17.content.streams:parse": 431,
-      "pdf.17.content.streams:render": 1029,
+      "pdf.17.content.streams:parse": 434,
+      "pdf.17.content.streams:render": 1032,
       "pdf.17.content.text-state:extract": 9,
       "pdf.17.content.text-state:parse": 9,
       "pdf.17.content.text-state:render": 9,
       "pdf.17.graphics.color:parse": 53,
       "pdf.17.graphics.color:render": 53,
-      "pdf.17.graphics.fonts:extract": 266,
-      "pdf.17.graphics.fonts:parse": 266,
-      "pdf.17.graphics.fonts:render": 1022,
+      "pdf.17.graphics.fonts:extract": 267,
+      "pdf.17.graphics.fonts:parse": 267,
+      "pdf.17.graphics.fonts:render": 1025,
       "pdf.17.graphics.images:extract": 249,
       "pdf.17.graphics.images:parse": 249,
-      "pdf.17.graphics.images:render": 1033,
+      "pdf.17.graphics.images:render": 1036,
       "pdf.17.graphics.paths-painting:parse": 320,
       "pdf.17.graphics.paths-painting:render": 320,
       "pdf.17.graphics.patterns-shadings:parse": 53,
@@ -53965,7 +54091,7 @@
       "pdf.17.graphics.state:parse": 320,
       "pdf.17.graphics.state:render": 320,
       "pdf.17.transparency.model:parse": 95,
-      "pdf.17.transparency.model:render": 915
+      "pdf.17.transparency.model:render": 918
     },
     "unclassified": 43,
     "allTestsMapped": true
