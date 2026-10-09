@@ -300,6 +300,30 @@ public class XfaCertificationStripTests
         field.ContainsKey("Lock").Should().BeTrue("Table 235: the fields to lock WHEN the field is signed; an authoring choice");
     }
 
+    [Fact]
+    public void StaticXfaForm_FillTheDatasetsCannotMap_StillStripsOnSave()
+    {
+        using var document = PdfDocument.Open(CertifiedFormFixtures.Certify(XfaStaticFillFixtures.Build()));
+        document.GetAcroForm()!.FindField(XfaStaticFillFixtures.StrayPath)!.SetValue("nowhere");
+        document.XfaStaticDataSync!.Notes.Should().NotBeEmpty("fixture sanity: the datasets could not take this value");
+        var saved = document.SaveToBytes();
+
+        foreach (var marker in SignatureMarkers)
+            SavedPdfLeakScanner.FindTerm(saved, marker).Should().BeEmpty(marker);
+    }
+
+    [Fact]
+    public void RemovedDuplicate_LeavesNoEmptyParentField()
+    {
+        using var document = LaidOut(CertifiedDynamic(new() { WidgetInAnnots = false }), out _);
+        using var reopened = PdfDocument.Open(document.SaveToBytes());
+
+        var fields = (PdfArray)reopened.Resolve(AcroFormDictionary(reopened).GetOptional("Fields")!);
+        fields.Select(f => (PdfDictionary)reopened.Resolve(f))
+            .Where(f => (reopened.Resolve(f.GetOptional("T") ?? PdfNull.Instance) as PdfString)?.Value == CertifiedFormFixtures.ParentName)
+            .Should().ContainSingle("the certification field's emptied parent goes with it; the generated form1[0] stays");
+    }
+
     // ------------------------------------------------------------ #2025
 
     [Fact]

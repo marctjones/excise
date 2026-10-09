@@ -119,6 +119,8 @@ internal static class CertificationStripper
             if (document.Resolve(value) is PdfDictionary signature)
                 signatures.Add(signature);
             perms.Remove(key);
+            if (permsEntry is not PdfReference)
+                catalog["Perms"] = perms;   // a direct /Perms: mark the catalog that holds it modified
             if (key == "DocMDP")
             {
                 docMdp = true;
@@ -150,6 +152,8 @@ internal static class CertificationStripper
             && !SignedFieldDetector.HasSignedField(document))
         {
             acroForm.SetInt("SigFlags", (int)flags.Value & ~AppendOnly);
+            if (catalog.GetOptional("AcroForm") is PdfDictionary)
+                catalog["AcroForm"] = acroForm;   // a direct /AcroForm: mark the catalog modified
             removed.Add("/SigFlags AppendOnly: no signed field remains (Table 225)");
         }
 
@@ -254,6 +258,19 @@ internal static class CertificationStripper
         var key = parent != null ? "Kids" : "Fields";
         if (!RemoveFrom(document, owner, key, field))
             return false;
+        // A non-terminal parent left with no kids is a field that holds nothing; take it out too,
+        // walking up, so no empty namesake of a generated subform field stays in the tree.
+        while (parent != null
+            && document.Resolve(parent.GetOptional("Kids") ?? PdfNull.Instance) is PdfArray { Count: 0 }
+            && !parent.ContainsKey("FT") && !parent.ContainsKey("V"))
+        {
+            var grandparent = document.Resolve(parent.GetOptional("Parent") ?? PdfNull.Instance) as PdfDictionary;
+            var acroForm = document.Resolve(document.Catalog.GetOptional("AcroForm") ?? PdfNull.Instance) as PdfDictionary;
+            var holder = grandparent ?? acroForm;
+            if (holder == null || !RemoveFrom(document, holder, grandparent != null ? "Kids" : "Fields", parent))
+                break;
+            parent = grandparent;
+        }
 
         foreach (var page in document.Pages)
         {
