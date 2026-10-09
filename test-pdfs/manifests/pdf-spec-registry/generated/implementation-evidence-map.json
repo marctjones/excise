@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "c311eec42edf446756746decfad9ed1326d89c07319c0649e551c4042e25be6b",
+  "sourceFingerprint": "824a3a3da9bb34426f4de84b597bf2200bc7374e53058815dfa58c947df1215b",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -6845,6 +6845,63 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Xfa/XfaWidgetWriter.cs",
+      "path": "Excise.Core/Xfa/XfaWidgetWriter.cs",
+      "kind": "source-file",
+      "facets": [
+        "forms",
+        "safe-save-and-metadata"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.document.metadata",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.interactive.forms",
+          "modes": [
+            "mutate",
+            "parse",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.syntax.objects",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdfe.product.security.privacy-clean-copy",
+          "modes": [
+            "mutate",
+            "preserve",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering/AcroFormAppearanceDefaults.cs",
       "path": "Excise.Rendering/AcroFormAppearanceDefaults.cs",
       "kind": "source-file",
@@ -11746,17 +11803,17 @@
     }
   ],
   "summary": {
-    "records": 595,
+    "records": 596,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 20,
       "document-structure": 36,
       "fonts": 34,
-      "forms": 11,
+      "forms": 12,
       "images": 40,
       "product-integration-general": 342,
       "redaction": 83,
-      "safe-save-and-metadata": 20,
+      "safe-save-and-metadata": 21,
       "security-and-encryption": 24,
       "transparency": 3
     },
@@ -11768,9 +11825,9 @@
       "pdf.17.document.catalog-pages:parse": 36,
       "pdf.17.document.catalog-pages:preserve": 36,
       "pdf.17.document.catalog-pages:write": 36,
-      "pdf.17.document.metadata:mutate": 20,
-      "pdf.17.document.metadata:preserve": 20,
-      "pdf.17.document.metadata:write": 20,
+      "pdf.17.document.metadata:mutate": 21,
+      "pdf.17.document.metadata:preserve": 21,
+      "pdf.17.document.metadata:write": 21,
       "pdf.17.graphics.color:parse": 1,
       "pdf.17.graphics.color:preserve": 1,
       "pdf.17.graphics.color:render": 1,
@@ -11796,10 +11853,10 @@
       "pdf.17.interactive.annotations:parse": 14,
       "pdf.17.interactive.annotations:preserve": 14,
       "pdf.17.interactive.annotations:render": 14,
-      "pdf.17.interactive.forms:mutate": 11,
-      "pdf.17.interactive.forms:parse": 11,
-      "pdf.17.interactive.forms:render": 11,
-      "pdf.17.interactive.forms:write": 11,
+      "pdf.17.interactive.forms:mutate": 12,
+      "pdf.17.interactive.forms:parse": 12,
+      "pdf.17.interactive.forms:render": 12,
+      "pdf.17.interactive.forms:write": 12,
       "pdf.17.interactive.redaction-annotations:mutate": 14,
       "pdf.17.interactive.redaction-annotations:parse": 14,
       "pdf.17.interactive.redaction-annotations:preserve": 14,
@@ -11815,19 +11872,19 @@
       "pdf.17.syntax.file:parse": 36,
       "pdf.17.syntax.file:preserve": 36,
       "pdf.17.syntax.file:write": 36,
-      "pdf.17.syntax.objects:mutate": 20,
+      "pdf.17.syntax.objects:mutate": 21,
       "pdf.17.syntax.objects:parse": 36,
-      "pdf.17.syntax.objects:preserve": 53,
-      "pdf.17.syntax.objects:write": 53,
+      "pdf.17.syntax.objects:preserve": 54,
+      "pdf.17.syntax.objects:write": 54,
       "pdf.17.transparency.model:parse": 3,
       "pdf.17.transparency.model:render": 3,
       "pdfe.product.security.attachments:extract": 4,
       "pdfe.product.security.attachments:mutate": 4,
       "pdfe.product.security.attachments:parse": 4,
       "pdfe.product.security.attachments:preserve": 4,
-      "pdfe.product.security.privacy-clean-copy:mutate": 20,
-      "pdfe.product.security.privacy-clean-copy:preserve": 20,
-      "pdfe.product.security.privacy-clean-copy:write": 20,
+      "pdfe.product.security.privacy-clean-copy:mutate": 21,
+      "pdfe.product.security.privacy-clean-copy:preserve": 21,
+      "pdfe.product.security.privacy-clean-copy:write": 21,
       "pdfe.product.security.signature-and-permission-warning:mutate": 24,
       "pdfe.product.security.signature-and-permission-warning:parse": 24,
       "pdfe.product.security.signature-and-permission-warning:preserve": 24,
