@@ -8,13 +8,6 @@ namespace Excise.App.ViewModels;
 
 internal class PreferencesViewModel : ViewModelBase
 {
-    private string _ocrLanguages = "eng";
-    private int _ocrBaseDpi = 350;
-    private int _ocrHighDpi = 450;
-    private double _ocrLowConfidence = 0.6;
-    private bool _ocrPreprocess = true;
-    private bool _ocrBinarize = true;
-    private double _ocrDenoiseRadius = 0.8;
     private Excise.Core.Text.ReadingOrderStrategy _readingOrderStrategy =
         Excise.Core.Text.ReadingOrderStrategy.ColumnAware;
     private Excise.Core.Text.WhitespaceMode _whitespaceMode =
@@ -242,49 +235,6 @@ internal class PreferencesViewModel : ViewModelBase
         }
     }
 
-    // OCR Properties
-    public string OcrLanguages
-    {
-        get => _ocrLanguages;
-        set => this.RaiseAndSetIfChanged(ref _ocrLanguages, value);
-    }
-
-    public int OcrBaseDpi
-    {
-        get => _ocrBaseDpi;
-        set => this.RaiseAndSetIfChanged(ref _ocrBaseDpi, value);
-    }
-
-    public int OcrHighDpi
-    {
-        get => _ocrHighDpi;
-        set => this.RaiseAndSetIfChanged(ref _ocrHighDpi, value);
-    }
-
-    public double OcrLowConfidence
-    {
-        get => _ocrLowConfidence;
-        set => this.RaiseAndSetIfChanged(ref _ocrLowConfidence, value);
-    }
-
-    public bool OcrPreprocess
-    {
-        get => _ocrPreprocess;
-        set => this.RaiseAndSetIfChanged(ref _ocrPreprocess, value);
-    }
-
-    public bool OcrBinarize
-    {
-        get => _ocrBinarize;
-        set => this.RaiseAndSetIfChanged(ref _ocrBinarize, value);
-    }
-
-    public double OcrDenoiseRadius
-    {
-        get => _ocrDenoiseRadius;
-        set => this.RaiseAndSetIfChanged(ref _ocrDenoiseRadius, value);
-    }
-
     // Text-selection reading-order strategy (#774).
     // Enum.GetValues<T>() rather than the Type overload: the latter carries
     // [RequiresDynamicCode] and warns IL3050 under AOT, because it may have to
@@ -435,13 +385,6 @@ internal class PreferencesViewModel : ViewModelBase
 
     private void ResetToDefaults()
     {
-        OcrLanguages = "eng";
-        OcrBaseDpi = 350;
-        OcrHighDpi = 450;
-        OcrLowConfidence = 0.6;
-        OcrPreprocess = true;
-        OcrBinarize = true;
-        OcrDenoiseRadius = 0.8;
         SelectedReadingOrderStrategy = Excise.Core.Text.ReadingOrderStrategy.ColumnAware;
         SelectedWhitespaceMode = Excise.Core.Text.WhitespaceMode.Smart;
         RedactionPreferences = new();
