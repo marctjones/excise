@@ -139,6 +139,13 @@ public class RedactionCollateralHarness
         // hypothesised (#1038's lesson).
         "issue14821.pdf",     // 'text': excise 97, mutool 96 — off-by-one, distinct mechanism
         "ZapfDingbats.pdf",   // 'document': excise 4, mutool 3 — #1099
+        // #2039: a multiline field (Tekstveld7, 401 chars) holds 'consectetur' three times in
+        // its /V but its appearance paints one of them. mutool counts the paint (4 on the page);
+        // excise now also counts the occurrences the field HOLDS but does not show (6). The
+        // redacted file is clean either way: before and after #2039 the saved bytes, every
+        // field /V and mutool's page text contain no 'consectetur' (checked with qpdf and
+        // mutool on the outputs of both builds). The reported count is the larger, true one.
+        "annotation-text-widget.pdf", // 'consectetur': excise 6, mutool 4 (hidden overflow in /V)
     };
 
     /// <summary>
