@@ -40,6 +40,13 @@ public sealed class XfaLayoutOptions
     /// default) draws JPEG only and reports the rest. Excise.App supplies one.
     /// </summary>
     internal IXfaImageDecoder? ImageDecoder { get; init; }
+
+    /// <summary>
+    /// Generate the AcroForm fields ISO 32000-2 Annex K.2 asks for (#2028): field values move from the
+    /// page content into read-only widgets. Default true. False reproduces the Phase 2 pages (values
+    /// drawn on the page, no widgets), which the S1 oracles compare against.
+    /// </summary>
+    internal bool EmitWidgets { get; init; } = true;
 }
 
 /// <summary>What <see cref="PdfXfaLayout.ApplyXfaLayout"/> did, and what the rendition leaves out.</summary>
@@ -84,6 +91,9 @@ public sealed class XfaLayoutResult
     /// rebuilding it for an already laid-out document is a later slice (#2031).
     /// </summary>
     internal IReadOnlyList<XfaFieldInfo> Fields { get; init; } = Array.Empty<XfaFieldInfo>();
+
+    /// <summary>AcroForm fields generated for <see cref="Fields"/> (#2028); 0 when none were.</summary>
+    internal int GeneratedFieldCount { get; init; }
 
     /// <summary>True when the document's pages now show the XFA form.</summary>
     public bool ShowsForm => Status is XfaLayoutStatus.LaidOut or XfaLayoutStatus.AlreadyLaidOut;
@@ -134,12 +144,14 @@ public static class PdfXfaLayout
         List<XfaPage> pages;
         XfaFormNode form;
         bool xmlSignature;
+        string datasetsHash;
         try
         {
             if (!XfaPackets.TryRead(document, out var packets, out var reason))
                 return Failed(document, reason, report);
 
-            var template = new XfaTemplate(packets!.Template, budget, report);
+            datasetsHash = DatasetsHash(packets!.Datasets);
+            var template = new XfaTemplate(packets.Template, budget, report);
             var merge = new XfaMerge(budget, report, packets.DataRoot, packets.Datasets);
             form = merge.Merge(template.Root);
             xmlSignature = packets.HasXmlSignature;
@@ -157,9 +169,10 @@ public static class PdfXfaLayout
 
         // Only now touch the document, and undo everything on failure.
         int original = document.PageCount;
+        var writer = new XfaPdfWriter(document, budget, report, options.ImageDecoder, options.EmitWidgets);
         try
         {
-            var written = new XfaPdfWriter(document, budget, report, options.ImageDecoder).Write(pages);
+            var written = writer.Write(pages);
             var stamp = new PdfString(PdfDate.Format(DateTimeOffset.UtcNow));
             foreach (var page in written)
                 Mark(page, stamp);
@@ -190,6 +203,25 @@ public static class PdfXfaLayout
             fields = Array.Empty<XfaFieldInfo>();
         }
 
+        // #2028: the fields K.2 asks for. Every value a widget does not take stays on its page, so a
+        // failure here costs the widgets, never a value.
+        var taken = new HashSet<(XfaFormNode, int)>();
+        int generated = 0;
+        if (options.EmitWidgets && fields.Count > 0)
+        {
+            try
+            {
+                (taken, generated) = XfaWidgetWriter.Emit(document, fields, writer.FieldValues, datasetsHash, budget, report);
+            }
+            catch (XfaLayoutException ex)
+            {
+                report.Note($"AcroForm fields not generated: {ex.Message}");
+                taken.Clear();
+                generated = 0;
+            }
+        }
+        writer.Finish(taken.Contains);
+
         return new XfaLayoutResult
         {
             Status = XfaLayoutStatus.LaidOut,
@@ -200,6 +232,7 @@ public static class PdfXfaLayout
             ScriptFailures = report.ScriptFailures,
             FieldsWrittenByScripts = report.ScriptWrites,
             Fields = fields,
+            GeneratedFieldCount = generated,
         };
     }
 
@@ -304,6 +337,45 @@ public static class PdfXfaLayout
         var row = $"/XFA ({kind}; removed whole)";
         document.RedactionLedger.RecordXfaRemoval(row);
         return row;
+    }
+
+    /// <summary>
+    /// Decision 17 (#2028): bake the AcroForm widgets the layout generated into their pages and remove
+    /// them and their fields, before a redaction runs. Hidden and duplicate (<c>match="global"</c>)
+    /// generated widgets would otherwise keep a value an area redaction removed from the visible field.
+    /// Callers are the redaction orchestrators (App <c>RedactionService</c>,
+    /// <c>Excise.Ocr.TermRedactionRunner</c>); the engine in <c>Excise.Core/Redaction</c> does not call
+    /// it. <c>/XFA</c> stays for the redaction's own decision 5. Returns the report row ("generated XFA
+    /// fields flattened ...") and records it with the document's XFA removals, or null when the
+    /// document carries no generated widget.
+    /// </summary>
+    internal static string? FlattenGeneratedXfaFields(PdfDocument document)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        // No /XFA gate: a laid-out copy whose XFA was removed (RemoveXfaForm) still carries the widgets.
+        int count = XfaWidgetWriter.Flatten(document);
+        if (count == 0)
+            return null;
+        var row = $"generated XFA fields flattened ({count} widget{(count == 1 ? string.Empty : "s")} baked into the page content before redaction)";
+        document.RedactionLedger.RecordXfaRemoval(row);
+        return row;
+    }
+
+    /// <summary>
+    /// The AcroForm widgets the layout generated on <paramref name="page"/> (#2028), from the page's
+    /// record. The form overlay leaves them alone: they are display only until S2.
+    /// </summary>
+    internal static IReadOnlySet<PdfDictionary> GeneratedXfaWidgets(PdfPage page)
+    {
+        ArgumentNullException.ThrowIfNull(page);
+        return new HashSet<PdfDictionary>(XfaWidgetWriter.GeneratedWidgets(page.Document, page), ReferenceEqualityComparer.Instance);
+    }
+
+    /// <summary>SHA-256 of the datasets packet as parsed (no formatting), recorded with the widgets (#2028).</summary>
+    private static string DatasetsHash(XElement? datasets)
+    {
+        var text = datasets?.ToString(SaveOptions.DisableFormatting) ?? string.Empty;
+        return "sha256:" + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
     }
 
     private static XfaLayoutResult Failed(PdfDocument document, string reason, XfaReport report)

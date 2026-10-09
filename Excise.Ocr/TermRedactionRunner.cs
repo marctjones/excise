@@ -181,6 +181,10 @@ public static class TermRedactionRunner
             cancellationToken.ThrowIfCancellationRequested();
         }
 
+        // #2028, decision 17: AcroForm widgets excise generated for a dynamic XFA form are baked into
+        // their pages first, so no hidden or duplicate widget keeps a value the redaction removes.
+        var generatedXfaFlattened = Excise.Core.Xfa.PdfXfaLayout.FlattenGeneratedXfaFields(document);
+
         // #1089/#1187: report verified removals and use the unified Core
         // redaction surface.
         var options = request.Options;
@@ -199,6 +203,8 @@ public static class TermRedactionRunner
                 RunRasterRedactionAudit = false,
                 InspectKeptAttachments = false,
             })).Warnings.ToList();
+        if (generatedXfaFlattened != null)
+            carrierNotes.Add($"XFA: {generatedXfaFlattened}.");
         if (ocrResult != null)
         {
             carrierNotes.Add(

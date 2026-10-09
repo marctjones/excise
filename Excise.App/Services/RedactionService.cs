@@ -60,6 +60,12 @@ internal class RedactionService
 
         var coreRect = PdfCoordinateMapper.ToContentPoints(page, area).ToPdfRectangle();
 
+        // #2028, decision 17: AcroForm widgets excise generated for a dynamic XFA form are baked into
+        // their pages first; a hidden or duplicate one would keep a value this area removes. The row
+        // goes on the document's XFA removals, which the redacted-copy report lists.
+        if (Excise.Core.Xfa.PdfXfaLayout.FlattenGeneratedXfaFields(page.Document) is { } flattened)
+            _logger.LogInformation("XFA: {Row}", flattened);
+
         // The engine also strips the document's positionless carriers (/Info,
         // XMP) by default — see #897 and the note at the top of this class —
         // and, unless kept, every attachment (#1572). It draws the covering box.

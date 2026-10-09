@@ -64,6 +64,33 @@ internal static class AcroFormFlattener
         }
     }
 
+    /// <summary>
+    /// Stamp each widget's normal appearance (by <c>/AS</c> for a state dictionary) into the page
+    /// content at its <c>/Rect</c>, with the same §12.5.5 mapping a pushbutton gets in
+    /// <see cref="Flatten"/>. The widgets themselves are left to the caller. Used to bake generated
+    /// XFA widgets into their page before redaction (#2028, decision 17).
+    /// </summary>
+    internal static void StampWidgetAppearances(PdfDocument document, PdfPage page, IReadOnlyList<PdfDictionary> widgets)
+    {
+        if (widgets.Count == 0)
+            return;
+        var existing = page.GetContentStreamBytes();
+        var sb = new StringBuilder();
+        sb.Append("q\n");
+        sb.Append(Encoding.Latin1.GetString(existing));
+        if (existing.Length > 0 && existing[^1] != (byte)'\n') sb.Append('\n');
+        sb.Append("Q\n");
+        foreach (var widget in widgets)
+        {
+            if (TryGetNumbers(document, document.Resolve(widget.GetOptional("Rect") ?? PdfNull.Instance) as PdfArray, 4, out var r))
+            {
+                var rect = new PdfRectangle(Math.Min(r[0], r[2]), Math.Min(r[1], r[3]), Math.Max(r[0], r[2]), Math.Max(r[1], r[3]));
+                StampWidgetAppearance(document, page, sb, widget, rect);
+            }
+        }
+        page.SetContentStreamBytes(Encoding.Latin1.GetBytes(sb.ToString()));
+    }
+
     private static void AddTarget(
         Dictionary<int, List<FieldDrawTarget>> byPage,
         int pageNumber,

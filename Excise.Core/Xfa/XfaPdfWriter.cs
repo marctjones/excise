@@ -7,6 +7,13 @@ using Excise.Core.Primitives;
 namespace Excise.Core.Xfa;
 
 /// <summary>
+/// A field's value drawn apart from its page (#2028): content-stream operators in page coordinates,
+/// clipped to the field box, using the page's resources. For a check button it is the mark, its
+/// on appearance whatever the current state.
+/// </summary>
+internal sealed record XfaFieldValueDrawing(string Content, bool IsCheckMark);
+
+/// <summary>
 /// Turns laid-out pages into ordinary PDF pages: base-14 text, paths and
 /// fills in one content stream per page. The existing renderer, extractor,
 /// search and redaction read these pages like any others.
@@ -43,36 +50,96 @@ internal sealed class XfaPdfWriter
     private PdfFont? _fallbackFont;
     private bool _fallbackTried;
 
-    /// <summary>Append one PDF page per laid-out page; returns the new pages.</summary>
+    /// <summary>
+    /// With <c>separateFieldValues</c> (#2028, XFA Phase 3 S1): each field's value (text, list items,
+    /// comb cells, image, a check button's mark) drawn apart from the page, keyed by form node and
+    /// layout page index, for the generated widget's appearance. The page keeps borders, captions and
+    /// the field chrome (decision 10). Content is in page coordinates and uses the page's resources.
+    /// </summary>
+    public Dictionary<(XfaFormNode Node, int Page), XfaFieldValueDrawing> FieldValues { get; } = new();
+
+    private readonly bool _separateFieldValues;
+    private readonly List<(PdfPage Page, PageContent Content)> _written = new();
+
+    public XfaPdfWriter(
+        PdfDocument document, XfaBudget budget, XfaReport report, IXfaImageDecoder? imageDecoder, bool separateFieldValues)
+        : this(document, budget, report, imageDecoder)
+    {
+        _separateFieldValues = separateFieldValues;
+    }
+
+    /// <summary>
+    /// Append one PDF page per laid-out page; returns the new pages. Without separated field values
+    /// the content streams are final; with them, <see cref="Finish"/> writes them.
+    /// </summary>
     public List<PdfPage> Write(IReadOnlyList<XfaPage> pages)
     {
         var result = new List<PdfPage>(pages.Count);
-        foreach (var page in pages)
+        for (int i = 0; i < pages.Count; i++)
         {
+            var page = pages[i];
             var pdfPage = _document.Pages.AddBlank(page.Area.Width, page.Area.Height);
             var content = new PageContent(pdfPage, page.Area.Height, FallbackFont);
             foreach (var paint in page.Paints)
             {
                 _budget.Tick();
                 if (paint.DecorationOnly)
+                {
                     DrawBorder(content, paint.Rect, XfaBorderSpec.From(paint.Box.Node.Element.Child("border")));
+                }
                 else if (paint.Box.Leaf is { } leaf)
-                    DrawLeaf(content, leaf, paint.Rect);
+                {
+                    var value = _separateFieldValues && leaf.IsField
+                        ? new PageContent(pdfPage, page.Area.Height, FallbackFont)
+                        : null;
+                    DrawLeaf(content, leaf, paint.Rect, value);
+                    if (value != null)
+                        FieldValues[(leaf.Node, i)] = new XfaFieldValueDrawing(value.ToString(), leaf.WidgetKind == "checkButton");
+                }
             }
 
-            pdfPage.SetContentStreamBytes(Encoding.Latin1.GetBytes(content.ToString()));
+            _written.Add((pdfPage, content));
+            if (!_separateFieldValues)
+                pdfPage.SetContentStreamBytes(Encoding.Latin1.GetBytes(content.ToString()));
             result.Add(pdfPage);
         }
         return result;
     }
 
-    private void DrawLeaf(PageContent content, XfaLeaf leaf, XfaRect rect)
+    /// <summary>
+    /// Write the page content streams. A separated field value no widget took
+    /// (<paramref name="taken"/> says false) is drawn into its page after all, so a value is never
+    /// left undrawn: the page then looks as it did before #2028.
+    /// </summary>
+    public void Finish(Func<(XfaFormNode Node, int Page), bool> taken)
+    {
+        if (!_separateFieldValues)
+            return;
+        for (int i = 0; i < _written.Count; i++)
+        {
+            var (pdfPage, content) = _written[i];
+            var bytes = new StringBuilder(content.ToString());
+            foreach (var ((node, page), drawing) in FieldValues)
+            {
+                // A check button's drawing is its mark, drawn only when on (the unseparated rule).
+                if (page != i || taken((node, page)) || (drawing.IsCheckMark && !XfaValues.IsOn(node)))
+                    continue;
+                bytes.Append(drawing.Content);
+            }
+            pdfPage.SetContentStreamBytes(Encoding.Latin1.GetBytes(bytes.ToString()));
+        }
+    }
+
+    private void DrawLeaf(PageContent content, XfaLeaf leaf, XfaRect rect, PageContent? separateValue = null)
     {
         DrawBorder(content, rect, XfaBorderSpec.From(leaf.Element.Child("border")));
 
         var regions = leaf.Regions(rect, _budget);
 
         content.SaveAndClip(rect);
+        // The value: on the page, or in its own drawing clipped the same way (#2028).
+        var value = separateValue ?? content;
+        separateValue?.SaveAndClip(rect);
 
         if (leaf.Caption is { } caption && regions.Caption is { } captionRect && !caption.Invisible)
         {
@@ -93,11 +160,11 @@ internal sealed class XfaPdfWriter
         switch (leaf.WidgetKind)
         {
             case "checkButton":
-                checkBox = DrawCheckButton(content, leaf, inner);
+                checkBox = DrawCheckButton(content, leaf, inner, separateValue);
                 break;
 
             case "imageEdit":
-                DrawImage(content, leaf, inner);
+                DrawImage(value, leaf, inner);
                 break;
 
             case "button":
@@ -108,30 +175,31 @@ internal sealed class XfaPdfWriter
             default:
                 if (leaf.Shape != null)
                 {
-                    DrawShape(content, leaf.Shape, inner);
+                    DrawShape(value, leaf.Shape, inner);
                 }
                 else if (leaf.Image != null)
                 {
-                    DrawImage(content, leaf, inner);
+                    DrawImage(value, leaf, inner);
                 }
                 else if (leaf.ListItems.Count > 0)
                 {
-                    DrawList(content, leaf, inner);
+                    DrawList(value, leaf, inner);
                 }
                 else if (leaf.CombCells > 0)
                 {
-                    DrawComb(content, leaf, inner);
+                    DrawComb(value, leaf, inner);
                 }
                 else
                 {
                     var block = leaf.LayoutValue(inner.W, _budget);
-                    DrawTextBlock(content, block, inner, leaf.Para);
+                    DrawTextBlock(value, block, inner, leaf.Para);
                 }
                 if (leaf.Dropdown)
                     DrawDropdownArrow(content, inner, leaf.Font.Color);
                 break;
         }
 
+        separateValue?.Restore();
         content.Restore();
 
         // pdf.js outlines a required control (CSS :required, 1.5px red) outside its box, so
@@ -250,8 +318,12 @@ internal sealed class XfaPdfWriter
         }
     }
 
-    /// <summary>Draw a check button's box (or circle) and mark; returns the box.</summary>
-    private XfaRect DrawCheckButton(PageContent content, XfaLeaf leaf, XfaRect area)
+    /// <summary>
+    /// Draw a check button's box (or circle) and mark; returns the box. With
+    /// <paramref name="separateMark"/> the mark goes there whatever the state (it is the widget's on
+    /// appearance, #2028); otherwise it is drawn on the page when the button is on.
+    /// </summary>
+    private XfaRect DrawCheckButton(PageContent content, XfaLeaf leaf, XfaRect area, PageContent? separateMark)
     {
         var widget = leaf.Widget!;
         double size = Math.Min(leaf.CheckSize, Math.Max(1, Math.Min(area.W, area.H)));
@@ -279,8 +351,9 @@ internal sealed class XfaPdfWriter
             content.StrokeRect(box, width, stroke, edge != null ? DashFor(edge.Stroke, edge.Thickness) : null);
         }
 
-        bool on = leaf.Node.Value != null && leaf.Node.Value == XfaValues.OnValue(leaf.Element);
-        if (!on)
+        if (separateMark != null)
+            content = separateMark;
+        else if (!XfaValues.IsOn(leaf.Node))
             return box;
 
         var mark = widget.AttrOr("mark", "default");

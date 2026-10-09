@@ -456,7 +456,7 @@ internal partial class MainWindowViewModel
                 return Array.Empty<PdfField>();
             try
             {
-                return _pdfCoreDocument.GetPage(CurrentPageIndex + 1).GetFormFields();
+                return OverlayFields(_pdfCoreDocument.GetPage(CurrentPageIndex + 1));
             }
             catch
             {
@@ -493,12 +493,26 @@ internal partial class MainWindowViewModel
             return Array.Empty<PdfField>();
         try
         {
-            return _pdfCoreDocument.GetPage(pageNumber).GetFormFields();
+            return OverlayFields(_pdfCoreDocument.GetPage(pageNumber));
         }
         catch
         {
             return Array.Empty<PdfField>();
         }
+    }
+
+    /// <summary>
+    /// The page's fields the form overlay offers for editing. Fields excise generated for a dynamic
+    /// XFA form (#2028) are left out: they are display only until the datasets write-back (S2), and
+    /// the page already shows their appearance, so an overlay box would only cover it.
+    /// </summary>
+    internal static IReadOnlyList<PdfField> OverlayFields(PdfPage page)
+    {
+        var fields = page.GetFormFields();
+        var generated = Excise.Core.Xfa.PdfXfaLayout.GeneratedXfaWidgets(page);
+        if (generated.Count == 0)
+            return fields;
+        return fields.Where(f => !f.WidgetDictionaries.Any(generated.Contains)).ToList();
     }
 
     /// <summary>
