@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1638,
-  "indexedContentSha256": "5d0f9f6d0634bcd1af7c8e98221012dd41774e313062ac1682bd579211aaac9f",
+  "indexedContentSha256": "9901a829115d65a5aeac442dbcd6719c87413d6ce61c1ebd9cf8ced0011d10c9",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -75709,7 +75709,6 @@
           "matchedTerms": [
             "editing",
             "redaction",
-            "ocr",
             "redaction"
           ]
         },
@@ -77423,7 +77422,6 @@
             "attachment",
             "copy",
             "metadata",
-            "ocr",
             "redaction"
           ]
         },
@@ -78417,7 +78415,6 @@
             "attachment",
             "attachments",
             "save",
-            "ocr",
             "redaction"
           ]
         },
@@ -79719,16 +79716,6 @@
           ]
         },
         {
-          "path": "Excise.App/ViewModels/PreferencesViewModel.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "documents",
-            "ocr",
-            "ocr",
-            "redaction"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Document/PdfDocumentCoverageTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -80194,9 +80181,19 @@
             "ocr",
             "redaction"
           ]
+        },
+        {
+          "path": "Excise.Cli.Tests/UnredactOcrChannelTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "ocr",
+            "scanned",
+            "ocr",
+            "redaction"
+          ]
         }
       ],
-      "candidateReferenceCount": 99
+      "candidateReferenceCount": 98
     },
     {
       "id": "pdfe.product.security.audit-log",
