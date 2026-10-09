@@ -218,7 +218,7 @@ public sealed class ExtractionParityTests
             _output.WriteLine($"  {b.Subtype} / {b.Encoding}: {b.PageCount} pages");
         }
 
-        var reportDir = Path.Combine(root!, "logs", "extraction-parity");
+        var reportDir = ReportDirectory(root!);
         Directory.CreateDirectory(reportDir);
         var reportPath = Path.Combine(reportDir, "latest-report.json");
         var report = new ParityReport
@@ -375,7 +375,7 @@ public sealed class ExtractionParityTests
     /// </summary>
     private const int MinReferenceLength = 32;
 
-    private static PageEntry ScanPage(string relPath, string pdfPath, PdfDocument doc, int pageNumber)
+    internal static PageEntry ScanPage(string relPath, string pdfPath, PdfDocument doc, int pageNumber)
     {
         var entry = new PageEntry { File = relPath, Page = pageNumber };
 
@@ -445,7 +445,7 @@ public sealed class ExtractionParityTests
     /// build — record which one produced them so a maintainer on a different
     /// version can tell "regression" from "the oracle changed."
     /// </summary>
-    private static string MutoolVersion()
+    internal static string MutoolVersion()
     {
         try
         {
@@ -481,6 +481,9 @@ public sealed class ExtractionParityTests
     // old walk stopped at a worktree's .git FILE, short of the MAIN checkout
     // where the gitignored corpora below actually live.
     private static string? LocateRepoRoot() => TestRepoLayout.MainCheckoutRoot;
+
+    /// <summary>Where the parity reports go: the main checkout's logs/, which scripts/check-extraction-parity.sh grades.</summary>
+    internal static string ReportDirectory(string root) => Path.Combine(root, "logs", "extraction-parity");
 
     public sealed class ParityReport
     {

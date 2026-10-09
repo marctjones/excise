@@ -170,32 +170,10 @@ internal static class AcroFormFlattener
         if (resolved is not PdfStream appearance || rawAppearance == null)
             return;
 
-        if (!TryGetNumbers(document, appearance.ResolveArray(document, "BBox"), 4, out var bbox))
+        // §12.5.5 Algorithm 8.1: the page draws `A cm`, then `Do` applies the form's /Matrix.
+        if (!AppearanceMapping.TryMap(document, appearance, rect, out _, out var a))
             return;
-
-        double[] matrix = { 1, 0, 0, 1, 0, 0 };
-        if (TryGetNumbers(document, appearance.ResolveArray(document, "Matrix"), 6, out var m))
-            matrix = m;
-
-        // Transform the four BBox corners through /Matrix and take bounds.
-        double minX = double.MaxValue, minY = double.MaxValue, maxX = double.MinValue, maxY = double.MinValue;
-        foreach (var (x, y) in new[] { (bbox[0], bbox[1]), (bbox[2], bbox[1]), (bbox[2], bbox[3]), (bbox[0], bbox[3]) })
-        {
-            var tx = matrix[0] * x + matrix[2] * y + matrix[4];
-            var ty = matrix[1] * x + matrix[3] * y + matrix[5];
-            minX = Math.Min(minX, tx); maxX = Math.Max(maxX, tx);
-            minY = Math.Min(minY, ty); maxY = Math.Max(maxY, ty);
-        }
-
-        var bw = maxX - minX;
-        var bh = maxY - minY;
-        if (bw < 1e-6 || bh < 1e-6 || rect.Width < 1e-6 || rect.Height < 1e-6)
-            return;
-
-        var sx = rect.Width / bw;
-        var sy = rect.Height / bh;
-        var ox = rect.Left - minX * sx;
-        var oy = rect.Bottom - minY * sy;
+        var (sx, sy, ox, oy) = a;
 
         var name = AddXObjectResource(document, page, rawAppearance);
 
@@ -209,18 +187,7 @@ internal static class AcroFormFlattener
     }
 
     private static bool TryGetNumbers(PdfDocument document, PdfArray? array, int count, out double[] values)
-    {
-        values = new double[count];
-        if (array == null || array.Count < count)
-            return false;
-        for (var i = 0; i < count; i++)
-        {
-            if (document.Resolve(array[i]) is not PdfObject obj || !obj.TryGetNumber(out var n))
-                return false;
-            values[i] = n;
-        }
-        return true;
-    }
+        => AppearanceMapping.TryGetNumbers(document, array, count, out values);
 
     private static string AddXObjectResource(PdfDocument document, PdfPage page, PdfObject appearance)
     {

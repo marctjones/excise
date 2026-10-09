@@ -49,7 +49,8 @@ public class WidgetAppearanceTextTests
 
         canada[0].StartX.Should().BeApproximately(F.ChoiceGlyphX, 0.01, "/Matrix first, then BBox onto Rect");
         canada[0].StartY.Should().BeApproximately(F.ChoiceGlyphY, 0.01);
-        canada[0].FontSize.Should().BeApproximately(F.ChoiceFontSize, 0.01);
+        // Helvetica 'C' is 722/1000 em: 3 Tf through both scales of 2 draws it at 12 pt.
+        canada[0].GlyphRectangle.Width.Should().BeApproximately(0.722 * F.ChoiceFontSize, 0.05);
         canada.Should().AllSatisfy(l => l.FontName.Should().StartWith("AcroForm:",
             "redaction routes a widget match to the interactive scrubber by this prefix"));
         canada.Should().AllSatisfy(l => l.OperandByteOffset.Should().Be(-1,
