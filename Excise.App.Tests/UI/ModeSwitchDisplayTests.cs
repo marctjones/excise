@@ -425,8 +425,11 @@ public class ModeSwitchDisplayTests
             PdfPageSlot Page2() => items.ItemsSource!.Cast<PdfPageSlot>().Single(s => s.PageNumber == 2);
             double ContinuousFraction() => (cont.Offset.Y - Page2().TopDip) / Page2().DisplayHeight;
 
-            // Continuous → single-page, from 15% into page 2.
-            const double intoContinuous = 0.15;
+            // Continuous → single-page, from 5% into page 2. Kept small on purpose: the single-page
+            // range that can be scrolled depends on the viewport (the system title bar, #1664, gave
+            // the content area more room, so the page nearly fits), and the second leg below needs
+            // a fraction inside that range that differs from this one by more than 0.05.
+            const double intoContinuous = 0.05;
             cont.Offset = new global::Avalonia.Vector(cont.Offset.X, Page2().TopDip + intoContinuous * Page2().DisplayHeight);
             await PumpUntilAsync(window, () => viewer.CurrentPage == 2 && Math.Abs(ContinuousFraction() - intoContinuous) < 0.005);
 
