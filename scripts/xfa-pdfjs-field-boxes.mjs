@@ -9,6 +9,8 @@
 //   PUPPETEER_CORE a puppeteer-core package directory
 //   CHROME         a Chrome or chrome-headless-shell executable
 // Usage: node scripts/xfa-pdfjs-field-boxes.mjs <form.pdf> <out.json>
+// The tracked results are tests/xfa-pdfjs-field-boxes/<path under test-pdfs, "/" as "__">.json, read by
+// Excise.Rendering.Tests XfaFieldMapPdfJsOracleTests (its Forms list is the corpus measured).
 //
 // Output: pdf.js version, the input's SHA-256, and per page its size and every visible .xfaField /
 // .xfaExclgroup box (CSS px at scale 1 = PDF points, top-left origin of the page) with its xfaName.
@@ -40,7 +42,12 @@ const page = `<!doctype html><html><head><meta charset="utf-8">
 import * as pdfjs from "/pdfjs/legacy/build/pdf.mjs";
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/legacy/build/pdf.worker.mjs";
 window.measure = async () => {
-  const doc = await pdfjs.getDocument({ url: "/doc.pdf", enableXfa: true, password: "" }).promise;
+  let doc;
+  try {
+    doc = await pdfjs.getDocument({ url: "/doc.pdf", enableXfa: true, password: "" }).promise;
+  } catch (e) {
+    return { pureXfa: false, error: String(e?.message ?? e), pages: [] };   // "no oracle", never a pass
+  }
   if (!doc.isPureXfa) return { pureXfa: false, pages: [] };
   const pages = [];
   for (let n = 1; n <= doc.numPages; n++) {

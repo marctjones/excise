@@ -18,6 +18,9 @@ namespace Excise.Rendering.Tests.Differential;
 /// <para>Acceptance: every box pdf.js draws has a map entry of the same name and kind on the same
 /// page within 4pt on every edge, and every drop-down's (value, label) list is the one pdf.js shows.
 /// Matching is by page, name and kind, then nearest box, one map entry per pdf.js box.</para>
+/// <para>Corpus: the four real forms, and the 21 files #1547 Phase 2 laid out (pdfium corpus and
+/// pdf.js's issue14130) except <c>xfa/xfa_break_before_after</c> and <c>bug_1301</c>, which pdf.js
+/// cannot open: no oracle, so no row. <c>bug_306123</c> is a known divergence (below).</para>
 /// </summary>
 public class XfaFieldMapPdfJsOracleTests
 {
@@ -27,16 +30,46 @@ public class XfaFieldMapPdfJsOracleTests
 
     public XfaFieldMapPdfJsOracleTests(ITestOutputHelper output) => _out = output;
 
-    public static TheoryData<string> Forms => new() { "imm5257e", "imm1295e", "ohio-expense-report", "hsbc-cloture-compte" };
+    public static TheoryData<string> Forms => new()
+    {
+        "xfa-real/imm5257e", "xfa-real/imm1295e", "xfa-real/ohio-expense-report", "xfa-real/hsbc-cloture-compte",
+        "pdfium/simple_xfa", "pdfium/bug_504416752", "pdfium/bug_1058653", "pdfium/bug_1055869",
+        "pdfium/xfa/email_recommended", "pdfium/xfa/xfa_combobox", "pdfium/xfa/xfa_date_time_edit",
+        "pdfium/xfa/xfa_multiline_textfield", "pdfium/xfa/xfa_image_edit",
+        "pdfium/pixel/xfa_specific/barcode_test", "pdfium/pixel/xfa_specific/dynamic_list_box_allow_multiple_selection",
+        "pdfium/pixel/xfa_specific/dynamic_password_field_background_fill",
+        "pdfium/pixel/xfa_specific/dynamic_table_color_and_width", "pdfium/pixel/xfa_specific/resolve_nodes_0",
+        "pdfium/javascript/xfa_specific/resolve_nodes_1", "pdfium/javascript/xfa_specific/resolve_nodes_2",
+        "pdfium/pixel/xfa_specific/xfa_node_caption", "pdfjs/issue14130",
+    };
+
+    private static string CorpusScript(string form) => form.Split('/')[0] switch
+    {
+        "xfa-real" => "scripts/download-xfa-real-corpus.sh",
+        "pdfium" => "scripts/download-pdfium-corpus.sh",
+        _ => "scripts/download-pdfjs-corpus.sh",
+    };
 
     [Theory]
     [MemberData(nameof(Forms))]
-    public void EveryFieldPdfJsDraws_HasAMapRectWithin4pt_AndTheSameOptions(string form)
+    public void EveryFieldPdfJsDraws_HasAMapRectWithin4pt_AndTheSameOptions(string form) => Compare(form);
+
+    /// <summary>
+    /// Known divergence (#1547 Phase 2): hidden subforms carry <c>breakBefore startNew</c>, which pdf.js
+    /// honours while they are hidden, and <c>initialize</c> scripts excise does not run presumably show
+    /// them. pdf.js draws 4 pages, excise 2. Page 1 is laid out by both before any of those breaks and
+    /// is compared; if the page counts ever agree, this row should join the theory above.
+    /// </summary>
+    [Fact]
+    public void Bug306123_FirstPageAgrees_PageCountDiffersByScriptsOnly()
+        => Compare("pdfium/bug_306123", pagesToCompare: 1, excisePageCount: 2);
+
+    private void Compare(string form, int? pagesToCompare = null, int? excisePageCount = null)
     {
-        var source = TestRepoLayout.FindFile("test-pdfs", "xfa-real", form + ".pdf");
+        var source = TestRepoLayout.FindFile(new[] { "test-pdfs" }.Concat((form + ".pdf").Split('/')).ToArray());
         Assert.SkipWhen(source == null, TestRepoLayout.AbsenceReason(
-            "xfa-real corpus (scripts/download-xfa-real-corpus.sh)", $"test-pdfs/xfa-real/{form}.pdf"));
-        var oraclePath = TestRepoLayout.FindFile("tests", "xfa-pdfjs-field-boxes", form + ".json");
+            $"corpus file ({CorpusScript(form)})", $"test-pdfs/{form}.pdf"));
+        var oraclePath = TestRepoLayout.FindFile("tests", "xfa-pdfjs-field-boxes", form.Replace("/", "__", StringComparison.Ordinal) + ".json");
         oraclePath.Should().NotBeNull("the pdf.js measurement is tracked in the repository");
 
         var bytes = File.ReadAllBytes(source!);
@@ -51,13 +84,13 @@ public class XfaFieldMapPdfJsOracleTests
         result.Status.Should().Be(XfaLayoutStatus.LaidOut, result.FailureReason);
 
         var pdfJsPages = rootElement.GetProperty("pages").EnumerateArray().ToList();
-        document.PageCount.Should().Be(pdfJsPages.Count, "pdf.js lays the form out on this many pages");
+        document.PageCount.Should().Be(excisePageCount ?? pdfJsPages.Count, "pdf.js lays the form out on this many pages");
 
         int boxes = 0, matched = 0, lists = 0, listsEqual = 0, listsFromData = 0;
         double worst = 0;
         var failures = new List<string>();
         var used = new HashSet<XfaFieldInfo>(ReferenceEqualityComparer.Instance);
-        for (int pageIndex = 0; pageIndex < pdfJsPages.Count; pageIndex++)
+        for (int pageIndex = 0; pageIndex < (pagesToCompare ?? pdfJsPages.Count); pageIndex++)
         {
             var page = document.Pages[pageIndex];
             foreach (var box in pdfJsPages[pageIndex].GetProperty("boxes").EnumerateArray())
@@ -133,7 +166,7 @@ public class XfaFieldMapPdfJsOracleTests
         failures.Should().BeEmpty();
         matched.Should().Be(boxes);
         listsEqual.Should().Be(lists);
-        if (form == "imm5257e")
+        if (form == "xfa-real/imm5257e")
             listsFromData.Should().Be(34, "IMM 5257e's 34 drop-downs take their lists from the datasets through bindItems (#2018)");
     }
 
