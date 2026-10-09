@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1571,
-  "indexedContentSha256": "5f2bb220bc7fe6312bc3a32b4f9ed54462f523add171f10820cb3335fc41469f",
+  "indexedFileCount": 1575,
+  "indexedContentSha256": "6dede44ed8db5a061bd356c0fce504f4a4ccfad177d46639ef7b0f9cc3a437af",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -651,6 +651,19 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "header",
+            "structure",
+            "syntax",
+            "pdfdocumentwriter",
+            "pdfobject",
+            "pdfparser",
+            "xref"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -726,7 +739,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 73
+      "candidateReferenceCount": 74
     },
     {
       "id": "pdf.17.syntax.objects",
@@ -1575,7 +1588,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 218
+      "candidateReferenceCount": 219
     },
     {
       "id": "pdf.17.syntax.filters",
@@ -2336,7 +2349,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 130
+      "candidateReferenceCount": 132
     },
     {
       "id": "pdf.17.syntax.encryption",
@@ -3204,7 +3217,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 130
+      "candidateReferenceCount": 132
     },
     {
       "id": "pdf.17.document.catalog-pages",
@@ -4130,7 +4143,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 216
+      "candidateReferenceCount": 217
     },
     {
       "id": "pdf.17.document.navigation",
@@ -5049,7 +5062,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 183
+      "candidateReferenceCount": 184
     },
     {
       "id": "pdf.17.document.metadata",
@@ -5963,7 +5976,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 133
+      "candidateReferenceCount": 136
     },
     {
       "id": "pdf.17.document.embedded-files",
@@ -6836,7 +6849,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 95
+      "candidateReferenceCount": 96
     },
     {
       "id": "pdf.17.graphics.state",
@@ -7319,6 +7332,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "dictionaries",
+            "resource",
+            "colorspace",
+            "pdfgraphics",
+            "pdfimage",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -7357,7 +7382,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 49
+      "candidateReferenceCount": 50
     },
     {
       "id": "pdf.17.graphics.paths-painting",
@@ -8186,7 +8211,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 735
+      "candidateReferenceCount": 737
     },
     {
       "id": "pdf.17.graphics.color",
@@ -9000,7 +9025,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 350
+      "candidateReferenceCount": 352
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -9113,6 +9138,28 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "patterns",
+            "shadings",
+            "colorspace",
+            "pdfgraphics",
+            "pdfimage",
+            "skiarenderer"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/adopted-f2550b79/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "patterns",
+            "shadings",
+            "colorspace",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -9135,7 +9182,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 7
+      "candidateReferenceCount": 9
     },
     {
       "id": "pdf.17.graphics.images",
@@ -10010,7 +10057,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 278
+      "candidateReferenceCount": 280
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -10856,7 +10903,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 207
+      "candidateReferenceCount": 209
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -11593,7 +11640,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 200
+      "candidateReferenceCount": 202
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -11887,6 +11934,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "limits",
+            "version",
+            "differentialrendering",
+            "performancebenchmark",
+            "renderpage",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -11996,7 +12055,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 40
+      "candidateReferenceCount": 41
     },
     {
       "id": "pdf.20.compatibility.deprecated",
@@ -12932,7 +12991,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 196
+      "candidateReferenceCount": 198
     },
     {
       "id": "pdf.20.content.operators",
@@ -13780,7 +13839,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 146
+      "candidateReferenceCount": 147
     },
     {
       "id": "pdf.17.content.text-state",
@@ -15029,6 +15088,28 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "artifacts",
+            "marked",
+            "property",
+            "contentoperator",
+            "contentstream",
+            "textextractor"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/adopted-f2550b79/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "artifacts",
+            "marked",
+            "contentoperator",
+            "contentstream"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -15075,27 +15156,9 @@
             "artifacts",
             "property"
           ]
-        },
-        {
-          "path": "docs/architecture/main-window-architecture.md",
-          "kind": "architecture",
-          "matchedTerms": [
-            "artifacts",
-            "marked",
-            "property"
-          ]
-        },
-        {
-          "path": "docs/architecture/pdf-viewer-control-architecture.md",
-          "kind": "architecture",
-          "matchedTerms": [
-            "artifacts",
-            "marked",
-            "property"
-          ]
         }
       ],
-      "candidateReferenceCount": 82
+      "candidateReferenceCount": 84
     },
     {
       "id": "pdf.20.content.operator-001",
@@ -22117,6 +22180,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "syntax",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -22128,7 +22202,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 3
+      "candidateReferenceCount": 4
     },
     {
       "id": "pdf.20.renderer.requirement-002",
@@ -22348,6 +22422,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "streams",
+            "syntax",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -22384,7 +22470,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 25
+      "candidateReferenceCount": 26
     },
     {
       "id": "pdf.20.renderer.requirement-003",
@@ -22511,6 +22597,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "tree",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -22522,7 +22619,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 10
+      "candidateReferenceCount": 11
     },
     {
       "id": "pdf.20.renderer.requirement-004",
@@ -22647,6 +22744,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "extgstate",
+            "pdf20",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -22658,7 +22766,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 2
+      "candidateReferenceCount": 3
     },
     {
       "id": "pdf.20.renderer.requirement-006",
@@ -23402,7 +23510,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 134
+      "candidateReferenceCount": 136
     },
     {
       "id": "pdf.20.renderer.requirement-007",
@@ -23458,6 +23566,17 @@
       },
       "candidateReferences": [
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "patterns",
+            "pdf20",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -23469,7 +23588,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 1
+      "candidateReferenceCount": 2
     },
     {
       "id": "pdf.20.renderer.requirement-008",
@@ -23534,6 +23653,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "images",
+            "pdf20",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -23545,7 +23675,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 2
+      "candidateReferenceCount": 3
     },
     {
       "id": "pdf.20.renderer.requirement-009",
@@ -23617,6 +23747,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "forms",
+            "pdf20",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -23636,7 +23777,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 4
+      "candidateReferenceCount": 5
     },
     {
       "id": "pdf.20.renderer.requirement-010",
@@ -23702,6 +23843,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "fonts",
+            "pdf20",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -23721,7 +23873,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 4
+      "candidateReferenceCount": 5
     },
     {
       "id": "pdf.20.renderer.requirement-011",
@@ -23768,6 +23920,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "transparency",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -23779,7 +23942,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 2
+      "candidateReferenceCount": 3
     },
     {
       "id": "pdf.20.renderer.requirement-012",
@@ -23920,6 +24083,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "streams",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -23939,7 +24113,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 5
+      "candidateReferenceCount": 6
     },
     {
       "id": "pdf.20.renderer.requirement-014",
@@ -23988,6 +24162,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "images",
+            "pdf20",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -23999,7 +24184,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 2
+      "candidateReferenceCount": 3
     },
     {
       "id": "pdf.20.renderer.requirement-015",
@@ -24186,6 +24371,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "pdf20",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -24205,7 +24401,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 10
+      "candidateReferenceCount": 11
     },
     {
       "id": "pdf.20.renderer.requirement-017",
@@ -24311,6 +24507,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "pdf20",
+            "preservation",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -24339,7 +24547,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 11
+      "candidateReferenceCount": 12
     },
     {
       "id": "pdf.20.renderer.requirement-018",
@@ -24634,6 +24842,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotations",
+            "pdf20",
+            "synthesis",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -24686,7 +24906,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 32
+      "candidateReferenceCount": 33
     },
     {
       "id": "pdf.20.renderer.requirement-019",
@@ -24844,6 +25064,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "structure",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -24863,7 +25094,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 14
+      "candidateReferenceCount": 15
     },
     {
       "id": "pdf.20.renderer.requirement-020",
@@ -24912,6 +25143,17 @@
       },
       "candidateReferences": [
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdf20",
+            "signatures",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -24923,7 +25165,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 1
+      "candidateReferenceCount": 2
     },
     {
       "id": "pdf.20.renderer.requirement-021",
@@ -29740,6 +29982,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "bdc",
+            "pdf20",
+            "conformancetests",
+            "differentialrendering",
+            "skiarenderer"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -29751,7 +30004,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 2
+      "candidateReferenceCount": 3
     },
     {
       "id": "pdf.20.renderer.requirement-091",
@@ -34962,6 +35215,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "jpxdecode",
+            "image",
+            "jbig2",
+            "jpx",
+            "pdfimage"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -34983,7 +35248,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 25
+      "candidateReferenceCount": 26
     },
     {
       "id": "pdf.20.image.requirement-015",
@@ -35347,6 +35612,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "jbig2decode",
+            "image",
+            "jbig2",
+            "jpx",
+            "pdfimage"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -35368,7 +35645,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 31
+      "candidateReferenceCount": 32
     },
     {
       "id": "pdf.20.image.requirement-016",
@@ -35806,6 +36083,19 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "globals",
+            "image",
+            "jbig2decode",
+            "image",
+            "jbig2",
+            "jpx",
+            "pdfimage"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -35837,7 +36127,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 37
+      "candidateReferenceCount": 38
     },
     {
       "id": "pdf.20.image.requirement-017",
@@ -36356,6 +36646,29 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "crypt",
+            "image",
+            "image",
+            "jbig2",
+            "jpx",
+            "pdfimage"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/adopted-f2550b79/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "crypt",
+            "image",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -36453,7 +36766,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 56
+      "candidateReferenceCount": 58
     },
     {
       "id": "pdf.20.image.requirement-018",
@@ -37983,7 +38296,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 90
+      "candidateReferenceCount": 92
     },
     {
       "id": "pdf.20.image.requirement-022",
@@ -38802,7 +39115,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 90
+      "candidateReferenceCount": 92
     },
     {
       "id": "pdf.20.image.requirement-023",
@@ -39614,7 +39927,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 206
+      "candidateReferenceCount": 208
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -42298,6 +42611,29 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "devicecmyk",
+            "image",
+            "image",
+            "jbig2",
+            "jpx",
+            "pdfimage"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/adopted-f2550b79/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "devicecmyk",
+            "image",
+            "image",
+            "jbig2",
+            "jpx"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -42358,7 +42694,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 37
+      "candidateReferenceCount": 39
     },
     {
       "id": "pdf.20.image.requirement-029",
@@ -42571,6 +42907,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "iccbased",
+            "image",
+            "image",
+            "jbig2",
+            "jpx",
+            "pdfimage"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -42601,7 +42949,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 19
+      "candidateReferenceCount": 20
     },
     {
       "id": "pdf.20.image.requirement-030",
@@ -43757,7 +44105,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 149
+      "candidateReferenceCount": 151
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -43912,6 +44260,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "separation",
+            "image",
+            "jbig2",
+            "jpx",
+            "pdfimage"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -43942,7 +44302,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 13
+      "candidateReferenceCount": 14
     },
     {
       "id": "pdf.20.image.requirement-033",
@@ -44743,6 +45103,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "ctm",
+            "image",
+            "image",
+            "jbig2",
+            "jpx",
+            "pdfimage"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -44784,7 +45156,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 65
+      "candidateReferenceCount": 66
     },
     {
       "id": "pdf.20.image.requirement-035",
@@ -45770,7 +46142,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 102
+      "candidateReferenceCount": 104
     },
     {
       "id": "pdf.20.annotation.subtype-002",
@@ -46674,7 +47046,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 121
+      "candidateReferenceCount": 122
     },
     {
       "id": "pdf.20.annotation.subtype-003",
@@ -47483,6 +47855,28 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "freetext",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/adopted-f2550b79/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "freetext",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -47584,7 +47978,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 67
+      "candidateReferenceCount": 69
     },
     {
       "id": "pdf.20.annotation.subtype-005",
@@ -48487,6 +48881,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "highlight",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -48506,18 +48911,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "tests/corpus-expectations.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "highlight",
-            "annotation"
-          ]
         }
       ],
-      "candidateReferenceCount": 89
+      "candidateReferenceCount": 90
     },
     {
       "id": "pdf.20.annotation.subtype-006",
@@ -51040,6 +51436,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "square",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
           "kind": "test",
           "matchedTerms": [
@@ -51088,19 +51495,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "tests/undo-classification.tsv",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "square",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 82
+      "candidateReferenceCount": 83
     },
     {
       "id": "pdf.20.annotation.subtype-010",
@@ -51661,6 +52058,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "circle",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
           "kind": "test",
           "matchedTerms": [
@@ -51743,7 +52151,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 51
+      "candidateReferenceCount": 52
     },
     {
       "id": "pdf.20.annotation.subtype-011",
@@ -52682,7 +53090,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 245
+      "candidateReferenceCount": 247
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -53178,6 +53586,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "polygon",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
           "kind": "test",
           "matchedTerms": [
@@ -53259,7 +53678,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 43
+      "candidateReferenceCount": 44
     },
     {
       "id": "pdf.20.annotation.subtype-013",
@@ -54696,7 +55115,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 181
+      "candidateReferenceCount": 182
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -55134,6 +55553,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "popup",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -55175,7 +55605,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 41
+      "candidateReferenceCount": 42
     },
     {
       "id": "pdf.20.annotation.subtype-016",
@@ -56372,6 +56802,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "stamp",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -56491,7 +56932,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 75
+      "candidateReferenceCount": 76
     },
     {
       "id": "pdf.20.annotation.subtype-018",
@@ -57658,7 +58099,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 207
+      "candidateReferenceCount": 209
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -58787,6 +59228,17 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "screen",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -58818,7 +59270,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 64
+      "candidateReferenceCount": 65
     },
     {
       "id": "pdf.20.annotation.subtype-023",
@@ -60298,7 +60750,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 248
+      "candidateReferenceCount": 250
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -61039,7 +61491,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 108
+      "candidateReferenceCount": 110
     },
     {
       "id": "pdf.17.interactive.annotations",
@@ -62150,7 +62602,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 237
+      "candidateReferenceCount": 239
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -63140,7 +63592,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 114
+      "candidateReferenceCount": 116
     },
     {
       "id": "pdf.17.interactive.redaction-review-drafts",
@@ -64065,7 +64517,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 122
+      "candidateReferenceCount": 124
     },
     {
       "id": "pdf.17.security.redaction-content-removal",
@@ -66080,7 +66532,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 242
+      "candidateReferenceCount": 244
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -67014,7 +67466,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 204
+      "candidateReferenceCount": 205
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -67211,6 +67663,18 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "applications",
+            "usage",
+            "acroform",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -67245,7 +67709,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 15
+      "candidateReferenceCount": 16
     },
     {
       "id": "pdf.17.multimedia.media",
@@ -68028,7 +68492,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 151
+      "candidateReferenceCount": 152
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -68798,7 +69262,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 99
+      "candidateReferenceCount": 100
     },
     {
       "id": "pdf.17.interchange.tagged-pdf",
@@ -69613,7 +70077,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 447
+      "candidateReferenceCount": 448
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -70361,7 +70825,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 239
+      "candidateReferenceCount": 241
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -71135,7 +71599,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 228
+      "candidateReferenceCount": 229
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -71924,7 +72388,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 804
+      "candidateReferenceCount": 806
     },
     {
       "id": "pdf.20.extension.developer",
@@ -72627,7 +73091,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 174
+      "candidateReferenceCount": 176
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -73377,6 +73841,29 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "conformance",
+            "pdfa",
+            "profile",
+            "conformance",
+            "pdfa",
+            "pdfua"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/adopted-f2550b79/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "conformance",
+            "pdfa",
+            "profile",
+            "conformance",
+            "pdfa"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -73448,7 +73935,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 78
+      "candidateReferenceCount": 80
     },
     {
       "id": "pdf.20.profile.pdfua",
@@ -73946,6 +74433,29 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "accessibility",
+            "conformance",
+            "pdfua",
+            "profile",
+            "conformance",
+            "pdfa",
+            "pdfua"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/adopted-f2550b79/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "conformance",
+            "profile",
+            "conformance",
+            "pdfa"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -74043,7 +74553,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 52
+      "candidateReferenceCount": 54
     },
     {
       "id": "pdf.20.profile.pdfx",
@@ -74234,6 +74744,28 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "conformance",
+            "pdfx",
+            "profile",
+            "conformance",
+            "pdfa",
+            "pdfua"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/adopted-f2550b79/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "conformance",
+            "profile",
+            "conformance",
+            "pdfa"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -74275,7 +74807,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 21
+      "candidateReferenceCount": 23
     },
     {
       "id": "pdfe.product.safety.limited-editing",
@@ -75115,7 +75647,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 166
+      "candidateReferenceCount": 168
     },
     {
       "id": "pdfe.product.redaction.review-panel",
@@ -75911,7 +76443,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 169
+      "candidateReferenceCount": 171
     },
     {
       "id": "pdfe.product.security.privacy-clean-copy",
@@ -76728,7 +77260,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 173
+      "candidateReferenceCount": 175
     },
     {
       "id": "pdfe.product.security.external-links",
@@ -76941,6 +77473,28 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "activation",
+            "pdfe",
+            "safe",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/adopted-f2550b79/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "safe",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -77014,7 +77568,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 23
+      "candidateReferenceCount": 25
     },
     {
       "id": "pdfe.product.security.attachments",
@@ -77875,7 +78429,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 154
+      "candidateReferenceCount": 155
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",
@@ -78370,6 +78924,28 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "override",
+            "pdfe",
+            "signature",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/adopted-f2550b79/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "signature",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -78470,7 +79046,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 55
+      "candidateReferenceCount": 57
     },
     {
       "id": "pdfe.product.ocr.scanned-documents",
@@ -79261,7 +79837,7 @@
           ]
         },
         {
-          "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
           "kind": "test",
           "matchedTerms": [
             "documents",
@@ -79274,7 +79850,7 @@
           ]
         },
         {
-          "path": "tests/code-health/baselines/candidate-4421d66a/summary.json",
+          "path": "tests/code-health/baselines/adopted-f2550b79/summary.json",
           "kind": "test",
           "matchedTerms": [
             "documents",
@@ -79286,7 +79862,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 94
+      "candidateReferenceCount": 96
     },
     {
       "id": "pdfe.product.security.audit-log",
@@ -80032,7 +80608,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 184
+      "candidateReferenceCount": 186
     },
     {
       "id": "pdfe.product.platform.printing",
@@ -80397,6 +80973,27 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "printing",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/adopted-f2550b79/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "printing",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -80471,7 +81068,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 42
+      "candidateReferenceCount": 44
     },
     {
       "id": "pdfe.product.forms.restricted-javascript-research",
@@ -80914,6 +81511,28 @@
           ]
         },
         {
+          "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
+          "kind": "test",
+          "matchedTerms": [
+            "forms",
+            "pdfe",
+            "subset",
+            "ocr",
+            "redaction",
+            "security"
+          ]
+        },
+        {
+          "path": "tests/code-health/baselines/adopted-f2550b79/summary.json",
+          "kind": "test",
+          "matchedTerms": [
+            "pdfe",
+            "subset",
+            "ocr",
+            "redaction"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/candidate-4421d66a/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -81081,7 +81700,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 60
+      "candidateReferenceCount": 62
     }
   ],
   "summary": {

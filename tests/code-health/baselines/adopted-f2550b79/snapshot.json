@@ -1,0 +1,34 @@
+{
+  "artifacts": {
+    "dependencies": {
+      "path": "dependencies.json",
+      "sha256": "cd71ae7cfab45d396c14e44db1cd80f82c369264788e74607df4f512b856773b"
+    },
+    "diagnostics": {
+      "path": "diagnostics.json",
+      "sha256": "ffc79449c10237dd7be6b15a179ebcab00f955d27bfed3115bb1e5eaf3c52cba"
+    },
+    "duplication": {
+      "path": "duplication.json",
+      "sha256": "37ef0910e5e14a883dda70f16a4b21fcbba28df2e64b64da950f130d8da305f4"
+    },
+    "inventory": {
+      "path": "inventory.json",
+      "sha256": "ec475c45c4e3f475004a5dd2825d4a39865d88bdfb47e548a4aebb14f63a3698"
+    },
+    "structural": {
+      "path": "structural.json",
+      "sha256": "c1367d5a57023eafbe92d9bac0befe5deee4a2869dafd27a3063d2c8db8d6db9"
+    },
+    "testStrength": {
+      "path": "testStrength.json",
+      "sha256": "7becd5a8cb31e2fd24dd409c7de038c5db570d7362c661b1fa6582d18dbcd7d3"
+    }
+  },
+  "schemaVersion": 1,
+  "sourceAttestation": {
+    "dependencyInputHash": "e40188fc7e74bbad6750724b796602987848a1b16da731d3b5c3d67afc59069f",
+    "inventorySha256": "ec475c45c4e3f475004a5dd2825d4a39865d88bdfb47e548a4aebb14f63a3698",
+    "reviewer": "Marc Jones"
+  }
+}

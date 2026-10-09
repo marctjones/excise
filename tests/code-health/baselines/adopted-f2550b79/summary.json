@@ -1,0 +1,1432 @@
+{
+  "counts": {
+    "diagnostics": 2185,
+    "duplicateGroups": 159,
+    "inventorySymbols": 30437,
+    "shippingCallables": 5984
+  },
+  "duplicateCandidates": [
+    {
+      "examples": [
+        {
+          "Classification": "test",
+          "Path": "Excise.Core.Tests/Filters/Jpx/CodestreamParserTests.cs",
+          "StartLine": 273,
+          "SymbolKey": "Excise.Core.Tests/Excise.Core.Tests.csproj::M:Excise.Core.Tests.Filters.Jpx.CodestreamParserTests.IsOpenJpegDecompressAvailable"
+        },
+        {
+          "Classification": "test",
+          "Path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
+          "StartLine": 6956,
+          "SymbolKey": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj::M:Excise.Rendering.Tests.SkiaRendererTests.IsOpenJpegDecompressAvailable"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-87e46ee15d38dad0f18a27a9614ed9c0f49d50fefb69ebaae8b1e274e9f13435",
+      "kind": "block",
+      "match": "exact-tokens",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "test",
+          "Path": "Excise.Core.Tests/Fonts/SymbolCmapTtfBuilder.cs",
+          "StartLine": 102,
+          "SymbolKey": "Excise.Core.Tests/Excise.Core.Tests.csproj::M:Excise.Core.Tests.Fonts.SymbolCmapTtfBuilder.ParseUnicodeCmap(System.Byte[],System.ValueTuple{System.Int32,System.Int32})"
+        },
+        {
+          "Classification": "test",
+          "Path": "Excise.Rendering.Tests/Fonts/SymbolCmapTtfBuilder.cs",
+          "StartLine": 102,
+          "SymbolKey": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj::M:Excise.Rendering.Tests.Fonts.SymbolCmapTtfBuilder.ParseUnicodeCmap(System.Byte[],System.ValueTuple{System.Int32,System.Int32})"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-63e7328b19a55409283e030a8d824f2aab628f4f4711d7e33a58e886d802d079",
+      "kind": "block",
+      "match": "exact-tokens",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "test",
+          "Path": "Excise.Rendering.Tests/Differential/GhentConformanceCellTests.cs",
+          "StartLine": 578,
+          "SymbolKey": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj::M:Excise.Rendering.Tests.Differential.GhentConformanceCellTests.MeasureCell(SKBitmap,System.Double[],System.Double,System.Int32,System.Double)"
+        },
+        {
+          "Classification": "test",
+          "Path": "Excise.Rendering.Tests/Differential/GhentSoftMaskVectorCellTests.cs",
+          "StartLine": 137,
+          "SymbolKey": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj::M:Excise.Rendering.Tests.Differential.GhentSoftMaskVectorCellTests.Blocks(SKBitmap,System.Double,System.Double,System.Double,System.Double)"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-1fb3d2a269b74a0eb9cb21c0846b0fc5d37815e4240051365228a767326d8550",
+      "kind": "block",
+      "match": "exact-tokens",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "test",
+          "Path": "Excise.Core.Tests/Authoring/ListTests.cs",
+          "StartLine": 21,
+          "SymbolKey": "Excise.Core.Tests/Excise.Core.Tests.csproj::M:Excise.Core.Tests.Authoring.ListTests.StructTypes(PdfDocument)"
+        },
+        {
+          "Classification": "test",
+          "Path": "Excise.Core.Tests/Authoring/TaggedPdfTests.cs",
+          "StartLine": 24,
+          "SymbolKey": "Excise.Core.Tests/Excise.Core.Tests.csproj::M:Excise.Core.Tests.Authoring.TaggedPdfTests.StructTypes(PdfDocument)"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-aa0ab40636baf89a4713b9b6ef2d2f1c5bb26b3b6049b5a30b01314105c126b9",
+      "kind": "block",
+      "match": "parameter-local-alpha-renaming",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "test",
+          "Path": "Excise.Rendering.Tests/Visual/DeviceCmykBlendPathRenderTests.cs",
+          "StartLine": 166,
+          "SymbolKey": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj::M:Excise.Rendering.Tests.Visual.DeviceCmykBlendPathRenderTests.BuildSinglePagePdf(System.String,System.String,System.ValueTuple{System.Int32,System.String,System.String}[])"
+        },
+        {
+          "Classification": "test",
+          "Path": "Excise.Rendering.Tests/Visual/RenderTailEmptyTransparencyGroupTests.cs",
+          "StartLine": 142,
+          "SymbolKey": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj::M:Excise.Rendering.Tests.Visual.RenderTailEmptyTransparencyGroupTests.BuildSinglePagePdf(System.String,System.String,System.ValueTuple{System.Int32,System.String,System.String}[])"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-bceebc9cca968acc45bd61ff54a4656ea5019e44c036ed5572b2125aa74351ce",
+      "kind": "block",
+      "match": "exact-tokens",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "test",
+          "Path": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs",
+          "StartLine": 85,
+          "SymbolKey": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj::M:Excise.Rendering.Tests.Differential.RedactionRoundTripTests.Discover"
+        },
+        {
+          "Classification": "test",
+          "Path": "Excise.Rendering.Tests/Differential/TextExtractionDifferentialTests.cs",
+          "StartLine": 90,
+          "SymbolKey": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj::M:Excise.Rendering.Tests.Differential.TextExtractionDifferentialTests.Discover"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-6c15781f54f8e06fc20ca7e026859b198de3521cb64f6449bce89ce49ebb527b",
+      "kind": "block",
+      "match": "exact-tokens",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "shipping",
+          "Path": "Excise.App/Services/MacFilePanelAccessoryCleanup.cs",
+          "StartLine": 204,
+          "SymbolKey": "Excise.App/Excise.App.csproj::M:Excise.App.Services.MacFilePanelAccessoryCleanup.TryResolveApi"
+        },
+        {
+          "Classification": "shipping",
+          "Path": "Excise.App/Workspace/MacWindowTabbing.cs",
+          "StartLine": 249,
+          "SymbolKey": "Excise.App/Excise.App.csproj::M:Excise.App.Workspace.MacWindowTabbing.TryResolveApi"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-85b773cbf858cff60052373201369bc6497cb229672df51d716d359a4c4f8689",
+      "kind": "block",
+      "match": "exact-tokens",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "test",
+          "Path": "Excise.App.Tests/Controls/ContinuousCompositeReleaseRenderTests.cs",
+          "StartLine": 203,
+          "SymbolKey": "Excise.App.Tests/Excise.App.Tests.csproj::M:Excise.App.Tests.Controls.ContinuousCompositeReleaseRenderTests.PagingThroughTheDocument_KeepsCompositesOnlyForRealizedPages_AndReleasesTheRest"
+        },
+        {
+          "Classification": "test",
+          "Path": "Excise.App.Tests/Controls/ContinuousCompositeReleaseRenderTests.cs",
+          "StartLine": 73,
+          "SymbolKey": "Excise.App.Tests/Excise.App.Tests.csproj::M:Excise.App.Tests.Controls.ContinuousCompositeReleaseRenderTests.RecomposingRepeatedlyWhileRenderingFrames_ReleasesEveryReplacedComposite_WithoutObjectDisposed"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-9f5edf10b235c43920099799375acf4fae1f92f46cd06de9d20f3302ca65fc59",
+      "kind": "block",
+      "match": "exact-tokens",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "test",
+          "Path": "Excise.Core.Tests/Fonts/SymbolCmapTtfBuilder.cs",
+          "StartLine": 67,
+          "SymbolKey": "Excise.Core.Tests/Excise.Core.Tests.csproj::M:Excise.Core.Tests.Fonts.SymbolCmapTtfBuilder.ReadTableDirectory(System.Byte[])"
+        },
+        {
+          "Classification": "test",
+          "Path": "Excise.Rendering.Tests/Fonts/SymbolCmapTtfBuilder.cs",
+          "StartLine": 67,
+          "SymbolKey": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj::M:Excise.Rendering.Tests.Fonts.SymbolCmapTtfBuilder.ReadTableDirectory(System.Byte[])"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-27750728e86d29e9b0cca564230055476edbaab7a98da7c401dfb3577075024e",
+      "kind": "block",
+      "match": "exact-tokens",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "shipping",
+          "Path": "Excise.Core/Fonts/CffParser.cs",
+          "StartLine": 514,
+          "SymbolKey": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Fonts.CffParser.ParseDict(System.Byte[])"
+        },
+        {
+          "Classification": "shipping",
+          "Path": "Excise.Core/Fonts/CffSubsetter.cs",
+          "StartLine": 213,
+          "SymbolKey": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Fonts.CffSubsetter.CffSubsetParser.ParseDict(System.Byte[])"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-bf6c96823595c344c311383a5c2abdf60ed8deffe9de33a0e208cfd8382b9c72",
+      "kind": "block",
+      "match": "exact-tokens",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "shipping",
+          "Path": "Excise.Rendering/SkiaRenderer.Patterns.cs",
+          "StartLine": 982,
+          "SymbolKey": "Excise.Rendering/Excise.Rendering.csproj::M:Excise.Rendering.RenderContext.RasterizeCoonsPatch(Excise.Rendering.Shadings.MeshRasterTarget,Excise.Rendering.Shadings.MeshPatch,System.Double,System.Double,System.Double,System.Double)"
+        },
+        {
+          "Classification": "shipping",
+          "Path": "Excise.Rendering/SkiaRenderer.Patterns.cs",
+          "StartLine": 942,
+          "SymbolKey": "Excise.Rendering/Excise.Rendering.csproj::M:Excise.Rendering.RenderContext.RasterizeTensorPatch(Excise.Rendering.Shadings.MeshRasterTarget,Excise.Rendering.Shadings.MeshPatch,System.Double,System.Double,System.Double,System.Double)"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-b16118fcad83b4f7345091acf2dadd241ad693f89aae54129231bc89fec405b4",
+      "kind": "block",
+      "match": "exact-tokens",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "test",
+          "Path": "Excise.App.Tests/Unit/RevealHiddenTextTests.cs",
+          "StartLine": 196,
+          "SymbolKey": "Excise.App.Tests/Excise.App.Tests.csproj::M:Excise.App.Tests.Unit.RevealHiddenTextTests.BuildRasterWithOverlayPdf"
+        },
+        {
+          "Classification": "test",
+          "Path": "Excise.Cli.Tests/UnredactOcrChannelTests.cs",
+          "StartLine": 99,
+          "SymbolKey": "Excise.Cli.Tests/Excise.Cli.Tests.csproj::M:Excise.Cli.Tests.UnredactOcrChannelTests.WriteScannedRedaction"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-138e25163770a9acd7a960f465d1c9b1ad5625ef729cde6564d6cb16fbad5861",
+      "kind": "block",
+      "match": "parameter-local-alpha-renaming",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "test",
+          "Path": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs",
+          "StartLine": 451,
+          "SymbolKey": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj::M:Excise.Rendering.Tests.Differential.EncryptionInteropGateTests.MaxChannelDiff(SKBitmap,SKBitmap)"
+        },
+        {
+          "Classification": "test",
+          "Path": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs",
+          "StartLine": 541,
+          "SymbolKey": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj::M:Excise.Rendering.Tests.Differential.EncryptionWriterInteropTests.MaxChannelDiff(SKBitmap,SKBitmap)"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-2347047badbb3cb136327933fc2e3aa6331cec1104095aa327f642437f255631",
+      "kind": "block",
+      "match": "exact-tokens",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "test",
+          "Path": "Excise.Core.Tests/Fonts/SymbolCmapTtfBuilder.cs",
+          "StartLine": 108,
+          "SymbolKey": "Excise.Core.Tests/Excise.Core.Tests.csproj::M:Excise.Core.Tests.Fonts.SymbolCmapTtfBuilder.ParseUnicodeCmap(System.Byte[],System.ValueTuple{System.Int32,System.Int32})"
+        },
+        {
+          "Classification": "test",
+          "Path": "Excise.Rendering.Tests/Fonts/SymbolCmapTtfBuilder.cs",
+          "StartLine": 108,
+          "SymbolKey": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj::M:Excise.Rendering.Tests.Fonts.SymbolCmapTtfBuilder.ParseUnicodeCmap(System.Byte[],System.ValueTuple{System.Int32,System.Int32})"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-08cab3c2defd81c3384e0b1ff479890c502b871e06f7cb8103291b4f71ea8a90",
+      "kind": "block",
+      "match": "exact-tokens",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "test",
+          "Path": "Excise.Rendering.Tests/Differential/GhentConformanceCellTests.cs",
+          "StartLine": 580,
+          "SymbolKey": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj::M:Excise.Rendering.Tests.Differential.GhentConformanceCellTests.MeasureCell(SKBitmap,System.Double[],System.Double,System.Int32,System.Double)"
+        },
+        {
+          "Classification": "test",
+          "Path": "Excise.Rendering.Tests/Differential/GhentSoftMaskVectorCellTests.cs",
+          "StartLine": 139,
+          "SymbolKey": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj::M:Excise.Rendering.Tests.Differential.GhentSoftMaskVectorCellTests.Blocks(SKBitmap,System.Double,System.Double,System.Double,System.Double)"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-632542a753b9e784baa3b78fe6c8c64e6a88f3d028d53d5969c9e101c893f926",
+      "kind": "block",
+      "match": "exact-tokens",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "test",
+          "Path": "Excise.App.Tests/Controls/ContinuousRotateReadingAnchorTests.cs",
+          "StartLine": 150,
+          "SymbolKey": "Excise.App.Tests/Excise.App.Tests.csproj::M:Excise.App.Tests.Controls.ContinuousRotateReadingAnchorTests.MovingAnEarlierPage_KeepsReaderOnTheirContentAndFraction"
+        },
+        {
+          "Classification": "test",
+          "Path": "Excise.App.Tests/Controls/ContinuousRotateReadingAnchorTests.cs",
+          "StartLine": 57,
+          "SymbolKey": "Excise.App.Tests/Excise.App.Tests.csproj::M:Excise.App.Tests.Controls.ContinuousRotateReadingAnchorTests.RotatingTheCurrentPage_KeepsTheReaderAtTheSameIntraPageFraction"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-2183baa1de240ada74a8002bbc83c6a4a76e9df7877a89350709ccb51049e30b",
+      "kind": "block",
+      "match": "exact-tokens",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "tool",
+          "Path": "tools/Excise.RenderTools/Program.cs",
+          "StartLine": 1982,
+          "SymbolKey": "tools/Excise.RenderTools/Excise.RenderTools.csproj::M:Excise.RenderTools.Program.ScanOnePage(System.String,System.String,PdfDocument,SkiaRenderer,System.Int32,System.Int32,System.Double,System.Double,System.Int32,Excise.RenderTools.Program.CorpusExtraOracles,Excise.RenderTools.Program.CorpusScanProgress,System.Nullable{System.String},Excise.RenderTools.Program.OracleRenderCache,Excise.RenderTools.Program.ExciseRenderCache)"
+        },
+        {
+          "Classification": "tool",
+          "Path": "tools/Excise.RenderTools/Program.cs",
+          "StartLine": 1993,
+          "SymbolKey": "tools/Excise.RenderTools/Excise.RenderTools.csproj::M:Excise.RenderTools.Program.ScanOnePage(System.String,System.String,PdfDocument,SkiaRenderer,System.Int32,System.Int32,System.Double,System.Double,System.Int32,Excise.RenderTools.Program.CorpusExtraOracles,Excise.RenderTools.Program.CorpusScanProgress,System.Nullable{System.String},Excise.RenderTools.Program.OracleRenderCache,Excise.RenderTools.Program.ExciseRenderCache)"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-012abb08faef7f168e0dd6ead04817a0bd08907928ea077d8ec3848a927f771f",
+      "kind": "block",
+      "match": "parameter-local-alpha-renaming",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "shipping",
+          "Path": "Excise.Core/Redaction/GlyphRemover.cs",
+          "StartLine": 701,
+          "SymbolKey": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Segmentation.GlyphRemover.ComputeBoundsFromLetters(IReadOnlyList{Excise.Core.Text.Letter})"
+        },
+        {
+          "Classification": "shipping",
+          "Path": "Excise.Core/Text/Word.cs",
+          "StartLine": 44,
+          "SymbolKey": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Word.CalculateBoundingBox(IReadOnlyList{Excise.Core.Text.Letter})"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-e742b81a209a001dd3867e293a85f90e5c797187c16b6f4d54775290d150b0b4",
+      "kind": "block",
+      "match": "parameter-local-alpha-renaming",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "test",
+          "Path": "Excise.App.Tests/UI/VisualAssertions.cs",
+          "StartLine": 100,
+          "SymbolKey": "Excise.App.Tests/Excise.App.Tests.csproj::M:Excise.App.Tests.UI.VisualAssertionExtensions.ShouldVisuallyMatch(SKBitmap,System.String,System.Double,System.Nullable{System.String})"
+        },
+        {
+          "Classification": "test",
+          "Path": "Excise.Rendering.Tests/Visual/VisualAssertions.cs",
+          "StartLine": 151,
+          "SymbolKey": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj::M:Excise.Rendering.Tests.Visual.VisualAssertionExtensions.ShouldVisuallyMatch(SKBitmap,System.String,System.Double,System.Nullable{System.String})"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-7941247b682fe18d47fe4f24849297d2680501c838658ba5f7532b9d1da61828",
+      "kind": "block",
+      "match": "exact-tokens",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    },
+    {
+      "examples": [
+        {
+          "Classification": "test",
+          "Path": "Excise.Rendering.Tests/Differential/EncryptionInteropGateTests.cs",
+          "StartLine": 453,
+          "SymbolKey": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj::M:Excise.Rendering.Tests.Differential.EncryptionInteropGateTests.MaxChannelDiff(SKBitmap,SKBitmap)"
+        },
+        {
+          "Classification": "test",
+          "Path": "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs",
+          "StartLine": 543,
+          "SymbolKey": "Excise.Rendering.Tests/Excise.Rendering.Tests.csproj::M:Excise.Rendering.Tests.Differential.EncryptionWriterInteropTests.MaxChannelDiff(SKBitmap,SKBitmap)"
+        }
+      ],
+      "fullEvidence": "duplication.json",
+      "id": "clone-b820daf9f4b3a7fa01ee0a77e65cf192ecaef938722c7026a8a1aa303be69f94",
+      "kind": "block",
+      "match": "exact-tokens",
+      "occurrenceCount": 2,
+      "reviewStatus": "review-candidate"
+    }
+  ],
+  "entrypointReviewCandidates": {
+    "componentEdges": [
+      {
+        "classification": "undeclared",
+        "evidence": [
+          {
+            "references": 11,
+            "source": "Excise.Core.Editing.PdfTypewriterTextApplier",
+            "target": "Excise.Core.Content.ContentTransform"
+          },
+          {
+            "references": 4,
+            "source": "Excise.Core.Document.PdfPage",
+            "target": "Excise.Core.Content.ContentTransform"
+          },
+          {
+            "references": 3,
+            "source": "Excise.Core.Document.PdfCoordinateMapper",
+            "target": "Excise.Core.Content.ContentTransform"
+          }
+        ],
+        "references": 18,
+        "source": "core-document",
+        "target": "core-content",
+        "typeDependencyCount": 3
+      },
+      {
+        "classification": "undeclared",
+        "evidence": [
+          {
+            "references": 5,
+            "source": "Excise.Core.Document.PdfAnnotationAuthoring",
+            "target": "Excise.Core.Text.Letter"
+          },
+          {
+            "references": 2,
+            "source": "Excise.Core.Document.AcroFormAuthoring",
+            "target": "Excise.Core.Text.UnicodeTextSafety"
+          }
+        ],
+        "references": 7,
+        "source": "core-document",
+        "target": "core-text",
+        "typeDependencyCount": 2
+      },
+      {
+        "classification": "undeclared",
+        "evidence": [
+          {
+            "references": 2,
+            "source": "Excise.Core.Document.PdfDocument",
+            "target": "Excise.Core.Writing.OnDiskFileState"
+          }
+        ],
+        "references": 2,
+        "source": "core-document",
+        "target": "core-writing",
+        "typeDependencyCount": 1
+      },
+      {
+        "classification": "undeclared",
+        "evidence": [
+          {
+            "references": 2,
+            "source": "Excise.Core.Primitives.PdfStream",
+            "target": "Excise.Core.Filters.BasicStreamFilters"
+          },
+          {
+            "references": 2,
+            "source": "Excise.Core.Primitives.PdfStream",
+            "target": "Excise.Core.Filters.FlateFilterDecoder"
+          },
+          {
+            "references": 2,
+            "source": "Excise.Core.Primitives.PdfStream",
+            "target": "Excise.Core.Filters.PdfPredictor"
+          }
+        ],
+        "references": 6,
+        "source": "core-primitives",
+        "target": "core-parsing",
+        "typeDependencyCount": 3
+      },
+      {
+        "classification": "undeclared",
+        "evidence": [
+          {
+            "references": 2,
+            "source": "Excise.Core.Primitives.PdfString",
+            "target": "Excise.Core.Writing.PdfObjectWriter"
+          }
+        ],
+        "references": 2,
+        "source": "core-primitives",
+        "target": "core-writing",
+        "typeDependencyCount": 1
+      },
+      {
+        "classification": "undeclared",
+        "evidence": [
+          {
+            "references": 1,
+            "source": "Excise.Core.Text.TextSelectionEngine",
+            "target": "Excise.Core.Text.Segmentation.GlyphRemovalStrategy"
+          },
+          {
+            "references": 1,
+            "source": "Excise.Core.Text.TextSelectionEngine",
+            "target": "Excise.Core.Text.Segmentation.GlyphRemovalStrategyExtensions"
+          }
+        ],
+        "references": 2,
+        "source": "core-text",
+        "target": "core-redaction",
+        "typeDependencyCount": 2
+      },
+      {
+        "classification": "undeclared",
+        "evidence": [
+          {
+            "references": 4,
+            "source": "Excise.Core.Writing.PdfDocumentOptimizer",
+            "target": "Excise.Core.Filters.BasicStreamFilters"
+          },
+          {
+            "references": 4,
+            "source": "Excise.Core.Writing.PdfDocumentWriter",
+            "target": "Excise.Core.Filters.BasicStreamFilters"
+          }
+        ],
+        "references": 8,
+        "source": "core-writing",
+        "target": "core-parsing",
+        "typeDependencyCount": 2
+      }
+    ],
+    "contract": "Existing registry classifications identify review candidates. These observations are not automatic architectural verdicts, refactor instructions or removal proof.",
+    "registryMismatches": [],
+    "unownedCode": {
+      "projects": [
+        {
+          "classification": "sample",
+          "name": "Excise.Avalonia.Sample",
+          "path": "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj",
+          "projectComponent": null,
+          "unownedSymbols": 15
+        },
+        {
+          "classification": "sample",
+          "name": "Excise.Demo",
+          "path": "Excise.Demo/Excise.Demo.csproj",
+          "projectComponent": null,
+          "unownedSymbols": 33
+        },
+        {
+          "classification": "tool",
+          "name": "Excise.ImageInspection",
+          "path": "tools/Excise.ImageInspection/Excise.ImageInspection.csproj",
+          "projectComponent": null,
+          "unownedSymbols": 20
+        },
+        {
+          "classification": "tool",
+          "name": "Excise.RenderTools",
+          "path": "tools/Excise.RenderTools/Excise.RenderTools.csproj",
+          "projectComponent": null,
+          "unownedSymbols": 352
+        }
+      ]
+    },
+    "unregisteredSymbols": [
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::F:Excise.Avalonia.Sample.MainWindow._pageLabel",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::F:Excise.Avalonia.Sample.MainWindow._viewer",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::M:Excise.Avalonia.Sample.App.Initialize",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::M:Excise.Avalonia.Sample.App.OnFrameworkInitializationCompleted",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::M:Excise.Avalonia.Sample.MainWindow.#ctor",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::M:Excise.Avalonia.Sample.MainWindow.OnActualSize(System.Object,Avalonia.Interactivity.RoutedEventArgs)",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::M:Excise.Avalonia.Sample.MainWindow.OnNext(System.Object,Avalonia.Interactivity.RoutedEventArgs)",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::M:Excise.Avalonia.Sample.MainWindow.OnOpen(System.Object,Avalonia.Interactivity.RoutedEventArgs)",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::M:Excise.Avalonia.Sample.MainWindow.OnPageChanged(System.Object,Excise.Avalonia.Controls.PageChangedEventArgs)",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::M:Excise.Avalonia.Sample.MainWindow.OnPrev(System.Object,Avalonia.Interactivity.RoutedEventArgs)",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::M:Excise.Avalonia.Sample.MainWindow.OnZoomIn(System.Object,Avalonia.Interactivity.RoutedEventArgs)",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::M:Excise.Avalonia.Sample.MainWindow.OnZoomOut(System.Object,Avalonia.Interactivity.RoutedEventArgs)",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::M:Excise.Avalonia.Sample.MainWindow.UpdateLabel",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::M:Excise.Avalonia.Sample.Program.BuildAvaloniaApp",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::M:Excise.Avalonia.Sample.Program.Main(System.String[])",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::N:Excise.Avalonia.Sample",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::T:Excise.Avalonia.Sample.App",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::T:Excise.Avalonia.Sample.MainWindow",
+      "Excise.Avalonia.Sample/Excise.Avalonia.Sample.csproj::T:Excise.Avalonia.Sample.Program",
+      "Excise.Demo/Excise.Demo.csproj::F:Excise.Demo.FeatureCategory.Clipping"
+    ],
+    "unresolvedTypeDependencyCount": 285,
+    "unresolvedTypeDependencyExamples": [
+      {
+        "references": 2,
+        "sourceOwners": [],
+        "sourceType": "Excise.Avalonia.Sample.App",
+        "targetOwners": [],
+        "targetType": "Excise.Avalonia.Sample.MainWindow"
+      },
+      {
+        "references": 1,
+        "sourceOwners": [],
+        "sourceType": "Excise.Avalonia.Sample.MainWindow",
+        "targetOwners": [
+          "avalonia"
+        ],
+        "targetType": "Excise.Avalonia.Controls.PageChangedEventArgs"
+      },
+      {
+        "references": 10,
+        "sourceOwners": [],
+        "sourceType": "Excise.Avalonia.Sample.MainWindow",
+        "targetOwners": [
+          "avalonia"
+        ],
+        "targetType": "Excise.Avalonia.Controls.PdfViewerControl"
+      },
+      {
+        "references": 3,
+        "sourceOwners": [],
+        "sourceType": "Excise.Avalonia.Sample.MainWindow",
+        "targetOwners": [
+          "core-document"
+        ],
+        "targetType": "Excise.Core.Document.PdfDocument"
+      },
+      {
+        "references": 1,
+        "sourceOwners": [],
+        "sourceType": "Excise.Avalonia.Sample.Program",
+        "targetOwners": [],
+        "targetType": "Excise.Avalonia.Sample.App"
+      },
+      {
+        "references": 2,
+        "sourceOwners": [],
+        "sourceType": "Excise.Demo.App",
+        "targetOwners": [],
+        "targetType": "Excise.Demo.MainWindow"
+      },
+      {
+        "references": 2,
+        "sourceOwners": [],
+        "sourceType": "Excise.Demo.App",
+        "targetOwners": [],
+        "targetType": "Excise.Demo.SpecCoverageWindow"
+      },
+      {
+        "references": 2,
+        "sourceOwners": [],
+        "sourceType": "Excise.Demo.FeatureInfo",
+        "targetOwners": [],
+        "targetType": "Excise.Demo.FeatureCategory"
+      },
+      {
+        "references": 2,
+        "sourceOwners": [],
+        "sourceType": "Excise.Demo.FeatureInfo",
+        "targetOwners": [],
+        "targetType": "Excise.Demo.FeatureStatus"
+      },
+      {
+        "references": 10,
+        "sourceOwners": [],
+        "sourceType": "Excise.Demo.MainWindow",
+        "targetOwners": [
+          "core-document"
+        ],
+        "targetType": "Excise.Core.Document.PdfDocument"
+      },
+      {
+        "references": 1,
+        "sourceOwners": [],
+        "sourceType": "Excise.Demo.MainWindow",
+        "targetOwners": [
+          "core-document"
+        ],
+        "targetType": "Excise.Core.Document.PdfPage"
+      },
+      {
+        "references": 2,
+        "sourceOwners": [],
+        "sourceType": "Excise.Demo.MainWindow",
+        "targetOwners": [
+          "rendering"
+        ],
+        "targetType": "Excise.Rendering.RenderOptions"
+      },
+      {
+        "references": 1,
+        "sourceOwners": [],
+        "sourceType": "Excise.Demo.MainWindow",
+        "targetOwners": [
+          "rendering"
+        ],
+        "targetType": "Excise.Rendering.SkiaRenderer"
+      },
+      {
+        "references": 1,
+        "sourceOwners": [],
+        "sourceType": "Excise.Demo.Program",
+        "targetOwners": [],
+        "targetType": "Excise.Demo.App"
+      },
+      {
+        "references": 3,
+        "sourceOwners": [],
+        "sourceType": "Excise.Demo.SpecCoverageWindow",
+        "targetOwners": [
+          "core-document"
+        ],
+        "targetType": "Excise.Core.Document.PdfDocument"
+      },
+      {
+        "references": 1,
+        "sourceOwners": [],
+        "sourceType": "Excise.Demo.SpecCoverageWindow",
+        "targetOwners": [
+          "core-document"
+        ],
+        "targetType": "Excise.Core.Document.PdfPage"
+      },
+      {
+        "references": 21,
+        "sourceOwners": [],
+        "sourceType": "Excise.Demo.SpecCoverageWindow",
+        "targetOwners": [],
+        "targetType": "Excise.Demo.FeatureCategory"
+      },
+      {
+        "references": 14,
+        "sourceOwners": [],
+        "sourceType": "Excise.Demo.SpecCoverageWindow",
+        "targetOwners": [],
+        "targetType": "Excise.Demo.FeatureInfo"
+      },
+      {
+        "references": 12,
+        "sourceOwners": [],
+        "sourceType": "Excise.Demo.SpecCoverageWindow",
+        "targetOwners": [],
+        "targetType": "Excise.Demo.FeatureStatus"
+      },
+      {
+        "references": 2,
+        "sourceOwners": [],
+        "sourceType": "Excise.Demo.SpecCoverageWindow",
+        "targetOwners": [
+          "rendering"
+        ],
+        "targetType": "Excise.Rendering.RenderOptions"
+      }
+    ]
+  },
+  "largestByMetric": {
+    "Cognitive": [
+      {
+        "file": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
+        "line": 79,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Segmentation.PdfDocumentRedactionExtensions.RedactTextCore(PdfDocument,System.String,RedactionOptions,System.Action{System.Int32,System.Int32},System.Int32)",
+        "value": 132
+      },
+      {
+        "file": "Excise.Rendering/SkiaRenderer.Text.cs",
+        "line": 1692,
+        "symbol": "Excise.Rendering/Excise.Rendering.csproj::M:Excise.Rendering.RenderContext.RenderText(System.String,System.Byte[])",
+        "value": 117
+      },
+      {
+        "file": "Excise.Core/ColorSpaces/PdfFunctionEvaluator.cs",
+        "line": 400,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.ColorSpaces.PdfFunctionEvaluator.ExecuteCalculatorTokens(IReadOnlyList{System.String},Stack{System.Double})",
+        "value": 102
+      },
+      {
+        "file": "Excise.Core/Redaction/HiddenTextDetector.cs",
+        "line": 109,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Segmentation.HiddenTextDetector.ScanPageCore(PdfPage,System.Int32,System.Boolean,System.Collections.Generic.List{PdfRectangle})",
+        "value": 97
+      },
+      {
+        "file": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
+        "line": 893,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Segmentation.RedactionFeatureStripper.PruneUndrawnXObjects(PdfDocument,System.Collections.Generic.List{PdfDictionary},System.Collections.Generic.HashSet{System.Int32},System.Collections.Generic.ICollection{CarrierResult})",
+        "value": 86
+      },
+      {
+        "file": "Excise.Core/Xfa/FormCalc/FormCalcBuiltins.cs",
+        "line": 124,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Xfa.FormCalc.FormCalcBuiltins.RegisterCore",
+        "value": 78
+      },
+      {
+        "file": "Excise.Rendering/SkiaRenderer.Text.cs",
+        "line": 2688,
+        "symbol": "Excise.Rendering/Excise.Rendering.csproj::M:Excise.Rendering.RenderContext.RenderCidBytes(System.Byte[])",
+        "value": 78
+      },
+      {
+        "file": "Excise.Core/Redaction/PdfDocumentSanitizer.cs",
+        "line": 954,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Operations.PdfDocumentSanitizer.ScrubAnnotationContents(PdfDocument,Excise.Core.Operations.PdfDocumentSanitizer.CarrierScrub)",
+        "value": 69
+      },
+      {
+        "file": "Excise.Rendering/RawSampleImageDecoder.cs",
+        "line": 242,
+        "symbol": "Excise.Rendering/Excise.Rendering.csproj::M:Excise.Rendering.RawSampleImageDecoder.DecodeGeneralRows(Excise.Rendering.RawSampleImageDecodeRequest,PdfColorSpace,System.Nullable{ImageColorConverter},System.Double,System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean,Span{System.Byte},System.Int32,System.Int32)",
+        "value": 66
+      },
+      {
+        "file": "Excise.Core/Content/ContentStreamWalker.cs",
+        "line": 1326,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Content.ContentStreamWalker.ParseInlineImage``1(``0@)",
+        "value": 63
+      },
+      {
+        "file": "Excise.Core/Fonts/CffParser.cs",
+        "line": 414,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Fonts.CffParser.Type2CharstringWidth(System.Byte[],System.Collections.Generic.List{System.Byte[]},System.Collections.Generic.List{System.Byte[]},System.Int32,System.Int32,System.Int32,System.Int32)/local:Run(byte[], int)#0",
+        "value": 63
+      },
+      {
+        "file": "Excise.Cli/Commands/RedactCommand.cs",
+        "line": 12,
+        "symbol": "Excise.Cli/Excise.Cli.csproj::M:Excise.Cli.Commands.RedactCommand.Create",
+        "value": 59
+      },
+      {
+        "file": "Excise.Core/Redaction/MarkedContentCarrierScrubber.cs",
+        "line": 67,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Segmentation.MarkedContentCarrierScrubber.ScrubTerm(PdfDocument,System.Func{System.String,System.String},System.Int32@)",
+        "value": 58
+      },
+      {
+        "file": "Excise.Core/Filters/Ccitt/CcittFaxFilterDecoder.cs",
+        "line": 216,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Filters.Ccitt.CcittFaxFilterDecoder.DecodeTwoDimensionalRow(Excise.Core.Filters.Ccitt.CcittFaxFilterDecoder.CcittBitReader,System.Boolean[],System.Int32,Excise.Core.Filters.Ccitt.CcittFaxFilterDecoder.CcittTwoDimensionalState)",
+        "value": 57
+      },
+      {
+        "file": "Excise.Core/Content/ContentStreamWalker.cs",
+        "line": 1634,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Content.ContentStreamWalker.LoadFontDerivedState",
+        "value": 55
+      },
+      {
+        "file": "Excise.Core/Xfa/XfaSom.cs",
+        "line": 18,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Xfa.XfaSom.Evaluate(System.String,System.Nullable{XElement},XElement,XfaBudget)",
+        "value": 55
+      },
+      {
+        "file": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+        "line": 998,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Document.PdfAnnotationAuthoring.TurnedTextMarkup(PdfDocument,IReadOnlyList{System.ValueTuple{PdfRectangle,System.Int32,System.Int32}},System.String,System.String,System.String,System.ValueTuple{System.Double,System.Double,System.Double})",
+        "value": 53
+      },
+      {
+        "file": "Excise.Core/Fonts/TrueTypeFontFile.cs",
+        "line": 259,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Fonts.TrueTypeFontFile.ParseCmap(Excise.Core.Fonts.TrueTypeFontFile.BE,System.Int32)",
+        "value": 52
+      },
+      {
+        "file": "Excise.Core/Fonts/CMapTokenizer.cs",
+        "line": 19,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.CMapTokenizer.Tokenize(System.String)",
+        "value": 52
+      },
+      {
+        "file": "Excise.Core/Xfa/FormCalc/FormCalcBuiltins.Extra.cs",
+        "line": 405,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Xfa.FormCalc.FormCalcBuiltins.FormatNumber(FormCalcInterpreter,System.String,System.Double)",
+        "value": 49
+      }
+    ],
+    "Cyclomatic": [
+      {
+        "file": "Excise.Core/Content/ContentOperator.cs",
+        "line": 469,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Content.ContentOperator.CategorizeOperator(System.String)",
+        "value": 75
+      },
+      {
+        "file": "Excise.Rendering/ContentOperatorRoute.cs",
+        "line": 12,
+        "symbol": "Excise.Rendering/Excise.Rendering.csproj::M:Excise.Rendering.ContentOperatorRoute.Resolve(System.String)",
+        "value": 73
+      },
+      {
+        "file": "Excise.App/Views/MainWindow.axaml.cs",
+        "line": 1276,
+        "symbol": "Excise.App/Excise.App.csproj::M:Excise.App.Views.MainWindow.ExecuteWindowShortcut(MainWindowViewModel,Excise.App.Services.Input.WindowShortcut)",
+        "value": 66
+      },
+      {
+        "file": "Excise.App/Converters/EnumDisplayConverter.cs",
+        "line": 34,
+        "symbol": "Excise.App/Excise.App.csproj::M:Excise.App.Converters.EnumDisplayConverter.TryLabel(System.Object)",
+        "value": 61
+      },
+      {
+        "file": "Excise.Core/Redaction/HiddenTextDetector.cs",
+        "line": 109,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Segmentation.HiddenTextDetector.ScanPageCore(PdfPage,System.Int32,System.Boolean,System.Collections.Generic.List{PdfRectangle})",
+        "value": 60
+      },
+      {
+        "file": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
+        "line": 79,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Segmentation.PdfDocumentRedactionExtensions.RedactTextCore(PdfDocument,System.String,RedactionOptions,System.Action{System.Int32,System.Int32},System.Int32)",
+        "value": 59
+      },
+      {
+        "file": "Excise.Core/ColorSpaces/PdfFunctionEvaluator.cs",
+        "line": 400,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.ColorSpaces.PdfFunctionEvaluator.ExecuteCalculatorTokens(IReadOnlyList{System.String},Stack{System.Double})",
+        "value": 56
+      },
+      {
+        "file": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
+        "line": 893,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Segmentation.RedactionFeatureStripper.PruneUndrawnXObjects(PdfDocument,System.Collections.Generic.List{PdfDictionary},System.Collections.Generic.HashSet{System.Int32},System.Collections.Generic.ICollection{CarrierResult})",
+        "value": 51
+      },
+      {
+        "file": "Excise.Rendering/SkiaRenderer.Text.cs",
+        "line": 1692,
+        "symbol": "Excise.Rendering/Excise.Rendering.csproj::M:Excise.Rendering.RenderContext.RenderText(System.String,System.Byte[])",
+        "value": 51
+      },
+      {
+        "file": "Excise.Core/Content/ContentStreamWalker.cs",
+        "line": 1326,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Content.ContentStreamWalker.ParseInlineImage``1(``0@)",
+        "value": 49
+      },
+      {
+        "file": "Excise.Core/Xfa/XfaLeaf.cs",
+        "line": 107,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Xfa.XfaLeaf.From(XfaFormNode,XfaReport)",
+        "value": 48
+      },
+      {
+        "file": "Excise.Rendering/SkiaRenderer.Text.cs",
+        "line": 2688,
+        "symbol": "Excise.Rendering/Excise.Rendering.csproj::M:Excise.Rendering.RenderContext.RenderCidBytes(System.Byte[])",
+        "value": 46
+      },
+      {
+        "file": "Excise.Cli/Commands/RedactCommand.cs",
+        "line": 12,
+        "symbol": "Excise.Cli/Excise.Cli.csproj::M:Excise.Cli.Commands.RedactCommand.Create",
+        "value": 41
+      },
+      {
+        "file": "Excise.Core/Xfa/FormCalc/FormCalcBuiltins.cs",
+        "line": 124,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Xfa.FormCalc.FormCalcBuiltins.RegisterCore",
+        "value": 41
+      },
+      {
+        "file": "Excise.Core/Xfa/FormCalc/FormCalcBuiltins.Extra.cs",
+        "line": 405,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Xfa.FormCalc.FormCalcBuiltins.FormatNumber(FormCalcInterpreter,System.String,System.Double)",
+        "value": 40
+      },
+      {
+        "file": "Excise.Rendering/SkiaRenderer.Text.cs",
+        "line": 324,
+        "symbol": "Excise.Rendering/Excise.Rendering.csproj::M:Excise.Rendering.RenderContext.TryLoadEmbeddedTypeface(System.Nullable{Excise.Core.Primitives.PdfDictionary},System.Nullable{IReadOnlyDictionary{System.Int32,System.String}},System.String[],System.Char[],System.String,System.Single[],System.Int32,List{System.String})",
+        "value": 39
+      },
+      {
+        "file": "Excise.Core/Fonts/CffParser.cs",
+        "line": 414,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Fonts.CffParser.Type2CharstringWidth(System.Byte[],System.Collections.Generic.List{System.Byte[]},System.Collections.Generic.List{System.Byte[]},System.Int32,System.Int32,System.Int32,System.Int32)/local:Run(byte[], int)#0",
+        "value": 37
+      },
+      {
+        "file": "Excise.Avalonia/Controls/Viewer/ContinuousPageView.Pipeline.cs",
+        "line": 1100,
+        "symbol": "Excise.Avalonia/Excise.Avalonia.csproj::M:Excise.Avalonia.Controls.ContinuousPageView.RenderContinuousCellsAsync(PdfPageSlot,System.Collections.Generic.List{System.ValueTuple{GridCell,ContinuousTileKey}},System.Nullable{ContinuousLookAheadBatch})",
+        "value": 36
+      },
+      {
+        "file": "Excise.Core/Xfa/FormCalc/FormCalcLexer.cs",
+        "line": 68,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Xfa.FormCalc.FormCalcLexer.Next",
+        "value": 35
+      },
+      {
+        "file": "Excise.Core/Xfa/XfaStyle.cs",
+        "line": 130,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Xfa.XfaFontSpec.BaseFontName(System.String,System.Boolean,System.Boolean)",
+        "value": 35
+      }
+    ],
+    "ExecutableLines": [
+      {
+        "file": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
+        "line": 79,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Segmentation.PdfDocumentRedactionExtensions.RedactTextCore(PdfDocument,System.String,RedactionOptions,System.Action{System.Int32,System.Int32},System.Int32)",
+        "value": 115
+      },
+      {
+        "file": "Excise.Core/Xfa/FormCalc/FormCalcBuiltins.cs",
+        "line": 124,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Xfa.FormCalc.FormCalcBuiltins.RegisterCore",
+        "value": 102
+      },
+      {
+        "file": "Excise.Rendering/SkiaRenderer.Text.cs",
+        "line": 2688,
+        "symbol": "Excise.Rendering/Excise.Rendering.csproj::M:Excise.Rendering.RenderContext.RenderCidBytes(System.Byte[])",
+        "value": 96
+      },
+      {
+        "file": "Excise.Rendering/SkiaRenderer.Text.cs",
+        "line": 1692,
+        "symbol": "Excise.Rendering/Excise.Rendering.csproj::M:Excise.Rendering.RenderContext.RenderText(System.String,System.Byte[])",
+        "value": 96
+      },
+      {
+        "file": "Excise.Avalonia/Controls/Viewer/ContinuousPageView.Pipeline.cs",
+        "line": 1100,
+        "symbol": "Excise.Avalonia/Excise.Avalonia.csproj::M:Excise.Avalonia.Controls.ContinuousPageView.RenderContinuousCellsAsync(PdfPageSlot,System.Collections.Generic.List{System.ValueTuple{GridCell,ContinuousTileKey}},System.Nullable{ContinuousLookAheadBatch})",
+        "value": 90
+      },
+      {
+        "file": "Excise.Cli/Commands/RedactCommand.cs",
+        "line": 12,
+        "symbol": "Excise.Cli/Excise.Cli.csproj::M:Excise.Cli.Commands.RedactCommand.Create",
+        "value": 89
+      },
+      {
+        "file": "Excise.Core/Redaction/HiddenTextDetector.cs",
+        "line": 109,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Segmentation.HiddenTextDetector.ScanPageCore(PdfPage,System.Int32,System.Boolean,System.Collections.Generic.List{PdfRectangle})",
+        "value": 85
+      },
+      {
+        "file": "Excise.App/App.axaml.cs",
+        "line": 50,
+        "symbol": "Excise.App/Excise.App.csproj::M:Excise.App.App.OnFrameworkInitializationCompleted",
+        "value": 81
+      },
+      {
+        "file": "Excise.Avalonia/Controls/Viewer/SinglePageView.Rendering.cs",
+        "line": 286,
+        "symbol": "Excise.Avalonia/Excise.Avalonia.csproj::M:Excise.Avalonia.Controls.SinglePageView.RenderCurrentPageAsync",
+        "value": 75
+      },
+      {
+        "file": "Excise.Core/Redaction/ImageRegionRedactor.cs",
+        "line": 45,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Segmentation.ImageRegionRedactor.TryRegionRedact(PdfPage,PdfStream,System.Double,System.Double,System.Double,System.Double,System.Double,System.Double,PdfRectangle,System.String@)",
+        "value": 75
+      },
+      {
+        "file": "Excise.Core/Fonts/CffParser.cs",
+        "line": 64,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Fonts.CffParser.Parse(System.Byte[])",
+        "value": 72
+      },
+      {
+        "file": "Excise.Core/Graphics/PdfTrueTypeFont.cs",
+        "line": 176,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Graphics.PdfTrueTypeFont.BuildFontDictionary(PdfDocument)",
+        "value": 72
+      },
+      {
+        "file": "Excise.Core/Xfa/XfaSom.cs",
+        "line": 18,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Xfa.XfaSom.Evaluate(System.String,System.Nullable{XElement},XElement,XfaBudget)",
+        "value": 72
+      },
+      {
+        "file": "Excise.App/Views/MainWindow.axaml.cs",
+        "line": 1276,
+        "symbol": "Excise.App/Excise.App.csproj::M:Excise.App.Views.MainWindow.ExecuteWindowShortcut(MainWindowViewModel,Excise.App.Services.Input.WindowShortcut)",
+        "value": 70
+      },
+      {
+        "file": "Excise.Core/ColorSpaces/PdfFunctionEvaluator.cs",
+        "line": 400,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.ColorSpaces.PdfFunctionEvaluator.ExecuteCalculatorTokens(IReadOnlyList{System.String},Stack{System.Double})",
+        "value": 70
+      },
+      {
+        "file": "Excise.Core/Redaction/RedactedCopySafetyPolicy.cs",
+        "line": 35,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Segmentation.RedactedCopySafetyPolicy.Evaluate(PdfDocument,RedactedCopySafetyRequest)",
+        "value": 69
+      },
+      {
+        "file": "Excise.Rendering/SkiaRenderer.XObjects.cs",
+        "line": 1064,
+        "symbol": "Excise.Rendering/Excise.Rendering.csproj::M:Excise.Rendering.RenderContext.CompositeDeviceCmykGroupBitmap(SKBitmap,DeviceCmykBackdrop,System.Int32,System.Int32,SKBlendMode,System.Single,System.Byte[],System.Boolean,System.Nullable{DeviceCmykBackdrop})",
+        "value": 68
+      },
+      {
+        "file": "Excise.Rendering/SkiaRenderer.XObjects.cs",
+        "line": 454,
+        "symbol": "Excise.Rendering/Excise.Rendering.csproj::M:Excise.Rendering.RenderContext.TryRenderDeviceCmykFormGroup(Excise.Core.Primitives.PdfStream,System.Nullable{Excise.Core.Primitives.PdfDictionary},GraphicsState,Excise.Rendering.RenderContext.DeviceCmykGroupEntry)",
+        "value": 68
+      },
+      {
+        "file": "Excise.Core/Filters/Jbig2/Jbig2SymbolDictionaryDecoder.cs",
+        "line": 81,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Filters.Jbig2.Jbig2SymbolDictionaryDecoder.DecodeHuffman(Jbig2SymbolDictionarySegment,System.ReadOnlySpan{System.Byte},System.Collections.Generic.IReadOnlyList{Jbig2Bitmap},System.Collections.Generic.IReadOnlyList{Jbig2HuffmanTable})",
+        "value": 67
+      },
+      {
+        "file": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+        "line": 998,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Document.PdfAnnotationAuthoring.TurnedTextMarkup(PdfDocument,IReadOnlyList{System.ValueTuple{PdfRectangle,System.Int32,System.Int32}},System.String,System.String,System.String,System.ValueTuple{System.Double,System.Double,System.Double})",
+        "value": 64
+      }
+    ],
+    "MaxNesting": [
+      {
+        "file": "Excise.Core/Redaction/PdfDocumentSanitizer.cs",
+        "line": 954,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Operations.PdfDocumentSanitizer.ScrubAnnotationContents(PdfDocument,Excise.Core.Operations.PdfDocumentSanitizer.CarrierScrub)",
+        "value": 7
+      },
+      {
+        "file": "Excise.Core/Redaction/MarkedContentCarrierScrubber.cs",
+        "line": 67,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Segmentation.MarkedContentCarrierScrubber.ScrubTerm(PdfDocument,System.Func{System.String,System.String},System.Int32@)",
+        "value": 7
+      },
+      {
+        "file": "Excise.Rendering/RawSampleImageDecoder.cs",
+        "line": 242,
+        "symbol": "Excise.Rendering/Excise.Rendering.csproj::M:Excise.Rendering.RawSampleImageDecoder.DecodeGeneralRows(Excise.Rendering.RawSampleImageDecodeRequest,PdfColorSpace,System.Nullable{ImageColorConverter},System.Double,System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean,Span{System.Byte},System.Int32,System.Int32)",
+        "value": 7
+      },
+      {
+        "file": "Excise.App/App.axaml.cs",
+        "line": 50,
+        "symbol": "Excise.App/Excise.App.csproj::M:Excise.App.App.OnFrameworkInitializationCompleted",
+        "value": 6
+      },
+      {
+        "file": "Excise.Core/Parsing/PdfLexer.cs",
+        "line": 491,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Parsing.PdfLexer.ReadLiteralString(System.Int64)",
+        "value": 6
+      },
+      {
+        "file": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
+        "line": 79,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Segmentation.PdfDocumentRedactionExtensions.RedactTextCore(PdfDocument,System.String,RedactionOptions,System.Action{System.Int32,System.Int32},System.Int32)",
+        "value": 6
+      },
+      {
+        "file": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
+        "line": 893,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Segmentation.RedactionFeatureStripper.PruneUndrawnXObjects(PdfDocument,System.Collections.Generic.List{PdfDictionary},System.Collections.Generic.HashSet{System.Int32},System.Collections.Generic.ICollection{CarrierResult})",
+        "value": 6
+      },
+      {
+        "file": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
+        "line": 1130,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Segmentation.RedactionFeatureStripper.RemoveAnnotations(PdfDocument,System.Boolean,System.Boolean,System.Boolean)",
+        "value": 6
+      },
+      {
+        "file": "Excise.Core/Xfa/XfaText.cs",
+        "line": 47,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Xfa.XfaText.Layout(IReadOnlyList{XfaParagraph},System.Double,System.Boolean,XfaParaSpec,XfaFontSpec,XfaBudget)",
+        "value": 6
+      },
+      {
+        "file": "Excise.Rendering/SkiaRenderer.Text.cs",
+        "line": 1692,
+        "symbol": "Excise.Rendering/Excise.Rendering.csproj::M:Excise.Rendering.RenderContext.RenderText(System.String,System.Byte[])",
+        "value": 6
+      },
+      {
+        "file": "Excise.Cli/Commands/UnredactCommandOutput.cs",
+        "line": 260,
+        "symbol": "Excise.Cli/Excise.Cli.csproj::M:Excise.Cli.Commands.UnredactCommandOutput.WriteRecoveryModel(System.Nullable{UnredactRecoveryModel},TextWriter)",
+        "value": 5
+      },
+      {
+        "file": "Excise.Core/ColorSpaces/PdfFunctionEvaluator.cs",
+        "line": 400,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.ColorSpaces.PdfFunctionEvaluator.ExecuteCalculatorTokens(IReadOnlyList{System.String},Stack{System.Double})",
+        "value": 5
+      },
+      {
+        "file": "Excise.Core/Content/ContentStreamWalker.cs",
+        "line": 1634,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Content.ContentStreamWalker.LoadFontDerivedState",
+        "value": 5
+      },
+      {
+        "file": "Excise.Core/Content/ContentStreamWalker.cs",
+        "line": 2157,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Content.ContentStreamWalker.ParseStringLiteral",
+        "value": 5
+      },
+      {
+        "file": "Excise.Core/Document/PdfEmbeddedFileParser.cs",
+        "line": 18,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Document.PdfEmbeddedFileParser.ParseEmbeddedFiles(PdfDocument)",
+        "value": 5
+      },
+      {
+        "file": "Excise.Core/Fonts/TrueTypeFontFile.cs",
+        "line": 259,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Fonts.TrueTypeFontFile.ParseCmap(Excise.Core.Fonts.TrueTypeFontFile.BE,System.Int32)",
+        "value": 5
+      },
+      {
+        "file": "Excise.Core/Fonts/TrueTypeFontFile.cs",
+        "line": 358,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Fonts.TrueTypeFontFile.ParseSubtableInto(Excise.Core.Fonts.TrueTypeFontFile.BE,System.Int32,Dictionary{System.Int32,System.Int32})",
+        "value": 5
+      },
+      {
+        "file": "Excise.Core/Redaction/PdfDocumentSanitizer.cs",
+        "line": 907,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Operations.PdfDocumentSanitizer.OptionalContentStrings(PdfDocument)",
+        "value": 5
+      },
+      {
+        "file": "Excise.Core/Redaction/Recovery/MarkedContentTextRecovery.cs",
+        "line": 87,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Redaction.Recovery.MarkedContentTextRecovery.Drawn(PdfDocument,System.Nullable{PdfDictionary},System.Nullable{PdfDictionary})",
+        "value": 5
+      },
+      {
+        "file": "Excise.Core/Redaction/CarrierTextRecovery.cs",
+        "line": 607,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Text.Segmentation.CarrierTextRecovery.ScanAppearance(PdfDocument,PdfPage,PdfDictionary,System.Nullable{PdfDictionary},Excise.Core.Text.Segmentation.CarrierTextRecovery.Collector,System.Int32,System.Int32,System.String,System.String)",
+        "value": 5
+      }
+    ],
+    "ParameterCount": [
+      {
+        "file": "Excise.Core/Document/PdfAnnotation.cs",
+        "line": 228,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Document.PdfAnnotation.#ctor(Excise.Core.Document.PdfAnnotationSubtype,PdfRectangle,System.String,System.String,System.Nullable{DateTimeOffset},System.Nullable{DateTimeOffset},System.Nullable{System.ValueTuple{System.Double,System.Double,System.Double}},Excise.Core.Document.PdfAnnotationFlags,System.String,System.Nullable{IReadOnlyList{PdfRectangle}},System.Nullable{System.Int32},System.String,System.Boolean,System.String,System.Nullable{System.ValueTuple{System.Double,System.Double,System.Double,System.Double}},System.Nullable{System.ValueTuple{System.String,System.String}},System.Nullable{IReadOnlyList{System.ValueTuple{System.Double,System.Double}}},System.Nullable{IReadOnlyList{IReadOnlyList{System.ValueTuple{System.Double,System.Double}}}},System.String,System.Byte[],System.String,System.Nullable{System.Double},System.Nullable{System.ValueTuple{System.Double,System.Double,System.Double}},System.String,System.Nullable{IReadOnlyList{System.Double}},System.Boolean,PdfDictionary,System.Nullable{PdfRectangle})",
+        "value": 28
+      },
+      {
+        "file": "Excise.App/ViewModels/MainWindowViewModel.cs",
+        "line": 119,
+        "symbol": "Excise.App/Excise.App.csproj::M:Excise.App.ViewModels.MainWindowViewModel.#ctor(ILogger{Excise.App.ViewModels.MainWindowViewModel},PdfDocumentService,RedactedCopyDialogFormatter,RedactionWorkflowService,PdfTextExtractionService,DocumentSearchSession,DocumentTextIndexSession,FilenameSuggestionService,ToastService,IUserDialogService,SignatureVerificationWorkflowService,PageOrganizationWorkflowService,DocumentImageExportWorkflowService,AnnotationWorkflowService,ReleasedMemoryReclaimer,Services.Printing.DocumentPrintWorkflowService,IFilePicker,IWindowHost,ITextClipboard,ISettingsStore,IRecentFilesStore)",
+        "value": 21
+      },
+      {
+        "file": "Excise.Core/Fonts/TrueTypeFontFile.cs",
+        "line": 41,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Fonts.TrueTypeFontFile.#ctor(System.Byte[],System.UInt16,System.Int32,System.String,System.Int16,System.Int16,System.Int16,System.Int16,System.Int16,System.Int16,System.Boolean,System.Boolean,System.Boolean,System.UInt16[],Dictionary{System.Int32,System.Int32},System.Nullable{Dictionary{System.Int32,System.Int32}},System.Nullable{Dictionary{System.Int32,System.Int32}},Dictionary{System.Int32,System.String})",
+        "value": 18
+      },
+      {
+        "file": "Excise.Rendering/Shadings/MeshRasterizer.cs",
+        "line": 64,
+        "symbol": "Excise.Rendering/Excise.Rendering.csproj::M:Excise.Rendering.Shadings.MeshRasterizer.RasterizeTriangle(Excise.Rendering.Shadings.MeshRasterTarget,SKPoint,SKPoint,SKPoint,SKColor,SKColor,SKColor,System.Double,System.Double,System.Double,System.Double,System.Double,System.Double,System.Double,System.Double)",
+        "value": 15
+      },
+      {
+        "file": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+        "line": 1209,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Document.PdfAnnotationAuthoring.AddArrowAnnotation(PdfDocument,System.Int32,System.Double,System.Double,System.Double,System.Double,System.String,System.String,System.Double,System.Double,System.Double,System.Double,System.String,System.String)",
+        "value": 14
+      },
+      {
+        "file": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+        "line": 385,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Document.PdfAnnotationAuthoring.AddFreeTextAnnotation(PdfDocument,System.Int32,PdfRectangle,System.String,System.String,System.Double,System.Double,System.Double,System.Double,Excise.Core.Document.PdfFreeTextQuadding,System.Double,System.Nullable{System.Double},System.Nullable{System.Double},System.Nullable{System.Double})",
+        "value": 14
+      },
+      {
+        "file": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+        "line": 1228,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Document.PdfAnnotationAuthoring.AddLineOrArrowAnnotation(PdfDocument,System.Int32,System.Double,System.Double,System.Double,System.Double,System.String,System.String,System.Double,System.Double,System.Double,System.Double,System.String,System.String)",
+        "value": 14
+      },
+      {
+        "file": "Excise.Core/Document/PdfField.cs",
+        "line": 231,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Document.PdfField.#ctor(PdfDocument,System.String,System.String,PdfFieldType,System.Nullable{IReadOnlyList{System.String}},System.Nullable{PdfRectangle},System.Nullable{System.Int32},System.Boolean,System.Boolean,System.Boolean,PdfDictionary,IReadOnlyList{PdfDictionary},System.Int32,IReadOnlyList{PdfFieldWidget})",
+        "value": 14
+      },
+      {
+        "file": "Excise.Core/ColorSpaces/PdfColorSpace.cs",
+        "line": 37,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.ColorSpaces.PdfColorSpace.#ctor(PdfColorSpaceType,System.Int32,Excise.Core.ColorSpaces.PdfColorSpace,System.Byte[],Excise.Core.ColorSpaces.PdfColorSpace,System.Nullable{PdfObject},System.Double[],System.Double[],System.Double[],System.Double[],System.Nullable{PdfIccProfile},System.Nullable{PdfIccProfile},PdfColorConverter.CmykPolicy)",
+        "value": 13
+      },
+      {
+        "file": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+        "line": 1417,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Document.PdfAnnotationAuthoring.AddPolyAnnotation(PdfDocument,System.Int32,IReadOnlyList{System.ValueTuple{System.Double,System.Double}},System.Boolean,System.String,System.String,System.Double,System.Double,System.Double,System.Double,System.Nullable{System.Double},System.Nullable{System.Double},System.Nullable{System.Double})",
+        "value": 13
+      },
+      {
+        "file": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+        "line": 1938,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Document.PdfAnnotationAuthoring.AddShapeAnnotation(PdfDocument,System.Int32,PdfRectangle,System.Boolean,System.String,System.String,System.Double,System.Double,System.Double,System.Double,System.Nullable{System.Double},System.Nullable{System.Double},System.Nullable{System.Double})",
+        "value": 13
+      },
+      {
+        "file": "Excise.Core/Automation/PdfCommandMetadata.cs",
+        "line": 9,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Automation.PdfCommandMetadata.#ctor(System.String,System.String,System.String,System.String,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.String,System.Nullable{IReadOnlyList{PdfCommandParameterMetadata}},System.Nullable{IReadOnlyList{System.String}})",
+        "value": 12
+      },
+      {
+        "file": "Excise.Core/Automation/PdfCommandRegistry.cs",
+        "line": 299,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Automation.PdfCommandRegistry.New(System.String,System.String,System.String,System.String,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.String,System.Nullable{IReadOnlyList{PdfCommandParameterMetadata}},System.Nullable{IReadOnlyList{System.String}})",
+        "value": 12
+      },
+      {
+        "file": "Excise.Core/Document/AcroFormAuthoring.cs",
+        "line": 40,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Document.AcroFormAuthoring.AddTextField(PdfDocument,System.Int32,PdfRectangle,System.String,System.String,System.Boolean,System.Boolean,System.Boolean,System.String,System.Nullable{System.Int32},System.Boolean,System.Nullable{Graphics.PdfFont})",
+        "value": 12
+      },
+      {
+        "file": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+        "line": 335,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Document.PdfAnnotationAuthoring.AddCircleAnnotation(PdfDocument,System.Int32,PdfRectangle,System.String,System.String,System.Double,System.Double,System.Double,System.Double,System.Nullable{System.Double},System.Nullable{System.Double},System.Nullable{System.Double})",
+        "value": 12
+      },
+      {
+        "file": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+        "line": 1184,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Document.PdfAnnotationAuthoring.AddLineAnnotation(PdfDocument,System.Int32,System.Double,System.Double,System.Double,System.Double,System.String,System.String,System.Double,System.Double,System.Double,System.Double)",
+        "value": 12
+      },
+      {
+        "file": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+        "line": 1381,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Document.PdfAnnotationAuthoring.AddPolygonAnnotation(PdfDocument,System.Int32,IReadOnlyList{System.ValueTuple{System.Double,System.Double}},System.String,System.String,System.Double,System.Double,System.Double,System.Double,System.Nullable{System.Double},System.Nullable{System.Double},System.Nullable{System.Double})",
+        "value": 12
+      },
+      {
+        "file": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
+        "line": 312,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Document.PdfAnnotationAuthoring.AddSquareAnnotation(PdfDocument,System.Int32,PdfRectangle,System.String,System.String,System.Double,System.Double,System.Double,System.Double,System.Nullable{System.Double},System.Nullable{System.Double},System.Nullable{System.Double})",
+        "value": 12
+      },
+      {
+        "file": "Excise.Core/Content/PdfFormAutoDetector.cs",
+        "line": 177,
+        "symbol": "Excise.Core/Excise.Core.csproj::M:Excise.Core.Document.PdfFormAutoDetector.AnalysePaintedPath(List{Excise.Core.Document.SuggestedField},System.Int32,System.Boolean,System.Boolean,System.Double,System.Double,System.Double,System.Double,List{System.ValueTuple{System.Double,System.Double,System.Double,System.Double}},ContentTransform,System.Int32@,System.Int32@)",
+        "value": 12
+      },
+      {
+        "file": "Excise.Rendering/RawSampleImageDecoder.cs",
+        "line": 242,
+        "symbol": "Excise.Rendering/Excise.Rendering.csproj::M:Excise.Rendering.RawSampleImageDecoder.DecodeGeneralRows(Excise.Rendering.RawSampleImageDecodeRequest,PdfColorSpace,System.Nullable{ImageColorConverter},System.Double,System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean,Span{System.Byte},System.Int32,System.Int32)",
+        "value": 12
+      }
+    ]
+  },
+  "policy": "Separate metric rankings, not a composite score, defect verdict, deletion proof or release gate.",
+  "schemaVersion": 1,
+  "scope": "shipping callable review candidates",
+  "unknownTestEvidence": {
+    "Coverage": {
+      "Artifacts": [],
+      "Status": "not-supplied"
+    },
+    "Execution": {
+      "Artifacts": [],
+      "Status": "not-supplied"
+    },
+    "UnresolvedTestInvocationCount": 171
+  }
+}
