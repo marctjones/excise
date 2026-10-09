@@ -224,6 +224,10 @@ public class TextExtractor
     // carry (see AddLetter). Null on every other walk.
     private string? _appearanceFontName;
 
+    // While an appearance is walked: the widget whose appearance it is (see
+    // AddLetter, #2041). Null on every other walk.
+    private PdfDictionary? _appearanceWidget;
+
     /// <summary>The widget annotations in this page's <c>/Annots</c>.</summary>
     private HashSet<PdfDictionary> PageWidgetSet()
     {
@@ -309,6 +313,7 @@ public class TextExtractor
         _hiddenOptionalContentDepth = 0;
         _unscopedHiddenDepth = 0;
         _appearanceFontName = fontName;
+        _appearanceWidget = widget;
         try
         {
             RunFormXObject(_appearanceWalker ??= CreateWalker(Array.Empty<byte>()), appearance,
@@ -317,6 +322,7 @@ public class TextExtractor
         finally
         {
             _appearanceFontName = null;
+            _appearanceWidget = null;
             while (_unscopedHiddenStack.Count > savedUnscopedCount)
                 _unscopedHiddenStack.Pop();
             _hiddenOptionalContentDepth = savedHidden;
@@ -821,6 +827,9 @@ public class TextExtractor
             BaselineAngle = glyph.BaselineAngle,
             // #776: the innermost enclosing /MCID span, for the a11y bridge.
             MarkedContentId = appearanceFont == null ? _currentMcid : null,
+            // #2041: which widget drew it, so redaction selects that field by
+            // identity, wherever the glyph lands (outside /Rect, beyond /BBox).
+            SourceWidget = appearanceFont == null ? null : _appearanceWidget,
             // #1091/#1092: where this glyph's code lives, for the operand rewrite.
             OperandByteOffset = appearanceFont == null ? glyph.OperandByteOffset : -1,
             TjElementIndex = appearanceFont == null ? glyph.TjElementIndex : -1,

@@ -301,6 +301,18 @@ internal static class QpdfReferenceTool
     }
 
     /// <summary>
+    /// qpdf's own writer with <c>--object-streams=generate</c>: every non-stream object it can
+    /// compress goes into an <c>/ObjStm</c>, behind a cross-reference stream. An input variant
+    /// built by a tool that is not excise, so a test can check that excise reads (and redacts)
+    /// dictionaries it finds only inside object streams. False on any failure.
+    /// </summary>
+    public static bool GenerateObjectStreams(string inputPath, string outputPath, int timeoutMs = 30_000)
+    {
+        var result = Run(new[] { "--object-streams=generate", inputPath, outputPath }, timeoutMs);
+        return result?.ExitCode == 0 && System.IO.File.Exists(outputPath);
+    }
+
+    /// <summary>
     /// Every annotation qpdf's OWN parser finds in the file, with the fields a
     /// structural check needs (#933).
     ///

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Excise.Core.Content;
 using Excise.Core.Document;
+using Excise.Core.Primitives;
 
 namespace Excise.Core.Text.Segmentation;
 
@@ -154,6 +155,8 @@ public static class PdfDocumentRedactionExtensions
 
         var pageCount = document.PageCount;
         progress?.Invoke(0, pageCount);
+        // #2041: which appearance streams this redaction has rewritten, across pages and passes.
+        var termScrubState = new InteractiveRedactionScrubber.TermScrubState();
         for (int pageNum = 1; pageNum <= pageCount; pageNum++)
         {
             var page = document.GetPage(pageNum);
@@ -216,6 +219,12 @@ public static class PdfDocumentRedactionExtensions
                     // positions and stay separate. Two different visible words
                     // can never share a position, so coincidence ⟺ overprint.
                     var countedCenters = new List<(double X, double Y)>();
+                    // #2041: the interactive matches of this pass, scrubbed
+                    // together after the loop (one scrub per pass, so a field
+                    // holding the term several times is rewritten once).
+                    var interactiveAreas = new List<PdfRectangle>();
+                    var drawingWidgets = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+                    var unattributedAreas = new List<PdfRectangle>();
                     foreach (var matchLetters in matches)
                     {
                         var bbox = BoundingBoxOf(matchLetters);
@@ -250,11 +259,25 @@ public static class PdfDocumentRedactionExtensions
 
                         var interactiveOnly = IsInteractiveOnlyMatch(matchLetters);
                         if (interactiveOnly)
+                        {
                             // TERM-aware (#1038). The area-only form deletes the
                             // whole field value; on issue18036.pdf that was 545
-                            // of 568 characters to remove one word.
-                            InteractiveRedactionScrubber.ScrubTerm(
-                                page, bbox, text, options.CaseSensitive, options.WholeWord);
+                            // of 568 characters to remove one word. #2041: a
+                            // glyph a widget's appearance drew selects that
+                            // widget's field by identity, wherever it landed;
+                            // only letters no widget drew select by rectangle.
+                            interactiveAreas.Add(bbox);
+                            var unattributed = new List<Letter>();
+                            foreach (var letter in matchLetters)
+                            {
+                                if (letter.SourceWidget is { } widget)
+                                    drawingWidgets.Add(widget);
+                                else
+                                    unattributed.Add(letter);
+                            }
+                            if (unattributed.Count > 0)
+                                unattributedAreas.Add(BoundingBoxOf(unattributed));
+                        }
 
                         // #1791: one set of boxes per LINE of the match. A match
                         // that wraps spans two lines, and one box around it covers
@@ -282,6 +305,11 @@ public static class PdfDocumentRedactionExtensions
                                     : lineBox);
                         }
                     }
+
+                    if (interactiveAreas.Count > 0)
+                        InteractiveRedactionScrubber.ScrubTerm(
+                            page, interactiveAreas, drawingWidgets, unattributedAreas,
+                            text, options.CaseSensitive, options.WholeWord, termScrubState);
 
                     if (contentAreas.Count > 0)
                     {

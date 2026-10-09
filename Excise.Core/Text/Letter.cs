@@ -1,4 +1,5 @@
 using Excise.Core.Document;
+using Excise.Core.Primitives;
 
 namespace Excise.Core.Text;
 
@@ -156,6 +157,15 @@ public class Letter
     /// runs along this direction, so line grouping reads it in that frame.
     /// </summary>
     internal double BaselineAngle { get; set; }
+
+    /// <summary>
+    /// #2041: the widget annotation whose normal appearance drew this glyph, for a letter read
+    /// from a shown widget's <c>/AP /N</c>; null for every other letter (page content, and the
+    /// synthetic letters laid out from a field's <c>/V</c>). Redaction routes a match to the
+    /// field by this identity, not by where the glyph lands: a scrolled multiline field draws
+    /// lines outside its <c>/Rect</c> that the <c>/BBox</c> clips, still in the file.
+    /// </summary>
+    internal PdfDictionary? SourceWidget { get; set; }
 
     /// <summary>True when this glyph paints nothing (§9.3.6 modes 3 and 7).</summary>
     public bool IsInvisible => TextRenderMode == 3 || TextRenderMode == 7;

@@ -15,7 +15,7 @@ internal static class InteractiveRedactionScrubber
         var changed = false;
         var pruneCandidates = new HashSet<int>();
 
-        changed |= ScrubFormFields(page, area, pruneCandidates);
+        changed |= ScrubFormFields(page, IntersectsAny([area]), pruneCandidates);
         changed |= RemoveIntersectingAnnotations(page, area, pruneCandidates);
 
         if (pruneCandidates.Count > 0)
@@ -25,6 +25,33 @@ internal static class InteractiveRedactionScrubber
             page.InvalidateTextExtractionCache();
 
         return changed;
+    }
+
+    /// <summary>
+    /// The area selection: a field is scrubbed when one of its widgets on this
+    /// page has a <c>/Rect</c> that intersects one of <paramref name="areas"/>.
+    /// </summary>
+    private static Func<PdfPage, PdfField, IReadOnlyList<PdfFieldWidget>, bool> IntersectsAny(
+        IReadOnlyList<PdfRectangle> areas)
+        => (page, _, widgets) => areas.Count > 0 && widgets.Any(w =>
+            w.PageNumber == page.PageNumber && areas.Any(a => w.Rect.IntersectsWith(a)));
+
+    /// <summary>
+    /// #2041 — state one <c>RedactText</c> call carries across its page passes:
+    /// which appearance streams it has already rewritten. An appearance can be
+    /// reached more than once (a field matched on two passes, a stream shared by
+    /// two widgets, a field's widgets on two pages), and a second rewrite of a
+    /// stream that no longer holds the term finds nothing and would drop the
+    /// appearance the first one just fixed.
+    /// </summary>
+    internal sealed class TermScrubState
+    {
+        /// <summary>Original appearance stream to its rewritten copy; null when it could not be
+        /// rewritten (every holder then drops its appearance).</summary>
+        public Dictionary<PdfStream, PdfReference?> Rewritten { get; } = new(ReferenceEqualityComparer.Instance);
+
+        /// <summary>The copies this redaction wrote: already free of the term.</summary>
+        public HashSet<PdfStream> Clean { get; } = new(ReferenceEqualityComparer.Instance);
     }
 
     /// <summary>
@@ -66,13 +93,55 @@ internal static class InteractiveRedactionScrubber
         bool wholeWord = false)   // #1052
     {
         if (string.IsNullOrEmpty(term)) return ScrubArea(page, area);
-
         area = area.Normalize();
+        return ScrubTerm(page, [area], Array.Empty<PdfDictionary>(), [area], term, caseSensitive, wholeWord,
+            new TermScrubState());
+    }
+
+    /// <summary>
+    /// #2041 — the term scrub for one page pass of <c>RedactText</c>, every
+    /// interactive match at once.
+    ///
+    /// <para><b>Fields are selected by what their appearance DRAWS.</b> A
+    /// letter read from a widget's appearance names that widget
+    /// (<see cref="Letter.SourceWidget"/>), and the field owning it is scrubbed
+    /// wherever the glyph landed. Selecting by rectangle (the match box against
+    /// the widget <c>/Rect</c>) missed a scrolled multiline field: its
+    /// appearance draws the lines below <c>/Rect</c> that its <c>/BBox</c>
+    /// clips, the file holds them and search finds them, and no field was
+    /// scrubbed (pdfjs annotation-text-widget.pdf: "Etiam" located, 0 removed,
+    /// reported survived). The match box can also fall on ANOTHER widget, whose
+    /// appearance the scrub would then drop for not holding the term.</para>
+    ///
+    /// <para><paramref name="unattributedAreas"/> are the boxes of match letters
+    /// no widget drew (a field's <c>/V</c> laid out in its <c>/Rect</c>, a
+    /// hidden widget's text): those still select by rectangle, as before.
+    /// <paramref name="matchAreas"/> (every interactive match) drive the
+    /// non-widget annotation removal, unchanged.</para>
+    /// </summary>
+    internal static bool ScrubTerm(
+        PdfPage page,
+        IReadOnlyList<PdfRectangle> matchAreas,
+        IReadOnlyCollection<PdfDictionary> drawingWidgets,
+        IReadOnlyList<PdfRectangle> unattributedAreas,
+        string term,
+        bool caseSensitive,
+        bool wholeWord,
+        TermScrubState state)
+    {
         var changed = false;
         var pruneCandidates = new HashSet<int>();
 
-        changed |= ScrubFormFields(page, area, pruneCandidates, term, caseSensitive, wholeWord);
-        changed |= RemoveIntersectingAnnotations(page, area, pruneCandidates);
+        var drawn = new HashSet<PdfDictionary>(drawingWidgets, ReferenceEqualityComparer.Instance);
+        var byRect = IntersectsAny(unattributedAreas.Select(a => a.Normalize()).ToList());
+        changed |= ScrubFormFields(
+            page,
+            (p, field, widgets) => drawn.Contains(field.RawDictionary)
+                                   || field.WidgetDictionaries.Any(drawn.Contains)
+                                   || byRect(p, field, widgets),
+            pruneCandidates, term, caseSensitive, wholeWord, state);
+        foreach (var area in matchAreas)
+            changed |= RemoveIntersectingAnnotations(page, area.Normalize(), pruneCandidates);
 
         if (pruneCandidates.Count > 0)
             PruneUnreachableCandidates(page.Document, pruneCandidates);
@@ -234,12 +303,14 @@ internal static class InteractiveRedactionScrubber
 
     private static bool ScrubFormFields(
         PdfPage page,
-        PdfRectangle area,
+        Func<PdfPage, PdfField, IReadOnlyList<PdfFieldWidget>, bool> selected,
         HashSet<int> pruneCandidates,
         string? term = null,
         bool caseSensitive = false,
-        bool wholeWord = false)
+        bool wholeWord = false,
+        TermScrubState? state = null)
     {
+        state ??= new TermScrubState();
         IReadOnlyList<PdfField> fields;
         try { fields = page.GetFormFields(); }
         catch (Exception ex) when (ex is not OutOfMemoryException) { return false; }
@@ -249,7 +320,7 @@ internal static class InteractiveRedactionScrubber
         // ONE dictionary, so its /AP is reached twice (as field, as widget).
         // Rewriting removes the term the first time; the second pass would find
         // no match and drop the appearance we just fixed. Process each /AP once.
-        var processedAp = new HashSet<PdfDictionary>();
+        var processedAp = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
         // #1499: every widget this scrub ran over, so its appearance can be
         // accounted for ONCE at the end (see SettleWidgetAppearances). A
         // HashSet<PdfDictionary> is reference-keyed — PdfDictionary does not
@@ -263,7 +334,7 @@ internal static class InteractiveRedactionScrubber
                     ? new[] { new PdfFieldWidget(rect, field.PageNumber, exportValue: null) }
                     : Array.Empty<PdfFieldWidget>();
 
-            if (!widgets.Any(w => w.PageNumber == page.PageNumber && w.Rect.IntersectsWith(area)))
+            if (!selected(page, field, widgets))
                 continue;
 
             // #1760: /V on a Button holds an on/off STATE NAME
@@ -321,7 +392,7 @@ internal static class InteractiveRedactionScrubber
                 // dropping /AP: the same fail-closed policy every other field
                 // type already gets when its widget rect intersects the match.
                 changed |= RewriteOrDropAppearance(
-                    page, field.RawDictionary, defaultResources, term, caseSensitive, processedAp, wholeWord);
+                    page, field.RawDictionary, defaultResources, term, caseSensitive, processedAp, state, wholeWord);
             }
             else
             {
@@ -362,7 +433,7 @@ internal static class InteractiveRedactionScrubber
             {
                 CaptureObjectGraph(page.Document, widget.GetOptional("AP"), pruneCandidates);
                 changed |= term != null
-                    ? RewriteOrDropAppearance(page, widget, defaultResources, term, caseSensitive, processedAp, wholeWord)
+                    ? RewriteOrDropAppearance(page, widget, defaultResources, term, caseSensitive, processedAp, state, wholeWord)
                     : widget.Remove("AP");
             }
 
@@ -486,22 +557,109 @@ internal static class InteractiveRedactionScrubber
 
     /// <summary>
     /// #1098 — rewrite the holder's <c>/AP</c> to remove the term's glyphs, or
-    /// drop it (leak-safe) if the rewrite can't be done. Each appearance is
-    /// touched at most once (<paramref name="processedAp"/>): a rewrite removes
-    /// the term, so a second pass over the same shared dict would find no match
-    /// and wrongly drop the appearance it just fixed.
+    /// drop it (leak-safe) if the rewrite can't be done. Each holder is
+    /// touched at most once (<paramref name="processedHolders"/>): a field that
+    /// is its own widget is reached as field and as widget.
+    ///
+    /// <para><b>#2041: copy on write.</b> The rewritten content goes into a NEW
+    /// stream, and the holder gets its own <c>/AP</c> dictionary pointing at
+    /// it. The original stream and dictionary are left to whoever else holds
+    /// them: an appearance shared with a widget this scrub did not select is
+    /// never edited for one field (a sharer that draws the term is selected
+    /// on its own page and gets the same copy, through
+    /// <paramref name="state"/>). Whatever is left unreachable is pruned. A
+    /// stream this redaction already wrote is clean and kept, not rewritten
+    /// again (finding nothing, a second rewrite used to drop the appearance the
+    /// first had just fixed).</para>
     /// </summary>
     private static bool RewriteOrDropAppearance(
         PdfPage page, PdfDictionary holder, PdfDictionary? defaultResources,
-        string term, bool caseSensitive, HashSet<PdfDictionary> processedAp, bool wholeWord = false)
+        string term, bool caseSensitive, HashSet<PdfDictionary> processedHolders, TermScrubState state,
+        bool wholeWord = false)
     {
-        if (page.Document.Resolve(holder.GetOptional("AP") ?? PdfNull.Instance) is not PdfDictionary ap)
+        var document = page.Document;
+        if (document.Resolve(holder.GetOptional("AP") ?? PdfNull.Instance) is not PdfDictionary ap)
             return false;   // nothing to touch
-        if (!processedAp.Add(ap))
+        if (!processedHolders.Add(holder))
             return false;   // already handled via the merged field/widget dict
-        if (AppearanceStreamRedactor.RedactTerm(page, ap, defaultResources, term, caseSensitive, wholeWord))
-            return true;    // rewritten in place, kept
-        return holder.Remove("AP");   // couldn't rewrite -> drop
+
+        // A /N that is a dictionary of states (§12.5.5) has no single readable
+        // stream: dropped, as any appearance that cannot be rewritten is.
+        if (document.Resolve(ap.GetOptional("N") ?? PdfNull.Instance) is not PdfStream normal)
+            return holder.Remove("AP");
+
+        var replaced = new Dictionary<string, PdfReference>();
+        if (!state.Clean.Contains(normal))   // else written by this redaction: already free of the term
+        {
+            if (!state.Rewritten.TryGetValue(normal, out var replacement))
+            {
+                replacement = RewriteIntoCopy(page, normal, defaultResources, term, caseSensitive, wholeWord, state);
+                state.Rewritten[normal] = replacement;
+            }
+            if (replacement == null)
+                return holder.Remove("AP");   // couldn't rewrite -> drop
+            replaced["N"] = replacement;
+        }
+
+        // #2041: the down (/D) and rollover (/R) appearances are drawn while the
+        // widget is pressed or hovered, and are in the file regardless. They
+        // used to be left as they were: a redaction reported the term removed
+        // while /D still drew it. One that reads the term is rewritten the same
+        // way, or the whole /AP goes; one that does not is left alone.
+        foreach (var key in new[] { "D", "R" })
+        {
+            if (document.Resolve(ap.GetOptional(key) ?? PdfNull.Instance) is not PdfStream other
+                || state.Clean.Contains(other))
+                continue;
+            if (!state.Rewritten.TryGetValue(other, out var otherReplacement))
+            {
+                if (!AppearanceStreamRedactor.Holds(page, other, defaultResources, term, caseSensitive, wholeWord))
+                    continue;
+                otherReplacement = RewriteIntoCopy(page, other, defaultResources, term, caseSensitive, wholeWord, state);
+                state.Rewritten[other] = otherReplacement;
+            }
+            if (otherReplacement == null)
+                return holder.Remove("AP");
+            replaced[key] = otherReplacement;
+        }
+
+        if (replaced.Count == 0)
+            return false;
+        var own = new PdfDictionary();
+        foreach (var entry in ap)
+            own[entry.Key] = entry.Value;
+        foreach (var (key, value) in replaced)
+            own[key] = value;
+        holder["AP"] = own;
+        return true;
+    }
+
+    private static PdfReference? RewriteIntoCopy(
+        PdfPage page, PdfStream original, PdfDictionary? defaultResources, string term, bool caseSensitive,
+        bool wholeWord, TermScrubState state)
+        => AppearanceStreamRedactor.RewrittenContent(page, original, defaultResources, term, caseSensitive, wholeWord)
+            is { } content
+            ? AddRewrittenCopy(page.Document, original, content, state)
+            : null;
+
+    /// <summary>
+    /// A new indirect stream with <paramref name="original"/>'s dictionary
+    /// (<c>/BBox</c>, <c>/Matrix</c>, <c>/Resources</c>, ...) and
+    /// <paramref name="content"/> as its data, encoded afresh.
+    /// </summary>
+    private static PdfReference AddRewrittenCopy(
+        PdfDocument document, PdfStream original, byte[] content, TermScrubState state)
+    {
+        var copy = new PdfStream();
+        foreach (var entry in original)
+        {
+            if (entry.Key.Value is "Length" or "Filter" or "DecodeParms" or "DL" or "F" or "FFilter" or "FDecodeParms")
+                continue;
+            copy[entry.Key] = entry.Value;
+        }
+        copy.DecodedData = content;
+        state.Clean.Add(copy);
+        return document.AddIndirectObject(copy);
     }
 
     /// <summary>

@@ -18,33 +18,51 @@ namespace Excise.Core.Text.Segmentation;
 /// coordinate mapping to get wrong: extract the appearance's own letters (in its
 /// own coordinate space, using its own <c>/Resources</c>), match the term by
 /// text, and remove exactly those glyphs. Fails CLOSED — any parse/rewrite
-/// problem returns false so the caller falls back to dropping <c>/AP</c>, which
-/// is leak-safe.</para>
+/// problem returns null so the caller falls back to dropping <c>/AP</c>, which
+/// is leak-safe. The caller writes the result (#2041: into a copy, see
+/// <see cref="InteractiveRedactionScrubber"/>).</para>
 /// </summary>
 internal static class AppearanceStreamRedactor
 {
     /// <summary>
-    /// Rewrite the normal appearance (<c>/N</c>) of <paramref name="apDict"/> to
-    /// remove <paramref name="term"/>. Returns true if it rewrote a stream and
-    /// removed at least one occurrence.
+    /// #2041 — true when <paramref name="ap"/>'s own glyphs read
+    /// <paramref name="term"/>, by the search redaction uses. False when they do
+    /// not, or when the stream cannot be read.
     /// </summary>
-    public static bool RedactTerm(
-        PdfPage page, PdfDictionary apDict, PdfDictionary? defaultResources,
-        string term, bool caseSensitive, bool wholeWord = false)
+    internal static bool Holds(
+        PdfPage page, PdfStream ap, PdfDictionary? defaultResources, string term, bool caseSensitive,
+        bool wholeWord = false)
     {
-        if (page.Document.Resolve(apDict.GetOptional("N") ?? PdfNull.Instance) is not PdfStream ap)
-            return false;   // a /N that is a dict of states (buttons) has no readable text
-        return RewriteStream(page, ap, defaultResources, term, caseSensitive, wholeWord);
+        try
+        {
+            var resources = page.Document.Resolve(ap.GetOptional("Resources") ?? PdfNull.Instance)
+                as PdfDictionary ?? defaultResources;
+            var letters = new TextExtractor(page) { IncludeFormFieldValues = false }
+                .ExtractLettersFrom(ap.DecodedData, resources);
+            return PdfDocumentRedactionExtensions.FindTextMatches(letters, term, caseSensitive, wholeWord).Count > 0;
+        }
+        catch { return false; }
     }
 
-    private static bool RewriteStream(
+    /// <summary>
+    /// #2041 — the content of <paramref name="ap"/> with every occurrence of
+    /// <paramref name="term"/> cut out of its glyphs, WITHOUT touching the
+    /// stream (the caller decides whether to write it in place or into a copy:
+    /// an appearance can be shared by widgets this redaction does not scrub).
+    /// Null when the stream cannot be read, holds no occurrence, or still reads
+    /// the term after the rewrite: the caller then drops the appearance, the
+    /// leak-safe move. Glyphs are matched in the stream's own space, so text
+    /// drawn outside the widget's <c>/Rect</c> or clipped by its <c>/BBox</c>
+    /// (a scrolled multiline field) is cut exactly like the visible lines.
+    /// </summary>
+    internal static byte[]? RewrittenContent(
         PdfPage page, PdfStream ap, PdfDictionary? defaultResources, string term, bool caseSensitive,
         bool wholeWord = false)
     {
         byte[] content;
         try { content = ap.DecodedData; }
-        catch { return false; }
-        if (content.Length == 0) return false;
+        catch { return null; }
+        if (content.Length == 0) return null;
 
         // The appearance's own /Resources; fall back to the AcroForm /DR that a
         // producer may share across every field rather than duplicate per stream.
@@ -61,11 +79,11 @@ internal static class AppearanceStreamRedactor
             letters = new TextExtractor(page) { IncludeFormFieldValues = false }
                 .ExtractLettersFrom(content, resources);
         }
-        catch { return false; }
-        if (parsed.Operators.Count == 0 || letters.Count == 0) return false;
+        catch { return null; }
+        if (parsed.Operators.Count == 0 || letters.Count == 0) return null;
 
         var matches = PdfDocumentRedactionExtensions.FindTextMatches(letters, term, caseSensitive, wholeWord);
-        if (matches.Count == 0) return false;
+        if (matches.Count == 0) return null;
 
         // One box per line of a match that wraps (#1791).
         var areas = matches.SelectMany(PdfDocumentRedactionExtensions.LinesOf)
@@ -77,28 +95,27 @@ internal static class AppearanceStreamRedactor
             var newOps = new GlyphRemover().ProcessOperations(parsed.Operators, letters, areas);
             newBytes = new ContentStreamWriter().Write(new ContentStream(newOps));
         }
-        catch { return false; }
+        catch { return null; }
 
         // Verify the term is actually GONE from the rewritten stream — not by
         // comparing bytes (re-serialisation reformats whitespace even when
         // nothing was removed), but by re-extracting. If the term survives, it
         // is drawn by a nested Form XObject this stream only invokes with Do (a
         // signature /AP/N → /FRM Do, #669): the split can't reach it. Do NOT
-        // claim success — return false so the caller drops /AP (leak-safe),
-        // which prunes the nested form and takes the term with it.
+        // claim success — return null so the caller drops /AP (leak-safe),
+        // which prunes the nested form and takes the term with it. #2041: ANY
+        // occurrence left is a failure, not only "none removed": a partial
+        // rewrite kept the rest of the term in the file while the caller
+        // treated the appearance as clean.
         try
         {
             var after = new TextExtractor(page) { IncludeFormFieldValues = false }
                 .ExtractLettersFrom(newBytes, resources);
-            if (PdfDocumentRedactionExtensions.FindTextMatches(after, term, caseSensitive, wholeWord).Count >= matches.Count)
-                return false;
+            if (PdfDocumentRedactionExtensions.FindTextMatches(after, term, caseSensitive, wholeWord).Count > 0)
+                return null;
         }
-        catch { return false; }
+        catch { return null; }
 
-        // Replace the content. The setter re-encodes with Flate and rewrites
-        // /Filter, /DecodeParms and /Length together, so the old /Filter can
-        // never describe the new bytes (#1549 — this used to store them raw).
-        ap.DecodedData = newBytes;
-        return true;
+        return newBytes;
     }
 }
