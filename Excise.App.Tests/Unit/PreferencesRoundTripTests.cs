@@ -127,6 +127,44 @@ public class PreferencesRoundTripTests
         failures.Should().BeEmpty();
     }
 
+    /// <summary>#1640 step 3: after any performance preset, and the extremes of the advanced values, a document still opens whole.</summary>
+    [FixedAvaloniaFact]
+    public async Task EveryPerformancePreset_StillOpensADocumentWithAllItsPagesAndThumbnails()
+    {
+        var path = TestRepoLayout.FindFile("test-pdfs", "smoke", "irs-w4.pdf");
+        Assert.SkipWhen(path == null, TestRepoLayout.AbsenceReason("irs-w4.pdf", "test-pdfs/smoke/irs-w4.pdf"));
+
+        var settings = new List<(string Name, PerformanceSettings Value)>
+        {
+            ("LowMemory", PerformanceSettings.LowMemory),
+            ("Balanced", PerformanceSettings.Balanced),
+            ("Fast", PerformanceSettings.Fast),
+            ("smallest values", new PerformanceSettings(TileCacheBudgetMb: 1, SinglePageCachedPages: 1, ThumbnailPrewarm: false,
+                ThumbnailKeepMargin: 0, SoftCacheTrims: true, IdleTrimSeconds: 1, RenderThreads: 1).Clamped()),
+            ("largest values", new PerformanceSettings(TileCacheBudgetMb: 100_000, SinglePageCachedPages: 1_000, ThumbnailPrewarm: true,
+                ThumbnailKeepMargin: 10_000, SoftCacheTrims: false, IdleTrimSeconds: 100_000, RenderThreads: 1_000).Clamped()),
+        };
+
+        foreach (var (name, value) in settings)
+        {
+            var vm = MainWindowViewModelTestFactory.Create();
+            var window = new Excise.App.Views.MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+            window.Show();
+            try
+            {
+                vm.ApplyPerformanceSettings(value);
+                await vm.LoadDocumentAsync(path!);
+                vm.TotalPages.Should().Be(5, $"{name}: every page of the W-4 is there");
+                vm.PageThumbnails.Should().HaveCount(5, $"{name}: and every thumbnail slot");
+                vm.PdfCoreDocument.Should().NotBeNull(name);
+            }
+            finally
+            {
+                window.Close();
+            }
+        }
+    }
+
     [FixedAvaloniaFact]
     public async Task ResetToDefaults_RestoresEveryPreference_AndThatSurvivesALaunch()
     {
