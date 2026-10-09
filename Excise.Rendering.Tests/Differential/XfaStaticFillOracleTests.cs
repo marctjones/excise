@@ -197,6 +197,8 @@ public sealed class XfaStaticFillOracleTests : IDisposable
         SavedPdfLeakScanner.FindTerm(redacted, secret).Should().BeEmpty(
             "the filled value must leave /V, the datasets and every other carrier");
         var redactedPath = Write(redacted, "w9-redacted.pdf");
+        QpdfReferenceTool.AcroFormFieldValues(redactedPath).Should().NotBeNull(
+            "qpdf can read the redacted file, so a null below means no /XFA rather than a failed qpdf run");
         QpdfReferenceTool.XfaPacketObjects(redactedPath).Should().BeNull("any redaction removes the XFA form (decision 5)");
         MutoolTextExtractor.ExtractPage(redactedPath, 1).Should().NotContain(secret);
 
