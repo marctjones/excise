@@ -107,9 +107,11 @@ require_grep "doc.RedactText delegates to glyph-level RedactArea" \
     "SECURITY: $CORE_API no longer routes through the glyph-level RedactArea path."
 
 # Check 3: the GUI must delegate to the glyph-level engine (page.RedactArea),
-# NOT draw a black box only.
+# NOT draw a black box only. `RedactAreaWithReport` / `RedactAreasWithReport` are the
+# report-returning entry points of the SAME engine path (#2037); a planted bare
+# AppendBlackRectangle in place of the call still fails this check.
 require_grep "GUI delegates to glyph-level page.RedactArea" \
-    "page\.RedactAreas?\(" "$REDACTION_SERVICE" \
+    "page\.RedactAreas?(WithReport)?\(" "$REDACTION_SERVICE" \
     "SECURITY: RedactionService no longer calls page.RedactArea — redaction" \
     "may have been downgraded to visual-only (black box without glyph removal)."
 

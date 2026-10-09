@@ -174,14 +174,19 @@ named below), not to this page.
     and duplicate widgets can hold a value that an area redaction removed from a visible field,
     so the generated fields are baked into the page content, then the normal parse, filter,
     rebuild pipeline runs, then decision 5 removes the datasets. The redaction report says
-    "generated XFA fields flattened". Built in S1 (#2028) at the orchestration layer:
-    `PdfXfaLayout.FlattenGeneratedXfaFields` (stamps each shown widget's appearance through the
-    AcroForm flatten path, removes the widgets and their fields, records the row with the XFA
-    removals) is called by `RedactionService.RedactArea` and `TermRedactionRunner` (CLI and
-    scripting), and, without the report row, before `FlattenAcroForm` on the flattened-copy paths
-    (GUI Save Flattened Form Copy, `fill-form --flatten`), which would otherwise redraw a hidden
-    field's `/V` as clipped page text. The engine in `Excise.Core/Redaction` does not call it, so a library caller that
-    redacts a document carrying generated widgets must call it first (#2037).
+    "generated XFA fields flattened". The ENGINE does it (#2037): `PdfXfaLayout.RemoveXfaFormForRedaction`
+    calls `FlattenGeneratedXfaFields` first, before anything reads or rewrites page content, for
+    every engine entry point (`RedactArea`, `RedactAreas`, `RedactText`, and the report variants),
+    so a library caller cannot skip it; a flatten after the content rewrite would stamp the value
+    back, and tests pin the order. `FlattenGeneratedXfaFields` stamps each shown widget's
+    appearance through the AcroForm flatten path, removes the widgets and their fields, and records
+    the row with the XFA removals; the report row reaches the user through `report.Carriers` (CLI
+    and GUI notes). The two flattened-copy paths (GUI Save Flattened Form Copy, `fill-form
+    --flatten`) still call it themselves, without the report row, because they make a flattened
+    copy and do not redact; without it `FlattenAcroForm` would redraw a hidden field's `/V` as
+    clipped page text. Lower-level public scrubbers (`PdfDocumentSanitizer.ScrubTerms`,
+    `AppearanceStreamRedactor.RedactTerm`, `InteractiveRedactionScrubber`) never ran decision 5's
+    removal and still do not.
 18. **Reopening a form whose widgets and datasets disagree.** The datasets hash is stored with
     the layout marker. If the datasets still match it, a widget edit made by another tool is
     newer: it is written into the datasets and reported. If the datasets changed (Acrobat
