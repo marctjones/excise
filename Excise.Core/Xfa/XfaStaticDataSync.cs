@@ -561,19 +561,8 @@ internal sealed class XfaStaticDataSync
     /// <summary>The on value: the first <c>items</c> entry, else "1" (as <see cref="XfaValues.OnValue"/>).</summary>
     private static string OnValue(XElement field) => XfaValues.OnValue(field);
 
-    /// <summary>
-    /// The off value: the second <c>items</c> entry. When <c>items</c> is
-    /// present without one, the spec default is the null string (XFA 3.3
-    /// p759) — not the "0" <see cref="XfaValues.OffValue"/> returns, see
-    /// #2016. With no <c>items</c> at all, "0" as the merge reads it.
-    /// </summary>
-    private static string OffValue(XElement field)
-    {
-        var items = field.ChildrenNamed("items").FirstOrDefault();
-        if (items == null)
-            return "0";
-        return items.Elements().Skip(1).FirstOrDefault()?.Value ?? string.Empty;
-    }
+    /// <summary>The off value (XFA 3.3 p759), as <see cref="XfaValues.OffValue"/>.</summary>
+    private static string OffValue(XElement field) => XfaValues.OffValue(field);
 
     /// <summary>
     /// A choice list with a display column and a <c>save="1"</c> column stores

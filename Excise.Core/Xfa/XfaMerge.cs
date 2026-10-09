@@ -396,8 +396,18 @@ internal static class XfaValues
     public static string OnValue(XElement field)
         => ItemTexts(field.ChildrenNamed("items").FirstOrDefault()).FirstOrDefault() ?? "1";
 
+    /// <summary>
+    /// The check button's off value: its second <c>items</c> entry. When <c>items</c> is present
+    /// without one, the spec default is the null string (XFA 3.3 p759, #2016). With no <c>items</c>
+    /// at all, "0": the pages read for #2016 (p650-651, p758-760) state no default for that case.
+    /// </summary>
     public static string OffValue(XElement field)
-        => ItemTexts(field.ChildrenNamed("items").FirstOrDefault()).Skip(1).FirstOrDefault() ?? "0";
+    {
+        var items = field.ChildrenNamed("items").FirstOrDefault();
+        if (items == null)
+            return "0";
+        return ItemTexts(items).Skip(1).FirstOrDefault() ?? string.Empty;
+    }
 
     public static List<string> ItemTexts(XElement? items)
         => items == null
