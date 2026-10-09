@@ -1,10 +1,11 @@
-# Dynamic XFA display (#1547 phase 2)
+# XFA forms (#1547)
 
 A dynamic XFA form (the XML Forms Architecture, deprecated in PDF 2.0) keeps its
 real form in `/AcroForm /XFA`. Its PDF pages hold only a "Please wait..."
 placeholder that an XFA engine is expected to replace. This document describes
-how excise replaces that placeholder with the form's initial layout, and the
-rules that keep the feature from becoming a redaction leak.
+how excise replaces that placeholder with the form's initial layout, how filled
+values reach the XFA `datasets` packet, and the rules that keep both from
+becoming a redaction leak.
 
 Status, evidence and gaps belong to the issue tracker (#1547, and the follow-ups
 named below), not to this page.
@@ -49,6 +50,12 @@ named below), not to this page.
    direct `PdfDocumentSanitizer.ScrubTerms` call. The removal is reported as an
    `/XFA` carrier row (`PdfXfaLayout.RemoveXfaFormForRedaction`) and, for area
    redaction, on the redacted-copy report.
+   A static form's filled value also sits in its widgets' `/V`, `/AP`, `/AS` and `/Opt`, and
+   under decision 11 a dynamic form's will too. Removing `/XFA` does not touch those; the
+   `form-fields` carrier does, for the widgets a redaction reaches. Generated widgets of a
+   dynamic form add hidden and duplicate (`match="global"`) copies that an area redaction does
+   not reach; the plan on #1547 proposes flattening them before redaction. The `form` packet
+   (decision 14) is removed with `/XFA`.
 6. **Only FormCalc `initialize` and `calculate` run (#1570); JavaScript never does.** The
    interpreter is a tree-walker over our own AST under `Excise.Core/Xfa/FormCalc/`
    (no reflection, no dynamic code, no `Get`/`Post`/`Put` and no host functions: absent, not
@@ -58,16 +65,22 @@ named below), not to this page.
    share). Steps, call depth, string length, list size, `Eval` nesting and wall time are
    bounded; a nested `Eval` spends its parent's remaining budget. Each script is a
    transaction: a failure undoes its writes, is reported in `XfaLayoutResult.ScriptFailures`,
-   and the rest carry on. `calculate` repeats until the values settle, capped at ten passes.
+   and the rest carry on. `initialize` runs first; then `calculate` repeats until the values
+   settle, capped at ten passes. XFA 3.3 p407 (Rule 3) orders a merge's calculations before its
+   initialize events, repeating calculations whose inputs change; no fixture pins the difference.
    Scripts run in `ApplyXfaLayout` at open and nowhere else: redaction, save, print-copy
    creation and the command line never execute one (`FormCalcContainmentTests` reads the
    sources and fails on a new caller). `XfaLayoutOptions.RunFormCalc` turns it off; in the app,
    Preferences > Forms sets it (`WindowSettings.RunFormCalc`, `PdfDocumentService.XfaLayoutOptionsForOpen`).
    Not run: JavaScript (#1571), `validate`, `click`, `docReady` and every other event.
-7. **Display only.** Values are drawn as page content, not as AcroForm widgets.
-   Filling and writing the datasets back is #1547 phase 3. Converting to
-   AcroForm is #1569. A flattened static copy (layout applied, `/XFA` removed)
-   falls out of this work and is exposed through the library API.
+7. **A laid-out dynamic form is display only.** Its values are drawn as page
+   content, not as AcroForm widgets, so nothing on those pages can be filled.
+   Static XFA forms are fillable: their AcroForm fields are edited as usual and
+   `PdfField.SetValue` writes the same value into the datasets
+   (`XfaStaticDataSync`, #2013). Filling a dynamic form is #1547 phase 3
+   (decision 11; not built). Converting to AcroForm (#1569) is closed. A
+   flattened static copy (layout applied, `/XFA` removed) comes from
+   `ApplyXfaLayout` + `RemoveXfaForm` through the library API.
 8. **Values are drawn raw.** Picture clauses (`<format><picture>`) are not
    applied, so the text on the page is the text in the datasets. A formatted
    rendition ("1,234" for "1234") would let a term-redaction of the displayed
@@ -78,6 +91,12 @@ named below), not to this page.
    whole `/XFA` packet, script text included, and the page text is ordinary page content), and
    `XfaFormCalcRedactionTests` pins both a secret written literally by a script and one that
    only a calculation produces. `XfaLayoutResult.FieldsWrittenByScripts` names the fields.
+   Against XFA 3.3: the Data and Form DOMs hold canonical values (p152) and a `format` picture
+   changes only what is displayed (p164 Rule 3); without one, date, time and decimal fields are
+   still displayed in the locale's default format (p165 Rule 4). So raw values are correct
+   storage and a departure in display (Ohio's `0.00000000` where Acrobat and pdf.js show `0`).
+   The merge also copies data text without applying a `bind` picture (p176), which real forms
+   use (IMM 5257e, Ohio). A formatted rendition is an owner decision on #1547 (plan revision 2).
 9. **Password fields never show their value.** A `passwordEdit` draws its
    `passwordChar` once per character.
 10. **Fields look the way pdf.js shows them on screen (#1825).** The field tint
@@ -89,10 +108,44 @@ named below), not to this page.
     widget for a viewer to highlight, so they are drawn into the page, and a
     saved or printed rendition carries them. A `checkButton` inside an `exclGroup` with no `shape` is a circle, as
     pdf.js renders it (a radio button); an explicit `shape` is honoured.
+11. **AcroForm widgets and the datasets are kept consistent (ISO 32000-2 Annex K.2).** A
+    writer that creates or modifies a PDF with `/XFA` provides an AcroForm field for each XFA
+    field, named by its XFA-SOM path (XFA 3.3 p72-74), with `/V` consistent with the XFA value
+    and no `/A` or `/AA` on widgets whose actions the XFA specifies. A datasets-only design does not
+    conform. Static forms: done (`XfaStaticDataSync`, called from `PdfField.SetValue`, the
+    setter behind `fill-form`, Save Filled Copy and the GUI overlay). Dynamic forms: not built;
+    the layout will emit the widgets, the datasets stay the stored value, and `/V` and `/AP`
+    are regenerated from it on every layout (#1547, plan revision 2). Widget `/Rect` serves
+    non-XFA viewers only: an XFA processor places a field by the template (p74).
+12. **A filled save strips `/Perms /DocMDP` and `/Perms /UR3` with their signatures, and
+    reports it.** A full rewrite re-serialises the XFA stream, which can void a PDF signature over
+    it (XFA 3.3 p557-558), and excise has no incremental writer. Keeping a certification valid
+    needs an incremental fill-in save, which is a separate issue and is never used in a session
+    that contains a redaction. Not built: the GUI asks before a save that would invalidate a
+    signed `/Sig` field (#1415), but no save removes `/Perms` or reports it.
+13. **User annotations survive a re-layout by page index.** A re-layout replaces the
+    generated content and widgets of each page and carries every other `/Annots` entry on the
+    same page index when the page count is unchanged. If the page count would change while user
+    annotations exist, or the user added, deleted or reordered pages since the layout, the fill
+    is refused with a reason. The XFA specification is silent here; this is a project rule.
+    Not built (dynamic fill).
+14. **The `form` packet is reset when excise writes the datasets.** XFA 3.3 defines no syntax
+    for the saved Form DOM (p81-82); Adobe products re-merge template and data on open and then
+    apply the saved Form DOM content (p1263), so a stale non-empty `form` packet could override
+    the new data. A non-empty `form` packet is replaced by an empty element and reported; an
+    empty one is left byte-identical (`XfaStaticDataSync`). Acrobat-side state it held
+    (calculation overrides, validation overrides) is dropped with it.
+15. **The XFA 3.3 specification is local only.** Adobe's `xfa_spec_3_3.pdf` (1584 pages,
+    January 2012) is kept at `test-pdfs/archives/xfa_spec_3_3.pdf`, which is gitignored and is
+    never committed (Adobe copyright; source and checksum on #1547). Cite it by page number;
+    its printed page numbers equal the PDF page index.
+16. **XFA JavaScript never runs.** #1571 (a restricted JavaScript engine) is closed. Totals,
+    validations and barcodes a form computes in JavaScript are not updated by excise; the
+    dynamic-form notice says JavaScript does not run.
 
 ## Zero cost for non-XFA documents
 
-Nothing in `Excise.Core/Xfa` runs unless `PdfDocument.DetectXfaForm()` returns
+The layout runs only when `PdfDocument.DetectXfaForm()` returns
 `Dynamic` and the catalog sets `/NeedsRendering true`. The second condition is
 the one pdf.js uses. A document that is "dynamic" only because it has no
 AcroForm widgets can have real page content (PDFium's
@@ -100,7 +153,8 @@ AcroForm widgets can have real page content (PDFium's
 pages with a layout would lose them. That check reads two catalog keys. It walks the AcroForm field tree
 only when an `/XFA` entry exists. The service calls the layout only on that
 result, so no XML is parsed, no allocation happens, and no type is loaded for
-any other document.
+any other document. The static write-back (decision 11) costs `PdfField.SetValue` one
+`/AcroForm /XFA` lookup on a document without XFA.
 
 ## Pipeline
 
@@ -120,8 +174,8 @@ datasets ────────►  XfaMerge         form DOM: occur instances
 ```
 
 All code lives in `Excise.Core/Xfa` (namespace `Excise.Core.Xfa`). It is
-internal except the entry point `PdfDocument.ApplyXfaLayout(...)`, its result
-type, and `PdfDocument.HasXfaLayoutPages()`.
+internal except `PdfDocument.ApplyXfaLayout(...)` with its options and result
+types, `PdfDocument.HasXfaLayoutPages()` and `PdfDocument.RemoveXfaForm()`.
 
 ### Packets
 
