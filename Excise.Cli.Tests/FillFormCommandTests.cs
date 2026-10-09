@@ -285,6 +285,33 @@ public class FillFormCommandTests : IDisposable
         capturedErr.ToString().Should().Contain("Warning: XFA datasets not updated");
     }
 
+    /// <summary>#2024: an uncertified form's fill prints no certification warning (the certified case runs the
+    /// real CLI out of process in Excise.Rendering.Tests, XfaCertificationStripOracleTests).</summary>
+    [Fact]
+    public async Task RunAsync_FillForm_UncertifiedStaticXfa_PrintsNoCertificationWarning()
+    {
+        var input = TempPath(".pdf");
+        var output = TempPath(".pdf");
+        File.WriteAllBytes(input, Excise.TestSupport.XfaStaticFillFixtures.Build());
+
+        var prevErr = Console.Error;
+        var capturedErr = new StringWriter();
+        Console.SetError(capturedErr);
+        try
+        {
+            (await Program.RunAsync(new[]
+            {
+                "fill-form", input, output, "--field", $"{Excise.TestSupport.XfaStaticFillFixtures.NamePath}=Grace",
+            })).Should().Be(0);
+        }
+        finally
+        {
+            Console.SetError(prevErr);
+        }
+
+        capturedErr.ToString().Should().NotContain("certification");
+    }
+
     /// <summary>
     /// #2017: fill-form on a form whose widgets carry appearances excise did not
     /// author (Acrobat's) must not save the old appearance, which draws the old

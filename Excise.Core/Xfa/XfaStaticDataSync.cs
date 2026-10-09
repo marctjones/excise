@@ -114,6 +114,10 @@ internal sealed class XfaStaticDataSync
         }
         if (!_classifiedStatic)
             return;
+        // #2024, decision 12: a filled save strips the certification and says so. Any fill of a
+        // static XFA form counts, including one whose datasets value could not be written: the
+        // field's /V changed and the full rewrite voids the signatures either way.
+        Excise.Core.Signatures.CertificationStripper.StripOnEverySave(document);
 
         if (_snapshot == null || !_snapshot.IsCurrent(document))
         {

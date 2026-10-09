@@ -121,6 +121,11 @@ public partial class PdfDocument : IDisposable
     // template once. Null until the first field value is set.
     internal Excise.Core.Xfa.XfaStaticDataSync? XfaStaticDataSync { get; set; }
 
+    // #2024: what the saves of this document removed of its certification, one
+    // line each, for the life of the document. Null until a save path asked for
+    // the strip (CertificationStripper.StripOnEverySave); empty until a save ran it.
+    internal List<string>? CertificationRemovals { get; set; }
+
     /// <summary>
     /// Overwrite the content of an already-registered indirect object.
     /// </summary>

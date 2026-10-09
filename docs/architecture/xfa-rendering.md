@@ -149,8 +149,19 @@ named below), not to this page.
     reports it.** A full rewrite re-serialises the XFA stream, which can void a PDF signature over
     it (XFA 3.3 p557-558), and excise has no incremental writer. Keeping a certification valid
     needs an incremental fill-in save, which is a separate issue and is never used in a session
-    that contains a redaction. Not built: the GUI asks before a save that would invalidate a
-    signed `/Sig` field (#1415), but no save removes `/Perms` or reports it.
+    that contains a redaction. Built (#2024) for the static fill path: once a field of a static
+    XFA form is set (`XfaStaticDataSync`, whether or not its datasets value could be written),
+    every save runs `CertificationStripper` (a pre-save action). It
+    removes the catalog's `/Perms /DocMDP` and `/Perms /UR3` (and `/Perms` when nothing else is
+    in it), the signature dictionaries they name, `/Legal` when a DocMDP signature went
+    (ISO 32000-2 §12.8.7), and AppendOnly from `/SigFlags` when no signed field remains. The
+    certification field is kept unsigned (its `/V` and widget `/AP` removed, `/Lock` kept, Table
+    235), because K.2 asks for a field per XFA field; it is removed only when another field has
+    the same full name. Approval signatures that `/Perms` does not name are untouched, and the
+    GUI still asks before a save that would invalidate a signed `/Sig` field (#1415, which walks the
+    whole field tree since #2025). Each removal is reported: `fill-form` warnings on stderr, a
+    GUI warning toast after Save, Save As and Save Flattened Form Copy, and the Reduce File Size
+    summary. A static form opened and saved without a fill keeps `/Perms` as before.
 13. **User annotations survive a re-layout by page index.** A re-layout replaces the
     generated content and widgets of each page and carries every other `/Annots` entry on the
     same page index when the page count is unchanged. If the page count would change while user
@@ -197,7 +208,10 @@ named below), not to this page.
     hit on a field's drawn value scrubs that field's `/V`, `/AP` and every field bound to the
     same data node whole, never by substring. Fields whose bind picture excise cannot apply are
     read-only until then, and `/Perms` is stripped and reported on every save of a laid-out
-    dynamic form (decision 12 extended).
+    dynamic form (decision 12 extended). That part is built (#2024): `ApplyXfaLayout` registers
+    the decision 12 strip on `LaidOut` and on `AlreadyLaidOut`, after the #2012 page cut, so the
+    certification field whose widget sat on a placeholder page is pruned first and one field per
+    name remains; the XFA banner says before a save that it removes the certification.
 
 ## Zero cost for non-XFA documents
 

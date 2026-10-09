@@ -804,8 +804,10 @@ internal partial class MainWindowViewModel
         ClearPendingTypewriterText();
         FileState.MarkSaved();
 
+        var removals = document.CertificationRemovals?.ToArray();   // #2024: before the reload
         await LoadDocumentAsync(filePath);
         _toastService.ShowSuccess("Flattened form copy saved");
+        ReportCertificationRemovals(removals);
     }
 
     // #1973: a picker's SuggestedFileName is a bare name; the folder travels in

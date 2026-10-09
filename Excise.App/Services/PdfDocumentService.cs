@@ -46,6 +46,12 @@ internal class PdfDocumentService
     /// laid out on open. Null when the document is not a dynamic XFA form.
     /// </summary>
     public XfaLayoutResult? XfaLayout { get; private set; }
+
+    /// <summary>
+    /// #2024: what the last <see cref="SaveDocument"/> (or an earlier save of the same document
+    /// instance, such as a print) removed of the form's certification; empty when nothing was.
+    /// </summary>
+    internal IReadOnlyList<string> LastSaveCertificationRemovals { get; private set; } = Array.Empty<string>();
     public bool IsDocumentLoaded => _currentDocument != null;
 
     /// <summary>
@@ -241,6 +247,8 @@ internal class PdfDocumentService
 
         _currentDocument.Save(savePath, GetReEncryptionOptions());
         _logger.LogInformation("PDF saved to: {FilePath}", savePath);
+        // #2024: read before the reload; the reopened copy no longer carries what was removed.
+        LastSaveCertificationRemovals = _currentDocument.CertificationRemovals?.ToArray() ?? Array.Empty<string>();
 
         // Reload to reset in-memory state from the persisted bytes.
         _currentDocument.Dispose();
