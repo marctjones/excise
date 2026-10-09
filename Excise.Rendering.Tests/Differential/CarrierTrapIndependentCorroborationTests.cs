@@ -154,6 +154,25 @@ public sealed class CarrierTrapIndependentCorroborationTests : IDisposable
         return sb.ToString();
     }
 
+    /// <summary>
+    /// What a decoded stream body DRAWS (#2034): the strings of a kerned
+    /// <c>TJ</c> or of consecutive <c>Tj</c> joined per
+    /// <see cref="SavedPdfLeakScanner.ShownTextRuns(byte[])"/>, one line each
+    /// and also read as UTF-16BE, because a value split as
+    /// <c>[(ALP) -20 (HA) 10 (OLD)] TJ</c> is in no single string of the dump.
+    /// Only runs of two or more strings are added; the rest are already
+    /// in the body text above. qpdf decoded the body, so the split is ours alone.
+    /// </summary>
+    private static void AppendShownText(byte[] body, StringBuilder sb)
+    {
+        foreach (var run in SavedPdfLeakScanner.ShownTextRuns(body))
+        {
+            if (run.Operands.Count < 2) continue;
+            sb.Append(Encoding.Latin1.GetString(run.Bytes)).Append('\n');
+            sb.Append(Encoding.BigEndianUnicode.GetString(run.Bytes)).Append('\n');
+        }
+    }
+
     private static void Collect(JsonElement e, string? propertyName, StringBuilder sb)
     {
         switch (e.ValueKind)
@@ -176,6 +195,7 @@ public sealed class CarrierTrapIndependentCorroborationTests : IDisposable
                     {
                         var raw = Convert.FromBase64String(s);
                         sb.Append(Encoding.Latin1.GetString(raw)).Append('\n');
+                        AppendShownText(raw, sb);
                     }
                     catch (FormatException) { sb.Append(s).Append('\n'); }
                 }

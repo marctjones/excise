@@ -108,6 +108,15 @@ public class CanaryInjectionLeakTests
             doc0.RedactText(Canary, RedactionOptions.Default);
             doc0.GetPage(1).Text.Replace(" ", "").Should().NotContain(Canary,
                 "the split canary must be gone from the extracted text after redaction");
+
+            // The extractor must not referee itself (#2034): the scanner joins
+            // the strings of the kerned TJ, so the split canary is visible to it.
+            SavedPdfLeakScanner.FindTerm(pdf, Canary).Should().NotBeEmpty(
+                "guard: the scanner must see the split canary in the fixture");
+            using var splitSaved = new MemoryStream();
+            doc0.Save(splitSaved);
+            SavedPdfLeakScanner.FindTerm(splitSaved.ToArray(), Canary).Should().BeEmpty(
+                "the split canary must not be drawn by any saved stream");
             return;
         }
 

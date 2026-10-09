@@ -23,7 +23,7 @@ namespace Excise.Core.Tests.Document;
 /// <see cref="SavedPdfLeakScanner"/>, searched for the old value AND for the
 /// unique <c>/StaleMarker</c> name on each old appearance stream, because a
 /// kerned <c>TJ</c> array never holds the value contiguously (see
-/// <see cref="ScannerBlindSpot_KernedTjValue_IsNotFoundByFindTerm"/>). The
+/// <see cref="Scanner_KernedTjValue_IsFoundByFindTerm"/>). The
 /// qpdf, mutool and Poppler twins are
 /// <c>Excise.Rendering.Tests.Differential.StaleFieldAppearanceOracleTests</c>.</para>
 /// </summary>
@@ -53,14 +53,15 @@ public sealed class StaleFieldAppearanceTests
     }
 
     /// <summary>
-    /// The blind spot this issue's history warned about: the scanner searches
-    /// contiguous bytes and each string operand alone, so a value split across a
-    /// kerned TJ array is invisible to it. Pinned so the marker-based assertions
-    /// below are known to be load-bearing; tracked by #2034. A hex string is
-    /// decoded, so it is found.
+    /// The blind spot this issue's history warned about, closed by #2034: the
+    /// scanner once searched contiguous bytes and each string operand alone, so
+    /// a value split across a kerned TJ array was invisible to it. It now joins
+    /// the strings a stream shows, so Tj, hex and kerned TJ are all found. The
+    /// stream-marker assertions below stay: they prove the appearance is gone
+    /// without trusting a text search.
     /// </summary>
     [Fact]
-    public void ScannerBlindSpot_KernedTjValue_IsNotFoundByFindTerm()
+    public void Scanner_KernedTjValue_IsFoundByFindTerm()
     {
         static byte[] OnlyInAppearance(OldAppearanceText form)
         {
@@ -72,8 +73,8 @@ public sealed class StaleFieldAppearanceTests
 
         SavedPdfLeakScanner.FindTerm(OnlyInAppearance(OldAppearanceText.Tj), F.Name.OldValue).Should().NotBeEmpty();
         SavedPdfLeakScanner.FindTerm(OnlyInAppearance(OldAppearanceText.Hex), F.Name.OldValue).Should().NotBeEmpty();
-        SavedPdfLeakScanner.FindTerm(OnlyInAppearance(OldAppearanceText.KernedTj), F.Name.OldValue).Should().BeEmpty(
-            "a kerned TJ split is not contiguous; only the stream marker can prove the appearance is gone");
+        SavedPdfLeakScanner.FindTerm(OnlyInAppearance(OldAppearanceText.KernedTj), F.Name.OldValue).Should().NotBeEmpty(
+            "FindTerm joins the strings of a kerned TJ array (#2034)");
         SavedPdfLeakScanner.FindTerm(OnlyInAppearance(OldAppearanceText.KernedTj), F.NormalMarker(F.Name)).Should().NotBeEmpty();
     }
 

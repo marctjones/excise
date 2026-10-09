@@ -93,9 +93,28 @@ internal static class SavedPdfLeakScanner
                 Scan(region.Data, region.Where);
             foreach (var value in StringObjects(region.Data, region.From, region.To))
                 ScanString(value, region.Where);
+
+            // Shown text (#2034): a term split across a kerned TJ array, or one
+            // glyph per Tj, is in no single string. Only stream bodies are
+            // content streams; the raw-file region is the whole file.
+            if (region.IsStream)
+                foreach (var run in ShownTextRuns(region.Data, region.From, region.To))
+                {
+                    if (run.Operands.Count < 2) continue; // one operand is ScanString's job
+                    if (RunMatches(run.Bytes) && !run.Operands.Any(RunMatches))
+                    {
+                        var hit = $"{region.Where}: shown text split across {run.Operands.Count} string operands";
+                        if (!hits.Contains(hit)) hits.Add(hit);
+                    }
+                }
         }
 
         return hits;
+
+        bool RunMatches(byte[] value) =>
+            (pdfDocBytes != null && ContainsBytes(value, pdfDocBytes))
+            || ContainsBytes(value, utf16Bytes)
+            || ContainsBytes(value, utf8Bytes);
     }
 
     /// <summary>
@@ -158,7 +177,8 @@ internal static class SavedPdfLeakScanner
 
     /// <param name="ScanBytes">False for a stored stream body: the raw-file
     /// byte search has already covered its bytes.</param>
-    private readonly record struct Region(string Where, byte[] Data, int From, int To, bool ScanBytes);
+    /// <param name="IsStream">A stream body (a candidate content or appearance stream), not the raw file.</param>
+    private readonly record struct Region(string Where, byte[] Data, int From, int To, bool ScanBytes, bool IsStream = false);
 
     /// <summary>The raw file, then every stream body, inflated where possible.</summary>
     private static IEnumerable<Region> Regions(byte[] saved)
@@ -170,8 +190,8 @@ internal static class SavedPdfLeakScanner
             var where = $"stream #{streamIndex}" + (span.ByteSearch ? " (byte search: the syntax walk lost sync)" : "");
             var inflated = TryInflate(saved[span.Start..span.End]);
             yield return inflated != null
-                ? new Region($"inflated {where}", inflated, 0, inflated.Length, ScanBytes: true)
-                : new Region(where, saved, span.Start, span.End, ScanBytes: false);
+                ? new Region($"inflated {where}", inflated, 0, inflated.Length, ScanBytes: true, IsStream: true)
+                : new Region(where, saved, span.Start, span.End, ScanBytes: false, IsStream: true);
             streamIndex++;
         }
     }
@@ -554,6 +574,181 @@ internal static class SavedPdfLeakScanner
         }
 
         return null;
+    }
+
+    /// <summary>One run of shown text: the string operands and their concatenated bytes.</summary>
+    internal readonly record struct ShownRun(byte[] Bytes, IReadOnlyList<byte[]> Operands);
+
+    /// <summary>A TJ adjustment at or beyond this (thousandths of an em, leftwards = negative) is a word gap.</summary>
+    private const double WordGapAdjustment = -250;
+
+    /// <summary>Shown-text runs of one decoded stream body; see <see cref="ShownTextRuns(byte[], int, int)"/>.</summary>
+    internal static IReadOnlyList<ShownRun> ShownTextRuns(byte[] body) => ShownTextRuns(body, 0, body.Length);
+
+    /// <summary>
+    /// What a content or appearance stream DRAWS, as runs of consecutive shown
+    /// strings (#2034). Text split as <c>[(ALP) -20 (HA) 10 (OLD)] TJ</c> or
+    /// one glyph per <c>Tj</c> is in no single string object, so the per-string
+    /// search cannot see it while the file still draws it.
+    ///
+    /// <para><b>The rule.</b> A run is the string operands of <c>Tj</c> and
+    /// <c>TJ</c> (kerning numbers ignored) shown one after another with nothing
+    /// between them that moves the text to a different place. The run ENDS at:
+    /// <c>BT</c>/<c>ET</c>; <c>T*</c>; <c>'</c> and <c>"</c> (they start a new
+    /// line, and begin the next run); <c>Td</c>/<c>TD</c> with a non-zero y
+    /// offset; <c>Tm</c> unless it repeats the previous <c>Tm</c>'s
+    /// a b c d f (same line, same orientation); <c>cm</c>, <c>q</c>, <c>Q</c>,
+    /// <c>Do</c>; and a <c>TJ</c> adjustment of -250 or more to the left, which
+    /// is a word gap rather than kerning. Strings are never joined across
+    /// streams, which keeps a field's appearance apart from the page.</para>
+    ///
+    /// <para><b>False-positive boundary.</b> Not a break: <c>Tf</c> (a word may
+    /// change font), a horizontal-only <c>Td</c>/<c>Tm</c> (per-glyph
+    /// positioning is the case to catch), <c>Tc</c>/<c>Tw</c>/<c>Tz</c> and
+    /// kerning tighter than a word gap. So two strings on one baseline that a
+    /// horizontal move separates by a column are joined, and a term that spans
+    /// them without a space is reported. Bytes are joined as shown, so a
+    /// two-byte-code font joins as UTF-16BE and a term is searched in the
+    /// encodings <see cref="FindTerm"/> uses for string objects. A glyph a
+    /// font maps to other characters is out of reach, as it is for every byte
+    /// search here; mutool is the oracle for that.</para>
+    ///
+    /// <para>Self-contained on purpose, like <see cref="Walk"/>: the gate must
+    /// not share excise's content-stream lexer.</para>
+    /// </summary>
+    internal static IReadOnlyList<ShownRun> ShownTextRuns(byte[] data, int from, int to)
+    {
+        var runs = new List<ShownRun>();
+        var current = new List<byte[]>();
+        double[]? lineMatrix = null;
+
+        void End()
+        {
+            if (current.Count > 0)
+            {
+                runs.Add(new ShownRun(current.SelectMany(o => o).ToArray(), current.ToArray()));
+                current = new List<byte[]>();
+            }
+            lineMatrix = null;
+        }
+
+        var operands = new List<object>();
+        var arrays = new Stack<List<object>>();
+        void Push(object o) => (arrays.Count > 0 ? arrays.Peek() : operands).Add(o);
+
+        void Operator(string op)
+        {
+            switch (op)
+            {
+                case "BT": case "ET": case "T*": case "cm": case "q": case "Q": case "Do":
+                    End();
+                    break;
+                case "Tj":
+                    if (operands.Count > 0 && operands[^1] is byte[] shown) current.Add(shown);
+                    break;
+                case "TJ":
+                    if (operands.Count > 0 && operands[^1] is List<object> array)
+                        foreach (var element in array)
+                        {
+                            if (element is byte[] part) current.Add(part);
+                            else if (element is double adjustment && adjustment <= WordGapAdjustment) End();
+                        }
+                    break;
+                case "'": case "\"":
+                    End();
+                    if (operands.Count > 0 && operands[^1] is byte[] line) current.Add(line);
+                    break;
+                case "Td": case "TD":
+                    if (operands.Count < 2 || operands[^1] is not double ty || ty != 0) End();
+                    break;
+                case "Tm":
+                    var m = operands.OfType<double>().TakeLast(6).ToArray();
+                    if (m.Length != 6 || lineMatrix == null
+                        || m[0] != lineMatrix[0] || m[1] != lineMatrix[1] || m[2] != lineMatrix[2]
+                        || m[3] != lineMatrix[3] || m[5] != lineMatrix[5])
+                        End();
+                    lineMatrix = m.Length == 6 ? m : null;
+                    break;
+            }
+        }
+
+        var i = from;
+        while (i < to)
+        {
+            var c = data[i];
+            if (IsWhitespace(c)) { i++; continue; }
+            switch (c)
+            {
+                case (byte)'%':
+                    while (i < to && data[i] != '\r' && data[i] != '\n') i++;
+                    break;
+                case (byte)'(':
+                {
+                    var (value, next, _) = LiteralString(data, i + 1, to);
+                    i = next;
+                    Push(value);
+                    break;
+                }
+                case (byte)'<' when i + 1 < to && data[i + 1] == '<':
+                case (byte)'>' when i + 1 < to && data[i + 1] == '>':
+                    i += 2;
+                    break;
+                case (byte)'<':
+                {
+                    var (value, next) = HexString(data, i + 1, to);
+                    if (value != null) { Push(value); i = next; } else i++;
+                    break;
+                }
+                case (byte)'[':
+                    arrays.Push(new List<object>());
+                    i++;
+                    break;
+                case (byte)']':
+                    i++;
+                    if (arrays.Count > 0)
+                    {
+                        var array = arrays.Pop();
+                        Push(array);
+                    }
+                    break;
+                case (byte)'/':
+                    i++;
+                    while (i < to && IsRegularCharacter(data[i])) i++;
+                    Push("/");
+                    break;
+                default:
+                {
+                    if (!IsRegularCharacter(c)) { i++; break; }
+                    var start = i;
+                    while (i < to && IsRegularCharacter(data[i])) i++;
+                    var word = Encoding.Latin1.GetString(data, start, i - start);
+                    if (double.TryParse(word, System.Globalization.NumberStyles.Float,
+                            System.Globalization.CultureInfo.InvariantCulture, out var number))
+                    {
+                        Push(number);
+                        break;
+                    }
+                    arrays.Clear();
+                    if (word == "ID") i = SkipInlineImage(data, i, to);
+                    else Operator(word);
+                    operands.Clear();
+                    break;
+                }
+            }
+        }
+        End();
+        return runs;
+    }
+
+    /// <summary>After an <c>ID</c> operator: the index after the <c>EI</c> that ends the image data.</summary>
+    private static int SkipInlineImage(byte[] data, int i, int to)
+    {
+        for (var p = i; p + 1 < to; p++)
+            if (data[p] == 'E' && data[p + 1] == 'I'
+                && IsWhitespace(data[p - 1])
+                && (p + 2 >= to || IsWhitespace(data[p + 2])))
+                return p + 2;
+        return to;
     }
 
     /// <summary>
