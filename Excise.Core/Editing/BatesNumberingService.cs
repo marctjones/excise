@@ -1,3 +1,4 @@
+using Excise.Core.Content;
 using Excise.Core.Document;
 using Excise.Core.Graphics;
 using System;
@@ -171,11 +172,20 @@ public class BatesNumberingService
         // Measure text
         var textSize = PdfGraphics.MeasureString(batesNumber, font);
 
-        // Calculate position
+        // Calculate position in the upright frame: the displayed page, y up, origin at its
+        // bottom-left. Then map that frame onto the page the way the typewriter tool does
+        // (#1985), so the stamp reads upright at the named edge of the page the reader sees
+        // whatever the page's /Rotate, CropBox or MediaBox origin (#2047).
         var (x, y) = CalculatePosition(page, textSize, options);
+        var flip = new ContentTransform(1, 0, 0, -1, 0, page.VisualHeight);
+        var uprightToContent = flip.Multiply(page.VisualToContent);
 
-        // Draw the Bates number
+        gfx.SaveState();
+        gfx.Transform(
+            uprightToContent.A, uprightToContent.B, uprightToContent.C,
+            uprightToContent.D, uprightToContent.E, uprightToContent.F);
         gfx.DrawString(batesNumber, font, brush, x, y);
+        gfx.RestoreState();
     }
 
     /// <summary>
@@ -197,7 +207,8 @@ public class BatesNumberingService
     }
 
     /// <summary>
-    /// Baseline origin of the stamp, in the y-UP page space <c>DrawString</c> takes.
+    /// Baseline origin of the stamp, in the y-UP upright frame of the displayed page (origin at its
+    /// bottom-left); the caller maps that frame onto the page.
     /// </summary>
     /// <remarks>
     /// The vertical maths used to treat y as measured DOWN from the top of the page, so
@@ -210,8 +221,9 @@ public class BatesNumberingService
     /// </remarks>
     private (double x, double y) CalculatePosition(PdfPage page, PdfSize textSize, BatesOptions options)
     {
-        var pageWidth = page.Width;
-        var pageHeight = page.Height;
+        // The displayed page (after /Rotate, inside the CropBox), not the raw MediaBox (#2047).
+        var pageWidth = page.VisualWidth;
+        var pageHeight = page.VisualHeight;
 
         var x = options.Position switch
         {
