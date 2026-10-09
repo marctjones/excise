@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "3f1e753aa8aa099e2a61c3c486eee58a2b940ee7d0ff4050bad7f3b45704572f",
+  "sourceFingerprint": "60488b2bdb4749b9a3b79416499a184c2a6a5926515ab8a23f37ca0d73c04bf6",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -1785,6 +1785,29 @@
         "product-integration-general"
       ],
       "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Document/RemovedPageReferenceScrubber.cs",
+      "path": "Excise.Core/Document/RemovedPageReferenceScrubber.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
       "promotion": "review-required"
     },
     {
@@ -6752,6 +6775,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Xfa/XfaStaticDataSync.cs",
+      "path": "Excise.Core/Xfa/XfaStaticDataSync.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Xfa/XfaStyle.cs",
       "path": "Excise.Core/Xfa/XfaStyle.cs",
       "kind": "source-file",
@@ -8279,29 +8312,6 @@
         "product-integration-general"
       ],
       "parentCapabilityModes": [],
-      "promotion": "review-required"
-    },
-    {
-      "id": "Excise.App/Models/TextRedactionResult.cs",
-      "path": "Excise.App/Models/TextRedactionResult.cs",
-      "kind": "source-file",
-      "facets": [
-        "redaction"
-      ],
-      "parentCapabilityModes": [
-        {
-          "capability": "pdf.17.security.redaction-content-removal",
-          "modes": [
-            "extract",
-            "mutate",
-            "render",
-            "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        }
-      ],
       "promotion": "review-required"
     },
     {
@@ -11102,6 +11112,29 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Ocr/TermRedactionRunner.cs",
+      "path": "Excise.Ocr/TermRedactionRunner.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Avalonia/Automation/PdfViewerAutomationPeer.cs",
       "path": "Excise.Avalonia/Automation/PdfViewerAutomationPeer.cs",
       "kind": "source-file",
@@ -11683,7 +11716,7 @@
     }
   ],
   "summary": {
-    "records": 590,
+    "records": 592,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 20,
@@ -11691,8 +11724,8 @@
       "fonts": 34,
       "forms": 11,
       "images": 40,
-      "product-integration-general": 338,
-      "redaction": 82,
+      "product-integration-general": 339,
+      "redaction": 83,
       "safe-save-and-metadata": 20,
       "security-and-encryption": 24,
       "transparency": 3
@@ -11741,10 +11774,10 @@
       "pdf.17.interactive.redaction-annotations:parse": 14,
       "pdf.17.interactive.redaction-annotations:preserve": 14,
       "pdf.17.interactive.redaction-annotations:render": 14,
-      "pdf.17.security.redaction-content-removal:extract": 82,
-      "pdf.17.security.redaction-content-removal:mutate": 82,
-      "pdf.17.security.redaction-content-removal:render": 82,
-      "pdf.17.security.redaction-content-removal:write": 82,
+      "pdf.17.security.redaction-content-removal:extract": 83,
+      "pdf.17.security.redaction-content-removal:mutate": 83,
+      "pdf.17.security.redaction-content-removal:render": 83,
+      "pdf.17.security.redaction-content-removal:write": 83,
       "pdf.17.syntax.encryption:mutate": 24,
       "pdf.17.syntax.encryption:parse": 24,
       "pdf.17.syntax.encryption:preserve": 24,
@@ -11770,7 +11803,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 24,
       "pdfe.product.security.signature-and-permission-warning:write": 24
     },
-    "fallbackRecords": 338,
+    "fallbackRecords": 339,
     "allRecordsMapped": true
   }
 }
