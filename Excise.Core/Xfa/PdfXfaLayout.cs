@@ -78,6 +78,13 @@ public sealed class XfaLayoutResult
     /// </summary>
     public IReadOnlyCollection<string> FieldsWrittenByScripts { get; init; } = Array.Empty<string>();
 
+    /// <summary>
+    /// Every field and exclusion group of the merged form, with its page box, access, items and data
+    /// binding (#2027). Filled only when this call laid the form out (<see cref="XfaLayoutStatus.LaidOut"/>);
+    /// rebuilding it for an already laid-out document is a later slice (#2031).
+    /// </summary>
+    internal IReadOnlyList<XfaFieldInfo> Fields { get; init; } = Array.Empty<XfaFieldInfo>();
+
     /// <summary>True when the document's pages now show the XFA form.</summary>
     public bool ShowsForm => Status is XfaLayoutStatus.LaidOut or XfaLayoutStatus.AlreadyLaidOut;
 }
@@ -125,14 +132,17 @@ public static class PdfXfaLayout
         var report = new XfaReport();
 
         List<XfaPage> pages;
+        XfaFormNode form;
+        bool xmlSignature;
         try
         {
             if (!XfaPackets.TryRead(document, out var packets, out var reason))
                 return Failed(document, reason, report);
 
             var template = new XfaTemplate(packets!.Template, budget, report);
-            var merge = new XfaMerge(budget, report, packets.DataRoot);
-            var form = merge.Merge(template.Root);
+            var merge = new XfaMerge(budget, report, packets.DataRoot, packets.Datasets);
+            form = merge.Merge(template.Root);
+            xmlSignature = packets.HasXmlSignature;
             if (options.RunFormCalc)
                 XfaScripts.Run(form, budget, report, cancellationToken);
             var layout = new XfaLayout(budget, report);
@@ -166,6 +176,20 @@ public static class PdfXfaLayout
             return Failed(document, ex.Message, report);
         }
 
+        // After the removal, so each page carries its final number (PdfCoordinateMapper checks it).
+        // The pages are already in place: a map that runs out of budget leaves no field described,
+        // which reads as "nothing editable", never as a wrong field.
+        IReadOnlyList<XfaFieldInfo> fields;
+        try
+        {
+            fields = XfaFieldMap.Build(form, pages, document.Pages.ToList(), xmlSignature, budget);
+        }
+        catch (XfaLayoutException ex)
+        {
+            report.Note($"field map not built: {ex.Message}");
+            fields = Array.Empty<XfaFieldInfo>();
+        }
+
         return new XfaLayoutResult
         {
             Status = XfaLayoutStatus.LaidOut,
@@ -175,6 +199,7 @@ public static class PdfXfaLayout
             ScriptsRun = new Dictionary<string, int>(report.ScriptsRun),
             ScriptFailures = report.ScriptFailures,
             FieldsWrittenByScripts = report.ScriptWrites,
+            Fields = fields,
         };
     }
 

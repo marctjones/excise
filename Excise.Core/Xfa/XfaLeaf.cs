@@ -144,12 +144,12 @@ internal sealed class XfaLeaf
 
             case "choiceList":
             {
-                var (display, selected) = ChoiceDisplay(e, node.Value);
+                var (_, selected) = ChoiceDisplay(node, node.Value);
                 var open = widget.AttrOr("open", "userControl");
                 if (open is "always" or "multiSelect")
                 {
                     var values = SelectedValues(node.Value);
-                    listItems = display.Select((text, i) => (text, values.Contains(SaveValue(e, i, text)))).ToList();
+                    listItems = XfaValues.ChoiceItems(node).Select(i => (i.Display, values.Contains(i.Save))).ToList();
                 }
                 else if (selected != null)
                 {
@@ -266,26 +266,20 @@ internal sealed class XfaLeaf
 
     private static bool IsDefaultPara(XfaParaSpec para) => ReferenceEquals(para, XfaParaSpec.Default);
 
-    private static (List<string> Display, string? Selected) ChoiceDisplay(XElement field, string? value)
+    private static (List<string> Display, string? Selected) ChoiceDisplay(XfaFormNode node, string? value)
     {
-        var itemLists = field.ChildrenNamed("items").ToList();
-        var displayItems = itemLists.FirstOrDefault(i => i.Attr("save") != "1") ?? itemLists.FirstOrDefault();
-        var saveItems = itemLists.FirstOrDefault(i => i.Attr("save") == "1");
-        var display = XfaValues.ItemTexts(displayItems);
-        var save = saveItems != null ? XfaValues.ItemTexts(saveItems) : display;
+        var items = XfaValues.ChoiceItems(node);
+        var display = items.Select(i => i.Display).ToList();
 
         if (string.IsNullOrEmpty(value))
             return (display, null);
 
-        var index = save.IndexOf(value);
-        return (display, index >= 0 && index < display.Count ? display[index] : value);
-    }
-
-    private static string SaveValue(XElement field, int index, string display)
-    {
-        var saveItems = field.ChildrenNamed("items").FirstOrDefault(i => i.Attr("save") == "1");
-        var save = XfaValues.ItemTexts(saveItems);
-        return index < save.Count ? save[index] : display;
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (items[i].Save == value)
+                return (display, items[i].Display);
+        }
+        return (display, value);
     }
 
     private static HashSet<string> SelectedValues(string? value)

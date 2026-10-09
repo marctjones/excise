@@ -155,6 +155,21 @@ internal sealed class XfaLayout
             foreach (var item in box.Lines.SelectMany(l => l.Items))
                 item.X = innerWidth - item.X - item.W;
         }
+        else if (layout == "tb")
+        {
+            // A child's (deprecated) hAlign places it horizontally within a flowed parent (XFA 3.3
+            // p729 field, p717 exclGroup); pdf.js applies it as CSS align-self in its top-to-bottom
+            // flex column. Ohio's CountyName is centred this way (#2027).
+            var innerWidth = box.W - margin.Horizontal;
+            foreach (var item in box.Lines.SelectMany(l => l.Items))
+            {
+                switch (item.Node.Element.Attr("hAlign"))
+                {
+                    case "center": item.X = (innerWidth - item.W) / 2; break;
+                    case "right": item.X = innerWidth - item.W; break;
+                }
+            }
+        }
 
         box.ContainsBreak = box.Lines.SelectMany(l => l.Items)
             .Any(k => k.BreakBefore != null || k.BreakAfter != null || k.ContainsBreak);
