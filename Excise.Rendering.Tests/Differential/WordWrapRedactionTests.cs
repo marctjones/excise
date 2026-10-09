@@ -335,7 +335,9 @@ public class WordWrapRedactionTests
             var occurrences = Regex.Matches(popplerInput, Regex.Escape(term)).Count;
             occurrences.Should().Be(1, $"fixture sanity: pdftotext reads the term across the column change:\n{popplerInput}");
 
-            var scannable = new[] { "日本語", "漢字" }.All(part => SavedPdfLeakScanner.FindTerm(pdf, part).Count > 0);
+            // The scanner reads these Identity codes as UTF-16BE strings.
+            foreach (var part in new[] { "日本語", "漢字" })
+                SavedPdfLeakScanner.FindTerm(pdf, part).Should().NotBeEmpty($"fixture sanity: the scanner finds '{part}' in the input");
 
             RedactionReport report;
             byte[] saved;
@@ -345,11 +347,8 @@ public class WordWrapRedactionTests
             report.WordWrapCandidates.Should().BeEmpty("a confirmed column wrap is removed, not merely reported");
             report.IsCleanSuccess.Should().BeTrue(report.ToString());
 
-            // The scanner reads this font's codes only if it decodes them through
-            // /ToUnicode; when it cannot see the term in the input, Poppler alone judges.
-            if (scannable)
-                foreach (var part in new[] { "日本語", "漢字" })
-                    SavedPdfLeakScanner.FindTerm(saved, part).Should().BeEmpty($"'{part}' must leave the file");
+            foreach (var part in new[] { "日本語", "漢字" })
+                SavedPdfLeakScanner.FindTerm(saved, part).Should().BeEmpty($"'{part}' must leave the file");
             var popplerOutput = PdftotextTextExtractor.ExtractPage(output, 1);
             popplerOutput.Should().NotBeNull();
             popplerOutput.Should().NotContain("日").And.NotContain("本").And.NotContain("語")
