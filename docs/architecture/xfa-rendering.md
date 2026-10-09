@@ -142,6 +142,22 @@ named below), not to this page.
 16. **XFA JavaScript never runs.** #1571 (a restricted JavaScript engine) is closed. Totals,
     validations and barcodes a form computes in JavaScript are not updated by excise; the
     dynamic-form notice says JavaScript does not run.
+17. **Redacting a filled dynamic form flattens the generated fields first.** Generated hidden
+    and duplicate widgets can hold a value that an area redaction removed from a visible field,
+    so the generated fields are baked into the page content, then the normal parse, filter,
+    rebuild pipeline runs, then decision 5 removes the datasets. The redaction report says
+    "generated XFA fields flattened". Not built; Phase 3 slices S1 and S2 (#1547).
+18. **Reopening a form whose widgets and datasets disagree.** The datasets hash is stored with
+    the layout marker. If the datasets still match it, a widget edit made by another tool is
+    newer: it is written into the datasets and reported. If the datasets changed (Acrobat
+    edited them), the datasets win and the widgets are regenerated. Not built; slice S4.
+19. **Display formatting is separate from storage.** The datasets and `/V` stay canonical
+    (XFA 3.3 p152, p163-164); decision 8 (values drawn raw) holds until slice S6, which applies
+    the form's `format` picture to the drawn rendition only. With it comes one redaction rule: a
+    hit on a field's drawn value scrubs that field's `/V`, `/AP` and every field bound to the
+    same data node whole, never by substring. Fields whose bind picture excise cannot apply are
+    read-only until then, and `/Perms` is stripped and reported on every save of a laid-out
+    dynamic form (decision 12 extended).
 
 ## Zero cost for non-XFA documents
 
