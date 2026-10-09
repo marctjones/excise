@@ -76,7 +76,7 @@ public class ShortcutContractTests
                 key.Should().NotBeNullOrEmpty($"'{header}' renders its gesture");
 
                 // 1. No two menu items carry the same gesture.
-                key = key!;
+                key ??= string.Empty; // the assertion above already failed the test if it was null
                 if (seen.TryGetValue(key, out var other))
                     problems.Add($"{key} is on both '{other}' and '{header}'");
                 else
