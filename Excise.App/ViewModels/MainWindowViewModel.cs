@@ -163,6 +163,7 @@ internal partial class MainWindowViewModel : ViewModelBase
         _recentFilesStore = recentFilesStore ?? throw new ArgumentNullException(nameof(recentFilesStore));
         _documentService.DocumentReleased += OnDocumentReleased;
         PropertyChanged += RaiseCanPrintWithDocumentState;
+        PropertyChanged += RaiseWindowTitleWithDocumentState;
 
         InitializeCommands();
         _logger.LogInformation("MainWindowViewModel initialized");

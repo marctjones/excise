@@ -9,7 +9,7 @@ namespace Excise.App.Views;
 /// toolbar row use. No command logic lives here; MainWindow's code-behind
 /// owns creating, positioning, showing, hiding, and closing this window (see
 /// MainWindow.axaml.cs's SetAnnotationPaletteVisibility), matching how it
-/// owns other view-only mechanics like BeginMoveDrag for its own title bar.
+/// owns other view-only mechanics such as the document-tab switch.
 /// </summary>
 internal partial class AnnotationPaletteWindow : Window
 {
