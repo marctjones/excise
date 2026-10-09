@@ -27,9 +27,7 @@ MainWindow/Button:SaveFileCommand	B	reached only by Command.Execute in GuiClickS
 MainWindow/Button:SaveFlattenedFormCopyCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
 MainWindow/Button:ToggleContinuousViewCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
 MainWindow/Button:ToggleFormAuthoringModeCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
-MainWindow/Button:ToggleRedactionModeCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
 MainWindow/Button:ToggleSearchCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
-MainWindow/Button:ToggleTextSelectionModeCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
 MainWindow/Button:ToggleThumbnailsCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
 MainWindow/Button:ToggleTypewriterModeCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
 MainWindow/Button:ZoomFitWidthCommand	B	reached only by Command.Execute in GuiClickSafetySweepTests; no pointer/key path
