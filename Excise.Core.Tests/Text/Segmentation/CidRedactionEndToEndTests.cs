@@ -35,6 +35,9 @@ public class CidRedactionEndToEndTests
         string.Concat(letters.Select(l => l.Value)).Should().Contain("中文",
             "the Identity-H + ToUnicode font must extract as 中文");
 
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdf).Should().Be("中文", "control: MuPDF reads both glyphs in the input");
+
         // Locate 文 (the 2nd glyph) and redact a band over just it.
         var wen = letters.First(l => l.Value == "文");
         var area = new PdfRectangle(wen.GlyphRectangle.Left + 0.5, wen.GlyphRectangle.Bottom - 2,
@@ -42,6 +45,8 @@ public class CidRedactionEndToEndTests
         page.RedactArea(area, RedactionOptions.Default with { DrawBox = false });
 
         var saved = doc.SaveToBytes();
+        MutoolTextOracle.ExtractFolded(saved).Should().Be("中",
+            "MuPDF must read only the surviving glyph from the saved file");
         var content = Encoding.Latin1.GetString(
             PdfDocument.Open(saved).GetPage(1).GetContentStreamBytes());
 
@@ -76,10 +81,14 @@ public class CidRedactionEndToEndTests
         var page = doc.GetPage(1);
 
         page.Text.Should().Be("ZY", "the 1-byte codespace must decode 2 letters from 2 bytes");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdf).Should().Be("ZY", "control: MuPDF reads both glyphs in the input");
 
         doc.RedactText("Y", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(1);
 
         var saved = doc.SaveToBytes();
+        MutoolTextOracle.ExtractFolded(saved).Should().Be("Z",
+            "MuPDF must read only the surviving glyph from the saved file");
         var reopened = PdfDocument.Open(saved);
         reopened.GetPage(1).Text.Should().Be("Z", "only the targeted byte/glyph should survive");
 
