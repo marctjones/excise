@@ -68,9 +68,34 @@ public partial class PdfPage
     /// </summary>
     public IReadOnlyList<PdfField> GetFormFields()
     {
+        var pageNum = PageNumber;
+        return FormFields(f => f.PageNumber == pageNum);
+    }
+
+    /// <summary>
+    /// #2040: the fields with a widget on this page, whichever of their widgets
+    /// it is: <see cref="GetFormFields"/> plus every field one of whose other
+    /// widgets this page's <c>/Annots</c> lists (or, outside every
+    /// <c>/Annots</c>, whose <c>/P</c> names this page;
+    /// <see cref="PdfField.WidgetPageNumbers"/>). A field repeated on several
+    /// pages (a name or case number in every header) draws text on each, and
+    /// extraction and redaction read a page through this list: keyed by the
+    /// first widget's page, the text another page's widget drew was neither
+    /// found nor redacted. <see cref="PdfField.Rect"/> is still the FIRST
+    /// widget's: a caller placing anything on this page takes the rect of the
+    /// field's widget here.
+    /// </summary>
+    internal IReadOnlyList<PdfField> GetFormFieldsWithWidgetsOnPage()
+    {
+        var pageNum = PageNumber;
+        return FormFields(f => f.PageNumber == pageNum || f.WidgetPageNumbers.Contains(pageNum));
+    }
+
+    private IReadOnlyList<PdfField> FormFields(Func<PdfField, bool> onThisPage)
+    {
         var form = _document.GetAcroForm();
         var pageNum = PageNumber;
-        var linked = form?.Fields.Where(f => f.PageNumber == pageNum).ToList()
+        var linked = form?.Fields.Where(onThisPage).ToList()
             ?? new List<PdfField>();
 
         var linkedWidgets = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);

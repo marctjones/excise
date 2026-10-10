@@ -312,7 +312,10 @@ internal static class InteractiveRedactionScrubber
     {
         state ??= new TermScrubState();
         IReadOnlyList<PdfField> fields;
-        try { fields = page.GetFormFields(); }
+        // #2040: every field with a widget on this page, not only those whose
+        // FIRST widget is here: a match or an area on page 2 of a field
+        // repeated on pages 1 and 2 otherwise scrubbed nothing.
+        try { fields = page.GetFormFieldsWithWidgetsOnPage(); }
         catch (Exception ex) when (ex is not OutOfMemoryException) { return false; }
 
         var changed = false;

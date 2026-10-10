@@ -223,6 +223,15 @@ public sealed class PdfField
     internal IReadOnlyList<PdfDictionary> WidgetDictionaries { get; }
 
     /// <summary>
+    /// #2040: the page each of <see cref="WidgetDictionaries"/> is on, index for
+    /// index: the page whose <c>/Annots</c> lists it (where a reader draws it,
+    /// ISO 32000-2 12.5.2), else the page its <c>/P</c> names, else null.
+    /// <see cref="PageNumber"/> is the first widget's page only; a field
+    /// repeated on several pages has a widget, and text, on each.
+    /// </summary>
+    internal IReadOnlyList<int?> WidgetPageNumbers { get; }
+
+    /// <summary>
     /// Widget annotations associated with this field, including per-widget
     /// rectangles and export values when available.
     /// </summary>
@@ -242,7 +251,8 @@ public sealed class PdfField
         PdfDictionary rawDictionary,
         IReadOnlyList<PdfDictionary> widgetDictionaries,
         int flags,
-        IReadOnlyList<PdfFieldWidget> widgets)
+        IReadOnlyList<PdfFieldWidget> widgets,
+        IReadOnlyList<int?>? widgetPageNumbers = null)
     {
         _document = document;
         FullName = fullName;
@@ -258,6 +268,9 @@ public sealed class PdfField
         RawDictionary = rawDictionary;
         WidgetDictionaries = widgetDictionaries;
         Widgets = widgets;
+        WidgetPageNumbers = widgetPageNumbers is { } pages && pages.Count == widgetDictionaries.Count
+            ? pages
+            : widgetDictionaries.Select(_ => pageNumber).ToList();
     }
 
     /// <summary>
