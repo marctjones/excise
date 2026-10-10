@@ -163,12 +163,15 @@ public class AcroFormReadOnlyTests
     public void RedactText_RemovesAcroFormValueAfterSaveAndReopen()
     {
         var pdf = BuildFormPdf(textValue: "SECRET-12345");
+        // Control: the independent scanner can see the term in the input.
+        SavedPdfLeakScanner.FindTerm(pdf, "SECRET").Should().NotBeEmpty();
         using var doc = PdfDocument.Open(pdf);
 
         var matches = doc.RedactText("SECRET", RedactionOptions.Default).VerifiedRemovals;
         var bytes = doc.SaveToBytes();
 
         matches.Should().Be(1);
+        SavedPdfLeakScanner.FindTerm(bytes, "SECRET").Should().BeEmpty();
         using var reopened = PdfDocument.Open(bytes);
         reopened.GetPage(1).Text.Should().NotContain("SECRET");
         // POLICY REVERSED, #1038. This assertion used to require /V to be
@@ -190,12 +193,15 @@ public class AcroFormReadOnlyTests
     public void RedactText_RemovesAcroFormDefaultValueAfterSaveAndReopen()
     {
         var pdf = BuildFormPdf(textValue: null, defaultValue: "Fallback SECRET");
+        // Control: the independent scanner can see the term in the input.
+        SavedPdfLeakScanner.FindTerm(pdf, "SECRET").Should().NotBeEmpty();
         using var doc = PdfDocument.Open(pdf);
 
         var matches = doc.RedactText("SECRET", RedactionOptions.Default).VerifiedRemovals;
         var bytes = doc.SaveToBytes();
 
         matches.Should().Be(1);
+        SavedPdfLeakScanner.FindTerm(bytes, "SECRET").Should().BeEmpty();
         using var reopened = PdfDocument.Open(bytes);
         reopened.GetPage(1).Text.Should().NotContain("SECRET");
         // Same reversal as /V above — see that test for what the old policy cost.

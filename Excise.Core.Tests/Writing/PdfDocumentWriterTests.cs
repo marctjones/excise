@@ -385,10 +385,13 @@ public class PdfDocumentWriterTests
     {
         using var source = PdfDocument.Open(CreateSimplePdf("SECRET remains visible", version: "1.5"));
         var compressed = source.SaveToBytes();
+        // Control: the inflating scanner can see the term in the compressed input.
+        SavedPdfLeakScanner.FindTerm(compressed, "SECRET").Should().NotBeEmpty();
 
         using var doc = PdfDocument.Open(compressed);
         doc.RedactText("SECRET", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(1);
         var redacted = doc.SaveToBytes();
+        SavedPdfLeakScanner.FindTerm(redacted, "SECRET").Should().BeEmpty();
 
         Encoding.Latin1.GetString(redacted).Should().Contain("/Type /ObjStm",
             "redacted PDF 1.5+ output should still use the compressed writer path when eligible");
@@ -402,10 +405,13 @@ public class PdfDocumentWriterTests
     {
         using var source = PdfDocument.Open(CreateSimplePdf("AREASECRET remains visible", version: "1.5"));
         var compressed = source.SaveToBytes();
+        // Control: the inflating scanner can see the term in the compressed input.
+        SavedPdfLeakScanner.FindTerm(compressed, "AREASECRET").Should().NotBeEmpty();
 
         using var doc = PdfDocument.Open(compressed);
         doc.GetPage(1).RedactArea(new PdfRectangle(95, 690, 180, 720), RedactionOptions.Default with { DrawBox = false });
         var redacted = doc.SaveToBytes();
+        SavedPdfLeakScanner.FindTerm(redacted, "AREASECRET").Should().BeEmpty();
 
         Encoding.Latin1.GetString(redacted).Should().Contain("/Type /ObjStm");
         using var reopened = PdfDocument.Open(redacted);

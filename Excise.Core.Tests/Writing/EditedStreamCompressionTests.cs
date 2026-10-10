@@ -106,9 +106,13 @@ public class EditedStreamCompressionTests
     [Fact]
     public void RedactedContentStream_IsSavedFlateEncoded_AndReadsBack()
     {
-        using var doc = PdfDocument.Open(CompressedTextPagePdf());
+        var input = CompressedTextPagePdf();
+        // Control: the inflating scanner can see the term in the (compressed) input.
+        SavedPdfLeakScanner.FindTerm(input, Term).Should().NotBeEmpty();
+        using var doc = PdfDocument.Open(input);
         doc.RedactText(Term, RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(12);
         var saved = doc.SaveToBytes();
+        SavedPdfLeakScanner.FindTerm(saved, Term).Should().BeEmpty();
 
         using var reopened = PdfDocument.Open(saved);
         var stream = PageContentStream(reopened);

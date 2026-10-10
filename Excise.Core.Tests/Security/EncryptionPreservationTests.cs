@@ -185,6 +185,65 @@ public sealed class EncryptionPreservationTests
             "the output must stay encrypted and keep the source's V=4 AES-128 (#643)");
         reopened.GetPage(1).Text.Should().NotContain("REDACTME", "the redacted term must be gone")
             .And.Contain("keep", "surviving text must remain");
+
+        // Independent oracle (CLAUDE.md rule 4): the output is encrypted, so a
+        // byte scan sees only ciphertext. qpdf decrypts it with its own crypto,
+        // then the inflating scanner reads the plaintext. The control proves the
+        // chain can see the term in the encrypted input.
+        var qpdf = FindOnPath("qpdf");
+        Assert.SkipWhen(qpdf is null, "qpdf not on PATH");
+        SavedPdfLeakScanner.FindTerm(QpdfDecrypt(qpdf!, encrypted), "REDACTME").Should().NotBeEmpty(
+            "control: the decrypt+scan chain must see the term in the input");
+        SavedPdfLeakScanner.FindTerm(QpdfDecrypt(qpdf!, outBytes), "REDACTME").Should().BeEmpty(
+            "the term must be absent from every carrier of the qpdf-decrypted output");
+    }
+
+    private static byte[] QpdfDecrypt(string qpdf, byte[] encrypted)
+    {
+        var dir = Path.Combine(Path.GetTempPath(), $"excise-qdec-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var input = Path.Combine(dir, "in.pdf");
+            var output = Path.Combine(dir, "out.pdf");
+            File.WriteAllBytes(input, encrypted);
+            var start = new System.Diagnostics.ProcessStartInfo(qpdf)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+            };
+            foreach (var a in new[] { "--decrypt", "--password=", input, output })
+                start.ArgumentList.Add(a);
+            using var process = System.Diagnostics.Process.Start(start)!;
+            var stdout = process.StandardOutput.ReadToEndAsync();
+            var stderr = process.StandardError.ReadToEndAsync();
+            if (!process.WaitForExit(30_000))
+            {
+                process.Kill(entireProcessTree: true);
+                throw new TimeoutException("qpdf --decrypt exceeded 30 seconds");
+            }
+            // Exit 3 = succeeded with warnings.
+            if (process.ExitCode is not (0 or 3))
+                throw new InvalidOperationException($"qpdf --decrypt exited {process.ExitCode}: {stderr.Result}");
+            return File.ReadAllBytes(output);
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    private static string? FindOnPath(string executable)
+    {
+        foreach (var directory in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator))
+        {
+            if (string.IsNullOrWhiteSpace(directory)) continue;
+            var candidate = Path.Combine(directory, executable);
+            if (File.Exists(candidate)) return candidate;
+            if (File.Exists(candidate + ".exe")) return candidate + ".exe";
+        }
+        return null;
     }
 
     [Fact]

@@ -122,12 +122,16 @@ public class StructElementMcidTextMapTests
     [Fact]
     public void ResolveStructElementText_AfterRedaction_DoesNotReturnTheRemovedTerm()
     {
-        using var doc = PdfDocument.Open(TaggedDocument(p => $"Alpha{p:D2}",
-            p => p is 2 or 5 ? "Keep REDACTEDWORD tail" : $"Body text {p}"));
+        var input = TaggedDocument(p => $"Alpha{p:D2}",
+            p => p is 2 or 5 ? "Keep REDACTEDWORD tail" : $"Body text {p}");
+        // Control: the independent scanner can see the term in the input.
+        SavedPdfLeakScanner.FindTerm(input, "REDACTEDWORD").Should().NotBeEmpty();
+        using var doc = PdfDocument.Open(input);
         var elements = Descendants(doc.GetStructureTree()).ToList();
         Walk(doc, elements).Count(t => t.Contains("REDACTEDWORD")).Should().BeGreaterThanOrEqualTo(2);
 
         doc.RedactText("REDACTEDWORD", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(2);
+        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "REDACTEDWORD").Should().BeEmpty();
 
         var after = Walk(doc, elements);
         after.Should().NotContain(t => t.Contains("REDACTEDWORD"),

@@ -7,6 +7,7 @@ using Excise.Core.Document;
 using Excise.Core.Fonts;
 using Excise.Core.Text.Segmentation;
 using Excise.Core.Tests.Fixtures;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text;
@@ -81,8 +82,20 @@ public class RtlType0ExtractionTests
         removed.Should().BeGreaterThan(0,
             "a logical-order needle must match the visual-order CID run; 0 matches is the " +
             "silent-failure mode (excise cannot redact what excise cannot read)");
-        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        using var reopened = PdfDocument.Open(saved);
         reopened.GetPage(1).Text.Should().NotContain(ArabicWord);
+
+        // Independent oracle: the CIDs are glyph ids, so only a real text
+        // extractor (MuPDF, via the font's ToUnicode) can see the word.
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        var letters = ArabicScalars.Select(s => char.ConvertFromUtf32(s)).ToArray();
+        var before = MutoolTextOracle.ExtractAllPages(pdf);
+        letters.Should().OnlyContain(l => before.Contains(l),
+            "control: mutool must read the word in the input, or its silence after proves nothing");
+        var after = MutoolTextOracle.ExtractAllPages(saved);
+        letters.Should().OnlyContain(l => !after.Contains(l),
+            "MuPDF must independently agree no letter of the word survives, in either order");
     }
 
     /// <summary>
