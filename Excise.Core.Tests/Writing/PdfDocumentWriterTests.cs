@@ -883,38 +883,46 @@ public class PdfDocumentWriterTests
     }
 
     [Fact]
-    public void EncryptedSave_UsesClassicXRefTableEvenForPdf15()
+    public void EncryptedSave_UsesObjectStreamsAndAnUnencryptedXRefStreamForPdf15()
     {
-        using var doc = PdfDocument.Open(CreateSimplePdf("Encrypted Classic", version: "1.5"));
+        // #2053: object streams are legal in an encrypted file; refusing them
+        // made Reduce File Size grow an encrypted form 3.5x.
+        using var doc = PdfDocument.Open(CreateSimplePdf("Encrypted Compressed", version: "1.5"));
 
-        var saved = Encoding.Latin1.GetString(doc.SaveToBytes(new PdfEncryptionOptions()));
+        var savedBytes = doc.SaveToBytes(new PdfEncryptionOptions { UserPassword = "user", OwnerPassword = "owner" });
+        var saved = Encoding.Latin1.GetString(savedBytes);
 
-        saved.Should().Contain("\nxref\n");
-        saved.Should().Contain("\ntrailer\n");
         saved.Should().Contain("/Encrypt");
-        saved.Should().NotContain("/Type /ObjStm");
-        saved.Should().NotContain("/Type /XRef");
+        saved.Should().Contain("/Type /ObjStm");
+        saved.Should().Contain("/Type /XRef");
+        saved.Should().NotContain("\ntrailer\n");
+
+        using var reopened = PdfDocument.Open(savedBytes, new PdfOpenOptions { UserPassword = "user" });
+        reopened.GetPage(1).Text.Should().Contain("Encrypted Compressed");
     }
 
     [Theory]
     [InlineData(PdfEncryptionAlgorithm.Aes128)]
     [InlineData(PdfEncryptionAlgorithm.Aes256)]
-    public void EncryptedSave_UsesClassicXRefTableForEverySupportedAlgorithm(PdfEncryptionAlgorithm algorithm)
+    public void EncryptedSave_UsesAnXRefStreamForEverySupportedAlgorithm(PdfEncryptionAlgorithm algorithm)
     {
         using var doc = PdfDocument.Open(CreateSimplePdf($"Encrypted {algorithm}", version: "1.5"));
 
-        var saved = Encoding.Latin1.GetString(doc.SaveToBytes(new PdfEncryptionOptions
+        var savedBytes = doc.SaveToBytes(new PdfEncryptionOptions
         {
             Algorithm = algorithm,
             UserPassword = "user",
             OwnerPassword = "owner",
-        }));
+        });
+        var saved = Encoding.Latin1.GetString(savedBytes);
 
-        saved.Should().Contain("\nxref\n");
-        saved.Should().Contain("\ntrailer\n");
         saved.Should().Contain("/Encrypt");
-        saved.Should().NotContain("/Type /ObjStm");
-        saved.Should().NotContain("/Type /XRef");
+        saved.Should().Contain("/Type /ObjStm");
+        saved.Should().Contain("/Type /XRef");
+        saved.Should().NotContain("\ntrailer\n");
+
+        using var reopened = PdfDocument.Open(savedBytes, new PdfOpenOptions { UserPassword = "user" });
+        reopened.GetPage(1).Text.Should().Contain($"Encrypted {algorithm}");
     }
 
     [Fact]

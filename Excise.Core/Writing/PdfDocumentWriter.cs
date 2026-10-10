@@ -85,8 +85,7 @@ public class PdfDocumentWriter
     }
 
     private bool ShouldUseCompressedObjects()
-        => _encryptionOptions == null
-           && VersionAtLeast(SaveSession.Version, 1, 5)
+        => VersionAtLeast(SaveSession.Version, 1, 5)
            && !IsPdfA1();
 
     /// <summary>
@@ -407,7 +406,18 @@ public class PdfDocumentWriter
             WriteIndirectObject(writer, objNum, gen, obj, isEncryptDict: false);
         }
 
+        // The /Encrypt dictionary stays a top-level, unencrypted object: a
+        // reader needs it before it has a key, and it cannot live inside an
+        // object stream (ISO 32000-2 §7.5.7).
+        if (_encryptionOptions != null)
+        {
+            _objectOffsets[_encryptObjNum] = writer.BaseStream.Position;
+            WriteIndirectObject(writer, _encryptObjNum, 0, _encryptDict!, isEncryptDict: true);
+        }
+
         var maxExisting = allObjects.Count == 0 ? 0 : allObjects.Max(o => o.ObjectNumber);
+        if (_encryptionOptions != null)
+            maxExisting = Math.Max(maxExisting, _encryptObjNum);
         var objectStreamNumber = maxExisting + 1;
         var perStream = OptimizeForSize ? MaxObjectsPerCompactObjectStream : MaxObjectsPerObjectStream;
         foreach (var chunk in packable.Chunk(perStream))
@@ -718,7 +728,10 @@ public class PdfDocumentWriter
         trailer["Length"] = new PdfInteger(xrefData.Length);
         var stream = new PdfStream(trailer, xrefData);
 
-        WriteIndirectObject(writer, xrefObjNum, 0, stream, isEncryptDict: false);
+        // A cross-reference stream is never encrypted (ISO 32000-2 §7.6.2), and
+        // its dictionary is the trailer, so it takes the same unencrypted path
+        // as the /Encrypt dictionary.
+        WriteIndirectObject(writer, xrefObjNum, 0, stream, isEncryptDict: true);
         writer.Write(Encoding.ASCII.GetBytes($"startxref\n{xrefOffset}\n%%EOF\n"));
         return xrefOffset;
     }

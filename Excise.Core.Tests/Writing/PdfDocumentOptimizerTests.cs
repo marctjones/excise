@@ -7,6 +7,7 @@ using Excise.Core.Document;
 using Excise.Core.Primitives;
 using Excise.Core.Security;
 using Excise.Core.Writing;
+using Excise.TestSupport;
 using Xunit;
 using static Excise.Core.Tests.Writing.OptimizerFixtures;
 
@@ -284,6 +285,104 @@ public sealed class PdfDocumentOptimizerTests : IDisposable
         text.Should().Contain("AESv2", "the source's AES-128 must be kept, not upgraded or dropped");
         var (checkExit, checkText) = Run(qpdf!, "--check", $"--password={password}", output);
         checkExit.Should().Be(0, checkText);
+    }
+
+    /// <summary>
+    /// #2053 — the writer used to refuse object streams for any encrypted
+    /// output, so Reduce File Size grew a field-heavy encrypted form
+    /// (IRS W-4, AES-256: 188 KB to 657 KB). Object streams are legal in an
+    /// encrypted file (§7.5.7; the container stream is encrypted, the
+    /// objects inside are not encrypted separately, and the xref stream is
+    /// never encrypted). The encrypted copy must stay close to the plain one
+    /// AND still be encrypted, open with the same password, and read the
+    /// same text in two independent tools.
+    /// </summary>
+    [Theory]
+    [InlineData(PdfEncryptionAlgorithm.Aes128, "AESv2")]
+    [InlineData(PdfEncryptionAlgorithm.Aes256, "AESv3")]
+    public void SaveOptimizedCopy_EncryptedOutputStaysCloseToThePlainOptimizedSize(
+        PdfEncryptionAlgorithm algorithm, string qpdfName)
+    {
+        const string password = "s3cret";
+        var plainSource = FormHeavyPage();
+        var plainOut = Path.Combine(_dir, "plain-small.pdf");
+        using (var plain = PdfDocument.Open(plainSource))
+        {
+            PdfDocumentOptimizer.SaveOptimizedCopy(
+                plain.SaveToBytes(), plainOut, Lossless, cancellationToken: TestContext.Current.CancellationToken);
+        }
+
+        var encryptedPath = Path.Combine(_dir, "encrypted.pdf");
+        using (var plain = PdfDocument.Open(plainSource))
+        {
+            plain.Save(encryptedPath, new PdfEncryptionOptions
+            {
+                UserPassword = password,
+                OwnerPassword = "owner-" + password,
+                Algorithm = algorithm,
+            });
+        }
+
+        var encryptedOut = Path.Combine(_dir, "encrypted-small.pdf");
+        using (var source = PdfDocument.Open(encryptedPath, new PdfOpenOptions { UserPassword = password }))
+        {
+            PdfDocumentOptimizer.SaveOptimizedCopy(
+                source.SaveToBytes(), encryptedOut, Lossless, source.GetReEncryptionOptions(password),
+                TestContext.Current.CancellationToken);
+        }
+
+        var plainSize = new FileInfo(plainOut).Length;
+        var encryptedSize = new FileInfo(encryptedOut).Length;
+        encryptedSize.Should().BeLessThan((long)(plainSize * 1.10),
+            $"encrypted {encryptedSize} B vs plain {plainSize} B (the pre-fix writer gave ~3x)");
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(encryptedOut), "Louise Anne")
+            .Should().BeEmpty("the encrypted copy must not hold readable content");
+
+        using (var reopened = PdfDocument.Open(encryptedOut, new PdfOpenOptions { UserPassword = password }))
+            reopened.IsEncrypted.Should().BeTrue();
+
+        var qpdf = FindOnPath("qpdf");
+        var mutool = FindOnPath("mutool");
+        Assert.SkipWhen(qpdf is null || mutool is null, "qpdf and mutool must be on PATH: the verdict comes from independent readers");
+        var (exit, text) = Run(qpdf!, "--show-encryption", $"--password={password}", encryptedOut);
+        exit.Should().Be(0, text);
+        text.Should().Contain(qpdfName, "the source's security handler must be kept");
+        var (checkExit, checkText) = Run(qpdf!, "--check", $"--password={password}", encryptedOut);
+        checkExit.Should().Be(0, checkText);
+        var (noPwExit, _) = Run(mutool!, "draw", "-F", "txt", "-o", "-", encryptedOut);
+        noPwExit.Should().NotBe(0, "the output must still demand the password");
+
+        var (plainTextExit, plainText) = Run(mutool!, "draw", "-F", "txt", "-o", "-", plainOut);
+        var (encTextExit, encText) = Run(mutool!, "draw", "-p", password, "-F", "txt", "-o", "-", encryptedOut);
+        plainTextExit.Should().Be(0, plainText);
+        encTextExit.Should().Be(0, encText);
+        // mutool prints the file path on its "page" header lines; drop them.
+        static string BodyOnly(string t) => string.Join('\n', t.Split('\n').Where(l => !l.StartsWith("page ", StringComparison.Ordinal)));
+        encText.Should().Contain("Louise Anne");
+        BodyOnly(encText).Should().Be(BodyOnly(plainText));
+    }
+
+    /// <summary>A page with a compressed text stream and 400 widget fields: many small objects.</summary>
+    private static byte[] FormHeavyPage()
+    {
+        var pdf = new MiniPdf();
+        var catalog = pdf.Reserve();
+        var pages = pdf.Reserve();
+        var page = pdf.Reserve();
+        var contents = pdf.Add("<< /Filter /FlateDecode >>", Deflate(TextContent()));
+        var font = pdf.Add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
+        var fields = Enumerable.Range(0, 400)
+            .Select(i => pdf.Add(
+                $"<< /FT /Tx /T (topmostSubform[0].Page1[0].f{i}[0]) /V (value {i}) /Subtype /Widget " +
+                $"/Rect [{10 + i % 20 * 20} {10 + i / 20 * 12} {28 + i % 20 * 20} {20 + i / 20 * 12}] /F 4 /P {page} 0 R >>"))
+            .ToArray();
+        var refs = string.Join(' ', fields.Select(f => $"{f} 0 R"));
+        pdf.Set(catalog, $"<< /Type /Catalog /Pages {pages} 0 R /AcroForm << /Fields [{refs}] >> >>");
+        pdf.Set(pages, $"<< /Type /Pages /Kids [{page} 0 R] /Count 1 >>");
+        pdf.Set(page,
+            $"<< /Type /Page /Parent {pages} 0 R /MediaBox [0 0 612 792] " +
+            $"/Resources << /Font << /F1 {font} 0 R >> >> /Contents {contents} 0 R /Annots [{refs}] >>");
+        return pdf.Build(catalog);
     }
 
     [Fact]
