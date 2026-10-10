@@ -94217,6 +94217,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/RemovedPageUndoTests.cs::RemovedPageUndoTests.InsertPageFromAnotherDocument_IsACopy_AndRemovingTheSourcePageStillScrubsTheSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRedaction_DoesNotReturnTheRemovedTerm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -94684,13 +94691,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.BoxInsideAFormXObject_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AFormXObjectWithNoDarkFill_ProducesNoMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95559,6 +95559,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/RemovedPageUndoTests.cs::RemovedPageUndoTests.InsertPageFromAnotherDocument_IsACopy_AndRemovingTheSourcePageStillScrubsTheSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRedaction_DoesNotReturnTheRemovedTerm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -96026,13 +96033,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.BoxInsideAFormXObject_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AFormXObjectWithNoDarkFill_ProducesNoMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96915,6 +96915,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/RemovedPageUndoTests.cs::RemovedPageUndoTests.InsertPageFromAnotherDocument_IsACopy_AndRemovingTheSourcePageStillScrubsTheSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRedaction_DoesNotReturnTheRemovedTerm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97382,13 +97389,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.BoxInsideAFormXObject_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AFormXObjectWithNoDarkFill_ProducesNoMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98297,6 +98297,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/RemovedPageUndoTests.cs::RemovedPageUndoTests.InsertPageFromAnotherDocument_IsACopy_AndRemovingTheSourcePageStillScrubsTheSource",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRedaction_DoesNotReturnTheRemovedTerm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98764,13 +98771,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.BoxInsideAFormXObject_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AFormXObjectWithNoDarkFill_ProducesNoMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112582,8 +112582,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 8676,
-    "testMethodsWithCapabilityCandidate": 5645,
+    "testMethods": 8698,
+    "testMethodsWithCapabilityCandidate": 5665,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
