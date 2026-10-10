@@ -477,6 +477,54 @@ public static class PdfXfaLayout
         return document.Resolve(privateData.GetOptional(MarkerKey) ?? PdfNull.Instance) is PdfBoolean { Value: true };
     }
 
+    /// <summary>The keys excise writes under a page's <c>/PieceInfo /Excise /Private</c>: the marker and the widget record.</summary>
+    private static readonly string[] RecordKeys =
+    {
+        MarkerKey, XfaWidgetWriter.WidgetsKey, XfaWidgetWriter.PageOrdinalKey, XfaWidgetWriter.EngineKey, XfaWidgetWriter.DatasetsHashKey,
+    };
+
+    /// <summary>
+    /// #2038: a page's <c>/PieceInfo</c> rebuilt with excise's own entry only, holding only the keys
+    /// excise writes (<c>/LastModified</c>, and under <c>/Private</c> the decision-4 marker and the
+    /// decision-11 widget record); null when the page carries none of them. Reduce File Size removes
+    /// other applications' private data (§14.5) and keeps this: without the marker the optimized copy
+    /// of a laid-out form is laid out again on reopen, and without the record decision 17's flatten
+    /// finds no generated widget to flatten before a redaction. None of the kept values is user text:
+    /// widget references, two integers, a boolean, a date and a digest of the datasets packet, which
+    /// the copy keeps in <c>/XFA</c> anyway. <paramref name="droppedAny"/> says whether anything of
+    /// <paramref name="pieceInfo"/> was left out.
+    /// </summary>
+    internal static PdfDictionary? KeepOwnPieceInfo(PdfDocument document, PdfDictionary pieceInfo, out bool droppedAny)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(pieceInfo);
+        droppedAny = true;
+        if (document.Resolve(pieceInfo.GetOptional(PieceInfoOwner) ?? PdfNull.Instance) is not PdfDictionary data
+            || document.Resolve(data.GetOptional("Private") ?? PdfNull.Instance) is not PdfDictionary privateData)
+        {
+            return null;
+        }
+
+        var keptPrivate = new PdfDictionary();
+        foreach (var key in RecordKeys)
+        {
+            if (privateData.GetOptional(key) is { } value)
+                keptPrivate[key] = value;
+        }
+        if (keptPrivate.Count == 0)
+            return null;
+
+        var keptData = new PdfDictionary();
+        if (data.GetOptional("LastModified") is { } lastModified)
+            keptData["LastModified"] = lastModified;
+        keptData["Private"] = keptPrivate;
+
+        var kept = new PdfDictionary();
+        kept[PieceInfoOwner] = keptData;
+        droppedAny = pieceInfo.Count != kept.Count || data.Count != keptData.Count || privateData.Count != keptPrivate.Count;
+        return kept;
+    }
+
     private static List<XfaPageArea> ReadPageAreas(
         XElement root, XfaMerge merge, XfaLayout layout, XfaBudget budget, XfaReport report)
     {

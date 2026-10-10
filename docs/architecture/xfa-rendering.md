@@ -37,6 +37,8 @@ named below), not to this page.
    user's annotations, redactions or added pages, and a second layout would
    replace them. A tool that rewrites all the pages, Acrobat included, drops
    the marker, so its output is laid out afresh.
+   Reduce File Size removes other applications' `/PieceInfo` entries and keeps this one,
+   holding only the keys excise writes (#2038).
 5. **Any redaction of a document with an XFA form removes `/XFA` and
    `/NeedsRendering` whole.** For a form excise laid out, the generated pages
    ARE the form, so the XFA packet is a positionless copy of everything on

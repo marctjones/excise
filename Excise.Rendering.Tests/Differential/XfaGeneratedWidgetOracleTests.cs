@@ -718,6 +718,43 @@ public class XfaGeneratedWidgetOracleTests : IDisposable
             "the City value the first redaction stamped onto page 2 is page content");
     }
 
+    /// <summary>
+    /// #2038: Reduce File Size keeps excise's own <c>/PieceInfo /Excise</c> record, so a redaction of the
+    /// optimized copy still flattens every generated widget (the hidden dataRef copies and page 2's
+    /// hidden global copy included), and the optimized copy is not laid out a second time on reopen.
+    /// Before the fix the optimizer dropped the record: qpdf's dump held the hidden widgets' <c>/V</c>.
+    /// </summary>
+    [Fact]
+    public void ReduceFileSizeCopy_KeepsTheRecord_SoARedactionOfItLeavesNoCopyOfTheValue()
+    {
+        RequireTools();
+        using var laidOut = Source(visibleCopyOnPage2: false, "in-memory");
+        var compact = TempPath("2038-compact");
+        PdfDocumentOptimizer.SaveOptimizedCopy(laidOut.SaveToBytes(), compact, new PdfOptimizationOptions(),
+            cancellationToken: TestContext.Current.CancellationToken);
+        var fieldNames = QpdfReferenceTool.AcroFormWidgets(compact)!.Select(w => w.FullName).ToList();
+        fieldNames.Should().OnlyHaveUniqueItems("fixture sanity: one widget per generated field here");
+
+        using (var reopened = PdfDocument.Open(compact))
+        {
+            reopened.ApplyXfaLayout(cancellationToken: TestContext.Current.CancellationToken).Status
+                .Should().Be(XfaLayoutStatus.AlreadyLaidOut, "decision 4: the optimized copy keeps the marker");
+            var resaved = TempPath("2038-reopened");
+            reopened.Save(resaved);
+            QpdfReferenceTool.AcroFormWidgets(resaved)!.Select(w => w.FullName).Should().BeEquivalentTo(fieldNames,
+                "no second set of same-named generated fields");
+        }
+
+        using var document = PdfDocument.Open(compact);
+        _ = document.GetPage(1).Letters;
+        var report = document.GetPage(1).RedactAreaWithReport(FullNameBox, RedactionOptions.Default with { DrawBox = false });
+        var path = Save(document, "2038-redacted");
+
+        AssertNothingLeftAnywhere(path, Secret, pages: 2);
+        report.Carriers.Should().Contain(c => c.Carrier.StartsWith(FlattenRow, StringComparison.Ordinal) && c.Scrubbed);
+        MutoolTextExtractor.ExtractPage(path, 2).Should().Contain("Springfield");
+    }
+
     [Fact]
     public void TermRedaction_AfterTheFlatten_LeavesNoCopyOfTheValue()
     {
