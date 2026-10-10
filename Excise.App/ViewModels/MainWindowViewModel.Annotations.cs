@@ -1102,13 +1102,15 @@ internal partial class MainWindowViewModel
                 return;
             var snapshot = annots.ToList();
             var dictionary = annotation.RawDictionary;
+            // #2015: a save between the delete and its undo cuts the widget out of the field tree.
+            var fieldTree = FieldTreeLinkSnapshot.Capture(document, dictionary);
 
             if (!document.RemoveAnnotation(pageNumber, annotation))
                 return;
 
             AdjustAnnotationBookkeeping(+1);
             _history.Push("Delete annotation",
-                () => RestorePageAnnotationsAsync(pageNumber, snapshot, dirtyDelta: -1),
+                () => RestorePageAnnotationsAsync(pageNumber, snapshot, dirtyDelta: -1, fieldTree),
                 () => RemoveAnnotationByDictionaryAsync(pageNumber, dictionary));
             await RefreshAfterDocumentMutationAsync();
             RefreshRedactAnnotationCount();
@@ -1120,8 +1122,8 @@ internal partial class MainWindowViewModel
         }
     }
 
-    /// <summary>Undo of a delete: put the page's /Annots back exactly as it was.</summary>
-    private async Task RestorePageAnnotationsAsync(int pageNumber, IReadOnlyList<PdfObject> snapshot, int dirtyDelta)
+    /// <summary>Undo of a delete: put the page's /Annots, and a widget's place in the field tree, back exactly as they were.</summary>
+    private async Task RestorePageAnnotationsAsync(int pageNumber, IReadOnlyList<PdfObject> snapshot, int dirtyDelta, FieldTreeLinkSnapshot? fieldTree = null)
     {
         var document = _documentService.GetCurrentDocument();
         if (document?.Resolve(document.GetPage(pageNumber).Dictionary.GetOptional("Annots") ?? PdfNull.Instance) is PdfArray annots)
@@ -1129,6 +1131,7 @@ internal partial class MainWindowViewModel
             while (annots.Count > 0) annots.RemoveAt(annots.Count - 1);
             foreach (var item in snapshot) annots.Add(item);
         }
+        fieldTree?.Restore();
 
         AdjustAnnotationBookkeeping(dirtyDelta);
         await RefreshAfterDocumentMutationAsync();

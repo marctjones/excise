@@ -579,11 +579,19 @@ public static class AcroFormAuthoring
             {
                 if (document.Resolve(annots[i]) is PdfDictionary d && targets.Contains(d))
                 {
+                    if (annots[i] is PdfReference removedRef)
+                        document.Pages.RecordRemovedAnnotation(removedRef.ObjectNum);
                     annots.RemoveAt(i);
                     removed = true;
                 }
             }
         }
+
+        // The field itself too: a parent field is on no page, and /CO, a reply's /IRT or a structure
+        // /OBJR that names it would keep it, and its value, in the saved file (#2015). The cut at
+        // save time skips anything a page lists again; redo authors a new field with new objects.
+        if (removed && document.GetReferenceTo(field.RawDictionary) is { } fieldRef)
+            document.Pages.RecordRemovedAnnotation(fieldRef.ObjectNum);
 
         if (document.Catalog.GetOptional("AcroForm") is { } acroFormObj &&
             document.Resolve(acroFormObj) is PdfDictionary acroForm)
