@@ -127,6 +127,8 @@ internal static class RedactionFeatureStripper
         if (options.RemoveThumbnails)
             Row("page thumbnail image(s)", RemoveThumbnails(document));
 
+        // Every annotation a pass below takes off its page, for CutRemovedAnnotations (#2045).
+        var removedAnnots = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
         if (options.RemoveHiddenAnnotationAppearances)
         {
             Row("hidden annotation appearance stream(s)", RemoveHiddenAppearances(document));
@@ -134,7 +136,7 @@ internal static class RedactionFeatureStripper
             // /Contents, /RC, /Subj and /T are invisible to the reviewer and readable
             // by every other tool, so the annotation goes with them.
             var (droppedAnnots, scrubbedAnnots) = RemoveHiddenAnnotationText(
-                document, options.KeepAttachments);
+                document, options.KeepAttachments, removedAnnots);
             Row("hidden annotation(s) removed", droppedAnnots,
                 "Hidden or NoView flag set; markup annotations only");
             Row("hidden widget/link annotation text carrier(s) scrubbed", scrubbedAnnots,
@@ -166,15 +168,11 @@ internal static class RedactionFeatureStripper
             Row("document outline (bookmarks)", 1);
         }
 
-        var cutItems = 0;
         if (options.RemoveLinkAnnotations || options.RemoveMarkupAnnotations)
         {
-            var removedAnnots = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
             var (links, markup, reanchoredFromAnnots) = RemoveAnnotations(
                 document, options.RemoveLinkAnnotations, options.RemoveMarkupAnnotations,
                 options.KeepAttachments, removedAnnots);
-            // #2045: off the page is not out of the file while the structure tree names it.
-            if (removedAnnots.Count > 0) cutItems += CutRemovedAnnotations(document, removedAnnots, refusals);
             Row("link annotation(s)", links);
             Row("comment/markup annotation(s)", markup);
             Row("embedded file(s) re-anchored at document level", reanchoredFromAnnots,
@@ -182,6 +180,9 @@ internal static class RedactionFeatureStripper
                 + "was requested");
             if (reanchoredFromAnnots > 0) invalidate |= PdfDocumentDerivedStateScope.Attachments;
         }
+
+        // #2045: off the page is not out of the file while the structure tree names it.
+        var cutItems = removedAnnots.Count > 0 ? CutRemovedAnnotations(document, Reachable(), removedAnnots, refusals) : 0;
 
         // Before the name strip (#1857): the flatten removes /AcroForm, names and all.
         if (options.FlattenInteractiveContent)
@@ -576,10 +577,11 @@ internal static class RedactionFeatureStripper
     /// <paramref name="keepAttachments"/> is set, because it is the only carrier
     /// of its file (same rule as <see cref="RemoveAnnotations"/>). Annotations
     /// hidden only by an optional-content layer are left to
-    /// <see cref="RemoveHiddenOptionalContent"/>.
+    /// <see cref="RemoveHiddenOptionalContent"/>. Each dropped annotation is
+    /// added to <paramref name="removed"/>, for <see cref="CutRemovedAnnotations"/>.
     /// </remarks>
     private static (int Dropped, int Scrubbed) RemoveHiddenAnnotationText(
-        PdfDocument document, bool keepAttachments)
+        PdfDocument document, bool keepAttachments, HashSet<PdfDictionary> removed)
     {
         int dropped = 0, scrubbed = 0;
         foreach (var page in SafePages(document))
@@ -620,6 +622,7 @@ internal static class RedactionFeatureStripper
                         || PointsAtRemoved(document, annot, "IRT", removedDicts)))
                 {
                     dropped++;
+                    removed.Add(annot);
                     continue;
                 }
                 keep.Add(item);
@@ -1288,17 +1291,18 @@ internal static class RedactionFeatureStripper
     }
 
     /// <summary>
-    /// #2045: the Maximum annotation removal empties <c>/Annots</c>, but a tagged
-    /// document's structure tree still names each annotation (§14.7.5.3
-    /// <c>/OBJR</c>), and the writer ships what is reachable: a link's
-    /// <c>/URI</c> and <c>/Contents</c> with it. Every content item that names a
-    /// <paramref name="removed"/> annotation is cut; one the graph still reaches
-    /// after is refused.
+    /// #2045: the Maximum annotation removal and the #1799 hidden-annotation drop
+    /// take annotations out of <c>/Annots</c>, but a tagged document's structure
+    /// tree still names each one (§14.7.5.3 <c>/OBJR</c>), and the writer ships
+    /// what is reachable: a link's <c>/URI</c>, a note's <c>/Contents</c>. Every
+    /// content item that names a <paramref name="removed"/> annotation is cut;
+    /// one the graph still reaches after is refused.
     /// </summary>
     private static int CutRemovedAnnotations(
-        PdfDocument document, HashSet<PdfDictionary> removed, ICollection<CarrierResult> refusals)
+        PdfDocument document, List<PdfDictionary> reachable, HashSet<PdfDictionary> removed,
+        ICollection<CarrierResult> refusals)
     {
-        var cut = CutContentItems(document, ReachableDictionaries(document),
+        var cut = CutContentItems(document, reachable,
             r => Resolve(document, r) is PdfDictionary d && removed.Contains(d));
         foreach (var annot in ReachableDictionaries(document).Where(removed.Contains))
             refusals.Add(new CarrierResult($"annotation {annot.ObjectNumber ?? 0} {annot.GenerationNumber ?? 0} R", false,

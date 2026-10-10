@@ -797,6 +797,40 @@ public class RedactionProfileTests
         SavedPdfLeakScanner.FindTerm(saved, "LINKONESECRET").Should().BeEmpty();
     }
 
+    /// <summary>
+    /// #2045's sibling on the DEFAULT profile: the #1799 pass drops a Hidden
+    /// markup annotation from <c>/Annots</c>, and a structure-tree <c>/OBJR</c>
+    /// kept it, <c>/Contents</c> and all, in the saved file.
+    /// </summary>
+    [Theory]
+    [InlineData("NOMATCHXYZ")]
+    [InlineData("HIDDENNOTESECRET")]
+    public void Standard_CutsADroppedHiddenAnnotationTheStructureTreeStillNames(string term)
+    {
+        static byte[] Fixture(string flags) => CarrierTrapFixtures.WithCatalog(
+            "/StructTreeRoot 7 0 R /MarkInfo << /Marked true >>",
+            "/Annots [6 0 R] /StructParents 0",
+            $"<< /Type /Annot /Subtype /Text /Rect [72 600 92 620] {flags} /StructParent 1 /Contents (HIDDENNOTESECRET) >>",
+            "<< /Type /StructTreeRoot /K 8 0 R >>",
+            "<< /Type /StructElem /S /Annot /P 7 0 R /K << /Type /OBJR /Obj 6 0 R >> >>");
+
+        using (var shown = PdfDocument.Open(Fixture("")))
+        {
+            var report = shown.RedactText("NOMATCHXYZ", RedactionOptions.Default);
+            SavedPdfLeakScanner.FindTerm(shown.SaveToBytes(), "HIDDENNOTESECRET").Should().NotBeEmpty(
+                "planted failure: a visible note is kept");
+            report.Removals.Should().NotContain(r => r.Feature == CutItems);
+        }
+
+        using var doc = PdfDocument.Open(Fixture("/F 2"));
+        var hidden = doc.RedactText(term, RedactionOptions.Default);
+
+        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "HIDDENNOTESECRET").Should().BeEmpty(
+            "the /OBJR kept the dropped hidden annotation, and its /Contents, in the file");
+        hidden.Removals.Should().ContainSingle(r => r.Feature == "hidden annotation(s) removed").Which.Count.Should().Be(1);
+        hidden.Removals.Should().ContainSingle(r => r.Feature == CutItems).Which.Count.Should().Be(1);
+    }
+
     // ── the report is the contract ──────────────────────────────────────────
 
     [Fact]
