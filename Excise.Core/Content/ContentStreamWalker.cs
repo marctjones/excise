@@ -349,6 +349,35 @@ internal sealed class ContentStreamWalker
         return _page?.GetXObject(name);
     }
 
+    /// <summary>
+    /// Resolve a named resource of any category (<c>/Pattern</c>,
+    /// <c>/ExtGState</c>, …) through the resources in scope, innermost first,
+    /// falling back to the page's own: the §8.10.1 lookup, as
+    /// <see cref="ResolveXObject"/> does it for <c>Do</c>.
+    /// </summary>
+    public PdfObject? ResolveResource(string category, string name)
+    {
+        if (_page == null) return null;
+        foreach (var resources in _resourcesStack)
+        {
+            if (Lookup(resources) is { } found) return found;
+        }
+
+        return _page.Resources is { } pageResources ? Lookup(pageResources) : null;
+
+        PdfObject? Lookup(PdfDictionary resources)
+        {
+            var categoryObj = resources.GetOptional(category);
+            if (categoryObj == null) return null;
+            if (_page.Document.Resolve(categoryObj) is not PdfDictionary entries) return null;
+            var entry = entries.GetOptional(name);
+            return entry == null ? null : _page.Document.Resolve(entry);
+        }
+    }
+
+    /// <summary>The font dictionary the text state selects now (<c>Tf</c> or <c>gs /Font</c>).</summary>
+    public PdfDictionary? CurrentFont => _currentFont;
+
     private PdfDictionary? ResolveFont(string fontName)
     {
         foreach (var resources in _resourcesStack)

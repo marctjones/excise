@@ -344,6 +344,12 @@ public static class PdfPageRedactionExtensions
         var metadataRow = RedactionFeatureStripper.ApplyMetadataStrip(page.Document, options);
         var list = areas.Select(a => a.Normalize()).ToList();
         var xfaRowsBefore = page.Document.RedactionLedger.XfaRemovals.Count;
+        // Pattern cells, soft-mask groups and Type3 glyph procedures the page
+        // draws BEFORE the area is removed: removing a Type3 glyph stops the
+        // page drawing its procedure while the font, and the text the
+        // procedure draws, stay in the saved file.
+        _ = page.Letters;
+        var nestedTextCarriers = page.NestedTextCarriers;
         var imageCounts = page.RedactAreasInternal(GlyphArea.Of(list), list, options.Strategy,
             options.ScrubDocumentCarriers, options.Width,
             removeAttachments: !options.KeepAttachments,
@@ -364,6 +370,10 @@ public static class PdfPageRedactionExtensions
         carriers.AddRange(PdfDocumentRedactionExtensions.UndecodableFormResults(page.UndecodableForms
             .Where(form => form.ObjectNumber is not { } n || reachable!.Contains(n))
             .Select(form => (form, page.PageNumber))));
+        if (nestedTextCarriers.Count > 0)
+            carriers.AddRange(PdfDocumentRedactionExtensions.NestedTextCarrierResults(
+                nestedTextCarriers.Concat(page.NestedTextCarriers).Select(c => (c, page.PageNumber)),
+                term: null, caseSensitive: false, page.Document.ComputeReachableObjects()));
         return AreaReport(page.Document, options, metadataRow, removals, carriers, imageCounts);
     }
 

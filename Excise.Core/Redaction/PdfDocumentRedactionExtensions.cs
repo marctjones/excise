@@ -92,6 +92,7 @@ public static class PdfDocumentRedactionExtensions
         var carrierResults = new List<CarrierResult>();
         var imageCounts = default(ImageRedactionCounts);   // #1187/#1195 surfacing
         var undecodableForms = new List<(Excise.Core.Primitives.PdfStream Form, int Page)>();   // #1863
+        var nestedTextCarriers = new List<(Excise.Core.Text.NestedTextCarrier Carrier, int Page)>();
 
         if (string.IsNullOrEmpty(text))
             return new RedactionReport
@@ -161,6 +162,11 @@ public static class PdfDocumentRedactionExtensions
         {
             var page = document.GetPage(pageNum);
             var pageLocated = 0;
+            // Pattern cells, soft-mask groups and Type3 glyph procedures this
+            // page draws BEFORE anything is removed: a removal can stop the
+            // page drawing one while the saved file still holds it.
+            _ = page.Letters;
+            nestedTextCarriers.AddRange(page.NestedTextCarriers.Select(c => (c, pageNum)));
             // #1101: the window this page actually shows. Letters stays
             // unclipped so REMOVAL keeps full reach into off-page content (a
             // string in the content stream is extractable and therefore a leak,
@@ -355,6 +361,7 @@ public static class PdfDocumentRedactionExtensions
 
             var remaining = CountOccurrences(page, text, options.CaseSensitive, options.IncludeHiddenLayers, options.WholeWord);
             undecodableForms.AddRange(page.UndecodableForms.Select(form => (form, pageNum)));
+            nestedTextCarriers.AddRange(page.NestedTextCarriers.Select(c => (c, pageNum)));
             pageResults.Add(new PageRedactionResult(
                 pageNum,
                 pageLocated,
@@ -491,6 +498,27 @@ public static class PdfDocumentRedactionExtensions
         // every page, so a page this call also redacted is not named.
         carrierResults.AddRange(SharedImageCarrierResults(document, imageCounts.TouchedImages));
         carrierResults.AddRange(UndecodableFormResults(undecodableForms));
+        // The term inside a tiling-pattern cell, soft-mask group or Type3
+        // glyph procedure: cut out of that stream in its own space, exactly as
+        // a widget appearance's is (#2041), or reported when it cannot be.
+        var rewroteNested = false;
+        if (nestedTextCarriers.Count > 0)
+            carrierResults.AddRange(NestedTextCarrierResults(nestedTextCarriers, text, options.CaseSensitive,
+                document.ComputeReachableObjects(),
+                rewrite: (carrier, pageNum) =>
+                {
+                    if (AppearanceStreamRedactor.RewrittenContent(document.GetPage(pageNum), carrier.Stream,
+                            carrier.Resources, text, options.CaseSensitive, options.WholeWord) is not { } content)
+                        return false;
+                    carrier.Stream.DecodedData = content;
+                    rewroteNested = true;
+                    return true;
+                }));
+        // A page's letters do not hold the carrier's text, but its record of
+        // what each carrier draws does: the next walk must read the rewrite.
+        if (rewroteNested)
+            foreach (var pageNum in nestedTextCarriers.Select(d => d.Page).Distinct())
+                document.GetPage(pageNum).InvalidateTextExtractionCache();
 
         // #1599: a NAMED marked-content property list (/Span /P1 BDC) this
         // redaction could not scrub because a span that SURVIVES it still
@@ -623,6 +651,58 @@ public static class PdfDocumentRedactionExtensions
                 $"its /Filter {string.Join(" ", g.Key.Filters.Select(f => "/" + f))} could not be decoded" +
                 (g.Key.DecodeFailureReason is { } why ? $" ({why})" : "") +
                 ", so the text it draws was not examined and was left in place"));
+
+    /// <summary>
+    /// One "not scrubbed" row per tiling-pattern cell, soft-mask group or
+    /// Type3 glyph procedure a page draws that itself draws text. Extraction
+    /// does not make that text page letters, so the glyph pass can neither
+    /// match nor remove it, and the saved file keeps it. Reported, never left
+    /// behind in silence (CLAUDE.md rules 5 and 6).
+    /// </summary>
+    /// <param name="drawn">The carriers and the pages that draw them.</param>
+    /// <param name="term">A term redaction's term: only carriers whose text contains it
+    /// (or could not be read) are reported. Null for an area redaction, which
+    /// has no term and does not map the carrier's text to page space, so every
+    /// carrier with text on the page is reported.</param>
+    /// <param name="caseSensitive">The term redaction's case rule.</param>
+    /// <param name="reachable">Objects the saved file still holds; a carrier
+    /// the redaction removed is not reported. Null keeps every row.</param>
+    internal static IEnumerable<CarrierResult> NestedTextCarrierResults(
+        IEnumerable<(Excise.Core.Text.NestedTextCarrier Carrier, int Page)> drawn,
+        string? term, bool caseSensitive, ISet<int>? reachable,
+        Func<Excise.Core.Text.NestedTextCarrier, int, bool>? rewrite = null)
+    {
+        bool Holds(Excise.Core.Text.NestedTextCarrier c)
+        {
+            if (c.Text == null || term == null) return true;
+            var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+            // Over-report rather than miss: the carrier's spacing is not the page's.
+            return c.Text.Contains(term, comparison) ||
+                   RemoveWhitespace(c.Text).Contains(RemoveWhitespace(term), comparison);
+        }
+
+        return drawn
+            .Where(d => Holds(d.Carrier))
+            .Where(d => reachable == null || d.Carrier.Stream.ObjectNumber is not { } n || reachable.Contains(n))
+            .GroupBy(d => d.Carrier.Stream, d => d)
+            .Select(g =>
+            {
+                var c = g.First().Carrier;
+                var label = $"text inside {c.Kind} {c.Stream.ObjectNumber ?? 0} {c.Stream.GenerationNumber ?? 0} R on page(s) " +
+                    string.Join(", ", g.Select(d => d.Page).Distinct().OrderBy(p => p));
+                if (c.Text != null && rewrite != null && rewrite(c, g.Min(d => d.Page)))
+                    return new CarrierResult(label, true, null);
+                var what = c.Text == null
+                    ? $"{c.Unread ?? "it could not be read"}, so the text it may draw was not examined"
+                    : term == null
+                        ? "excise does not read or rewrite text drawn inside it, and the text it draws may lie in the redacted area"
+                        : "it draws text containing the term, and excise could not rewrite its stream without it";
+                return new CarrierResult(label, false, what + "; it was left in place and the saved file keeps it");
+            })
+            .ToList();
+
+        static string RemoveWhitespace(string s) => new(s.Where(ch => !char.IsWhiteSpace(ch)).ToArray());
+    }
 
     /// <summary>The document-level carriers the term is scrubbed from and
     /// reported on: #608's set (/Info, XMP, outline titles, annotation

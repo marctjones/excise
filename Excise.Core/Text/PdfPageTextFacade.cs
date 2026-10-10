@@ -61,6 +61,15 @@ public partial class PdfPage
         = Array.Empty<Excise.Core.Primitives.PdfStream>();
 
     /// <summary>
+    /// The tiling-pattern cells, soft-mask groups and Type3 glyph procedures
+    /// the most recent <see cref="GetLetters"/> walk found this page drawing
+    /// that themselves draw text, which is in no letter. Redaction reports
+    /// each one rather than calling the page clean.
+    /// </summary>
+    internal IReadOnlyList<Excise.Core.Text.NestedTextCarrier> NestedTextCarriers { get; private set; }
+        = Array.Empty<Excise.Core.Text.NestedTextCarrier>();
+
+    /// <summary>
     /// Get the extracted text content from the page.
     /// Cached on first access; subsequent calls return the cached result.
     /// </summary>
@@ -142,6 +151,7 @@ public partial class PdfPage
         var extractor = new Excise.Core.Text.TextExtractor(this);
         var letters = extractor.ExtractLetters(cancellationToken);
         UndecodableForms = extractor.UndecodableForms;
+        NestedTextCarriers = extractor.NestedTextCarriers;
 
         lock (_document.TextCacheGate)
         {

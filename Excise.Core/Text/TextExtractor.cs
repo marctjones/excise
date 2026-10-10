@@ -39,6 +39,18 @@ public class TextExtractor
     private const int MaxFormXObjectDepth = 64;
     private readonly List<PdfStream> _undecodableForms = new();
 
+    // Content streams the page draws that are NOT form XObjects: a tiling
+    // pattern cell (scn/SCN), a soft-mask group (gs /SMask /G), a Type3 glyph
+    // procedure. Their glyphs never reach a page letter, so redaction can
+    // neither match nor remove text they draw. Collected during the walk,
+    // probed for text after it, and reported by redaction rather than left
+    // in silence (CLAUDE.md rules 5 and 6).
+    private readonly List<(PdfStream Stream, string Kind, PdfDictionary? Scope, PdfDictionary? ExtraResources)> _nestedCandidates = new();
+    private readonly HashSet<PdfStream> _nestedSeen = new();
+    private readonly HashSet<PdfDictionary> _type3FontsSeen = new();
+    private PdfDictionary? _lastShowFont;
+    private readonly List<NestedTextCarrier> _nestedTextCarriers = new();
+
     // Marked-content nesting depth of /OC spans that are hidden. Maintained in
     // lock-step with _optionalContentHiddenStack (BDC/BMC push, EMC pop) so the
     // per-glyph "am I inside any hidden span?" check is O(1) instead of a
@@ -96,6 +108,13 @@ public class TextExtractor
     internal IReadOnlyList<PdfStream> UndecodableForms => _undecodableForms;
 
     /// <summary>
+    /// Tiling-pattern cells, soft-mask groups and Type3 glyph procedures the
+    /// last extraction found the page drawing that themselves draw text (or
+    /// could not be decoded). None of that text is in its letters.
+    /// </summary>
+    internal IReadOnlyList<NestedTextCarrier> NestedTextCarriers => _nestedTextCarriers;
+
+    /// <summary>
     /// Extract all letters from the page.
     /// </summary>
     /// <param name="cancellationToken">Cooperatively abandons a runaway
@@ -106,6 +125,11 @@ public class TextExtractor
     {
         _letters.Clear();
         _undecodableForms.Clear();
+        _nestedCandidates.Clear();
+        _nestedSeen.Clear();
+        _type3FontsSeen.Clear();
+        _lastShowFont = null;
+        _nestedTextCarriers.Clear();
         ParseContentStream(cancellationToken);
         // Restore logical character order for RTL (Arabic/Hebrew) runs (#632).
         // Content streams usually carry RTL text in VISUAL order (reversed);
@@ -119,6 +143,7 @@ public class TextExtractor
             EmitFormFieldLetters();
             EmitMarkupAnnotationLetters();
         }
+        ProbeNestedTextCarriers(cancellationToken);
         return _letters.AsReadOnly();
     }
 
@@ -769,7 +794,7 @@ public class TextExtractor
         // A Letter is per GLYPH, so the per-operator and per-string boundaries
         // carry no information here. ContentStreamParser is the sink that needs
         // them, to close an operator's bounding box.
-        public void OnTextShowBegin() { }
+        public void OnTextShowBegin() => owner.NoteType3Font(walker);
         public void OnStringBegin() { }
         public void OnStringEnd(int byteCount) { }
         public void OnTextShowEnd() { }
@@ -896,6 +921,23 @@ public class TextExtractor
                 PushMarkedContentSpan(hidden: false, spanMcid: null); // tag-only span carries no /MCID
                 break;
 
+            case "scn":
+            case "SCN":
+                // §8.7.3.1: a pattern colour names its pattern as the LAST operand.
+                if (operands.Count >= 1 && operands[^1] is PdfName patternName &&
+                    walker.ResolveResource("Pattern", patternName.Value) is PdfStream pattern &&
+                    pattern.GetInt("PatternType", 0) == 1)
+                    NoteNestedCarrier(pattern, "tiling pattern", null, walker);
+                break;
+
+            case "gs":
+                if (operands.Count >= 1 && operands[0] is PdfName gsName &&
+                    walker.ResolveResource("ExtGState", gsName.Value) is PdfDictionary gs &&
+                    _page.Document.Resolve(gs.GetOptional("SMask") ?? PdfNull.Instance) is PdfDictionary smask &&
+                    _page.Document.Resolve(smask.GetOptional("G") ?? PdfNull.Instance) is PdfStream group)
+                    NoteNestedCarrier(group, "soft-mask group", null, walker);
+                break;
+
             case "EMC":
                 if (_unscopedHiddenStack.Count > 0 && _unscopedHiddenStack.Pop())
                     _unscopedHiddenDepth--;
@@ -922,6 +964,94 @@ public class TextExtractor
         if (_optionalContentHiddenStack.Pop())
             _hiddenOptionalContentDepth--;
         PopMcid();
+    }
+
+    /// <summary>A Type3 font about to show glyphs: each glyph procedure is a nested carrier.</summary>
+    private void NoteType3Font(ContentStreamWalker walker)
+    {
+        var font = walker.CurrentFont;
+        if (font == null || ReferenceEquals(font, _lastShowFont)) return;
+        _lastShowFont = font;
+        if (font.GetNameOrNull("Subtype") != "Type3" || !_type3FontsSeen.Add(font)) return;
+        if (_page.Document.Resolve(font.GetOptional("CharProcs") ?? PdfNull.Instance) is not PdfDictionary procs)
+            return;
+        // §9.6.5: a glyph procedure's resources are the font's /Resources.
+        var fontResources = _page.Document.Resolve(font.GetOptional("Resources") ?? PdfNull.Instance) as PdfDictionary;
+        foreach (var value in procs.Values)
+            if (_page.Document.Resolve(value) is PdfStream proc)
+                NoteNestedCarrier(proc, "Type3 glyph procedure", fontResources, walker);
+    }
+
+    private void NoteNestedCarrier(PdfStream stream, string kind, PdfDictionary? extraResources, ContentStreamWalker walker)
+    {
+        if (_nestedSeen.Add(stream))
+            _nestedCandidates.Add((stream, kind, walker.ActiveResources.FirstOrDefault(), extraResources));
+    }
+
+    /// <summary>
+    /// Walk each nested carrier the page drew through the same walker and
+    /// sink, keep only what it says (its letters never join the page's), and
+    /// record those that draw text. A carrier found inside another is probed
+    /// in turn; the form depth bound and cycle set apply as for <c>Do</c>.
+    /// Geometry is not used: where a tiling cell repeats, or where a glyph
+    /// procedure lands in glyph space, is not computed here.
+    /// </summary>
+    private void ProbeNestedTextCarriers(CancellationToken cancellationToken)
+    {
+        for (var i = 0; i < _nestedCandidates.Count; i++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var (stream, kind, scope, extraResources) = _nestedCandidates[i];
+            if (stream.IsFiltered && !stream.TryEnsureDecoded())
+            {
+                _nestedTextCarriers.Add(new NestedTextCarrier(stream, kind, extraResources ?? scope, null,
+                    $"its /Filter {string.Join(" ", stream.Filters.Select(f => "/" + f))} could not be decoded" +
+                    (stream.DecodeFailureReason is { } why ? $" ({why})" : "")));
+                continue;
+            }
+
+            var walker = CreateWalker(Array.Empty<byte>());
+            if (scope != null) walker.PushResources(scope);
+            if (extraResources != null) walker.PushResources(extraResources);
+
+            var start = _letters.Count;
+            // Like an annotation appearance, a probed carrier starts outside
+            // every marked-content span the page left open, and leaves none.
+            var savedHidden = _hiddenOptionalContentDepth;
+            var savedUnscoped = _unscopedHiddenDepth;
+            var savedUnscopedCount = _unscopedHiddenStack.Count;
+            var savedMcid = _currentMcid;
+            _hiddenOptionalContentDepth = 0;
+            _unscopedHiddenDepth = 0;
+            string? unread = null;
+            try
+            {
+                RunFormXObject(walker, stream, fromIdentityCtm: true);
+            }
+            catch (Exception ex) when (ex is not OutOfMemoryException and not OperationCanceledException)
+            {
+                // A malformed carrier the page walk never entered must not
+                // fail the page's extraction; it is reported unexamined.
+                unread = $"it could not be read ({ex.Message})";
+            }
+            finally
+            {
+                while (_unscopedHiddenStack.Count > savedUnscopedCount)
+                    _unscopedHiddenStack.Pop();
+                _hiddenOptionalContentDepth = savedHidden;
+                _unscopedHiddenDepth = savedUnscoped;
+                _currentMcid = savedMcid;
+            }
+
+            var drawn = _letters.GetRange(start, _letters.Count - start);
+            _letters.RemoveRange(start, _letters.Count - start);
+            BidiReorderer.ReorderVisualRtlRuns(drawn);
+            var text = string.Concat(drawn.Select(l => l.Value));
+            if (unread != null)
+                _nestedTextCarriers.Add(new NestedTextCarrier(stream, kind, extraResources ?? scope, null, unread));
+            else if (!string.IsNullOrWhiteSpace(text))
+                _nestedTextCarriers.Add(new NestedTextCarrier(stream, kind, extraResources ?? scope, text));
+        }
     }
 
     private void ExecuteDo(string name, ContentStreamWalker walker)
@@ -1121,3 +1251,19 @@ public class TextExtractor
     }
 
 }
+
+/// <summary>
+/// A content stream a page draws that is not a form XObject (a tiling pattern
+/// cell, a soft-mask group, a Type3 glyph procedure) and that itself draws
+/// text. Extraction does not make its glyphs page letters, so the page's glyph
+/// pass can neither match nor remove them: a term redaction rewrites the
+/// carrier's own stream, and what it cannot rewrite is reported.
+/// </summary>
+/// <param name="Stream">The carrier's own content stream.</param>
+/// <param name="Kind">"tiling pattern", "soft-mask group" or "Type3 glyph procedure".</param>
+/// <param name="Resources">What its names resolve through when it has no
+/// <c>/Resources</c> of its own: a Type3 font's, else those in scope where it was drawn.</param>
+/// <param name="Text">What it draws, in logical order; null when it could not be read.</param>
+/// <param name="Unread">Why it could not be read, when <paramref name="Text"/> is null.</param>
+internal sealed record NestedTextCarrier(
+    PdfStream Stream, string Kind, PdfDictionary? Resources, string? Text, string? Unread = null);
