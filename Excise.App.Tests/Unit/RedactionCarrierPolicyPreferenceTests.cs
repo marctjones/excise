@@ -51,7 +51,8 @@ public class RedactionCarrierPolicyPreferenceTests
         defaults.Should().Be(new RedactionPreferences());
         defaults.WholeWord.Should().BeFalse("#1000 kept substring as the default");
         defaults.KeepAttachments.Should().BeFalse("#1572: a redacted copy carries no attachments");
-        defaults.Width.Should().Be(WidthPolicy.FixedMarker, "#1715: the width closes, and #1725: a box still marks it");
+        defaults.Width.Should().Be(WidthPolicy.OvershootPreserveLayout,
+            "owner decision 2026-10-10 (Refs #1715): nothing on the page moves; Maximum closes the width");
         defaults.Profile.Should().Be(RedactionProfile.Standard);
         defaults.LinkUriPolicy.Should().Be(CarrierScrubMode.Strip);
         defaults.MetadataPolicy.Should().Be(CarrierScrubMode.Strip);
@@ -213,13 +214,14 @@ public class RedactionCarrierPolicyPreferenceTests
     }
 
     [Fact]
-    public void WidthPolicy_DefaultsToFixedMarker_AndRoundTripsThroughPreferences()
+    public void WidthPolicy_DefaultsToKeepingTheLayout_AndRoundTripsThroughPreferences()
     {
         // #1189. CollapsePreserveLayout's exact-width box is the ruler #1140
-        // recorded; the owner made FixedMarker (#1755) the default on #1715 and
-        // #1725: it closes the width channel and always draws a visible mark.
+        // recorded; the default widens it and keeps the layout (owner decision
+        // 2026-10-10, Refs #1715). FixedMarker (#1755) is the choice that closes
+        // the width and still draws a visible mark.
         var main = MainWindowViewModelTestFactory.Create();
-        main.RedactionPreferences.Width.Should().Be(WidthPolicy.FixedMarker);
+        main.RedactionPreferences.Width.Should().Be(WidthPolicy.OvershootPreserveLayout);
 
         var prefs = new PreferencesViewModel();
         prefs.WidthPolicyOptions.Should().BeEquivalentTo(new[]
@@ -232,10 +234,28 @@ public class RedactionCarrierPolicyPreferenceTests
         });
 
         prefs.LoadFromMainViewModel(main);
-        prefs.RedactionPreferences.Width = WidthPolicy.OvershootPreserveLayout;
+        prefs.RedactionPreferences.Width = WidthPolicy.FixedMarker;
         prefs.SaveToMainViewModel(main);
 
-        main.RedactionPreferences.Width.Should().Be(WidthPolicy.OvershootPreserveLayout);
+        main.RedactionPreferences.Width.Should().Be(WidthPolicy.FixedMarker);
+    }
+
+    [Theory]
+    [InlineData(RedactionProfile.Standard, null, WidthPolicy.OvershootPreserveLayout)]
+    [InlineData(RedactionProfile.Maximum, null, WidthPolicy.FixedMarker)]
+    [InlineData(RedactionProfile.Standard, WidthPolicy.FixedMarker, WidthPolicy.FixedMarker)]
+    [InlineData(RedactionProfile.Maximum, WidthPolicy.CloseGap, WidthPolicy.CloseGap)]
+    [InlineData(RedactionProfile.Maximum, WidthPolicy.CollapsePreserveLayout, WidthPolicy.CollapsePreserveLayout)]
+    public void ToOptions_WidthAtTheDefault_FollowsTheProfile_AnExplicitChoiceWins(
+        RedactionProfile profile, WidthPolicy? chosen, WidthPolicy expected)
+    {
+        // Refs #1715: the GUI's default is the engine's (layout kept), and an
+        // untouched width preference must not reset Maximum's FixedMarker to it.
+        var prefs = new RedactionPreferences { Profile = profile };
+        prefs.Width.Should().Be(RedactionOptions.Default.Width, "the GUI default is the engine default, not a copy");
+        if (chosen is WidthPolicy w) prefs.Width = w;
+
+        prefs.ToOptions().Width.Should().Be(expected);
     }
 
     [Fact]
@@ -287,7 +307,7 @@ public class RedactionCarrierPolicyPreferenceTests
         var loaded = WindowSettings.Load().Redaction;
 
         loaded.Profile.Should().Be(RedactionProfile.Standard);
-        loaded.Width.Should().Be(WidthPolicy.FixedMarker);
+        loaded.Width.Should().Be(WidthPolicy.OvershootPreserveLayout, "the unrecognised value falls back to the default");
         loaded.MetadataPolicy.Should().Be(CarrierScrubMode.Strip, "absent");
         loaded.WholeWord.Should().BeFalse();
         loaded.LinkUriPolicy.Should().Be(CarrierScrubMode.RemoveWhole, "the valid field survives its neighbours");

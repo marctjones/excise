@@ -194,7 +194,7 @@ public class PreferencesRoundTripTests
 
         var after = Launch();
         var defaults = new RedactionPreferences();
-        after.RedactionPreferences.Should().Be(defaults, "Reset restores the redaction defaults (Standard, substring, attachments removed, FixedMarker, Strip)");
+        after.RedactionPreferences.Should().Be(defaults, "Reset restores the redaction defaults (Standard, substring, attachments removed, layout kept, Strip)");
         after.ReadingOrderStrategy.Should().Be(ReadingOrderStrategy.ColumnAware);
         after.WhitespaceMode.Should().Be(WhitespaceMode.Smart);
         after.PrintScaling.Should().Be(PrintScalingMode.ShrinkOversized);

@@ -423,11 +423,14 @@ public class UnredactCommandTests
     [Fact]
     public void WidthClosingRedaction_DefeatsResidueRecovery_WherePreserveLayoutDoesNot()
     {
-        // #1145 — the defence for the leak #1116 measured and #1127 exploits;
-        // #1715 — and the default is now that defence.
+        // #1145 — the defence for the leak #1116 measured and #1127 exploits.
+        // Since 2026-10-10 (Refs #1715) the default keeps the layout, so it
+        // leaks the width like --preserve-layout; --fixed-marker (Maximum's
+        // policy) is the defence with a visible mark.
         var src = Path.Combine(Path.GetTempPath(), $"wc-src-{Guid.NewGuid():N}.pdf");
         var layout = Path.Combine(Path.GetTempPath(), $"wc-layout-{Guid.NewGuid():N}.pdf");
         var def = Path.Combine(Path.GetTempPath(), $"wc-def-{Guid.NewGuid():N}.pdf");
+        var marker = Path.Combine(Path.GetTempPath(), $"wc-marker-{Guid.NewGuid():N}.pdf");
         var wc = Path.Combine(Path.GetTempPath(), $"wc-wc-{Guid.NewGuid():N}.pdf");
         var dict = Path.Combine(Path.GetTempPath(), $"wc-dict-{Guid.NewGuid():N}.txt");
         try
@@ -444,7 +447,8 @@ public class UnredactCommandTests
 
             RunRedact(src, layout, "SECRETWORD", "--preserve-layout");  // width-preserving
             RunRedact(src, wc, "SECRETWORD", "--close-width");          // #1145: width-closing
-            RunRedact(src, def, "SECRETWORD");                          // #1715: default, FixedMarker
+            RunRedact(src, def, "SECRETWORD");                          // default: layout kept
+            RunRedact(src, marker, "SECRETWORD", "--fixed-marker");     // #1755: width closed, marked
 
             // Layout-preserving output leaks the width -> recoverable (exit 4).
             var (layoutExit, layoutOut) = Run(layout, "--mode", "residue", "--dictionary", dict);
@@ -456,15 +460,26 @@ public class UnredactCommandTests
             wcExit.Should().Be(0, "width-closing destroys the residue channel; nothing to recover");
             wcOut.Should().Contain("No recoverable text");
 
-            // The default keeps one marker's room (2 em), which the residue
+            // The default keeps the removed run's advance, so the residue
+            // channel recovers the word from it: the cost the owner accepted
+            // for a layout that does not move, stated by the help and docs.
+            var (defExit, defOut) = Run(def, "--mode", "residue", "--dictionary", dict);
+            defExit.Should().Be(4, "the default keeps the width; residue recovers it; output: {0}", defOut);
+            defOut.Should().Contain("RECOVERED \"SECRETWORD\"");
+
+            // --fixed-marker keeps one marker's room (2 em), which the residue
             // channel still finds as a gap — but it is the same for every word,
             // so no candidate fits it and nothing is recovered.
-            var (_, defOut) = Run(def, "--mode", "residue", "--dictionary", dict);
-            defOut.Should().Contain("0 candidates, 0 bits").And.NotContain("SECRETWORD",
-                "the default closes the width too (#1715); its marker is one fixed size");
+            var (_, markerOut) = Run(marker, "--mode", "residue", "--dictionary", dict);
+            markerOut.Should().Contain("0 candidates, 0 bits").And.NotContain("SECRETWORD",
+                "--fixed-marker closes the width (#1715); its marker is one fixed size");
             (MutoolTextExtractor.ExtractPage(def, 1) ?? "").Should().NotContain("SECRETWORD");
+            (MutoolTextExtractor.ExtractPage(marker, 1) ?? "").Should().NotContain("SECRETWORD");
         }
-        finally { File.Delete(src); File.Delete(layout); File.Delete(def); File.Delete(wc); File.Delete(dict); }
+        finally
+        {
+            File.Delete(src); File.Delete(layout); File.Delete(def); File.Delete(marker); File.Delete(wc); File.Delete(dict);
+        }
     }
 
     private static void RunRedact(string src, string dst, string term, params string[] extra)

@@ -1001,23 +1001,24 @@ public class RedactCommandTests : IDisposable
     }
 
     [Fact]
-    public async Task RunAsync_Redact_NoWidthFlag_ClosesTheGapAndDrawsTheMarker_PreserveLayoutDoesNot()
+    public async Task RunAsync_Redact_FixedMarker_ClosesTheGapAndDrawsTheMarker_PreserveLayoutDoesNot()
     {
-        // #1715/#1725: no width flag means FixedMarker — the text after the
-        // redaction moves left and a box is still drawn. --preserve-layout is
-        // the old default, and leaves the text where it was. Measured on
-        // mutool's pixels, not excise's own geometry.
+        // #1715/#1725: --fixed-marker (Maximum's policy; the default until
+        // 2026-10-10) — the text after the redaction moves left and a box is
+        // still drawn. --preserve-layout leaves the text where it was.
+        // Measured on mutool's pixels, not excise's own geometry.
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
         var inputPath = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRETSECRET WORLD"));
-        var defaultPath = TempPath(".pdf");
+        var markerPath = TempPath(".pdf");
         var layoutPath = TempPath(".pdf");
 
         var prevOut = Console.Out;
         Console.SetOut(new StringWriter());
         try
         {
-            (await Program.RunAsync(new[] { "redact", inputPath, defaultPath, "SECRETSECRET" })).Should().Be(0);
+            (await Program.RunAsync(new[] { "redact", inputPath, markerPath, "SECRETSECRET", "--fixed-marker" }))
+                .Should().Be(0);
             (await Program.RunAsync(new[] { "redact", inputPath, layoutPath, "SECRETSECRET", "--preserve-layout" }))
                 .Should().Be(0);
         }
@@ -1026,13 +1027,93 @@ public class RedactCommandTests : IDisposable
             Console.SetOut(prevOut);
         }
 
-        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(defaultPath), "SECRET").Should().BeEmpty();
-        AppendedFillBoxColors(defaultPath).Should().NotBeEmpty("FixedMarker still draws a visible mark (#1725)");
-        var defaultRight = RightmostInkColumn(defaultPath);
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(markerPath), "SECRET").Should().BeEmpty();
+        AppendedFillBoxColors(markerPath).Should().NotBeEmpty("FixedMarker still draws a visible mark (#1725)");
+        var markerRight = RightmostInkColumn(markerPath);
         var layoutRight = RightmostInkColumn(layoutPath);
         // 72 dpi: SECRETSECRET is ~80 pt at 12 pt Helvetica, the marker 2 em (24 pt).
-        (layoutRight - defaultRight).Should().BeGreaterThan(30,
-            "the default closes the removed run's width, so WORLD ends further left than under --preserve-layout");
+        (layoutRight - markerRight).Should().BeGreaterThan(30,
+            "--fixed-marker closes the removed run's width, so WORLD ends further left than under --preserve-layout");
+    }
+
+    [Fact]
+    public async Task RunAsync_Redact_NoWidthFlag_KeepsTheLayout_AndSaysTheWidthIsMeasurable()
+    {
+        // Owner decision 2026-10-10 (Refs #1715): no width flag keeps the
+        // layout. WORLD ends exactly where --preserve-layout leaves it (mutool's
+        // pixels), a box is still drawn, no width note is printed, and the
+        // summary says the width is still measurable and how to close it.
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+        var inputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRETSECRET WORLD"));
+        var defaultPath = TempPath(".pdf");
+        var layoutPath = TempPath(".pdf");
+
+        var (exit, stdout) = await RunCapturedAsync("redact", inputPath, defaultPath, "SECRETSECRET");
+        exit.Should().Be(0);
+        (await RunCapturedAsync("redact", inputPath, layoutPath, "SECRETSECRET", "--preserve-layout")).Exit.Should().Be(0);
+
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(defaultPath), "SECRET").Should().BeEmpty();
+        (MutoolTextExtractor.ExtractPage(defaultPath, 1) ?? "").Should().NotContain("SECRET").And.Contain("WORLD");
+        AppendedFillBoxColors(defaultPath).Should().NotBeEmpty("the default still draws a covering box");
+        RightmostInkColumn(defaultPath).Should().Be(RightmostInkColumn(layoutPath),
+            "the default keeps the removed run's advance, so WORLD does not move");
+        stdout.Should().Contain("width: layout kept")
+            .And.Contain("still measurable")
+            .And.Contain("--profile maximum")
+            .And.NotContain("WIDTH NOT CLOSED");
+    }
+
+    [Theory]
+    [InlineData("--fixed-marker")]
+    [InlineData("--close-width")]
+    [InlineData("--profile", "maximum")]
+    public async Task RunAsync_Redact_GapClosingOptIn_MovesTheTextAfterTheRedaction(params string[] optIn)
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+        var inputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRETSECRET WORLD"));
+        var closedPath = TempPath(".pdf");
+        var defaultPath = TempPath(".pdf");
+
+        var (exit, stdout) = await RunCapturedAsync(
+            new[] { "redact", inputPath, closedPath, "SECRETSECRET" }.Concat(optIn).ToArray());
+        exit.Should().Be(0);
+        (await RunCapturedAsync("redact", inputPath, defaultPath, "SECRETSECRET")).Exit.Should().Be(0);
+
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(closedPath), "SECRET").Should().BeEmpty();
+        // 72 dpi: SECRETSECRET is ~80 pt at 12 pt Helvetica, the marker 2 em (24 pt).
+        (RightmostInkColumn(defaultPath) - RightmostInkColumn(closedPath)).Should().BeGreaterThan(30,
+            $"{string.Join(' ', optIn)} closes the removed run's width, so WORLD moves left");
+        stdout.Should().NotContain("width: layout kept", "the width was closed");
+    }
+
+    [Fact]
+    public async Task RunAsync_RedactHelp_StatesTheDefaultAndItsCost()
+    {
+        var (_, help) = await RunCapturedAsync("redact", "--help");
+        var oneLine = System.Text.RegularExpressions.Regex.Replace(help, @"\s+", " ");
+        oneLine.Should().Contain("The default (standard profile): nothing on the page moves")
+            .And.Contain("font metrics can still measure how wide the removed text was")
+            .And.Contain("--profile maximum, --fixed-marker or --close-width close that")
+            .And.Contain("close the removed text's width (--fixed-marker: the line reflows)")
+            .And.NotContain("The default. Close the width gap");
+    }
+
+    private static async Task<(int Exit, string Stdout)> RunCapturedAsync(params string[] args)
+    {
+        var prevOut = Console.Out;
+        var captured = new StringWriter();
+        Console.SetOut(captured);
+        try
+        {
+            var exit = await Program.RunAsync(args);
+            return (exit, captured.ToString());
+        }
+        finally
+        {
+            Console.SetOut(prevOut);
+        }
     }
 
     private static int RightmostInkColumn(string pdfPath)

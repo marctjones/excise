@@ -13,6 +13,11 @@ Common workflows and keyboard shortcuts.
 
 Multiple areas across multiple pages can be marked and applied as a single batch.
 
+By default nothing else on the page moves. The removed text's width is then still
+recoverable from the file by a determined analyst with the font metrics. To close it,
+choose Preferences ▸ Redaction ▸ Output Profile ▸ Maximum, or Covering Box Width ▸
+Fixed-size marker; the rest of the line then moves.
+
 ## Typewriter text on flat PDFs
 
 1. Click **✎ Type** in the toolbar.

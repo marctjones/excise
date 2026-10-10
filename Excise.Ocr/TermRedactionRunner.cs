@@ -59,8 +59,19 @@ public sealed record TermRedactionResult(
     // structurally remove — still fully readable in the output. Distinct from
     // "excise removed it and a re-read still finds it" (that goes through
     // CarrierNotes' WARNING line); this is "excise never even formed the match".
-    bool HasUnremovedWrappedOccurrence = false)
+    bool HasUnremovedWrappedOccurrence = false,
+    // The width policy that ran (Refs #1715): whether the removed text's width
+    // is still measurable is part of the result, like the match rule. Null when
+    // the run was flattened (no glyph pass).
+    WidthPolicy? Width = null)
 {
+    /// <summary>
+    /// True when the run kept the removed text's advance in the content stream
+    /// (the keep-layout policies), so its width is still measurable from the file.
+    /// </summary>
+    public bool WidthMeasurable =>
+        Width is WidthPolicy.CollapsePreserveLayout or WidthPolicy.OvershootPreserveLayout;
+
     /// <summary>Every attachment removed or kept (#1572); never null.</summary>
     public IReadOnlyList<AttachmentRedactionResult> Attachments =>
         AttachmentResults ?? Array.Empty<AttachmentRedactionResult>();
@@ -299,7 +310,8 @@ public static class TermRedactionRunner
             // still fully readable in the output — must not be indistinguishable
             // from a clean run at the exit-code level, or a script sees success.
             HasUnremovedWrappedOccurrence:
-                redaction.HyphenatedCandidates.Count > 0 || redaction.WordWrapCandidates.Count > 0);
+                redaction.HyphenatedCandidates.Count > 0 || redaction.WordWrapCandidates.Count > 0,
+            Width: options.Width);
     }
 
     private static Action<int, int>? CreateProgressCallback(

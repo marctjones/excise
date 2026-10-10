@@ -54,7 +54,7 @@ public class RedactionWordDecorationTests : IDisposable
             InkFractionIn(before!, WordExtent).Should().BeGreaterThan(0.01,
                 $"fixture sanity: the {kind} is drawn before redaction");
 
-        var saved = Redact(source, RedactionOptions.Default with { DrawBox = false }, out var report);
+        var saved = Redact(source, RedactionOptions.Default with { DrawBox = false, Width = WidthPolicy.FixedMarker }, out var report);
         var path = WriteTemp(saved);
 
         SavedPdfLeakScanner.FindTerm(saved, Secret).Should().BeEmpty();
@@ -75,7 +75,7 @@ public class RedactionWordDecorationTests : IDisposable
         // across the line: neither is sized to the word, so neither measures it.
         var source = Fixture($"q 0 1 1 rg 18 45 180 20 re f Q q 10 40 380 0.8 re f Q\n{Line}");
 
-        var saved = Redact(source, RedactionOptions.Default with { DrawBox = false }, out var report);
+        var saved = Redact(source, RedactionOptions.Default with { DrawBox = false, Width = WidthPolicy.FixedMarker }, out var report);
         var path = WriteTemp(saved);
 
         SavedPdfLeakScanner.FindTerm(saved, Secret).Should().BeEmpty();
@@ -125,7 +125,7 @@ public class RedactionWordDecorationTests : IDisposable
             $"/Annots [<< /Type /Annot /Subtype /{subtype} /Rect [{rect}] /QuadPoints [{quads}] /C [1 0 0] >>]");
         SavedPdfLeakScanner.FindTerm(source, $"/{subtype}").Should().NotBeEmpty("fixture sanity");
 
-        var saved = Redact(source, RedactionOptions.Default with { DrawBox = false }, out _);
+        var saved = Redact(source, RedactionOptions.Default with { DrawBox = false, Width = WidthPolicy.FixedMarker }, out _);
 
         SavedPdfLeakScanner.FindTerm(saved, Secret).Should().BeEmpty();
         SavedPdfLeakScanner.FindTerm(saved, $"/{subtype}").Should().BeEmpty(

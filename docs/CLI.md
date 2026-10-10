@@ -43,12 +43,17 @@ malformed Type1C fonts, including the small capitals in pdf.js `bug1308536.pdf`
 # Render page 1 of a PDF at 200 DPI
 excise render report.pdf -o report-p1.png --page 1 --dpi 200
 
-# Glyph-level redact a phrase
+# Glyph-level redact a phrase. Nothing else on the page moves; the removed text's
+# width is still measurable from the file by someone with the font metrics.
 excise redact report.pdf report-redacted.pdf "ACCOUNT 9876"
+
+# Close the removed text's width too (the rest of the line moves left, and a box of
+# one fixed size marks the spot); --profile maximum does this as well
+excise redact report.pdf report-redacted.pdf "ACCOUNT 9876" --fixed-marker
 
 # Same, listing every per-line "WIDTH NOT CLOSED" layout note (by default they are
 # summarised in one line, after the notes about text that was not removed)
-excise redact report.pdf report-redacted.pdf "ACCOUNT 9876" --verbose
+excise redact report.pdf report-redacted.pdf "ACCOUNT 9876" --fixed-marker --verbose
 
 # Write a smaller copy for email: downsample images above 188 dpi to 150 dpi
 excise optimize scan.pdf scan-small.pdf --preset standard

@@ -123,7 +123,7 @@ namespace Excise.Ocr
     }
     public sealed class TermRedactionResult : System.IEquatable<Excise.Ocr.TermRedactionResult>
     {
-        public TermRedactionResult(string InputPath, string OutputPath, string Text, int Count, bool Flattened, System.Collections.Generic.IReadOnlyList<string> CarrierNotes, System.Collections.Generic.IReadOnlyList<string> Diagnostics, bool WholeWord = false, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult>? AttachmentResults = null, System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval>? ProfileRemovals = null, bool AccessibilityRemoved = false, bool HasUnremovedWrappedOccurrence = false) { }
+        public TermRedactionResult(string InputPath, string OutputPath, string Text, int Count, bool Flattened, System.Collections.Generic.IReadOnlyList<string> CarrierNotes, System.Collections.Generic.IReadOnlyList<string> Diagnostics, bool WholeWord = false, System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult>? AttachmentResults = null, System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval>? ProfileRemovals = null, bool AccessibilityRemoved = false, bool HasUnremovedWrappedOccurrence = false, Excise.Core.Text.Segmentation.WidthPolicy? Width = default) { }
         public bool AccessibilityRemoved { get; init; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult>? AttachmentResults { get; init; }
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Document.AttachmentRedactionResult> Attachments { get; }
@@ -138,6 +138,8 @@ namespace Excise.Ocr
         public System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.RedactedFeatureRemoval> Removals { get; }
         public string Text { get; init; }
         public bool WholeWord { get; init; }
+        public Excise.Core.Text.Segmentation.WidthPolicy? Width { get; init; }
+        public bool WidthMeasurable { get; }
     }
     public static class TermRedactionRunner
     {

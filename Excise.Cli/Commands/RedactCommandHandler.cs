@@ -26,13 +26,16 @@ internal static class RedactCommandHandler
             CaseSensitive = request.CaseSensitive,
             WholeWord = request.WholeWord,   // #1052
             DrawBox = request.DrawBox,
-            // #1715/#1725: FixedMarker is the default; every other policy is
-            // an explicit opt-in to its own trade-off.
+            // A width flag is an explicit opt-in to its own trade-off; with
+            // none, the PROFILE's policy stands (Standard keeps the layout,
+            // Maximum closes the width: Refs #1715). The default lives in
+            // RedactionOptions only.
             Width = request.CloseWidth ? WidthPolicy.CloseGap
                 : request.OvershootBox ? WidthPolicy.OvershootPreserveLayout   // #1189
+                : request.FixedMarker ? WidthPolicy.FixedMarker   // #1755
                 : request.PreserveLayout ? WidthPolicy.CollapsePreserveLayout
                 : request.QuantizeGap ? WidthPolicy.QuantizeGap   // #1754
-                : WidthPolicy.FixedMarker,
+                : profileOptions.Width,
             BoxColor = request.BoxColor,
             // #1188/#1169: per-carrier mode. An explicit --carrier-policy wins;
             // otherwise the PROFILE's policy stands. Falling back to
@@ -111,8 +114,8 @@ internal readonly record struct RedactCommandRequest(
     Excise.Core.Operations.CarrierScrubPolicy? CarrierPolicy = null,   // #1188/#1169
     bool WholeWord = false,   // #1052
     bool OvershootBox = false,   // #1189
-    // #1755: WidthPolicy.FixedMarker, which is also what no width flag at all
-    // selects (#1715); the flag exists so a caller can say so explicitly.
+    // #1755: opt IN to WidthPolicy.FixedMarker (Maximum's policy) under any
+    // profile: closes the width, reflows the line, draws a fixed-size box.
     bool FixedMarker = false,
     bool KeepAttachments = false,   // #1572 — opt out of removing every attachment
     // #1586 — the output profile. Standard is the default on every path; the

@@ -1231,7 +1231,7 @@ public static class PdfDocumentRedactionExtensions
         // Same "one em of the match's own font size" reference OvershootBoxFor
         // uses for its bucket — but here it IS the width, not a rounding unit,
         // so no removed-width measurement ever enters the computation at all.
-        var em = matchLetters.Count > 0 ? matchLetters.Max(l => l.FontSize) : height;
+        var em = matchLetters.Count > 0 ? RenderedEm(matchLetters) : height;
         if (!(em > 0)) return bbox;
 
         var width = FixedMarkerEms * em;
@@ -1248,6 +1248,23 @@ public static class PdfDocumentRedactionExtensions
     /// width without depending on what it was.
     /// </summary>
     private const double FixedMarkerEms = 2.0;
+
+    /// <summary>
+    /// One em of <paramref name="letters"/> as RENDERED: the larger of the
+    /// <c>Tf</c> size and the median glyph-cell height, which carries the text
+    /// matrix's scale. A form that sets <c>/F1 1 Tf</c> and scales by
+    /// <c>12 0 0 12 x y Tm</c> (the W-9 idiom) has a <c>Tf</c> size of 1; an em
+    /// of 1 pt made the overshoot box the removed run's exact width to within a
+    /// point and the fixed marker 2 pt wide. Never smaller than the <c>Tf</c>
+    /// size, so unscaled text is unchanged.
+    /// </summary>
+    internal static double RenderedEm(IReadOnlyList<Letter> letters)
+    {
+        var tf = letters.Max(l => l.FontSize);
+        var heights = letters.Select(l => l.GlyphRectangle.Normalize().Height)
+            .Where(h => h > 0).OrderBy(h => h).ToList();
+        return heights.Count == 0 ? tf : Math.Max(tf, heights[heights.Count / 2]);
+    }
 
     /// <summary>
     /// #1189 — the covering box for one match, WIDENED so its width no longer
@@ -1292,7 +1309,7 @@ public static class PdfDocumentRedactionExtensions
         // The bucket size. One em of the removed text: coarse enough that names
         // of similar length collapse together, small enough to fit in the slack
         // an ordinary word gap provides.
-        var em = matchLetters.Count > 0 ? matchLetters.Max(l => l.FontSize) : height;
+        var em = matchLetters.Count > 0 ? RenderedEm(matchLetters) : height;
         if (!(em > 0)) return bbox;
 
         var midY = (box.Bottom + box.Top) / 2.0;
