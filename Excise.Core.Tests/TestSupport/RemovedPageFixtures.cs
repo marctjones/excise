@@ -37,15 +37,23 @@ internal static class RemovedPageFixtures
     public const string ImageBytes = "REMOVEDIMAGESECRET";
     public const string AnnotText = "REMOVEDANNOTSECRET";
     public const string FieldValue = "REMOVEDFIELDVALUESECRET";
+    public const string StructActualText = "REMOVEDSTRUCTACTUALTEXTSECRET";
+    public const string StructAlt = "REMOVEDSTRUCTALTSECRET";
+    public const string StructExpansion = "REMOVEDSTRUCTEXPANSIONSECRET";
+    public const string StructTitle = "REMOVEDSTRUCTTITLESECRET";
+    /// <summary>Page 1's structure element's /ActualText: stays (#2014).</summary>
+    public const string KeptStructText = "KEPTSTRUCTACTUALTEXT";
 
     /// <summary>Tokens only page 2 carries in every variant.</summary>
     public static readonly string[] PageTokens = [PageText, FontName, ImageBytes, AnnotText];
 
     /// <summary>Tokens that must be gone once page 2 is removed.</summary>
-    public static string[] RemovedTokens(RemovedPageBackReference back)
-        => back is RemovedPageBackReference.AcroFormWidget or RemovedPageBackReference.AcroFormFieldKids
-            ? [.. PageTokens, FieldValue]
-            : PageTokens;
+    public static string[] RemovedTokens(RemovedPageBackReference back) => back switch
+    {
+        RemovedPageBackReference.AcroFormWidget or RemovedPageBackReference.AcroFormFieldKids => [.. PageTokens, FieldValue],
+        RemovedPageBackReference.StructureElement => [.. PageTokens, StructActualText, StructAlt, StructExpansion, StructTitle],
+        _ => PageTokens,
+    };
 
     /// <summary>
     /// Three pages. Streams are uncompressed so the tokens are plain in the
@@ -66,7 +74,9 @@ internal static class RemovedPageFixtures
         // 10 page-2 font, 11 page-2 image, 12 page-2 annotation, 13+ extras.
         var catalogExtra = "";
         var page1Annots = "";
+        var page1Extra = "";
         var page2Extra = "";
+        var page3Extra = "";
         var page2Annots = "12 0 R";
         var extras = new List<string>();
         const string p2 = "4 0 R";
@@ -89,10 +99,20 @@ internal static class RemovedPageFixtures
                 catalogExtra = $"/OpenAction [{p2} /Fit]";
                 break;
             case RemovedPageBackReference.StructureElement:
+                // One paragraph per page, each page's /StructParents keying its
+                // /ParentTree entry, and an /IDTree naming two of them. Page 2's
+                // element carries every structure-element text field (#2014).
                 catalogExtra = "/MarkInfo << /Marked true >> /StructTreeRoot 13 0 R";
-                page2Extra = "/StructParents 0";
-                extras.Add("<< /Type /StructTreeRoot /K [14 0 R] >>");
-                extras.Add($"<< /Type /StructElem /S /P /P 13 0 R /Pg {p2} /K 0 >>");
+                page1Extra = "/StructParents 0";
+                page2Extra = "/StructParents 1";
+                page3Extra = "/StructParents 2";
+                extras.Add("<< /Type /StructTreeRoot /K [15 0 R 14 0 R 16 0 R] /ParentTree 17 0 R /ParentTreeNextKey 3 "
+                    + "/IDTree << /Names [(kept) 15 0 R (removed) 14 0 R] >> >>");
+                extras.Add($"<< /Type /StructElem /S /P /P 13 0 R /Pg {p2} /K 0 /ID (removed) /ActualText ({StructActualText}) "
+                    + $"/Alt ({StructAlt}) /E ({StructExpansion}) /T ({StructTitle}) >>");
+                extras.Add($"<< /Type /StructElem /S /P /P 13 0 R /Pg 3 0 R /K 0 /ID (kept) /ActualText ({KeptStructText}) >>");
+                extras.Add("<< /Type /StructElem /S /P /P 13 0 R /Pg 5 0 R /K 0 >>");
+                extras.Add("<< /Nums [0 [15 0 R] 1 [14 0 R] 2 [16 0 R]] >>");
                 break;
             case RemovedPageBackReference.AcroFormWidget:
                 catalogExtra = "/AcroForm << /Fields [13 0 R] >>";
@@ -123,16 +143,14 @@ internal static class RemovedPageFixtures
         {
             $"<< /Type /Catalog /Pages 2 0 R {catalogExtra} >>",
             "<< /Type /Pages /Kids [3 0 R 4 0 R 5 0 R] /Count 3 >>",
-            $"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R {page1Annots} >>",
+            $"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R >> >> /Contents 6 0 R {page1Annots} {page1Extra} >>",
             "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 10 0 R >> /XObject << /Im1 11 0 R >> >> "
                 + $"/Contents 7 0 R /Annots [{page2Annots}] {page2Extra} >>",
             "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 9 0 R "
-                + (pageThreeSharesFont ? "/F2 10 0 R " : "") + ">> >> /Contents 8 0 R >>",
-            Stream("", Content(KeptOne)),
-            Stream("", (tagged ? "/P << /MCID 0 >> BDC " : "")
-                + Content(PageText, " q 100 0 0 10 72 500 cm /Im1 Do Q")
-                + (tagged ? " EMC" : "")),
-            Stream("", Content(KeptThree)),
+                + (pageThreeSharesFont ? "/F2 10 0 R " : "") + $">> >> /Contents 8 0 R {page3Extra} >>",
+            Stream("", Tagged(tagged, Content(KeptOne))),
+            Stream("", Tagged(tagged, Content(PageText, " q 100 0 0 10 72 500 cm /Im1 Do Q"))),
+            Stream("", Tagged(tagged, Content(KeptThree))),
             "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
             $"<< /Type /Font /Subtype /Type1 /BaseFont /{FontName} /Encoding /WinAnsiEncoding >>",
             Stream($"/Type /XObject /Subtype /Image /Width {ImageBytes.Length} /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8", ImageBytes),
@@ -151,7 +169,12 @@ internal static class RemovedPageFixtures
         return Assemble(objs, version);
     }
 
-    private static byte[] Assemble(List<string> objs, string version)
+    /// <summary>Wrap a page's content in marked-content sequence 0 when tagged.</summary>
+    public static string Tagged(bool tagged, string content) =>
+        tagged ? $"/P << /MCID 0 >> BDC {content} EMC" : content;
+
+    /// <summary>A classic-xref PDF of <paramref name="objs"/>, numbered from 1; object 1 is the catalog.</summary>
+    public static byte[] Assemble(List<string> objs, string version)
     {
         var sb = new StringBuilder($"%PDF-{version}\n%âãÏÓ\n");
         var offsets = new int[objs.Count];
