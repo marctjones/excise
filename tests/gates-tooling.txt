@@ -28,7 +28,6 @@ scripts/build-pdf-corpus-governance.py   # invoked by check-pdf-capability-regis
 scripts/build-pdf-evidence-attribution.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
 scripts/build-pdf-evidence-deficiency-report.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
 scripts/build-pdf-evidence-maps.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
-scripts/build-pdf-feature-cluster-scorecard.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
 scripts/build-pdf-legacy-leaves.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
 scripts/build-pdf-operator-leaves.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)
 scripts/build-pdf-spec-inventory.py   # invoked by check-pdf-capability-registry.sh (row pdf-capability-registry)

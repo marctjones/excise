@@ -46,8 +46,8 @@ distinction explicit.
 Run `scripts/check-pdf-capability-registry.sh` before changing a capability
 claim. It validates references, regenerates the summary and scorecard, and
 rejects stale generated views. `generated/capability-scorecard.md` reports
-implementation, measurement, verification-plan, and unknown coverage by
-section; unknown is deliberately not credit.
+raw counts of implemented, verified and unknown modes by section (no overall or
+percentage row, #1758); unknown is deliberately not credit.
 
 `benchmarks.json` maps critical paths to their owning capabilities and local
 benchmark commands. Run `python3 scripts/run-pdf-capability-benchmarks.py

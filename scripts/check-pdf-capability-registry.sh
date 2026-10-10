@@ -78,7 +78,6 @@ GENERATED=(
   $GEN/reference-tool-evidence.json
   $GEN/atomic-fixture-evidence.json
   $GEN/evidence-attribution.json
-  $GEN/feature-cluster-scorecard.json
   $GEN/implementation-evidence-map.json
 )
 
@@ -100,7 +99,6 @@ build_derived() {
   python3 scripts/build-pdf-evidence-deficiency-report.py
   python3 scripts/build-pdf-atomic-fixture-map.py
   python3 scripts/build-pdf-evidence-attribution.py
-  python3 scripts/build-pdf-feature-cluster-scorecard.py
   python3 scripts/build-pdf-capability-scorecard.py
 }
 
