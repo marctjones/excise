@@ -88,10 +88,10 @@ re-derived by `scripts/check-doc-claim-freshness.sh`:
 
 ```
 Excise.Rendering/Differential/
-    MutoolReferenceRenderer.cs        # 551 uses in Differential tests
+    MutoolReferenceRenderer.cs        # 557 uses in Differential tests
     GhostscriptReferenceRenderer.cs   # 121 uses in Differential tests
     PdftocairoReferenceRenderer.cs    # 83 uses in Differential tests
-    PdftoppmReferenceRenderer.cs      # 22 uses in Differential tests
+    PdftoppmReferenceRenderer.cs      # 25 uses in Differential tests
     PdfiumReferenceRenderer.cs        # 2 uses in Differential tests
     PdfBoxReferenceRenderer.cs        # 16 uses in Differential tests
     MutoolTextExtractor.cs            # independent text oracle (MuPDF)

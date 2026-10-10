@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "1263ff2ccf9d24bbf02477bb5389770e906dc1148295a993ddd17c5b2d5a010e",
+  "sourceFingerprint": "e8655a35e7fd9952827e0eff8aa1d0f89846dd0d1c94c3985cf572d939c8915f",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -19158,6 +19158,258 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/Differential/RedactionFontGlyphScrubTests.cs::RedactionFontGlyphScrubTests.ACharacterDrawnOnAnotherPage_KeepsItsGlyphAndMapping",
+      "path": "Excise.Rendering.Tests/Differential/RedactionFontGlyphScrubTests.cs",
+      "class": "RedactionFontGlyphScrubTests",
+      "method": "ACharacterDrawnOnAnotherPage_KeepsItsGlyphAndMapping",
+      "line": 34,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "fonts",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/RedactionFontGlyphScrubTests.cs::RedactionFontGlyphScrubTests.AFieldValueUsingTheFont_KeepsItsCharacters",
+      "path": "Excise.Rendering.Tests/Differential/RedactionFontGlyphScrubTests.cs",
+      "class": "RedactionFontGlyphScrubTests",
+      "method": "AFieldValueUsingTheFont_KeepsItsCharacters",
+      "line": 53,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "fonts",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/RedactionFontGlyphScrubTests.cs::RedactionFontGlyphScrubTests.AFontTheEditCannotHandle_IsReportedAndLeftUnedited",
+      "path": "Excise.Rendering.Tests/Differential/RedactionFontGlyphScrubTests.cs",
+      "class": "RedactionFontGlyphScrubTests",
+      "method": "AFontTheEditCannotHandle_IsReportedAndLeftUnedited",
+      "line": 67,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "fonts",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/RedactionFontGlyphScrubTests.cs::RedactionFontGlyphScrubTests.SequentialRedactionsAcrossASave_EachRemoveWhatTheyStopDrawing",
+      "path": "Excise.Rendering.Tests/Differential/RedactionFontGlyphScrubTests.cs",
+      "class": "RedactionFontGlyphScrubTests",
+      "method": "SequentialRedactionsAcrossASave_EachRemoveWhatTheyStopDrawing",
+      "line": 91,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "fonts",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/RedactionFontGlyphScrubTests.cs::RedactionFontGlyphScrubTests.TheEdit_SurvivesAnEvictionOfEveryObjectBeforeTheSave",
+      "path": "Excise.Rendering.Tests/Differential/RedactionFontGlyphScrubTests.cs",
+      "class": "RedactionFontGlyphScrubTests",
+      "method": "TheEdit_SurvivesAnEvictionOfEveryObjectBeforeTheSave",
+      "line": 109,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "fonts",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/RedactionFontGlyphScrubTests.cs::RedactionFontGlyphScrubTests.AnEncryptedDocument_IsEditedThroughItsDecryptionAndSavedEncrypted",
+      "path": "Excise.Rendering.Tests/Differential/RedactionFontGlyphScrubTests.cs",
+      "class": "RedactionFontGlyphScrubTests",
+      "method": "AnEncryptedDocument_IsEditedThroughItsDecryptionAndSavedEncrypted",
+      "line": 134,
+      "xunitKind": "fact",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "fonts",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/Differential/RedactionFontSubsetCarrierTests.cs::RedactionFontSubsetCarrierTests.Term_IsGoneForIndependentExtractors_FontCarriersMeasured",
       "path": "Excise.Rendering.Tests/Differential/RedactionFontSubsetCarrierTests.cs",
       "class": "RedactionFontSubsetCarrierTests",
@@ -19206,7 +19458,91 @@
       "path": "Excise.Rendering.Tests/Differential/RedactionFontSubsetCarrierTests.cs",
       "class": "RedactionFontSubsetCarrierTests",
       "method": "RemovedCharacters_LeaveNoTraceInAnyFontCarrier",
-      "line": 97,
+      "line": 105,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "fonts",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/RedactionFontSubsetCarrierTests.cs::RedactionFontSubsetCarrierTests.WithoutTheFontEdit_TheProbeFindsTheRemovedCharacters",
+      "path": "Excise.Rendering.Tests/Differential/RedactionFontSubsetCarrierTests.cs",
+      "class": "RedactionFontSubsetCarrierTests",
+      "method": "WithoutTheFontEdit_TheProbeFindsTheRemovedCharacters",
+      "line": 137,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "fonts",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/RedactionFontSubsetCarrierTests.cs::RedactionFontSubsetCarrierTests.TheFontEdit_ChangesNoRenderedPixelAndNoExtractedCharacter",
+      "path": "Excise.Rendering.Tests/Differential/RedactionFontSubsetCarrierTests.cs",
+      "class": "RedactionFontSubsetCarrierTests",
+      "method": "TheFontEdit_ChangesNoRenderedPixelAndNoExtractedCharacter",
+      "line": 167,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -56371,12 +56707,12 @@
     }
   ],
   "summary": {
-    "testMethods": 1547,
+    "testMethods": 1555,
     "facets": {
       "content-streams": 449,
       "content-strings-and-text": 9,
-      "differential-rendering": 933,
-      "fonts": 272,
+      "differential-rendering": 941,
+      "fonts": 280,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 318,
       "images": 250,
@@ -56388,18 +56724,18 @@
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 9,
       "pdf.17.content.streams:parse": 456,
-      "pdf.17.content.streams:render": 1089,
+      "pdf.17.content.streams:render": 1097,
       "pdf.17.content.text-state:extract": 9,
       "pdf.17.content.text-state:parse": 9,
       "pdf.17.content.text-state:render": 9,
       "pdf.17.graphics.color:parse": 53,
       "pdf.17.graphics.color:render": 53,
-      "pdf.17.graphics.fonts:extract": 272,
-      "pdf.17.graphics.fonts:parse": 272,
-      "pdf.17.graphics.fonts:render": 1082,
+      "pdf.17.graphics.fonts:extract": 280,
+      "pdf.17.graphics.fonts:parse": 280,
+      "pdf.17.graphics.fonts:render": 1090,
       "pdf.17.graphics.images:extract": 250,
       "pdf.17.graphics.images:parse": 250,
-      "pdf.17.graphics.images:render": 1095,
+      "pdf.17.graphics.images:render": 1103,
       "pdf.17.graphics.paths-painting:parse": 318,
       "pdf.17.graphics.paths-painting:render": 318,
       "pdf.17.graphics.patterns-shadings:parse": 53,
@@ -56407,7 +56743,7 @@
       "pdf.17.graphics.state:parse": 318,
       "pdf.17.graphics.state:render": 318,
       "pdf.17.transparency.model:parse": 95,
-      "pdf.17.transparency.model:render": 976
+      "pdf.17.transparency.model:render": 984
     },
     "unclassified": 45,
     "allTestsMapped": true

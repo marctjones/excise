@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "ff1bc4b4f776c38c98fb403d2de0a7146d62fa6951b5071703c02f40bc111a67",
+  "sourceFingerprint": "c491a5e3ac5447ce17fa3c09868291050f798aa6650b5c44dca93963cf9f5ee4",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -2832,6 +2832,28 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Fonts/CffGlyphEditor.cs",
+      "path": "Excise.Core/Fonts/CffGlyphEditor.cs",
+      "kind": "source-file",
+      "facets": [
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Fonts/CffParser.cs",
       "path": "Excise.Core/Fonts/CffParser.cs",
       "kind": "source-file",
@@ -3054,6 +3076,28 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Fonts/SfntGlyphEditor.cs",
+      "path": "Excise.Core/Fonts/SfntGlyphEditor.cs",
+      "kind": "source-file",
+      "facets": [
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Fonts/SfntTableReader.cs",
       "path": "Excise.Core/Fonts/SfntTableReader.cs",
       "kind": "source-file",
@@ -3100,6 +3144,28 @@
     {
       "id": "Excise.Core/Fonts/StandardMacGlyphOrder.cs",
       "path": "Excise.Core/Fonts/StandardMacGlyphOrder.cs",
+      "kind": "source-file",
+      "facets": [
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Fonts/ToUnicodeCMapEditor.cs",
+      "path": "Excise.Core/Fonts/ToUnicodeCMapEditor.cs",
       "kind": "source-file",
       "facets": [
         "fonts"
@@ -4284,6 +4350,76 @@
         "redaction"
       ],
       "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/FontGlyphScrubber.cs",
+      "path": "Excise.Core/Redaction/FontGlyphScrubber.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction",
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/FontGlyphUsage.cs",
+      "path": "Excise.Core/Redaction/FontGlyphUsage.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction",
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        },
         {
           "capability": "pdf.17.security.redaction-content-removal",
           "modes": [
@@ -5538,6 +5674,29 @@
     {
       "id": "Excise.Core/Redaction/RedactionReport.cs",
       "path": "Excise.Core/Redaction/RedactionReport.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/SimpleTrueTypeAttribution.cs",
+      "path": "Excise.Core/Redaction/SimpleTrueTypeAttribution.cs",
       "kind": "source-file",
       "facets": [
         "redaction"
@@ -11904,16 +12063,16 @@
     }
   ],
   "summary": {
-    "records": 601,
+    "records": 607,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 20,
       "document-structure": 36,
-      "fonts": 34,
+      "fonts": 39,
       "forms": 12,
       "images": 40,
       "product-integration-general": 344,
-      "redaction": 85,
+      "redaction": 88,
       "safe-save-and-metadata": 21,
       "security-and-encryption": 25,
       "transparency": 3
@@ -11933,9 +12092,9 @@
       "pdf.17.graphics.color:preserve": 1,
       "pdf.17.graphics.color:render": 1,
       "pdf.17.graphics.color:write": 1,
-      "pdf.17.graphics.fonts:extract": 34,
-      "pdf.17.graphics.fonts:parse": 34,
-      "pdf.17.graphics.fonts:render": 34,
+      "pdf.17.graphics.fonts:extract": 39,
+      "pdf.17.graphics.fonts:parse": 39,
+      "pdf.17.graphics.fonts:render": 39,
       "pdf.17.graphics.images:extract": 40,
       "pdf.17.graphics.images:parse": 40,
       "pdf.17.graphics.images:render": 40,
@@ -11962,10 +12121,10 @@
       "pdf.17.interactive.redaction-annotations:parse": 14,
       "pdf.17.interactive.redaction-annotations:preserve": 14,
       "pdf.17.interactive.redaction-annotations:render": 14,
-      "pdf.17.security.redaction-content-removal:extract": 85,
-      "pdf.17.security.redaction-content-removal:mutate": 85,
-      "pdf.17.security.redaction-content-removal:render": 85,
-      "pdf.17.security.redaction-content-removal:write": 85,
+      "pdf.17.security.redaction-content-removal:extract": 88,
+      "pdf.17.security.redaction-content-removal:mutate": 88,
+      "pdf.17.security.redaction-content-removal:render": 88,
+      "pdf.17.security.redaction-content-removal:write": 88,
       "pdf.17.syntax.encryption:mutate": 25,
       "pdf.17.syntax.encryption:parse": 25,
       "pdf.17.syntax.encryption:preserve": 25,
