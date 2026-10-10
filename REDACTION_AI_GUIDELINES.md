@@ -25,7 +25,7 @@ This project implements **TRUE content-level redaction** that removes text glyph
 Correct redaction means:
 ```
 1. Text is REMOVED from PDF content stream
-2. Text extraction tools (pdftotext, PdfPig, copy-paste) return empty/missing text
+2. Text extraction tools (pdftotext, mutool, copy-paste) return empty/missing text
 3. Black box provides visual confirmation (secondary)
 ```
 
@@ -72,9 +72,13 @@ each overlapping Form XObject into the page content stream (wrapped
 merged into the page and collision-renamed), then runs the text/image passes
 on the now-flat stream. **Crucial:** after inlining it also *prunes* the
 orphaned form objects (`FormXObjectFlattener.PruneInlinedForms`). The writer
-serializes every in-use object with **no garbage collection**, so skipping the
-prune would re-emit the form and leak the very text you just removed — the
-prune is a security requirement, not an optimization. A form still referenced
+writes only the objects reachable from the Catalog and Info
+(`PdfDocumentSaveLifecycle.BuildReachableObjectSnapshot`), so a form object
+stays in the file exactly as long as something references it. The prune drops
+the page's `/XObject` entry for each inlined form no surviving `Do` invokes;
+that is what makes the original unreachable and keeps its text out of the
+output. Skip it and the form stays reachable and leaks the very text you just
+removed — the prune is a security requirement, not an optimization. A form still referenced
 by another page is left intact (its content legitimately remains there).
 
 > ⚠️ If you add a new way for content to reach a page (a new XObject kind, a
@@ -166,49 +170,42 @@ and that carries no page content to leak.
 
 These files contain the core glyph removal logic. **DO NOT** replace their functionality with simpler visual-only solutions:
 
-### 1. `Excise.App/Services/RedactionService.cs`
+### 1. `Excise.Core/Redaction/PdfPageRedactionExtensions.cs` and `PdfDocumentRedactionExtensions.cs`
 
-**Critical Method: `RemoveContentInArea()`** (lines 127-244)
+`RedactAreasInternal` (page) and `RedactText` (document) run the pipeline:
+
 ```csharp
-// Step 1: Parse content stream → List<PdfOperation>
-var operations = _parser.ParseContentStream(page);
+// Step 1: Parse content stream -> List<ContentOperator> (with source spans)
+var content = page.GetContentStream(trackSourceSpans: true);
 
-// Step 2: Filter operations intersecting redaction area
-foreach (var operation in operations)
-{
-    if (operation.IntersectsWith(area))
-    {
-        continue; // REMOVE this operation (glyph removal)
-    }
-    filteredOperations.Add(operation);
-}
+// Step 2: Flatten overlapping forms, scrub marked-content carriers, then
+// filter operations intersecting the area (GlyphRemover / LetterFinder)
+working = remover.ProcessOperations(working, letters, glyphAreas, strategy);
 
-// Step 3: Rebuild content stream WITHOUT removed operations
-var newContentBytes = _builder.BuildContentStream(filteredOperations);
-
+// Step 3: Image pass (ImageRedactor), then rebuild the stream WITHOUT the removed operations
 // Step 4: Replace page content
-ReplacePageContent(page, newContentBytes);
+page.SetContentStream(new ContentStream(working) { SourceBytes = content.SourceBytes, ... });
 ```
 
-**WHY THIS MATTERS:** This is the actual glyph removal. Without it, text is just hidden, not removed.
+**WHY THIS MATTERS:** This is the actual glyph removal. Without it, text is just hidden, not removed. `Excise.App/Services/RedactionService.cs` only orchestrates these calls.
 
-### 2. `Excise.App/Services/Redaction/ContentStreamParser.cs`
+### 2. `Excise.Core/Redaction/GlyphRemover.cs`, `LetterFinder.cs`, `OperationReconstructor.cs`
 
-Parses PDF content streams into structured operations with bounding boxes. This enables accurate intersection detection for text operations.
+Select the letters inside the area and rebuild the surviving text operators (including their `Tf` state).
 
-**DO NOT** remove or simplify the text operation parsing.
+**DO NOT** remove or simplify the text operation handling.
 
-### 3. `Excise.App/Services/Redaction/ContentStreamBuilder.cs`
+### 3. `Excise.Core/Content/ContentStreamParser.cs` and `ContentStreamWriter.cs`
 
-Rebuilds PDF content streams from filtered operations. This creates the new content stream without removed text.
+Parse content streams into operators with bounding boxes, and write the filtered operators back byte-preservingly. Both sit on `ContentStreamWalker`, the one content-stream state machine.
 
 **DO NOT** remove or simplify - this is essential for glyph removal.
 
-### 4. `Excise.App/Services/Redaction/TextBoundsCalculator.cs`
+### 4. `Excise.Core/Text/TextExtractor.cs`
 
-Calculates accurate bounding boxes for text operations. Enables precise intersection detection.
+Produces the letters (with positions) the matcher and `LetterFinder` select from. Accuracy of the bounding boxes is critical.
 
-**DO NOT** simplify bounding box calculations - accuracy is critical.
+**DO NOT** simplify bounding box calculations.
 
 ---
 
@@ -285,7 +282,7 @@ public void RedactText_ShouldPassIndependentVerification()
     RedactArea(page, textArea);
     SavePdf(path);
 
-    // Use DIFFERENT library (PdfPig) to verify
+    // Use DIFFERENT library (mutool, via MutoolTextExtractor) to verify
     using var verifier = PdfDocument.Open(path);
     var text = verifier.GetPages().First().Text;
 
@@ -297,11 +294,9 @@ public void RedactText_ShouldPassIndependentVerification()
 ### Test File Locations
 
 ```
-Excise.App.Tests/Integration/
-├── BlackBoxRedactionTests.cs      ← Primary glyph removal tests
-├── ComprehensiveRedactionTests.cs ← Complex scenarios
-├── RedactionIntegrationTests.cs   ← Full workflow tests
-└── SpecializedRedactionTests.cs   ← Edge cases
+Excise.Core.Tests/Text/Segmentation/   <- GlyphRemoverTests, OperationReconstructorTests, *RedactionLeakTests
+Excise.Core.Tests/Redaction/           <- redaction entry-point tests
+Excise.Rendering.Tests/Differential/   <- tests against independent renderers and text extractors
 ```
 
 ### Running Critical Tests
@@ -418,7 +413,7 @@ Before committing ANY changes to redaction code:
 - [ ] **Verify text extraction fails for redacted content**
 - [ ] **Confirm content stream is modified (not just black box added)**
 - [ ] **Check that unredacted content is preserved**
-- [ ] **Test with independent PDF library (PdfPig)**
+- [ ] **Test with independent tool (mutool or SavedPdfLeakScanner)**
 
 ### Required Test Coverage
 
@@ -475,7 +470,7 @@ When working on this codebase:
 2. **NEVER** simplify redaction to visual-only (drawing black boxes)
 3. **ALWAYS** maintain: parse → filter → rebuild → replace → draw
 4. **RUN** all redaction tests before and after changes
-5. **VERIFY** with independent tools (pdftotext, PdfPig)
+5. **VERIFY** with independent tools (pdftotext, mutool)
 6. **PRESERVE** working glyph removal code - do not "improve" by simplifying
 7. **TEST** that redacted text cannot be extracted after redaction
 
@@ -487,17 +482,19 @@ When working on this codebase:
 
 ### File Locations
 ```
-Excise.App/Services/RedactionService.cs           ← Main entry point
-Excise.App/Services/Redaction/ContentStreamParser.cs  ← Parses PDF operations
-Excise.App/Services/Redaction/ContentStreamBuilder.cs ← Rebuilds PDF content
-Excise.App/Services/Redaction/TextBoundsCalculator.cs ← Text positioning
+Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs  <- RedactText (document entry point)
+Excise.Core/Redaction/PdfPageRedactionExtensions.cs      <- RedactArea* (page entry points)
+Excise.Core/Redaction/GlyphRemover.cs, LetterFinder.cs, OperationReconstructor.cs
+Excise.Core/Content/ContentStreamParser.cs, ContentStreamWriter.cs, ContentStreamWalker.cs
+Excise.App/Services/RedactionService.cs                  <- GUI orchestration only
 ```
 
 ### Test Locations
 ```
-Excise.App.Tests/Integration/BlackBoxRedactionTests.cs
-Excise.App.Tests/Integration/ComprehensiveRedactionTests.cs
-Excise.App.Tests/Integration/RedactionIntegrationTests.cs
+Excise.Core.Tests/Text/Segmentation/GlyphRemoverTests.cs
+Excise.Core.Tests/Text/Segmentation/OperationReconstructorTests.cs
+Excise.Core.Tests/Text/Segmentation/*RedactionLeakTests.cs
+Excise.Rendering.Tests/Differential/
 ```
 
 ### Commands
