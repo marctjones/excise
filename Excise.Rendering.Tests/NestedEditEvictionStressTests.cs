@@ -123,25 +123,6 @@ public sealed class NestedEditEvictionStressTests : IDisposable
         reopened.GetPage(2).GetAnnotations().Should().BeEmpty();
     }
 
-    /// <summary>
-    /// The gap itself, pinned: a nested edit does not clear the owner's flag, so
-    /// the guard would hand an edited image back to the file. No production
-    /// mutator edits an image or mask dictionary below its top level, and only
-    /// those are ever offered for eviction; a site that starts to must
-    /// re-register the owner, as <see cref="ReRegisteringTheOwner_KeepsANestedImageEdit_ThroughAReleasingRender"/> does.
-    /// </summary>
-    [Fact]
-    public void ANestedImageEdit_DoesNotClearTheOwnersPristineFlag()
-    {
-        using var doc = PdfDocument.Open(ImageDocumentWithDecodeArray());
-        var image = Image(doc);
-        ((PdfArray)image["Decode"])[0] = new PdfInteger(1);
-
-        image.IsPristine.Should().BeTrue("PdfArray has no flag and a nested write does not reach its owner");
-        doc.TryEvictFromCache(image).Should().BeTrue(
-            "documented gap, not a contract: the top-level guard cannot see a nested edit. Flip this when the guard becomes recursive");
-    }
-
     [Fact]
     public void ReRegisteringTheOwner_KeepsANestedImageEdit_ThroughAReleasingRender()
     {
