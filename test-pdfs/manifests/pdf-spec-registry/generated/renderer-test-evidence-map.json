@@ -40772,7 +40772,7 @@
       "path": "Excise.Rendering.Tests/PerformanceBenchmarkTests.cs",
       "class": "PerformanceBenchmarkTests",
       "method": "RenderSinglePage_StaysUnder_Threshold",
-      "line": 50,
+      "line": 51,
       "xunitKind": "theory",
       "evidenceKind": "benchmark-candidate",
       "facets": [
@@ -40786,7 +40786,7 @@
       "path": "Excise.Rendering.Tests/PerformanceBenchmarkTests.cs",
       "class": "PerformanceBenchmarkTests",
       "method": "OpenDocument_StaysUnder_300ms_ForSmallForm",
-      "line": 88,
+      "line": 89,
       "xunitKind": "fact",
       "evidenceKind": "benchmark-candidate",
       "facets": [
@@ -40800,7 +40800,7 @@
       "path": "Excise.Rendering.Tests/PerformanceBenchmarkTests.cs",
       "class": "PerformanceBenchmarkTests",
       "method": "TextExtraction_StaysUnder_500ms_PerSmallPage",
-      "line": 106,
+      "line": 107,
       "xunitKind": "fact",
       "evidenceKind": "benchmark-candidate",
       "facets": [
@@ -40823,7 +40823,7 @@
       "path": "Excise.Rendering.Tests/PerformanceBenchmarkTests.cs",
       "class": "PerformanceBenchmarkTests",
       "method": "SaveRoundTrip_StaysUnder_OneSecond_ForSmallForm",
-      "line": 127,
+      "line": 128,
       "xunitKind": "fact",
       "evidenceKind": "benchmark-candidate",
       "facets": [
@@ -40837,7 +40837,7 @@
       "path": "Excise.Rendering.Tests/PerformanceBenchmarkTests.cs",
       "class": "PerformanceBenchmarkTests",
       "method": "AcroFormFillAndSave_StaysUnder_OneSecond_ForSmallForm",
-      "line": 150,
+      "line": 151,
       "xunitKind": "fact",
       "evidenceKind": "benchmark-candidate",
       "facets": [
@@ -40851,7 +40851,7 @@
       "path": "Excise.Rendering.Tests/PerformanceBenchmarkTests.cs",
       "class": "PerformanceBenchmarkTests",
       "method": "RedactText_CommonTermOnW9_StaysOnTheBatchedRewritePath",
-      "line": 207,
+      "line": 208,
       "xunitKind": "fact",
       "evidenceKind": "benchmark-candidate",
       "facets": [
