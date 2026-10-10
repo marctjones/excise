@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1657,
-  "indexedContentSha256": "3055a1bcd69e0fdf8768c05573e1bba73f2fc410b73c4851135ba3d596114591",
+  "indexedFileCount": 1659,
+  "indexedContentSha256": "8453b42a381ae1e8b264c923b9c9e6971b23708312432e0d6b8c54e11aef9215",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -1226,6 +1226,7 @@
           "path": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
           "kind": "source",
           "matchedTerms": [
+            "indirect",
             "streams",
             "trailer",
             "pdfobject"
@@ -1605,7 +1606,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 225
+      "candidateReferenceCount": 226
     },
     {
       "id": "pdf.17.syntax.filters",
@@ -4160,7 +4161,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 231
+      "candidateReferenceCount": 232
     },
     {
       "id": "pdf.17.document.navigation",
@@ -5078,7 +5079,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 188
+      "candidateReferenceCount": 190
     },
     {
       "id": "pdf.17.document.metadata",
@@ -7234,6 +7235,14 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/Segmentation/StripperReachRegressionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "dictionaries",
+            "resource"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/TextExtractorTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -7307,6 +7316,16 @@
             "resource",
             "colorspace",
             "pdfimage"
+          ]
+        },
+        {
+          "path": "Excise.Rendering.Tests/NestedEditEvictionStressTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "dictionaries",
+            "resource",
+            "colorspace",
+            "skiarenderer"
           ]
         },
         {
@@ -7412,7 +7431,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 52
+      "candidateReferenceCount": 54
     },
     {
       "id": "pdf.17.graphics.paths-painting",
@@ -8240,7 +8259,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 770
+      "candidateReferenceCount": 772
     },
     {
       "id": "pdf.17.graphics.color",
@@ -9051,7 +9070,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 361
+      "candidateReferenceCount": 362
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -10082,7 +10101,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 290
+      "candidateReferenceCount": 292
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -11663,7 +11682,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 205
+      "candidateReferenceCount": 206
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -13033,7 +13052,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 208
+      "candidateReferenceCount": 210
     },
     {
       "id": "pdf.20.content.operators",
@@ -15074,6 +15093,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/NestedEditEvictionStressTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "marked",
+            "property",
+            "contentstream",
+            "textextractor"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -15191,19 +15220,9 @@
             "artifacts",
             "property"
           ]
-        },
-        {
-          "path": "tests/unredaction-failure-modes.json",
-          "kind": "test",
-          "matchedTerms": [
-            "marked",
-            "property",
-            "contentstream",
-            "textextractor"
-          ]
         }
       ],
-      "candidateReferenceCount": 85
+      "candidateReferenceCount": 86
     },
     {
       "id": "pdf.20.content.operator-001",
@@ -31292,6 +31311,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/NestedEditEvictionStressTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/OutOfMemoryPropagationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -31376,7 +31404,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 52
+      "candidateReferenceCount": 53
     },
     {
       "id": "pdf.20.image.requirement-004",
@@ -31874,6 +31902,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/NestedEditEvictionStressTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/OutOfMemoryPropagationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -31958,7 +31995,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 52
+      "candidateReferenceCount": 53
     },
     {
       "id": "pdf.20.image.requirement-005",
@@ -32466,6 +32503,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/NestedEditEvictionStressTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "flatedecode",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/OutOfMemoryPropagationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -32560,7 +32606,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 54
+      "candidateReferenceCount": 55
     },
     {
       "id": "pdf.20.image.requirement-006",
@@ -38364,6 +38410,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/NestedEditEvictionStressTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/RawSampleImageDecoderIccAndParallelTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -38427,18 +38482,9 @@
             "mask",
             "image"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/Utilities/FixedAvaloniaFact.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "mask",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 93
+      "candidateReferenceCount": 94
     },
     {
       "id": "pdf.20.image.requirement-022",
@@ -39183,6 +39229,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/NestedEditEvictionStressTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "mask",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/RawSampleImageDecoderIccAndParallelTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -39246,18 +39301,9 @@
             "mask",
             "image"
           ]
-        },
-        {
-          "path": "Excise.App.Tests/Utilities/FixedAvaloniaFact.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "mask",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 93
+      "candidateReferenceCount": 94
     },
     {
       "id": "pdf.20.image.requirement-023",
@@ -40069,7 +40115,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 212
+      "candidateReferenceCount": 213
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -40749,6 +40795,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/NestedEditEvictionStressTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "bitspercomponent",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/OutOfMemoryPropagationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -40875,18 +40930,9 @@
             "image",
             "image"
           ]
-        },
-        {
-          "path": "Excise.Cli.Tests/UnredactFixtures.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "bitspercomponent",
-            "image",
-            "image"
-          ]
         }
       ],
-      "candidateReferenceCount": 81
+      "candidateReferenceCount": 82
     },
     {
       "id": "pdf.20.image.requirement-025",
@@ -42282,6 +42328,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/NestedEditEvictionStressTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicergb",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/OutOfMemoryPropagationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -42401,7 +42456,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 70
+      "candidateReferenceCount": 71
     },
     {
       "id": "pdf.20.image.requirement-028",
@@ -44291,7 +44346,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 155
+      "candidateReferenceCount": 156
     },
     {
       "id": "pdf.20.image.requirement-032",
@@ -46346,7 +46401,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 115
+      "candidateReferenceCount": 116
     },
     {
       "id": "pdf.20.annotation.subtype-002",
@@ -47248,7 +47303,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 129
+      "candidateReferenceCount": 130
     },
     {
       "id": "pdf.20.annotation.subtype-003",
@@ -53292,7 +53347,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 255
+      "candidateReferenceCount": 256
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -55316,7 +55371,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 189
+      "candidateReferenceCount": 190
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -58340,7 +58395,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 216
+      "candidateReferenceCount": 217
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -62861,7 +62916,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 249
+      "candidateReferenceCount": 250
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -63853,7 +63908,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 119
+      "candidateReferenceCount": 120
     },
     {
       "id": "pdf.17.interactive.redaction-review-drafts",
@@ -66808,7 +66863,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 285
+      "candidateReferenceCount": 287
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -67745,7 +67800,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 214
+      "candidateReferenceCount": 215
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -70367,7 +70422,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 469
+      "candidateReferenceCount": 470
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -71114,7 +71169,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 253
+      "candidateReferenceCount": 255
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -71890,7 +71945,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 246
+      "candidateReferenceCount": 248
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -72679,7 +72734,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 846
+      "candidateReferenceCount": 848
     },
     {
       "id": "pdf.20.extension.developer",
@@ -75986,7 +76041,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 171
+      "candidateReferenceCount": 172
     },
     {
       "id": "pdfe.product.redaction.review-panel",
@@ -81753,6 +81808,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/Segmentation/StripperReachRegressionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "forms",
+            "javascript",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Xfa/FormCalcFuzzTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -82154,7 +82218,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 67
+      "candidateReferenceCount": 68
     }
   ],
   "summary": {

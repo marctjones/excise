@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "2d5980a5407da6f1378bf52886511daccaa7527b",
+  "sourceRevision": "238055e594051b1fcfad55746d408697f8cfd333",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -22,8 +22,8 @@
     "commitsRequested": 200,
     "commitsObserved": 198,
     "broadCommitsExcluded": 1,
-    "newestProductionCommit": "08bdd9ea94daff6badbcd22e74ce756676773aaf",
-    "oldestProductionCommit": "7f16df06367a99a3c71b576ce5d7337216ab347c"
+    "newestProductionCommit": "c37425f0f189b66d3887c55324412ab91169298e",
+    "oldestProductionCommit": "85646f6c2038c8776ca6d3235f88afce3dcb637d"
   },
   "files": [
     {
@@ -55,12 +55,12 @@
       "commits": 11
     },
     {
-      "path": "Excise.Core/Redaction/WidthClosureLedger.cs",
+      "path": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
       "commits": 10
     },
     {
-      "path": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
-      "commits": 9
+      "path": "Excise.Core/Redaction/WidthClosureLedger.cs",
+      "commits": 10
     },
     {
       "path": "Excise.Core/Text/TextSelectionEngine.cs",
@@ -940,10 +940,6 @@
     },
     {
       "path": "Excise.Core/Text/TermMatch.cs",
-      "commits": 1
-    },
-    {
-      "path": "Excise.Core/Validation/PdfUaValidator.cs",
       "commits": 1
     },
     {
@@ -2881,12 +2877,6 @@
       "jaccard": 0.1429
     },
     {
-      "source": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
-      "target": "Excise.Core/Redaction/RedactionOptions.cs",
-      "cochanges": 2,
-      "jaccard": 0.1429
-    },
-    {
       "source": "Excise.App/Converters/EnumDisplayConverter.cs",
       "target": "Excise.App/Views/PreferencesWindow.axaml",
       "cochanges": 2,
@@ -2925,6 +2915,12 @@
     {
       "source": "Excise.App/Views/PreferencesWindow.axaml",
       "target": "Excise.App/Views/ReduceFileSizeDialog.axaml",
+      "cochanges": 2,
+      "jaccard": 0.1333
+    },
+    {
+      "source": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
+      "target": "Excise.Core/Redaction/RedactionOptions.cs",
       "cochanges": 2,
       "jaccard": 0.1333
     },
@@ -3073,14 +3069,14 @@
       "jaccard": 0.0952
     },
     {
-      "source": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
-      "target": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
-      "cochanges": 2,
-      "jaccard": 0.0909
-    },
-    {
       "source": "Excise.App/Views/PreferencesWindow.axaml",
       "target": "Excise.Core/Redaction/WidthClosureLedger.cs",
+      "cochanges": 2,
+      "jaccard": 0.087
+    },
+    {
+      "source": "Excise.Core/Redaction/PdfDocumentRedactionExtensions.cs",
+      "target": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
       "cochanges": 2,
       "jaccard": 0.087
     },
