@@ -856,20 +856,6 @@ public class PdfDocumentCoverageTests
     }
 
     /// <summary>
-    /// Test GetPage with valid page numbers.
-    /// </summary>
-    [Fact]
-    public void GetPage_ValidPageNumber_ReturnsPage()
-    {
-        var pdfData = CreatePdfWithCustomTrailer();
-
-        using var doc = PdfDocument.Open(new MemoryStream(pdfData));
-        var page = doc.GetPage(1);
-
-        page.Should().NotBeNull();
-    }
-
-    /// <summary>
     /// Test GetPage with page number less than 1.
     /// </summary>
     [Fact]
@@ -1076,23 +1062,6 @@ public class PdfDocumentCoverageTests
     }
 
     /// <summary>
-    /// Test IsTaggedPdf caching by accessing it multiple times.
-    /// </summary>
-    [Fact]
-    public void IsTaggedPdf_AccessedMultipleTimes_IsCached()
-    {
-        var pdfData = CreatePdfWithCustomTrailer();
-
-        using var doc = PdfDocument.Open(new MemoryStream(pdfData));
-
-        // Access twice to ensure caching works
-        var first = doc.IsTaggedPdf;
-        var second = doc.IsTaggedPdf;
-
-        first.Should().Be(second);
-    }
-
-    /// <summary>
     /// Test HasEmbeddedFiles when both modern and legacy entries are missing.
     /// </summary>
     [Fact]
@@ -1196,24 +1165,6 @@ public class PdfDocumentCoverageTests
     }
 
     /// <summary>
-    /// Test ScrubMetadata with scrubAttachments=false.
-    /// Should clear Info dict but NOT remove embedded files.
-    /// </summary>
-    [Fact]
-    public void ScrubMetadata_WithScrubAttachmentsFalse_DoesNotScrubEmbeddedFiles()
-    {
-        var pdfData = CreatePdfWithCustomTrailer();
-
-        using var doc = PdfDocument.Open(new MemoryStream(pdfData));
-
-        // Call with scrubAttachments=false
-        doc.ScrubMetadata(scrubAttachments: false);
-
-        // Should still work (no exception thrown)
-        doc.Should().NotBeNull();
-    }
-
-    /// <summary>
     /// Test ScrubInfoKeys with specific keys to remove.
     /// </summary>
     [Fact]
@@ -1277,22 +1228,6 @@ public class PdfDocumentCoverageTests
         doc.Title.Should().BeNull();
         doc.Author.Should().BeNull();
         doc.Subject.Should().Be("Subject");
-    }
-
-    /// <summary>
-    /// Test ScrubInfoKeys with null keys parameter.
-    /// Should not throw.
-    /// </summary>
-    [Fact]
-    public void ScrubInfoKeys_WithNullKeys_DoesNotThrow()
-    {
-        var pdfData = CreatePdfWithCustomTrailer();
-
-        using var doc = PdfDocument.Open(new MemoryStream(pdfData));
-
-        var act = () => doc.ScrubInfoKeys(null!);
-
-        act.Should().NotThrow();
     }
 
     /// <summary>

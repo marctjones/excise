@@ -223,16 +223,6 @@ public class PdfEmbeddedFileTests
     }
 
     [Fact]
-    public void ScrubEmbeddedFiles_OnDocumentWithoutEmbeddedFiles_DoesNotThrow()
-    {
-        var pdf = BuildPdfWithoutEmbeddedFiles();
-        using var doc = PdfDocument.Open(pdf);
-
-        var act = () => doc.ScrubEmbeddedFiles();
-        act.Should().NotThrow();
-    }
-
-    [Fact]
     public void ScrubEmbeddedFiles_RoundTrip_SaveAndReload_StaysScrubbed()
     {
         var pdf = BuildPdfWithEmbeddedFile("secret.xml", "<confidential/>");

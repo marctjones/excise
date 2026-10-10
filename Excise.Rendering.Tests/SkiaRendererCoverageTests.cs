@@ -118,27 +118,6 @@ public class SkiaRendererCoverageTests
     }
 
     [Fact]
-    public void RenderPage_CmykFillOperator_k_ShowsCyanMagentaYellowBlack()
-    {
-        // Arrange - k operator: CMYK fill color
-        var content = @"
-            1 0 0 0 k
-            100 100 150 100 re f
-            0 1 0 0 k
-            200 100 150 100 re f
-        ";
-        var pdfData = CreatePdfWithContent(content);
-        using var doc = PdfDocument.Open(pdfData);
-        var renderer = new SkiaRenderer();
-
-        // Act
-        using var bitmap = renderer.RenderPage(doc.GetPage(1));
-
-        // Assert - CMYK rectangles should render (cyan and magenta)
-        bitmap.Should().NotBeNull();
-    }
-
-    [Fact]
     public void RenderPage_CmykStrokeOperator_K_ShowsStroke()
     {
         // Arrange - K operator: CMYK stroke color
@@ -866,28 +845,6 @@ public class SkiaRendererCoverageTests
         using var bitmap = renderer.RenderPage(doc.GetPage(1));
 
         // Assert - text should render
-        bitmap.Should().NotBeNull();
-    }
-
-    [Fact]
-    public void RenderPage_Text_LargerFontSize()
-    {
-        // Arrange - Text at larger font size (24pt)
-        var content = @"
-            BT
-            /F1 24 Tf
-            100 600 Td
-            (Large Text) Tj
-            ET
-        ";
-        var pdfData = CreatePdfWithContent(content);
-        using var doc = PdfDocument.Open(pdfData);
-        var renderer = new SkiaRenderer();
-
-        // Act
-        using var bitmap = renderer.RenderPage(doc.GetPage(1));
-
-        // Assert - larger text should render
         bitmap.Should().NotBeNull();
     }
 

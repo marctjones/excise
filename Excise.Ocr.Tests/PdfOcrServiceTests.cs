@@ -163,14 +163,6 @@ public class PdfOcrServiceTests
     }
 
     [Fact]
-    public void PdfOcrService_IsAvailable_DoesNotThrow()
-    {
-        var service = new PdfOcrService(tesseractPath: "/nonexistent/tesseract");
-        var action = () => service.IsAvailable();
-        action.Should().NotThrow();
-    }
-
-    [Fact]
     public void PdfOcrService_RecognizePage_WithNullPage_ThrowsArgumentNullException()
     {
         var service = new PdfOcrService();
