@@ -7793,6 +7793,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ListedInCalculationOrder_IsNotInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -7834,6 +7841,13 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.DeleteWidget_Save_Restore_PutsTheParentFieldBackInFieldsAndCalculationOrder",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/ImageStampSoftMaskTests.cs::ImageStampSoftMaskTests.TheSMask_SurvivesSaveAndReload",
@@ -8526,24 +8540,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfFormAutoDetectorTests.cs::PdfFormAutoDetectorTests.GraphicsStateTracking_SavesAndRestoresTransformationMatrix",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -21043,6 +21039,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ListedInCalculationOrder_IsNotInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -21084,6 +21087,13 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.DeleteWidget_Save_Restore_PutsTheParentFieldBackInFieldsAndCalculationOrder",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/ImageStampSoftMaskTests.cs::ImageStampSoftMaskTests.TheSMask_SurvivesSaveAndReload",
@@ -21779,24 +21789,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfFormAutoDetectorTests.cs::PdfFormAutoDetectorTests.GraphicsStateTracking_SavesAndRestoresTransformationMatrix",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -22537,6 +22529,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ListedInCalculationOrder_IsNotInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -22578,6 +22577,13 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.DeleteWidget_Save_Restore_PutsTheParentFieldBackInFieldsAndCalculationOrder",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/ImageStampSoftMaskTests.cs::ImageStampSoftMaskTests.TheSMask_SurvivesSaveAndReload",
@@ -23273,24 +23279,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfFormAutoDetectorTests.cs::PdfFormAutoDetectorTests.GraphicsStateTracking_SavesAndRestoresTransformationMatrix",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -23992,6 +23980,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ListedInCalculationOrder_IsNotInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -24033,6 +24028,13 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.DeleteWidget_Save_Restore_PutsTheParentFieldBackInFieldsAndCalculationOrder",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/ImageStampSoftMaskTests.cs::ImageStampSoftMaskTests.TheSMask_SurvivesSaveAndReload",
@@ -24728,24 +24730,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfFormAutoDetectorTests.cs::PdfFormAutoDetectorTests.GraphicsStateTracking_SavesAndRestoresTransformationMatrix",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -81600,6 +81584,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.Capture_OfAnAnnotationThatIsNotAFormWidget_HoldsNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.PdfAnnotationParser_ParseDate_NoTimezone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -82982,13 +82973,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAReplyPointsAt_IsNotInTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAStructureElementPointsAt_IsNotInTheFile",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -83038,6 +83022,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.Capture_OfAnAnnotationThatIsNotAFormWidget_HoldsNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.PdfAnnotationParser_ParseDate_NoTimezone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -84420,13 +84411,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAReplyPointsAt_IsNotInTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAStructureElementPointsAt_IsNotInTheFile",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -84476,6 +84460,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.Capture_OfAnAnnotationThatIsNotAFormWidget_HoldsNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.PdfAnnotationParser_ParseDate_NoTimezone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -85858,13 +85849,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAReplyPointsAt_IsNotInTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAStructureElementPointsAt_IsNotInTheFile",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -85930,6 +85914,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.Capture_OfAnAnnotationThatIsNotAFormWidget_HoldsNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.PdfAnnotationParser_ParseDate_NoTimezone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -87312,13 +87303,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAReplyPointsAt_IsNotInTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAStructureElementPointsAt_IsNotInTheFile",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -87503,6 +87487,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.Capture_OfAnAnnotationThatIsNotAFormWidget_HoldsNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.PdfAnnotationParser_ParseDate_NoTimezone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -88885,13 +88876,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAReplyPointsAt_IsNotInTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAStructureElementPointsAt_IsNotInTheFile",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -88934,6 +88918,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.Capture_OfAnAnnotationThatIsNotAFormWidget_HoldsNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.PdfAnnotationParser_ParseDate_NoTimezone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -90316,13 +90307,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAReplyPointsAt_IsNotInTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAStructureElementPointsAt_IsNotInTheFile",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -90358,6 +90342,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.Capture_OfAnAnnotationThatIsNotAFormWidget_HoldsNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.PdfAnnotationParser_ParseDate_NoTimezone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -91740,13 +91731,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAReplyPointsAt_IsNotInTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAStructureElementPointsAt_IsNotInTheFile",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -91782,6 +91766,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.Capture_OfAnAnnotationThatIsNotAFormWidget_HoldsNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.PdfAnnotationParser_ParseDate_NoTimezone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -93164,13 +93155,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAReplyPointsAt_IsNotInTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAStructureElementPointsAt_IsNotInTheFile",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -94156,6 +94140,83 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.RemovePage_ItsElementGoes_KeptPagesElementsStay",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ElementSpanningRemovedAndKeptPage_StaysWithOnlyItsKeptContent_AndLosesItsTextFields",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ChildInheritingTheRemovedPage_GoesWithItsParent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ParentWithChildrenOnRemovedAndKeptPages_KeepsTheKeptChild",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ParentOnRemovedPageWithAChildOnAKeptPage_KeepsTheChild",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.DroppedElementNamedInAKeptPagesParentTreeArray_LeavesANullSlot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ElementWithNoPageAnywhere_IsPlacedThroughTheParentTree",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.AnnotationElementOnTheRemovedPage_Goes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.RemovedPageWithNoStructure_LeavesTheTreeAlone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.RemoveTwoPagesAcrossTwoSaves_BothElementsGo_SecondSaveIsClean",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ResaveOfTheSavedFile_StaysClean",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRedaction_DoesNotReturnTheRemovedTerm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -94630,83 +94691,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AFormXObjectWithNoDarkFill_ProducesNoMark",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.OrphanedOriginalImage_IsReportedAsAPresentOnlyLeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.FullyMaskedImage_IsReportedAsAPresentOnlyLeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AnOrdinaryImage_IsNotReportedAsAnImageLayerLeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AnUnreferencedImageWithNoMatchingReplacement_IsNotReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.XfaFieldValue_IsRecoveredFromTheDatasetsPacket",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.ADocumentWithNoXfa_SaysSoRatherThanReportingNothing",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.XfaStructuralElements_AreNotReportedAsFieldValues",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.InvisibleTextRenderMode3_IsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.VisibleText_IsNotReportedAsInvisible",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AnnotationDrawnBox_TextInsideTheMarkIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.UnappliedRedactAnnotation_TextInsideTheMarkIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95498,6 +95482,83 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.RemovePage_ItsElementGoes_KeptPagesElementsStay",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ElementSpanningRemovedAndKeptPage_StaysWithOnlyItsKeptContent_AndLosesItsTextFields",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ChildInheritingTheRemovedPage_GoesWithItsParent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ParentWithChildrenOnRemovedAndKeptPages_KeepsTheKeptChild",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ParentOnRemovedPageWithAChildOnAKeptPage_KeepsTheChild",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.DroppedElementNamedInAKeptPagesParentTreeArray_LeavesANullSlot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ElementWithNoPageAnywhere_IsPlacedThroughTheParentTree",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.AnnotationElementOnTheRemovedPage_Goes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.RemovedPageWithNoStructure_LeavesTheTreeAlone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.RemoveTwoPagesAcrossTwoSaves_BothElementsGo_SecondSaveIsClean",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ResaveOfTheSavedFile_StaysClean",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRedaction_DoesNotReturnTheRemovedTerm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -95972,83 +96033,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AFormXObjectWithNoDarkFill_ProducesNoMark",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.OrphanedOriginalImage_IsReportedAsAPresentOnlyLeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.FullyMaskedImage_IsReportedAsAPresentOnlyLeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AnOrdinaryImage_IsNotReportedAsAnImageLayerLeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AnUnreferencedImageWithNoMatchingReplacement_IsNotReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.XfaFieldValue_IsRecoveredFromTheDatasetsPacket",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.ADocumentWithNoXfa_SaysSoRatherThanReportingNothing",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.XfaStructuralElements_AreNotReportedAsFieldValues",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.InvisibleTextRenderMode3_IsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.VisibleText_IsNotReportedAsInvisible",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AnnotationDrawnBox_TextInsideTheMarkIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.UnappliedRedactAnnotation_TextInsideTheMarkIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96854,6 +96838,83 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.RemovePage_ItsElementGoes_KeptPagesElementsStay",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ElementSpanningRemovedAndKeptPage_StaysWithOnlyItsKeptContent_AndLosesItsTextFields",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ChildInheritingTheRemovedPage_GoesWithItsParent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ParentWithChildrenOnRemovedAndKeptPages_KeepsTheKeptChild",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ParentOnRemovedPageWithAChildOnAKeptPage_KeepsTheChild",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.DroppedElementNamedInAKeptPagesParentTreeArray_LeavesANullSlot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ElementWithNoPageAnywhere_IsPlacedThroughTheParentTree",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.AnnotationElementOnTheRemovedPage_Goes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.RemovedPageWithNoStructure_LeavesTheTreeAlone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.RemoveTwoPagesAcrossTwoSaves_BothElementsGo_SecondSaveIsClean",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ResaveOfTheSavedFile_StaysClean",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRedaction_DoesNotReturnTheRemovedTerm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97328,83 +97389,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AFormXObjectWithNoDarkFill_ProducesNoMark",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.OrphanedOriginalImage_IsReportedAsAPresentOnlyLeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.FullyMaskedImage_IsReportedAsAPresentOnlyLeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AnOrdinaryImage_IsNotReportedAsAnImageLayerLeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AnUnreferencedImageWithNoMatchingReplacement_IsNotReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.XfaFieldValue_IsRecoveredFromTheDatasetsPacket",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.ADocumentWithNoXfa_SaysSoRatherThanReportingNothing",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.XfaStructuralElements_AreNotReportedAsFieldValues",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.InvisibleTextRenderMode3_IsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.VisibleText_IsNotReportedAsInvisible",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AnnotationDrawnBox_TextInsideTheMarkIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.UnappliedRedactAnnotation_TextInsideTheMarkIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98236,6 +98220,83 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.RemovePage_ItsElementGoes_KeptPagesElementsStay",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ElementSpanningRemovedAndKeptPage_StaysWithOnlyItsKeptContent_AndLosesItsTextFields",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ChildInheritingTheRemovedPage_GoesWithItsParent",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ParentWithChildrenOnRemovedAndKeptPages_KeepsTheKeptChild",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ParentOnRemovedPageWithAChildOnAKeptPage_KeepsTheChild",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.DroppedElementNamedInAKeptPagesParentTreeArray_LeavesANullSlot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ElementWithNoPageAnywhere_IsPlacedThroughTheParentTree",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.AnnotationElementOnTheRemovedPage_Goes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.RemovedPageWithNoStructure_LeavesTheTreeAlone",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.RemoveTwoPagesAcrossTwoSaves_BothElementsGo_SecondSaveIsClean",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/RemovedPageStructureLeakTests.cs::RemovedPageStructureLeakTests.ResaveOfTheSavedFile_StaysClean",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/StructElementMcidTextMapTests.cs::StructElementMcidTextMapTests.ResolveStructElementText_AfterRedaction_DoesNotReturnTheRemovedTerm",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98714,83 +98775,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.OrphanedOriginalImage_IsReportedAsAPresentOnlyLeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.FullyMaskedImage_IsReportedAsAPresentOnlyLeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AnOrdinaryImage_IsNotReportedAsAnImageLayerLeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AnUnreferencedImageWithNoMatchingReplacement_IsNotReported",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.XfaFieldValue_IsRecoveredFromTheDatasetsPacket",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.ADocumentWithNoXfa_SaysSoRatherThanReportingNothing",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.XfaStructuralElements_AreNotReportedAsFieldValues",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.InvisibleTextRenderMode3_IsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.VisibleText_IsNotReportedAsInvisible",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AnnotationDrawnBox_TextInsideTheMarkIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.UnappliedRedactAnnotation_TextInsideTheMarkIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -99213,6 +99197,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ListedInCalculationOrder_IsNotInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.EveryAuthoredWidget_HasThePrintFlag_AndOnlyANormalAppearance_AndNeedAppearancesIsUnset",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -99235,6 +99226,20 @@
         },
         {
           "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_AfterReopening_RedrawsFromDaAndDr_WithoutNeedAppearances",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.DeleteWidget_Save_Restore_PutsTheParentFieldBackInFieldsAndCalculationOrder",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.Capture_OfAnAnnotationThatIsNotAFormWidget_HoldsNothing",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -100229,31 +100234,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/StaleFieldAppearanceTests.cs::StaleFieldAppearanceTests.SetValue_EveryWidgetRegenerated_DoesNotSetNeedAppearances",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_EmbedsNoBase14FontForTheWidgetAppearance",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_WidgetDefaultAppearanceNamesTheEmbeddedFont",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -100667,6 +100647,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ListedInCalculationOrder_IsNotInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.EveryAuthoredWidget_HasThePrintFlag_AndOnlyANormalAppearance_AndNeedAppearancesIsUnset",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -100689,6 +100676,20 @@
         },
         {
           "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_AfterReopening_RedrawsFromDaAndDr_WithoutNeedAppearances",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.DeleteWidget_Save_Restore_PutsTheParentFieldBackInFieldsAndCalculationOrder",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.Capture_OfAnAnnotationThatIsNotAFormWidget_HoldsNothing",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -101683,31 +101684,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/StaleFieldAppearanceTests.cs::StaleFieldAppearanceTests.SetValue_EveryWidgetRegenerated_DoesNotSetNeedAppearances",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_EmbedsNoBase14FontForTheWidgetAppearance",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_WidgetDefaultAppearanceNamesTheEmbeddedFont",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -102142,6 +102118,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ListedInCalculationOrder_IsNotInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.EveryAuthoredWidget_HasThePrintFlag_AndOnlyANormalAppearance_AndNeedAppearancesIsUnset",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -102164,6 +102147,20 @@
         },
         {
           "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_AfterReopening_RedrawsFromDaAndDr_WithoutNeedAppearances",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.DeleteWidget_Save_Restore_PutsTheParentFieldBackInFieldsAndCalculationOrder",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.Capture_OfAnAnnotationThatIsNotAFormWidget_HoldsNothing",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -103158,31 +103155,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/StaleFieldAppearanceTests.cs::StaleFieldAppearanceTests.SetValue_EveryWidgetRegenerated_DoesNotSetNeedAppearances",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_EmbedsNoBase14FontForTheWidgetAppearance",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_WidgetDefaultAppearanceNamesTheEmbeddedFont",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -103557,6 +103529,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ListedInCalculationOrder_IsNotInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.EveryAuthoredWidget_HasThePrintFlag_AndOnlyANormalAppearance_AndNeedAppearancesIsUnset",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -103579,6 +103558,20 @@
         },
         {
           "test": "Excise.Core.Tests/Document/AuthoredWidgetAppearanceTests.cs::AuthoredWidgetAppearanceTests.SetValue_AfterReopening_RedrawsFromDaAndDr_WithoutNeedAppearances",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.DeleteWidget_Save_Restore_PutsTheParentFieldBackInFieldsAndCalculationOrder",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.Capture_OfAnAnnotationThatIsNotAFormWidget_HoldsNothing",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -104573,31 +104566,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/StaleFieldAppearanceTests.cs::StaleFieldAppearanceTests.SetValue_EveryWidgetRegenerated_DoesNotSetNeedAppearances",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_EmbedsNoBase14FontForTheWidgetAppearance",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/WidgetDefaultAppearanceFontTests.cs::WidgetDefaultAppearanceFontTests.PdfAWithFormField_WidgetDefaultAppearanceNamesTheEmbeddedFont",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -105849,6 +105817,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ListedInCalculationOrder_IsNotInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -105890,6 +105865,13 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.DeleteWidget_Save_Restore_PutsTheParentFieldBackInFieldsAndCalculationOrder",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/ImageStampSoftMaskTests.cs::ImageStampSoftMaskTests.TheSMask_SurvivesSaveAndReload",
@@ -106581,24 +106563,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfFormAutoDetectorTests.cs::PdfFormAutoDetectorTests.GraphicsStateTracking_SavesAndRestoresTransformationMatrix",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -107291,6 +107255,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs::AcroFormRemoveFieldTests.RemoveField_ListedInCalculationOrder_IsNotInTheSavedBytes",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/ContentStreamReleaseTests.cs::ContentStreamReleaseTests.RedactingAfterARelease_RemovesTheTermFromTheSavedFile",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -107332,6 +107303,13 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Document/FieldTreeLinkSnapshotTests.cs::FieldTreeLinkSnapshotTests.DeleteWidget_Save_Restore_PutsTheParentFieldBackInFieldsAndCalculationOrder",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/ImageStampSoftMaskTests.cs::ImageStampSoftMaskTests.TheSMask_SurvivesSaveAndReload",
@@ -108023,24 +108001,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfFormAutoDetectorTests.cs::PdfFormAutoDetectorTests.GraphicsStateTracking_SavesAndRestoresTransformationMatrix",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.FlateIndexedImageWithPngPredictor_SurvivesASaveAndReload_AllKeysAndBytesUnchanged",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs::PdfImagePreservationTests.Ascii85LzwFilterArrayImageWithSoftMask_SurvivesASaveAndReload_Unchanged",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112622,8 +112582,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 8617,
-    "testMethodsWithCapabilityCandidate": 5586,
+    "testMethods": 8676,
+    "testMethodsWithCapabilityCandidate": 5645,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

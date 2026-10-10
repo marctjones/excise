@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "e6167baa803ccac2b5cbbb026b1c6b5c4f89b60bd8526f46e7283b80a5400dba",
+  "sourceFingerprint": "58684110ea6e21978ac41a1f26ad46ac71d13b487cd8faebc3989d2c9d6cf606",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -707,6 +707,16 @@
     {
       "id": "Excise.Core/Document/FieldAppearanceRegenerator.cs",
       "path": "Excise.Core/Document/FieldAppearanceRegenerator.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Document/FieldTreeLinkSnapshot.cs",
+      "path": "Excise.Core/Document/FieldTreeLinkSnapshot.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -5436,6 +5446,29 @@
     {
       "id": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
       "path": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
+      "kind": "source-file",
+      "facets": [
+        "redaction"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.security.redaction-content-removal",
+          "modes": [
+            "extract",
+            "mutate",
+            "render",
+            "write"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Redaction/RedactionNoteSummary.cs",
+      "path": "Excise.Core/Redaction/RedactionNoteSummary.cs",
       "kind": "source-file",
       "facets": [
         "redaction"
@@ -11848,7 +11881,7 @@
     }
   ],
   "summary": {
-    "records": 598,
+    "records": 600,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 20,
@@ -11856,8 +11889,8 @@
       "fonts": 34,
       "forms": 12,
       "images": 40,
-      "product-integration-general": 343,
-      "redaction": 83,
+      "product-integration-general": 344,
+      "redaction": 84,
       "safe-save-and-metadata": 21,
       "security-and-encryption": 25,
       "transparency": 3
@@ -11906,10 +11939,10 @@
       "pdf.17.interactive.redaction-annotations:parse": 14,
       "pdf.17.interactive.redaction-annotations:preserve": 14,
       "pdf.17.interactive.redaction-annotations:render": 14,
-      "pdf.17.security.redaction-content-removal:extract": 83,
-      "pdf.17.security.redaction-content-removal:mutate": 83,
-      "pdf.17.security.redaction-content-removal:render": 83,
-      "pdf.17.security.redaction-content-removal:write": 83,
+      "pdf.17.security.redaction-content-removal:extract": 84,
+      "pdf.17.security.redaction-content-removal:mutate": 84,
+      "pdf.17.security.redaction-content-removal:render": 84,
+      "pdf.17.security.redaction-content-removal:write": 84,
       "pdf.17.syntax.encryption:mutate": 25,
       "pdf.17.syntax.encryption:parse": 25,
       "pdf.17.syntax.encryption:preserve": 25,
@@ -11935,7 +11968,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 25,
       "pdfe.product.security.signature-and-permission-warning:write": 25
     },
-    "fallbackRecords": 343,
+    "fallbackRecords": 344,
     "allRecordsMapped": true
   }
 }
