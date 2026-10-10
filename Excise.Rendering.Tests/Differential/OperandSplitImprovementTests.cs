@@ -37,17 +37,23 @@ public sealed class OperandSplitImprovementTests : IDisposable
     }
 
     /// <summary>
-    /// The term mid-string in a Tj, and mid-element in a kerned TJ, under
-    /// CollapsePreserveLayout (nothing moves) and under the default,
-    /// FixedMarker (#1715), which closes the gap down to the marker's width.
+    /// The term mid-string in a Tj, and mid-element in a kerned TJ, under the
+    /// two layout-keeping policies (nothing moves: CollapsePreserveLayout and
+    /// the default, OvershootPreserveLayout) and under FixedMarker (#1715),
+    /// which closes the gap down to the marker's width and is now explicit.
     /// </summary>
     public static TheoryData<string, WidthPolicy> Shows() => new()
     {
         { "(Louise Anne Farrar) Tj", WidthPolicy.CollapsePreserveLayout },
         { "[(Lou) -30 (ise Anne Farrar) 50 (.)] TJ", WidthPolicy.CollapsePreserveLayout },
-        { "(Louise Anne Farrar) Tj", RedactionOptions.Default.Width },
-        { "[(Lou) -30 (ise Anne Farrar) 50 (.)] TJ", RedactionOptions.Default.Width },
+        { "(Louise Anne Farrar) Tj", WidthPolicy.OvershootPreserveLayout },
+        { "[(Lou) -30 (ise Anne Farrar) 50 (.)] TJ", WidthPolicy.OvershootPreserveLayout },
+        { "(Louise Anne Farrar) Tj", WidthPolicy.FixedMarker },
+        { "[(Lou) -30 (ise Anne Farrar) 50 (.)] TJ", WidthPolicy.FixedMarker },
     };
+
+    private static bool KeepsLayout(WidthPolicy width) =>
+        width is WidthPolicy.CollapsePreserveLayout or WidthPolicy.OvershootPreserveLayout;
 
     [Theory]
     [MemberData(nameof(Shows))]
@@ -79,8 +85,8 @@ public sealed class OperandSplitImprovementTests : IDisposable
         start.Should().BeGreaterThan(0, "mutool reads the term on the input");
         var expected = glyphsBefore.Take(start).Concat(glyphsBefore.Skip(start + 4)).ToList();
         glyphsAfter.Select(g => g.Char).Should().Equal(expected.Select(g => g.Char));
-        var shift = width == WidthPolicy.CollapsePreserveLayout ? 0 : expected[start].X - glyphsAfter[start].X;
-        if (width != WidthPolicy.CollapsePreserveLayout)
+        var shift = KeepsLayout(width) ? 0 : expected[start].X - glyphsAfter[start].X;
+        if (!KeepsLayout(width))
             shift.Should().BeGreaterThan(0).And.BeLessThan(glyphsBefore[start + 4].X - glyphsBefore[start].X,
                 "the gap closes, down to the marker's width");
         for (var i = 0; i < expected.Count; i++)
