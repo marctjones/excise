@@ -163,7 +163,8 @@ internal partial class MainWindowViewModel
     /// <summary>
     /// Snapshot the pages at <paramref name="indices"/> (original order) so a
     /// deletion can be undone by re-inserting them. RemoveAt keeps the removed
-    /// page's object graph in the store, so Insert can clone it back verbatim.
+    /// page's object graph in the store, and Insert puts that same page back
+    /// (not a copy), so its bookmarks, links, tags and fields survive the save (#2058).
     /// </summary>
     private IReadOnlyList<(int Index, PdfPage Page)> CapturePages(IReadOnlyList<int> indices)
     {

@@ -7,6 +7,8 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Primitives;
+using Excise.TestSupport;
 using Excise.App.Tests.Utilities;
 using Excise.App.ViewModels;
 using Excise.App.Views;
@@ -160,7 +162,7 @@ public class UndoRedoWorkflowTests
     }
 
     // ── Page delete: undo re-inserts the captured page (RemoveAt keeps the
-    //    object graph; Insert clones it back), redo removes it again. This
+    //    object graph; Insert relinks that page, #2058), redo removes it again. This
     //    exercises CapturePages / ReinsertPagesAsync / RemovePagesInternalAsync,
     //    the same helpers the selected-delete path reuses.
     [FixedAvaloniaFact]
@@ -190,6 +192,79 @@ public class UndoRedoWorkflowTests
         await vm.RedoCommand.Execute();
         vm.TotalPages.Should().Be(3, "redo must remove the page again");
         FirstPageText(vm).Should().Contain("Page 2 Content");
+
+        window.Close();
+        Cleanup(tempDir);
+    }
+
+    // ── #2058: Remove Page, Undo, Save keeps everything that pointed at the
+    //    page: undo puts the page itself back, so the #2012 pre-save cut has
+    //    nothing to cut. Removing it again, then Save, still cuts it. ──────────────────────────
+    [FixedAvaloniaTheory]
+    [InlineData(RemovedPageBackReference.Outline)]
+    [InlineData(RemovedPageBackReference.StructureElement)]
+    [InlineData(RemovedPageBackReference.AcroFormFieldKids)]
+    public async Task PageDelete_Undo_Save_KeepsThePagesBookmarkTagsAndFields(RemovedPageBackReference back)
+    {
+        var (sourcePath, outputPath, tempDir) = MakePaths();
+        File.WriteAllBytes(sourcePath, RemovedPageFixtures.Build(back, "1.7"));
+        var redoPath = Path.Combine(tempDir, "redo.pdf");
+
+        var vm = MainWindowViewModelTestFactory.Create();
+        var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
+        window.Show();
+
+        await vm.LoadDocumentAsync(sourcePath);
+        vm.ContextMenuPageNumber = 2; // remove page 2, as the right-click menu does (#1817)
+        await vm.RemoveCurrentPageCommand.Execute();
+        vm.TotalPages.Should().Be(2);
+        vm.PdfCoreDocument!.GetPage(2).Text.Should().Contain(RemovedPageFixtures.KeptThree, "page 2 was the one removed");
+
+        // Undo, redo, undo: the page goes back, out and back again before the save.
+        await vm.UndoCommand.Execute();
+        vm.TotalPages.Should().Be(3);
+        await vm.RedoCommand.Execute();
+        vm.TotalPages.Should().Be(2);
+        await vm.UndoCommand.Execute();
+        vm.TotalPages.Should().Be(3);
+        await vm.SaveFileAsAsync(outputPath);
+
+        var saved = File.ReadAllBytes(outputPath);
+        foreach (var token in RemovedPageFixtures.RemovedTokens(back))
+            SavedPdfLeakScanner.FindTerm(saved, token).Should().NotBeEmpty($"{back}: the restored page's {token} is in the file");
+        using (var reopened = PdfDocument.Open(outputPath))
+        {
+            reopened.PageCount.Should().Be(3);
+            var pageTwo = reopened.Pages[1].Reference!.ObjectNum;
+            switch (back)
+            {
+                case RemovedPageBackReference.Outline:
+                    PdfOutlineParser.Parse(reopened).Single().PageNumber.Should().Be(2, "the bookmark goes to page 2");
+                    break;
+                case RemovedPageBackReference.StructureElement:
+                    var root = (PdfDictionary)reopened.Resolve(reopened.Catalog["StructTreeRoot"]);
+                    var kids = ((PdfArray)reopened.Resolve(root["K"])).Select(k => (PdfDictionary)reopened.Resolve(k)).ToList();
+                    kids.Should().HaveCount(3, "every page's element is in the tree");
+                    kids.Select(e => (e.GetOptional("Pg") as PdfReference)?.ObjectNum).Should().Contain(pageTwo,
+                        "page 2's element names page 2");
+                    break;
+                case RemovedPageBackReference.AcroFormFieldKids:
+                    reopened.GetPage(2).GetFormFields().Should().ContainSingle(f => f.Value == RemovedPageFixtures.FieldValue,
+                        "the field is in the form with its value");
+                    break;
+            }
+        }
+
+        // Removed again (the save cleared the history): the saved copy must not carry it.
+        vm.ContextMenuPageNumber = 2;
+        await vm.RemoveCurrentPageCommand.Execute();
+        vm.TotalPages.Should().Be(2);
+        vm.PdfCoreDocument!.GetPage(1).Text.Should().Contain(RemovedPageFixtures.KeptOne, "page 2 was the one removed again");
+        vm.PdfCoreDocument!.GetPage(2).Text.Should().Contain(RemovedPageFixtures.KeptThree, "page 2 was the one removed again");
+        await vm.SaveFileAsAsync(redoPath);
+        var removed = File.ReadAllBytes(redoPath);
+        foreach (var token in RemovedPageFixtures.RemovedTokens(back))
+            SavedPdfLeakScanner.FindTerm(removed, token).Should().BeEmpty($"{back}: the removed page's {token} must not be in the file");
 
         window.Close();
         Cleanup(tempDir);
