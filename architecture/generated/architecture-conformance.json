@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "2e113f87fcadf3064a049a52ab8ee77938468580",
+  "sourceRevision": "7ef3406c4e99df3b740ad2809c6662a6d4bf00cf",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8703,
+    "retainedSymbols": 8694,
     "observedComponentDependencies": 84,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -66,7 +66,7 @@
     {
       "source": "avalonia",
       "target": "core-document",
-      "references": 510,
+      "references": 513,
       "typeDependencyCount": 61,
       "classification": "declared",
       "evidence": [
@@ -192,8 +192,8 @@
     {
       "source": "cli",
       "target": "core-redaction",
-      "references": 221,
-      "typeDependencyCount": 49,
+      "references": 224,
+      "typeDependencyCount": 50,
       "classification": "declared",
       "evidence": [
         {
@@ -416,7 +416,7 @@
     {
       "source": "core-document",
       "target": "core",
-      "references": 128,
+      "references": 131,
       "typeDependencyCount": 32,
       "classification": "declared",
       "evidence": [
@@ -430,14 +430,19 @@
     {
       "source": "core-document",
       "target": "core-content",
-      "references": 18,
-      "typeDependencyCount": 3,
+      "references": 27,
+      "typeDependencyCount": 4,
       "classification": "undeclared",
       "evidence": [
         {
           "source": "Excise.Core.Editing.PdfTypewriterTextApplier",
           "target": "Excise.Core.Content.ContentTransform",
           "references": 11
+        },
+        {
+          "source": "Excise.Core.Editing.BatesNumberingService",
+          "target": "Excise.Core.Content.ContentTransform",
+          "references": 9
         },
         {
           "source": "Excise.Core.Document.PdfPage",
@@ -670,7 +675,7 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1340,
+      "references": 1332,
       "typeDependencyCount": 154,
       "classification": "declared",
       "evidence": [
@@ -726,14 +731,14 @@
     {
       "source": "core-redaction",
       "target": "core-text",
-      "references": 255,
+      "references": 249,
       "typeDependencyCount": 36,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.Segmentation.PdfDocumentRedactionExtensions",
           "target": "Excise.Core.Text.Letter",
-          "references": 36
+          "references": 38
         }
       ]
     },
