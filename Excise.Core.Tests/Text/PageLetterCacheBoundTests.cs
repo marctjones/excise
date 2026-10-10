@@ -118,13 +118,17 @@ public class PageLetterCacheBoundTests
     [Fact]
     public void RedactText_OnAPageWithCachedTextState_LeavesNoStaleLettersWordsOrText()
     {
-        using var doc = PdfDocument.Open(MultiPagePdf(2, p => $"Keep{p} STALESECRET tail"));
+        var input = MultiPagePdf(2, p => $"Keep{p} STALESECRET tail");
+        // Control: the independent scanner can see the term in the input.
+        SavedPdfLeakScanner.FindTerm(input, "STALESECRET").Should().NotBeEmpty();
+        using var doc = PdfDocument.Open(input);
         var page = doc.GetPage(1);
         page.Letters.Should().NotBeEmpty();
         page.GetWords().Select(w => w.Text).Should().Contain("STALESECRET");
         page.Text.Should().Contain("STALESECRET");
 
         doc.RedactText("STALESECRET", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(2);
+        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "STALESECRET").Should().BeEmpty();
 
         string.Concat(page.Letters.Select(l => l.Value)).Should().NotContain("STALESECRET",
             "the letters must be re-walked from the rewritten bytes");

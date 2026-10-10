@@ -57,11 +57,32 @@ public class LigatureReconstructionDuplicationTests
 
         // excise's own extractor already sees the corruption (#1156 is content-
         // stream corruption, not a render artifact), so this catches it too.
-        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        using var reopened = PdfDocument.Open(saved);
         var text = reopened.GetPage(1).Text;
         text.Should().Contain("after", "the surviving word must be intact");
         text.Should().NotContain("aftfter", "the ligature glyph must not be doubled (#1156)");
         text.Should().NotContain("XYZ", "the redacted term must be gone");
+
+        // Independent oracle in this same method (the full pair is
+        // ..._MutoolOracle): the codes are font-encoded, so only a real
+        // extractor reading /ToUnicode can see "XYZ" in the saved file.
+        var mutool = FindOnPath("mutool");
+        Assert.SkipWhen(mutool is null, "mutool not on PATH");
+        var outPath = Path.Combine(Path.GetTempPath(), $"lig-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            File.WriteAllBytes(outPath, pdf);
+            MutoolText(mutool!, outPath).Should().Contain("XYZ",
+                "control: mutool must read the term in the input, or its silence after proves nothing");
+            File.WriteAllBytes(outPath, saved);
+            MutoolText(mutool!, outPath).Should().NotContain("XYZ",
+                "mutool must independently agree the redacted term is gone");
+        }
+        finally
+        {
+            if (File.Exists(outPath)) File.Delete(outPath);
+        }
     }
 
     [Fact]

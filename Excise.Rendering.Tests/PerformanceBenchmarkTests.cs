@@ -4,6 +4,7 @@ using System.IO;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
+using Excise.Rendering.Differential;
 using Xunit;
 namespace Excise.Rendering.Tests;
 
@@ -244,5 +245,27 @@ public class PerformanceBenchmarkTests
         survivingText.Should().Contain("1099-INT").And.Contain("1099-DIV")
             .And.Contain("1099-S").And.Contain("1099-B",
                 "the latency fix must not restore the stale-letter collateral regression");
+
+        // Independent oracle (CLAUDE.md rule 4): MuPDF reads the saved bytes,
+        // not excise's own extraction of the redacted document.
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+        var savedPath = Path.Combine(Path.GetTempPath(), $"excise-w9-the-{Guid.NewGuid():N}.pdf");
+        try
+        {
+            var inputText = string.Concat(MutoolTextExtractor.ExtractAllPages(path, document.PageCount)
+                ?? throw new InvalidOperationException("mutool refused the input W-9"));
+            inputText.Contains("the", StringComparison.OrdinalIgnoreCase).Should().BeTrue(
+                "control: mutool must read the term in the input, or its silence after proves nothing");
+
+            File.WriteAllBytes(savedPath, document.SaveToBytes());
+            var savedText = string.Concat(MutoolTextExtractor.ExtractAllPages(savedPath, document.PageCount)
+                ?? throw new InvalidOperationException("mutool refused the redacted W-9"));
+            savedText.Contains("the", StringComparison.OrdinalIgnoreCase).Should().BeFalse(
+                "MuPDF must independently agree the common term is gone from the saved file");
+        }
+        finally
+        {
+            if (File.Exists(savedPath)) File.Delete(savedPath);
+        }
     }
 }
