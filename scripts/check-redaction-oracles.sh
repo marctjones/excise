@@ -104,6 +104,19 @@ method_offenders=""
 population="$(find Excise.*.Tests \
                 \( -name "*Redaction*Tests.cs" -o -name "*HiddenText*Tests.cs" -o -name "*Audit*Tests.cs" -o -name "RedactCommandTests.cs" \) \
                 -not -path '*/obj/*' -not -path '*/bin/*' | sort)"
+# #1778: the name-scoped population above missed every #1769 self-oracle --
+# ScriptedGuiTests.cs and GoldenPathTests.cs redact and assert removal, but are
+# named after the WORKFLOW, not the feature. So the method gate also scans every
+# test file that CALLS a redaction entry point, whatever its name. For those
+# content-scoped files a method is in scope only if its own body calls the entry
+# point (REDACT_CALL below): a file that happens to redact in one test must not
+# drag its unrelated Letters/Text assertions into a redaction gate. The
+# name-scoped files keep the rule they always had (no REDACT_CALL requirement),
+# so this only ever ADDS methods to the gate.
+REDACT_CALL='\.(RedactText|RedactTextAsync|RedactArea|RedactAreaAsync|RedactAreas|RedactAreaWithReport|RedactAreasWithReport)\(|ApplyAllRedactions|ApplyRedactionsCommand|ApplyRedactionCommand|RedactTextCommand|RedactSelectionCommand|FlattenOcrRedactCommand'
+content_population="$(grep -rlE "$REDACT_CALL" Excise.*.Tests --include='*.cs' 2>/dev/null \
+                        | grep -vE '/(bin|obj)/' | sort -u \
+                        | comm -23 - <(printf '%s\n' "$population" | sort -u) || true)"
 # A floor, not just the per-item checks below: at 0 scanned files this script
 # used to exit 0 silently — a glob typo, a directory rename, or the population
 # collapsing some other way would read as a clean run (t0-gates review,
@@ -113,6 +126,13 @@ population_count="$(printf '%s\n' "$population" | grep -c . || true)"
 if [[ "$population_count" -eq 0 ]]; then
   echo "❌ ZERO files matched the redaction-test population glob — that is not a clean run," >&2
   echo "   it is the glob (or the directory layout) having broken. Check the find pattern above." >&2
+  exit 1
+fi
+content_count="$(printf '%s\n' "$content_population" | grep -c . || true)"
+if [[ "$content_count" -eq 0 ]]; then
+  echo "❌ ZERO test files outside the name glob call a redaction entry point (REDACT_CALL)." >&2
+  echo "   ~170 did when #1778 added this scan; zero means the pattern or the layout broke," >&2
+  echo "   not that the suite stopped redacting." >&2
   exit 1
 fi
 
@@ -131,7 +151,7 @@ offenders=$(printf '%s' "$offenders" | grep . || true)
 # and a separate page.Text-only leak assertion. Helpers/call graphs remain a
 # documented future Roslyn upgrade; keep helper-backed methods explicitly
 # allow-listed until that exists rather than pretending a regex proved them.
-while IFS= read -r f; do
+while IFS=$'\t' read -r f need_redact; do
   [[ -n "$f" ]] || continue
   # #1786: has_self (the CHAINED pattern, e.g. `.Text.Should(...)`) OR
   # (has_read AND has_assert) -- a self-oracle READ (SELF_READ) and a
@@ -150,17 +170,35 @@ while IFS= read -r f; do
   # matches a literal dot, just also over-matches other characters -- ENVIRON
   # values are not string-literal-parsed, so this stays correct for every
   # pattern here, not by accident.
+  #
+  # #1778 "token presence is not use": INDEPENDENT is matched against CODE only
+  # (string literals and // comments stripped), so a comment that says
+  # "mutool would catch this" no longer corroborates anything; and a mention
+  # that sits only inside a `foreach` body does not count either --
+  # RedactionMouseWorkflowTests passed this gate with its SavedPdfLeakScanner
+  # check inside a loop over a collection that was EMPTY for three of four
+  # scenarios. A loop's oracle may be real, but a lexical gate cannot see the
+  # collection is non-empty, so the method must also carry one unlooped
+  # independent assertion (or be declared in the allowlist with a reason).
+  # self/read/assert are still matched on the raw line, exactly as before, so
+  # neither rule can drop a method the gate used to flag.
   method_offenders+="$(SELF="$SELF" SELF_READ="$SELF_READ" LEAK_ASSERT="$LEAK_ASSERT" \
-      INDEPENDENT="$INDEPENDENT" awk '
+      INDEPENDENT="$INDEPENDENT" REDACT_CALL="$REDACT_CALL" NEED_REDACT="$need_redact" awk '
     BEGIN {
       self = ENVIRON["SELF"]
       selfread = ENVIRON["SELF_READ"]
       leakassert = ENVIRON["LEAK_ASSERT"]
       independent = ENVIRON["INDEPENDENT"]
+      redactcall = ENVIRON["REDACT_CALL"]
+      need_redact = ENVIRON["NEED_REDACT"] + 0
     }
     function flush() {
       if (!in_test) return
       offends = has_self || (has_read && has_assert)
+      # Content-scoped (#1778): the method redacts AND asserts absence -- a
+      # chained `.Text.Should().Be(...)` read BEFORE the redaction is not a
+      # leak claim on its own.
+      if (need_redact && !(has_redact && has_assert)) offends = 0
       if (!offends || has_independent) return
       if (method == "") method = "<unresolved-method>"
       print FILENAME "::" method
@@ -172,6 +210,8 @@ while IFS= read -r f; do
       has_read = 0
       has_assert = 0
       has_independent = 0
+      has_redact = 0
+      loop_state = 0
       method = ""
       looking_for_method = 1
     }
@@ -180,7 +220,30 @@ while IFS= read -r f; do
       if ($0 ~ self) has_self = 1
       if ($0 ~ selfread) has_read = 1
       if ($0 ~ leakassert) has_assert = 1
-      if ($0 ~ independent) has_independent = 1
+      code = $0
+      gsub(/"([^"\\]|\\.)*"/, "\"\"", code)
+      gsub(/\047([^\047\\]|\\.)\047/, "\047\047", code)
+      sub(/\/\/.*/, "", code)
+      if (code ~ redactcall) has_redact = 1
+      # A loop over an inline, non-empty literal (`in new[] { A, B }`,
+      # `in [A, B]`) visibly runs its body; only a loop over a collection
+      # the line does not spell out is treated as possibly zero-trip.
+      if (!loop_state && code ~ /(^|[^A-Za-z0-9_.])foreach[[:space:]]*\(/ \
+          && code !~ /[[:space:]]in[[:space:]]+(new[^({;]*\{[[:space:]]*[^[:space:]}]|\[[[:space:]]*[^[:space:]\]])/) {
+        loop_state = 1
+        loop_depth = depth
+        loop_braced = 0
+      }
+      line_in_loop = loop_state
+      opens = gsub(/\{/, "{", code)
+      closes = gsub(/\}/, "}", code)
+      depth += opens - closes
+      if (code ~ independent && !line_in_loop) has_independent = 1
+      if (loop_state) {
+        if (depth > loop_depth) loop_braced = 1
+        if (loop_braced && depth <= loop_depth) loop_state = 0
+        else if (!loop_braced && code ~ /;/) loop_state = 0
+      }
       if (looking_for_method && $0 ~ /^[[:space:]]*(public|protected|internal|private)[[:space:]].*\(/) {
         signature = $0
         sub(/[[:space:]]*\(.*/, "", signature)
@@ -191,7 +254,7 @@ while IFS= read -r f; do
     }
     END { flush() }
   ' "$f")"$'\n'
-done < <(printf '%s\n' "$population")
+done < <(printf '%s\n' "$population" | awk 'NF { print $0 "\t0" }'; printf '%s\n' "$content_population" | awk 'NF { print $0 "\t1" }')
 method_offenders=$(printf '%s' "$method_offenders" | grep . || true)
 
 if [[ "$UPDATE" == "--update" ]]; then
