@@ -181,6 +181,12 @@ internal sealed class ContentStreamWalker
 
     // Graphics state tracking
     private readonly Stack<GraphicsState> _stateStack = new();
+    // #1901: the stack depth on entry to the stream being walked right now.
+    // A `Q` may only pop entries that stream pushed itself: §8.4.2 requires
+    // q/Q to balance within a content stream and §8.10.1 brackets a `Do` in
+    // an implicit q/Q, so a stray `Q` in a form or appearance is ignored
+    // (mutool does the same). 0 for the page stream.
+    private int _stateStackFloor;
     private GraphicsState _state = new();
 
     // Text state tracking
@@ -434,6 +440,7 @@ internal sealed class ContentStreamWalker
         var savedNesting = _nestingDepth;
         var savedState = _state;
         var savedStackDepth = _stateStack.Count;
+        var savedStackFloor = _stateStackFloor;
         var savedTextState = CaptureTextState();
         var savedTm = (_tm_a, _tm_b, _tm_c, _tm_d, _tm_e, _tm_f, _tlm_e, _tlm_f);
         var pushedResources = false;
@@ -458,6 +465,7 @@ internal sealed class ContentStreamWalker
             _content = content;
             _pos = 0;
             _nestingDepth = 0;
+            _stateStackFloor = savedStackDepth;
             WalkOperators(ref sink);
         }
         finally
@@ -469,6 +477,7 @@ internal sealed class ContentStreamWalker
             // of it (§8.10.1 brackets the invocation).
             while (_stateStack.Count > savedStackDepth)
                 _stateStack.Pop();
+            _stateStackFloor = savedStackFloor;
 
             _content = savedContent;
             _pos = savedPos;
@@ -630,7 +639,10 @@ internal sealed class ContentStreamWalker
                 return true;
 
             case "Q":
-                if (_stateStack.Count > 0)
+                // #1901: never below the current stream's floor — popping the
+                // invoker's entry put the rest of the form under the page's
+                // outer state and left the page's own `Q` nothing to pop.
+                if (_stateStack.Count > _stateStackFloor)
                 {
                     _state = _stateStack.Pop();
                     if (_state.SavedTextState is { } restored)
