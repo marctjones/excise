@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Excise.Core.Document;
 using Excise.Core.Operations;
+using Excise.Core.Redaction;
 using Excise.Core.Primitives;
 
 namespace Excise.Core.Text.Segmentation;
@@ -227,7 +228,7 @@ public static class RedactedCopySafetyPolicy
 
         // #1751: a width-closing policy that could not close a line says so.
         foreach (var note in document.RedactionLedger.WidthNotes)
-            warnings.Add($"WIDTH NOT CLOSED: {note}.");
+            warnings.Add($"{RedactionNoteSummary.WidthNotePrefix}{note}.");
 
         if (options.RunCarrierAudit)
         {

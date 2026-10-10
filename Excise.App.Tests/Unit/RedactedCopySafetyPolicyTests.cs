@@ -322,6 +322,45 @@ public class RedactedCopySafetyPolicyTests : IDisposable
     }
 
     [Fact]
+    public void DialogFormatter_RollsUpWidthNotes_KeepsSurvivorWarningsFirst_AndLeavesTheReportIntact()
+    {
+        var warnings = new List<string> { "NOT SCRUBBED: Carrier outline -- refused" };
+        for (var i = 0; i < 95; i++)
+            warnings.Add($"WIDTH NOT CLOSED: page {1 + i % 3}, line at y={i}.0: justified line kept in place beside its marker; its edge moved by 9.4 pt, the removed width less the marker's.");
+        warnings.Add("Kept attachment a.txt NOT clean.");
+        var report = new RedactedCopySafetyReport
+        {
+            RedactionAreaCount = 1,
+            SkippedRedactionAreaCount = 0,
+            CheckedTermCount = 0,
+            RemainingTermCount = 0,
+            SkippedShortTermCount = 0,
+            InfoFieldsScrubbed = 0,
+            HadXmpMetadata = false,
+            AttachmentsScrubbed = false,
+            EmbeddedFileCountBefore = 0,
+            HiddenTextFindingCount = 0,
+            RemainingRasterOverlapCount = 0,
+            MetadataScrubbed = false,
+            RequestedTermCount = 1,
+            ContentVerificationStatus = RedactedContentVerificationStatus.Warning,
+            HiddenTextAuditStatus = RedactedContentVerificationStatus.NotChecked,
+            RasterRedactionAuditStatus = RedactedContentVerificationStatus.NotChecked,
+            FailedStages = Array.Empty<RedactedCopySafetyFailureStage>(),
+            Warnings = warnings,
+        };
+
+        var dialog = _formatter.Format("out.pdf", report);
+
+        report.Warnings.Should().HaveCount(97, "the structured report keeps every per-line entry");
+        dialog.Split(Environment.NewLine).Count(l => l.Contains("WIDTH NOT CLOSED")).Should().Be(1);
+        dialog.Should().Contain("95 lines on 3 pages");
+        dialog.Should().Contain("NOT SCRUBBED: Carrier outline").And.Contain("Kept attachment a.txt NOT clean");
+        dialog.IndexOf("NOT SCRUBBED", StringComparison.Ordinal)
+            .Should().BeLessThan(dialog.IndexOf("WIDTH NOT CLOSED", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void PrepareRedactedCopy_ScrubsInfoXmpAndEmbeddedFilesBeforeSave()
     {
         using var document = PdfDocument.Open(BuildPdfWithMetadataXmpAndEmbeddedFile(
