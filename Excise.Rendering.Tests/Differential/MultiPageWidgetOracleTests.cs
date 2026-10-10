@@ -86,5 +86,34 @@ public class MultiPageWidgetOracleTests : IDisposable
             PdftotextTextExtractor.ExtractPage(path, page).Should().NotContain(Page3Only, $"page {page}");
         }
         MutoolTextExtractor.ExtractPage(path, 1).Should().Contain(Shared, "page 1 is not part of the delta");
+        // #2059: nor is page 2, whose widget never drew the term.
+        MutoolTextExtractor.ExtractPage(path, 2).Should().Contain(Page2Only, "page 2's appearance is kept");
+        PdftotextTextExtractor.ExtractPage(path, 2).Should().Contain(Page2Only, "for Poppler too");
+    }
+
+    /// <summary>#2059 (c): redacting the field's value, which page 1 draws, leaves no copy of it on
+    /// any page for either reader, while pages 2 and 3 still draw their own text.</summary>
+    [Fact]
+    public void RedactingTheValue_LeavesNoCopy_AndKeepsTheOtherWidgetsText()
+    {
+        RequireTools();
+        byte[] saved;
+        using (var document = PdfDocument.Open(Build()))
+        {
+            document.RedactText(Shared, RedactionOptions.Default with { DrawBox = false })
+                .Survived.Should().Be(0);
+            saved = document.SaveToBytes();
+        }
+        var path = Write(saved, "value");
+
+        SavedPdfLeakScanner.FindTerm(saved, Shared).Should().BeEmpty();
+        for (var page = 1; page <= 3; page++)
+        {
+            MutoolTextExtractor.ExtractPage(path, page).Should().NotContain(Shared, $"page {page}");
+            PdftotextTextExtractor.ExtractPage(path, page).Should().NotContain(Shared, $"page {page}");
+        }
+        MutoolTextExtractor.ExtractPage(path, 2).Should().Contain(Page2Only);
+        MutoolTextExtractor.ExtractPage(path, 3).Should().Contain(Page3Only);
+        PdftotextTextExtractor.ExtractPage(path, 3).Should().Contain(Page3Only);
     }
 }

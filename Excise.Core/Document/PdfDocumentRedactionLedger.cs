@@ -1,3 +1,5 @@
+using Excise.Core.Primitives;
+
 namespace Excise.Core.Document;
 
 /// <summary>
@@ -62,6 +64,18 @@ internal sealed class PdfDocumentRedactionLedger
     {
         if (!_widthNotes.Contains(note)) _widthNotes.Add(note);
     }
+
+    private readonly HashSet<PdfDictionary> _formattedFields = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>
+    /// #2059: dictionaries whose <c>/AA</c> held a format (<c>/F</c>) or
+    /// keystroke (<c>/K</c>) action when the redaction profile removed it. The
+    /// field's appearances may still show its value formatted ("$1,234.50"),
+    /// and the term scrub of a later pass or term must still know it.
+    /// </summary>
+    internal bool HadFormatAction(PdfDictionary field) => _formattedFields.Contains(field);
+
+    internal void RecordFormatAction(PdfDictionary field) => _formattedFields.Add(field);
 }
 
 public partial class PdfDocument

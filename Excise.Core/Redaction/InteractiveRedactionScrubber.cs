@@ -57,6 +57,20 @@ internal static class InteractiveRedactionScrubber
         /// scrubbed widget because they could not be rewritten free of the term, one per widget
         /// and state. <c>RedactText</c> reports them as a removal.</summary>
         public int DroppedStateAppearances { get; set; }
+
+        /// <summary>#2059: normal appearances shown not to draw the term
+        /// (<see cref="AppearanceStreamRedactor.ProvablyFree"/>), kept as they are by every widget
+        /// that holds them.</summary>
+        public HashSet<PdfStream> Free { get; } = new(ReferenceEqualityComparer.Instance);
+
+        /// <summary>#2059: normal appearances that neither read the term nor could be shown free
+        /// of it (an unreadable font, a nested form), so they could not be rewritten.</summary>
+        public HashSet<PdfStream> Undecided { get; } = new(ReferenceEqualityComparer.Instance);
+
+        /// <summary>#2059: widgets of a scrubbed field whose normal appearance (an
+        /// <see cref="Undecided"/> stream) was dropped, one per widget. <c>RedactText</c> reports
+        /// them as a removal.</summary>
+        public int DroppedUndecidedAppearances { get; set; }
     }
 
     /// <summary>
@@ -372,13 +386,19 @@ internal static class InteractiveRedactionScrubber
             CaptureObjectGraph(page.Document, field.RawDictionary.GetOptional("AP"), pruneCandidates);
 
             var defaultResources = GetAcroFormDefaultResources(page.Document);
+            // #2059: a widget whose appearance does not draw the term keeps it,
+            // unless the cut value may be shown in a form the term search cannot
+            // see: a format or keystroke action (§12.6.3) shows /V as "$1,234.50"
+            // or a reordered date. Then no appearance of the field is kept on
+            // the strength of not holding the term.
+            var valueMayBeRestated = false;
             if (term != null)
             {
                 if (!isButton)
                 {
                     // #1038: cut the term out, keep the rest of the value. See
                     // ScrubTerm for what deleting it instead cost on a real file.
-                    changed |= RedactStringEntry(
+                    var valueCut = RedactStringEntry(
                         page.Document, field.RawDictionary, "V", term, caseSensitive, pruneCandidates, wholeWord);
                     changed |= RedactStringEntry(
                         page.Document, field.RawDictionary, "DV", term, caseSensitive, pruneCandidates, wholeWord);
@@ -387,8 +407,13 @@ internal static class InteractiveRedactionScrubber
                     // all — and mutool DRAWS it, so the term stayed both in
                     // the file and on the page while every /V assertion read
                     // clean.
-                    changed |= RedactStringEntry(
+                    valueCut |= RedactStringEntry(
                         page.Document, field.RawDictionary, "RV", term, caseSensitive, pruneCandidates, wholeWord);
+                    changed |= valueCut;
+                    // A producer may hang /AA on each widget rather than the field.
+                    valueMayBeRestated = valueCut
+                        && (HasFormatAction(page.Document, field.RawDictionary)
+                            || field.WidgetDictionaries.Any(w => HasFormatAction(page.Document, w)));
                 }
                 // #1098/#1760: rewrite the appearance to remove the term's
                 // GLYPHS so the field (button caption included) still renders
@@ -400,7 +425,8 @@ internal static class InteractiveRedactionScrubber
                 // dropping /AP: the same fail-closed policy every other field
                 // type already gets when its widget rect intersects the match.
                 changed |= RewriteOrDropAppearance(
-                    page, field.RawDictionary, defaultResources, term, caseSensitive, processedAp, state, wholeWord);
+                    page, field.RawDictionary, defaultResources, term, caseSensitive, processedAp, state, wholeWord,
+                    valueMayBeRestated);
             }
             else
             {
@@ -441,7 +467,8 @@ internal static class InteractiveRedactionScrubber
             {
                 CaptureObjectGraph(page.Document, widget.GetOptional("AP"), pruneCandidates);
                 changed |= term != null
-                    ? RewriteOrDropAppearance(page, widget, defaultResources, term, caseSensitive, processedAp, state, wholeWord)
+                    ? RewriteOrDropAppearance(
+                        page, widget, defaultResources, term, caseSensitive, processedAp, state, wholeWord, valueMayBeRestated)
                     : widget.Remove("AP");
             }
 
@@ -554,6 +581,17 @@ internal static class InteractiveRedactionScrubber
         return document.Resolve(ap.GetOptional("N") ?? PdfNull.Instance) is PdfDictionary;
     }
 
+    /// <summary>
+    /// #2059 — does (or did, before the redaction profile removed its scripts)
+    /// the field carry a format (<c>/F</c>) or keystroke (<c>/K</c>) action
+    /// (§12.6.3)? Either can make an appearance show the value in a form other
+    /// than <c>/V</c>'s text.
+    /// </summary>
+    private static bool HasFormatAction(PdfDocument document, PdfDictionary field)
+        => document.RedactionLedger.HadFormatAction(field)
+           || (document.Resolve(field.GetOptional("AA") ?? PdfNull.Instance) is PdfDictionary actions
+               && (actions.GetOptional("F") != null || actions.GetOptional("K") != null));
+
     /// <summary>The AcroForm default resources (/DR) — the fonts a producer may
     /// share across fields rather than duplicate in each appearance stream.</summary>
     private static PdfDictionary? GetAcroFormDefaultResources(PdfDocument doc)
@@ -579,11 +617,22 @@ internal static class InteractiveRedactionScrubber
     /// stream this redaction already wrote is clean and kept, not rewritten
     /// again (finding nothing, a second rewrite used to drop the appearance the
     /// first had just fixed).</para>
+    ///
+    /// <para><b>#2059: a normal appearance that does not draw the term is
+    /// kept.</b> A field's widgets can each draw their own text (a case number on
+    /// page 1, another line on page 3); the scrub runs over all of them, and one
+    /// that never drew the term used to lose its appearance with the one that
+    /// did (the rewrite found nothing, which read as a failure). Kept only when
+    /// <see cref="AppearanceStreamRedactor.ProvablyFree"/> shows it, and never
+    /// when <paramref name="valueMayBeRestated"/>. A stream that cannot be shown
+    /// free and does not read the term (#2043's lying font) is dropped and
+    /// counted for the report. A widget that drew the old <c>/V</c> reads the
+    /// term, so it is rewritten, never left stale.</para>
     /// </summary>
     private static bool RewriteOrDropAppearance(
         PdfPage page, PdfDictionary holder, PdfDictionary? defaultResources,
         string term, bool caseSensitive, HashSet<PdfDictionary> processedHolders, TermScrubState state,
-        bool wholeWord = false)
+        bool wholeWord = false, bool valueMayBeRestated = false)
     {
         var document = page.Document;
         if (document.Resolve(holder.GetOptional("AP") ?? PdfNull.Instance) is not PdfDictionary ap)
@@ -597,15 +646,24 @@ internal static class InteractiveRedactionScrubber
             return holder.Remove("AP");
 
         var replaced = new Dictionary<string, PdfReference>();
-        if (!state.Clean.Contains(normal))   // else written by this redaction: already free of the term
+        // Clean: written by this redaction, already free of the term.
+        if (!state.Clean.Contains(normal)
+            && (valueMayBeRestated || !IsFree(page, normal, defaultResources, term, state)))
         {
             if (!state.Rewritten.TryGetValue(normal, out var replacement))
             {
                 replacement = RewriteIntoCopy(page, normal, defaultResources, term, caseSensitive, wholeWord, state);
                 state.Rewritten[normal] = replacement;
+                if (replacement == null
+                    && !AppearanceStreamRedactor.Holds(page, normal, defaultResources, term, caseSensitive, wholeWord))
+                    state.Undecided.Add(normal);
             }
             if (replacement == null)
+            {
+                if (state.Undecided.Contains(normal))
+                    state.DroppedUndecidedAppearances++;
                 return holder.Remove("AP");   // couldn't rewrite -> drop
+            }
             replaced["N"] = replacement;
         }
 
@@ -661,6 +719,17 @@ internal static class InteractiveRedactionScrubber
             own.Remove(key);
         state.DroppedStateAppearances += dropped.Count;
         holder["AP"] = own;
+        return true;
+    }
+
+    /// <summary>#2059: <paramref name="normal"/> shown not to draw the term, decided once per stream.</summary>
+    private static bool IsFree(
+        PdfPage page, PdfStream normal, PdfDictionary? defaultResources, string term, TermScrubState state)
+    {
+        if (state.Free.Contains(normal)) return true;
+        if (state.Rewritten.ContainsKey(normal)) return false;
+        if (!AppearanceStreamRedactor.ProvablyFree(page, normal, defaultResources, term)) return false;
+        state.Free.Add(normal);
         return true;
     }
 

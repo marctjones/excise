@@ -26,14 +26,26 @@ internal static class MultiPageWidgetFixtures
     /// one whose <c>/Annots</c> lists it (ISO 32000-2 12.5.2).</param>
     /// <param name="hiddenPage">The page (1-based) whose widget is flagged Hidden (<c>/F 2</c>), if any.</param>
     /// <param name="emptyPages">Pages with no widget at all, after the widget pages.</param>
+    /// <param name="shareAppearance">#2059: page (1-based) to an earlier page whose <c>/AP /N</c>
+    /// stream object its widget references instead of its own (one stream, two widgets); that
+    /// page's <paramref name="drawn"/> entry is then unused.</param>
+    /// <param name="shiftedFontPages">#2059: pages whose appearance draws its text in a simple
+    /// font whose <c>/ToUnicode</c> maps every code to the next code (excise reads other letters
+    /// while the stream holds the text's codes, the #2043 font).</param>
+    /// <param name="formatAction">#2059: give the field a format action (<c>/AA /F</c>).</param>
     public static byte[] Build(
         IReadOnlyList<string?> drawn,
         string? value,
         IReadOnlyCollection<int>? omitP = null,
         int? hiddenPage = null,
-        int emptyPages = 0)
+        int emptyPages = 0,
+        IReadOnlyDictionary<int, int>? shareAppearance = null,
+        IReadOnlyCollection<int>? shiftedFontPages = null,
+        bool formatAction = false)
     {
         omitP ??= [];
+        shareAppearance ??= new Dictionary<int, int>();
+        shiftedFontPages ??= [];
         var objects = new List<string>();
         int Add(string body) { objects.Add(body); return objects.Count; }
         int Reserve() { objects.Add(""); return objects.Count; }
@@ -48,13 +60,26 @@ internal static class MultiPageWidgetFixtures
         var fonts = $"/Resources << /Font << /Helv {helv} 0 R >> >>";
 
         var widgets = new List<int>();
+        var appearances = new Dictionary<int, int>();
         for (var i = 0; i < drawn.Count; i++)
         {
             var pageNumber = i + 1;
-            var body = drawn[i] is { } text
-                ? $"/Tx BMC BT /Helv 12 Tf 0 g 2 6 Td ({text}) Tj ET EMC"
-                : "/Tx BMC EMC";
-            var ap = Add(RawStream($"/Type /XObject /Subtype /Form /BBox [0 0 300 20] {fonts}", body));
+            int ap;
+            if (shareAppearance.TryGetValue(pageNumber, out var source))
+            {
+                ap = appearances[source];
+            }
+            else
+            {
+                var shifted = shiftedFontPages.Contains(pageNumber);
+                var font = shifted ? "/Odd" : "/Helv";
+                var body = drawn[i] is { } text
+                    ? $"/Tx BMC BT {font} 12 Tf 0 g 2 6 Td ({text}) Tj ET EMC"
+                    : "/Tx BMC EMC";
+                var resources = shifted ? $"/Resources << /Font << /Odd {ShiftedFont(Add)} >> >>" : fonts;
+                ap = Add(RawStream($"/Type /XObject /Subtype /Form /BBox [0 0 300 20] {resources}", body));
+            }
+            appearances[pageNumber] = ap;
             var flags = hiddenPage == pageNumber ? 2 : 4;
             var p = omitP.Contains(pageNumber) ? "" : $"/P {pages[i]} 0 R ";
             widgets.Add(Add($"<< /Type /Annot /Subtype /Widget /F {flags} /Rect {RectOf(WidgetRect)} {p}" +
@@ -62,6 +87,8 @@ internal static class MultiPageWidgetFixtures
         }
 
         var v = value != null ? $"/V ({value}) " : "";
+        if (formatAction)
+            v += "/AA << /F << /S /JavaScript /JS (AFNumber_Format\\(2, 0, 0, 0, \"$\", true\\);) >> >> ";
         Set(field, $"<< /FT /Tx /T ({FieldName}) {v}/DA (/Helv 12 Tf 0 g) " +
                    $"/Kids [{string.Join(' ', widgets.Select(n => $"{n} 0 R"))}] >>");
 
@@ -91,6 +118,20 @@ internal static class MultiPageWidgetFixtures
         sb.Append("trailer\n<< /Size ").Append(objects.Count + 1)
           .Append($" /Root {catalog} 0 R >>\nstartxref\n").Append(xref).Append("\n%%EOF\n");
         return Encoding.Latin1.GetBytes(sb.ToString());
+    }
+
+    /// <summary>The #2043 shifted font: Helvetica codes, a <c>/ToUnicode</c> reading each as the next code.</summary>
+    private static string ShiftedFont(System.Func<string, int> add)
+    {
+        const int first = 32, last = 126;
+        var widths = string.Join(' ', Enumerable.Repeat("500", last - first + 1));
+        var cmap = "/CIDInit /ProcSet findresource begin 12 dict begin begincmap " +
+                   "/CMapName /Odd def /CMapType 2 def 1 begincodespacerange <00> <FF> endcodespacerange " +
+                   $"1 beginbfrange <{first:X2}> <{last:X2}> <{first + 1:X4}> endbfrange " +
+                   "endcmap CMapName currentdict /CMap defineresource pop end end";
+        var toUnicode = add(RawStream("", cmap));
+        return $"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /FirstChar {first} /LastChar {last} " +
+               $"/Widths [{widths}] /ToUnicode {toUnicode} 0 R >>";
     }
 
     private static string RectOf(double[] r) => $"[{F(r[0])} {F(r[1])} {F(r[2])} {F(r[3])}]";
