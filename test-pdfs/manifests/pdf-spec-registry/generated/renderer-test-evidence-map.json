@@ -14559,7 +14559,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperandSplitImprovementTests.cs",
       "class": "OperandSplitImprovementTests",
       "method": "TermInsideOneOperand_IsRemoved_AndTheNeighboursKeepTheirGlyphsAndPositions",
-      "line": 54,
+      "line": 60,
       "xunitKind": "theory",
       "evidenceKind": "differential-candidate",
       "facets": [
@@ -14601,7 +14601,7 @@
       "path": "Excise.Rendering.Tests/Differential/OperandSplitImprovementTests.cs",
       "class": "OperandSplitImprovementTests",
       "method": "RealDocuments_TheTermGoes_AndNoOtherCharacterDoes",
-      "line": 119,
+      "line": 125,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [

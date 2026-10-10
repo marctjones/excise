@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "f676d00a73561b9db238b88187e6c5750ecdff38",
+  "sourceRevision": "fba8a5a51ee3b097a76563f7dbc213d1c22c2a92",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
