@@ -114,8 +114,8 @@ internal static class FontGlyphScrubber
 
         // A font a field names but nothing draws could still share a carrier: never edit one.
         var fieldOnly = after.FieldText.Keys.Where(k => !infos.ContainsKey(k))
-            .Select(k => Current(document, k, before, after)).Where(f => f != null)
-            .Select(f => Describe(document, FontGlyphUsage.KeyOf(f!), f!)).ToList();
+            .Select(k => (Key: k, Font: Current(document, k, before, after))).Where(x => x.Font != null)
+            .Select(x => Describe(document, x.Key, x.Font!)).ToList();
 
         var refused = new Dictionary<FontInfo, string>();
         foreach (var plan in plans)
@@ -210,13 +210,16 @@ internal static class FontGlyphScrubber
             }
             if (widthEdits.TryGetValue(plan, out var w))
             {
+                // An object read from an object stream carries no number and is
+                // never evicted; a numbered one is re-registered.
                 w.Owner.Set(w.Key, w.Value);
-                Register(document, w.Owner);
+                if (ReferenceEquals(w.Owner, plan.Font)) document.ReplaceIndirectObject((int)plan.Key, plan.Font);
+                else Register(document, w.Owner);
                 if (!w.Owner.IsIndirect && plan.CidFont != null && ReferenceEquals(w.Owner, plan.CidFont))
                 {
                     // A direct descendant lives inside the Type0 dictionary: re-register that.
                     plan.Font.Set("DescendantFonts", plan.Font.GetOptional("DescendantFonts")!);
-                    Register(document, plan.Font);
+                    document.ReplaceIndirectObject((int)plan.Key, plan.Font);
                 }
             }
         }
@@ -270,10 +273,18 @@ internal static class FontGlyphScrubber
     private static FontInfo Describe(PdfDocument document, object key, PdfDictionary font)
     {
         var name = font.GetNameOrNull("BaseFont") ?? "(unnamed)";
-        var label = font.ObjectNumber is { } n ? $"{name} ({n} 0 R)" : name;
+        var label = key is int n ? $"{name} ({n} 0 R)" : name;
         var info = new FontInfo { Key = key, Font = font, Label = label };
         info.ToUnicode = document.Resolve(font.GetOptional("ToUnicode") ?? PdfNull.Instance) as PdfStream;
         var subtype = font.GetNameOrNull("Subtype");
+        if (key is not int)
+        {
+            // A direct font is tracked by instance: a re-parse of its owner between
+            // the two snapshots would read as "draws nothing now", and an edit to it
+            // cannot be re-registered.
+            info.Refusal = "it is a direct object inside a resource dictionary";
+            return info;
+        }
 
         switch (subtype)
         {

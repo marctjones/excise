@@ -88,6 +88,30 @@ internal sealed class FontGlyphUsage
     /// <summary>The key a font is tracked under.</summary>
     internal static object KeyOf(PdfDictionary font) => font.ObjectNumber is { } n ? n : font;
 
+    /// <summary>
+    /// The key for <paramref name="font"/>, reached as <paramref name="raw"/> in
+    /// a resource dictionary: the object number of the reference when it is one
+    /// (an object in an object stream carries no number of its own), else
+    /// <see cref="KeyOf(PdfDictionary)"/>.
+    /// </summary>
+    internal static object KeyOf(PdfDictionary font, PdfObject? raw) =>
+        font.ObjectNumber is { } n ? n : raw is PdfReference r ? r.ObjectNum : font;
+
+    private readonly Dictionary<PdfDictionary, object> _keys = new(ReferenceEqualityComparer.Instance);
+
+    private object KeyFor(PdfDictionary font, ContentStreamWalker walker, string name)
+    {
+        if (_keys.TryGetValue(font, out var key)) return key;
+        PdfObject? raw = null;
+        foreach (var resources in walker.ActiveResources.Append(_page?.Resources))
+        {
+            if (resources == null) continue;
+            if (_document.Resolve(resources.GetOptional("Font") ?? PdfNull.Instance) is not PdfDictionary fonts) continue;
+            if (fonts.GetOptional(name) is { } entry && ReferenceEquals(_document.Resolve(entry), font)) { raw = entry; break; }
+        }
+        return _keys[font] = KeyOf(font, raw);
+    }
+
     /// <summary>Walk the whole document.</summary>
     public static FontGlyphUsage Collect(PdfDocument document, CancellationToken cancellationToken = default)
     {
@@ -235,7 +259,7 @@ internal sealed class FontGlyphUsage
                 if (resources == null) continue;
                 if (_document.Resolve(resources.GetOptional("Font") ?? PdfNull.Instance) is not PdfDictionary fonts) continue;
                 if (_document.Resolve(fonts.GetOptional(name) ?? PdfNull.Instance) is not PdfDictionary font) continue;
-                var key = KeyOf(font);
+                var key = KeyOf(font, fonts.GetOptional(name));
                 if (!FieldText.TryGetValue(key, out var set)) FieldText[key] = set = new HashSet<int>();
                 foreach (var s in text)
                     for (var i = 0; i < s.Length; i++)
@@ -270,7 +294,7 @@ internal sealed class FontGlyphUsage
     private void Record(ContentStreamWalker walker, in WalkedGlyph glyph)
     {
         if (walker.CurrentFont is not { } font) return;
-        var key = KeyOf(font);
+        var key = KeyFor(font, walker, glyph.FontName);
         if (!Fonts.TryGetValue(key, out var use)) Fonts[key] = use = new FontUse(font);
         use.Font = font;
         use.Codes.Add(glyph.CharCode);
@@ -371,7 +395,7 @@ internal sealed class FontGlyphUsage
         if (_document.Resolve(resources.GetOptional("Font") ?? PdfNull.Instance) is not PdfDictionary fonts) return;
         foreach (var value in fonts.Values)
             if (_document.Resolve(value) is PdfDictionary font)
-                Uncertain.Add(KeyOf(font));
+                Uncertain.Add(KeyOf(font, value));
     }
 
     private readonly struct UsageSink(FontGlyphUsage owner, ContentStreamWalker walker) : IContentStreamSink
