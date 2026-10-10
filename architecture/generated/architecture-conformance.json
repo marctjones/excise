@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "fba8a5a51ee3b097a76563f7dbc213d1c22c2a92",
+  "sourceRevision": "532c835e115f1f0899c769a938619b7e7f4c8401",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8757,
+    "retainedSymbols": 8880,
     "observedComponentDependencies": 85,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -675,8 +675,8 @@
     {
       "source": "core-redaction",
       "target": "core-content",
-      "references": 450,
-      "typeDependencyCount": 65,
+      "references": 482,
+      "typeDependencyCount": 70,
       "classification": "declared",
       "evidence": [
         {
@@ -689,8 +689,8 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1365,
-      "typeDependencyCount": 157,
+      "references": 1409,
+      "typeDependencyCount": 161,
       "classification": "declared",
       "evidence": [
         {
@@ -703,14 +703,14 @@
     {
       "source": "core-redaction",
       "target": "core-fonts",
-      "references": 11,
-      "typeDependencyCount": 4,
+      "references": 53,
+      "typeDependencyCount": 14,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Core.Redaction.Recovery.RedactionFitAnalyzer",
-          "target": "Excise.Core.Fonts.StandardFontMetrics",
-          "references": 4
+          "source": "Excise.Core.Text.Segmentation.FontGlyphScrubber",
+          "target": "Excise.Core.Fonts.SfntGlyphEditor",
+          "references": 12
         }
       ]
     },
@@ -731,8 +731,8 @@
     {
       "source": "core-redaction",
       "target": "core-primitives",
-      "references": 1156,
-      "typeDependencyCount": 164,
+      "references": 1309,
+      "typeDependencyCount": 188,
       "classification": "declared",
       "evidence": [
         {

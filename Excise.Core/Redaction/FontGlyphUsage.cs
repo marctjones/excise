@@ -85,14 +85,11 @@ internal sealed class FontGlyphUsage
         _cancellationToken = cancellationToken;
     }
 
-    /// <summary>The key a font is tracked under.</summary>
-    internal static object KeyOf(PdfDictionary font) => font.ObjectNumber is { } n ? n : font;
-
     /// <summary>
     /// The key for <paramref name="font"/>, reached as <paramref name="raw"/> in
     /// a resource dictionary: the object number of the reference when it is one
-    /// (an object in an object stream carries no number of its own), else
-    /// <see cref="KeyOf(PdfDictionary)"/>.
+    /// (an object in an object stream carries no number of its own), else the
+    /// dictionary instance itself.
     /// </summary>
     internal static object KeyOf(PdfDictionary font, PdfObject? raw) =>
         font.ObjectNumber is { } n ? n : raw is PdfReference r ? r.ObjectNum : font;
