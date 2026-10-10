@@ -1004,7 +1004,7 @@ public class TextExtractor
             var (stream, kind, scope, extraResources) = _nestedCandidates[i];
             if (stream.IsFiltered && !stream.TryEnsureDecoded())
             {
-                _nestedTextCarriers.Add(new NestedTextCarrier(stream, kind, null,
+                _nestedTextCarriers.Add(new NestedTextCarrier(stream, kind, extraResources ?? scope, null,
                     $"its /Filter {string.Join(" ", stream.Filters.Select(f => "/" + f))} could not be decoded" +
                     (stream.DecodeFailureReason is { } why ? $" ({why})" : "")));
                 continue;
@@ -1048,9 +1048,9 @@ public class TextExtractor
             BidiReorderer.ReorderVisualRtlRuns(drawn);
             var text = string.Concat(drawn.Select(l => l.Value));
             if (unread != null)
-                _nestedTextCarriers.Add(new NestedTextCarrier(stream, kind, null, unread));
+                _nestedTextCarriers.Add(new NestedTextCarrier(stream, kind, extraResources ?? scope, null, unread));
             else if (!string.IsNullOrWhiteSpace(text))
-                _nestedTextCarriers.Add(new NestedTextCarrier(stream, kind, text));
+                _nestedTextCarriers.Add(new NestedTextCarrier(stream, kind, extraResources ?? scope, text));
         }
     }
 
@@ -1255,11 +1255,15 @@ public class TextExtractor
 /// <summary>
 /// A content stream a page draws that is not a form XObject (a tiling pattern
 /// cell, a soft-mask group, a Type3 glyph procedure) and that itself draws
-/// text. Extraction does not make its glyphs page letters, so redaction can
-/// neither match nor remove them; it reports the carrier instead.
+/// text. Extraction does not make its glyphs page letters, so the page's glyph
+/// pass can neither match nor remove them: a term redaction rewrites the
+/// carrier's own stream, and what it cannot rewrite is reported.
 /// </summary>
 /// <param name="Stream">The carrier's own content stream.</param>
 /// <param name="Kind">"tiling pattern", "soft-mask group" or "Type3 glyph procedure".</param>
+/// <param name="Resources">What its names resolve through when it has no
+/// <c>/Resources</c> of its own: a Type3 font's, else those in scope where it was drawn.</param>
 /// <param name="Text">What it draws, in logical order; null when it could not be read.</param>
 /// <param name="Unread">Why it could not be read, when <paramref name="Text"/> is null.</param>
-internal sealed record NestedTextCarrier(PdfStream Stream, string Kind, string? Text, string? Unread = null);
+internal sealed record NestedTextCarrier(
+    PdfStream Stream, string Kind, PdfDictionary? Resources, string? Text, string? Unread = null);

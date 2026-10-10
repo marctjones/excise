@@ -498,9 +498,27 @@ public static class PdfDocumentRedactionExtensions
         // every page, so a page this call also redacted is not named.
         carrierResults.AddRange(SharedImageCarrierResults(document, imageCounts.TouchedImages));
         carrierResults.AddRange(UndecodableFormResults(undecodableForms));
+        // The term inside a tiling-pattern cell, soft-mask group or Type3
+        // glyph procedure: cut out of that stream in its own space, exactly as
+        // a widget appearance's is (#2041), or reported when it cannot be.
+        var rewroteNested = false;
         if (nestedTextCarriers.Count > 0)
             carrierResults.AddRange(NestedTextCarrierResults(nestedTextCarriers, text, options.CaseSensitive,
-                document.ComputeReachableObjects()));
+                document.ComputeReachableObjects(),
+                rewrite: (carrier, pageNum) =>
+                {
+                    if (AppearanceStreamRedactor.RewrittenContent(document.GetPage(pageNum), carrier.Stream,
+                            carrier.Resources, text, options.CaseSensitive, options.WholeWord) is not { } content)
+                        return false;
+                    carrier.Stream.DecodedData = content;
+                    rewroteNested = true;
+                    return true;
+                }));
+        // A page's letters do not hold the carrier's text, but its record of
+        // what each carrier draws does: the next walk must read the rewrite.
+        if (rewroteNested)
+            foreach (var pageNum in nestedTextCarriers.Select(d => d.Page).Distinct())
+                document.GetPage(pageNum).InvalidateTextExtractionCache();
 
         // #1599: a NAMED marked-content property list (/Span /P1 BDC) this
         // redaction could not scrub because a span that SURVIVES it still
@@ -651,7 +669,8 @@ public static class PdfDocumentRedactionExtensions
     /// the redaction removed is not reported. Null keeps every row.</param>
     internal static IEnumerable<CarrierResult> NestedTextCarrierResults(
         IEnumerable<(Excise.Core.Text.NestedTextCarrier Carrier, int Page)> drawn,
-        string? term, bool caseSensitive, ISet<int>? reachable)
+        string? term, bool caseSensitive, ISet<int>? reachable,
+        Func<Excise.Core.Text.NestedTextCarrier, int, bool>? rewrite = null)
     {
         bool Holds(Excise.Core.Text.NestedTextCarrier c)
         {
@@ -669,17 +688,18 @@ public static class PdfDocumentRedactionExtensions
             .Select(g =>
             {
                 var c = g.First().Carrier;
+                var label = $"text inside {c.Kind} {c.Stream.ObjectNumber ?? 0} {c.Stream.GenerationNumber ?? 0} R on page(s) " +
+                    string.Join(", ", g.Select(d => d.Page).Distinct().OrderBy(p => p));
+                if (c.Text != null && rewrite != null && rewrite(c, g.Min(d => d.Page)))
+                    return new CarrierResult(label, true, null);
                 var what = c.Text == null
                     ? $"{c.Unread ?? "it could not be read"}, so the text it may draw was not examined"
                     : term == null
                         ? "excise does not read or rewrite text drawn inside it, and the text it draws may lie in the redacted area"
-                        : "it draws text containing the term, and excise does not read or rewrite text drawn inside it";
-                return new CarrierResult(
-                    $"text inside {c.Kind} {c.Stream.ObjectNumber ?? 0} {c.Stream.GenerationNumber ?? 0} R on page(s) " +
-                    string.Join(", ", g.Select(d => d.Page).Distinct().OrderBy(p => p)),
-                    false,
-                    what + "; it was left in place and the saved file keeps it");
-            });
+                        : "it draws text containing the term, and excise could not rewrite its stream without it";
+                return new CarrierResult(label, false, what + "; it was left in place and the saved file keeps it");
+            })
+            .ToList();
 
         static string RemoveWhitespace(string s) => new(s.Where(ch => !char.IsWhiteSpace(ch)).ToArray());
     }

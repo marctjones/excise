@@ -15,8 +15,10 @@ namespace Excise.Rendering.Tests.Differential;
 /// glyphs page letters, so redaction can neither match nor remove them, and
 /// before this it reported <c>IsCleanSuccess</c> over a saved file that still
 /// spelled the term (and, for the pattern and the soft mask, still painted it).
-/// The engine does not rewrite these streams; it must SAY it left them
-/// (CLAUDE.md rules 5 and 6). Form XObjects nested three deep and annotation
+/// A term redaction now cuts the term out of the carrier's own stream (as a
+/// widget appearance's is) and reports what it could not; an area redaction
+/// does not map the carrier's geometry, so it reports every carrier with text
+/// on the page (CLAUDE.md rules 5 and 6). Form XObjects nested three deep and annotation
 /// appearances are walked and removed; those rows pin that.
 /// </summary>
 public class NestedContentTextCarrierRedactionTests : IDisposable
@@ -39,38 +41,67 @@ public class NestedContentTextCarrierRedactionTests : IDisposable
 
     [Theory]
     [MemberData(nameof(TextCarriers))]
-    public void RedactText_ReportsTheCarrierItCannotRewrite(string carrier, string term, string kind)
+    public void RedactText_CutsTheTermOutOfTheCarrierStream(string carrier, string term, string kind)
     {
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
 
-        // The term is also ordinary page text, so the redaction finds and
-        // removes one occurrence: the case where a clean report is believed.
+        // The term is also ordinary page text, so the page's glyph pass finds
+        // and removes one occurrence: the case where a clean report is believed.
         var source = Build(carrier, term, visibleCopy: true);
         var saved = Redact(source, d => d.RedactText(term, RedactionOptions.Default with { DrawBox = false }), out var report);
         var path = WriteTemp(saved);
 
         report.MatchesLocated.Should().Be(1, "the page-text occurrence is found");
+        SavedPdfLeakScanner.FindTerm(saved, term).Should().BeEmpty($"the {kind}'s copy goes too");
+        MutoolTextExtractor.ExtractPage(path, 1).Should().NotContain(term);
         using (var after = MutoolReferenceRenderer.RenderPage(path, 1, Dpi))
+        {
             InkFractionIn(after!, VisibleTerm).Should().BeLessThan(0.001, "the page-text occurrence is removed");
-
-        SavedPdfLeakScanner.FindTerm(saved, term).Should().NotBeEmpty(
-            $"the {kind} still holds the term; that is why the report must not call this clean");
-        report.IsCleanSuccess.Should().BeFalse($"the {kind} drawing the term was left in place");
-        report.Carriers.Should().Contain(c => c.RefusedReason != null && c.Carrier.Contains(kind) &&
-                                              c.RefusedReason.Contains("containing the term"));
+            InkFractionIn(after!, Drawn).Should().BeLessThan(0.001, $"the {kind} drew only the term, so it now paints nothing");
+        }
+        report.IsCleanSuccess.Should().BeTrue(report.ToString());
+        report.Carriers.Should().Contain(c => c.Scrubbed && c.Carrier.Contains(kind), "every removal is reported");
     }
 
     [Theory]
     [MemberData(nameof(TextCarriers))]
-    public void RedactText_TermOnlyInsideTheCarrier_IsNotCalledClean(string carrier, string term, string kind)
+    public void RedactText_TermOnlyInsideTheCarrier_IsRemoved(string carrier, string term, string kind)
     {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
         var source = Build(carrier, term, visibleCopy: false);
         var saved = Redact(source, d => d.RedactText(term, RedactionOptions.Default), out var report);
 
-        SavedPdfLeakScanner.FindTerm(saved, term).Should().NotBeEmpty();
-        report.MatchesLocated.Should().Be(0, "extraction cannot read the carrier's text");
-        report.IsCleanSuccess.Should().BeFalse($"\"0 removed\" over a {kind} that draws the term is not clean");
-        report.Carriers.Should().Contain(c => c.RefusedReason != null && c.Carrier.Contains(kind));
+        report.MatchesLocated.Should().Be(0, "the page's letters do not hold the carrier's text");
+        SavedPdfLeakScanner.FindTerm(saved, term).Should().BeEmpty();
+        using (var after = MutoolReferenceRenderer.RenderPage(WriteTemp(saved), 1, Dpi))
+            InkFractionIn(after!, Drawn).Should().BeLessThan(0.001);
+        report.Carriers.Should().Contain(c => c.Scrubbed && c.Carrier.Contains(kind));
+        report.IsCleanSuccess.Should().BeTrue(report.ToString());
+
+        // Sequential redaction: the second run reads the rewritten carrier,
+        // not a record of what it drew before.
+        using var doc = PdfDocument.Open(saved);
+        var again = doc.RedactText(term, RedactionOptions.Default);
+        again.IsCleanSuccess.Should().BeTrue(again.ToString());
+        again.Carriers.Should().NotContain(c => c.Carrier.StartsWith("text inside"));
+    }
+
+    [Fact]
+    public void RedactText_CarrierItCannotRewrite_IsReportedNotCalledClean()
+    {
+        // The pattern cell draws the term through a form XObject of its own:
+        // cutting the cell's glyphs cannot reach it, so the cell is kept and
+        // the report says so.
+        const string term = "PATTERNFORMSECRET";
+        var source = Build("tiling-pattern-form", term, visibleCopy: false);
+
+        var saved = Redact(source, d => d.RedactText(term, RedactionOptions.Default), out var report);
+
+        SavedPdfLeakScanner.FindTerm(saved, term).Should().NotBeEmpty("the form the cell invokes keeps the term");
+        report.IsCleanSuccess.Should().BeFalse("the tiling pattern drawing the term was left in place");
+        report.Carriers.Should().Contain(c => c.RefusedReason != null && c.Carrier.Contains("tiling pattern") &&
+                                              c.RefusedReason.Contains("could not rewrite"));
     }
 
     [Theory]
@@ -187,6 +218,12 @@ public class NestedContentTextCarrierRedactionTests : IDisposable
                 Stream("/Type /Pattern /PatternType 1 /PaintType 1 /TilingType 1 /BBox [0 0 300 60] /XStep 300 /YStep 60 " +
                        "/Matrix [1 0 0 1 20 100] /Resources << /Font << /F1 5 0 R >> >>",
                     "0 g " + (cellText ?? "0 0 m 300 60 l 0 60 m 300 0 l S"))),
+            "tiling-pattern-form" => Pdf(
+                visible + "/Pattern cs /P1 scn 20 100 300 60 re f", "/Pattern << /P1 6 0 R >>", null,
+                Stream("/Type /Pattern /PatternType 1 /PaintType 1 /TilingType 1 /BBox [0 0 300 60] /XStep 300 /YStep 60 " +
+                       "/Matrix [1 0 0 1 20 100] /Resources << /XObject << /Fx 7 0 R >> >>", "/Fx Do"),
+                Stream("/Type /XObject /Subtype /Form /BBox [0 0 300 60] /Resources << /Font << /F1 5 0 R >> >>",
+                    "0 g " + cellText)),
             // Luminosity mask: where the group paints white, the blue fill shows.
             "smask-group" => Pdf(
                 visible + "q /GS1 gs 0 0 1 rg 20 100 300 60 re f Q",
