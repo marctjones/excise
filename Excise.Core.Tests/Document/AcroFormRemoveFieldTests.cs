@@ -1,5 +1,6 @@
 using AwesomeAssertions;
 using Excise.Core.Document;
+using Excise.Core.Primitives;
 using Excise.Core.Tests.TestSupport;
 using Xunit;
 
@@ -64,5 +65,24 @@ public class AcroFormRemoveFieldTests
         doc.AddTextField(1, new PdfRectangle(72, 650, 300, 670), "dropthisfield");
 
         doc.GetAcroForm()!.Fields.Select(f => f.FullName).Should().BeEquivalentTo(new[] { "keepthisfield", "dropthisfield" });
+    }
+
+    [Fact]
+    public void RemoveField_ListedInCalculationOrder_IsNotInTheSavedBytes()
+    {
+        // #2015: /AcroForm /CO still named the removed field and kept it, and its value, reachable.
+        using var doc = TwoFieldDocument();
+        var acroForm = (PdfDictionary)doc.Resolve(doc.Catalog["AcroForm"]);
+        var dropped = doc.GetAcroForm()!.FindField("dropthisfield")!;
+        acroForm["CO"] = new PdfArray { doc.GetReferenceTo(dropped.RawDictionary)! };
+
+        doc.RemoveField("dropthisfield").Should().BeTrue();
+        var saved = doc.SaveToBytes();
+
+        SavedPdfLeakScanner.FindTerm(saved, "DROPPEDVALUE").Should().BeEmpty();
+        using var reopened = PdfDocument.Open(saved);
+        var reopenedForm = (PdfDictionary)reopened.Resolve(reopened.Catalog["AcroForm"]);
+        if (reopenedForm.GetOptional("CO") is { } co)
+            ((PdfArray)reopened.Resolve(co)).Should().BeEmpty("no /CO entry names a field that is gone");
     }
 }
