@@ -355,6 +355,18 @@ internal sealed class TrueTypeFontFile
     /// offset applied. Shares the decode with <see cref="ParseCmap"/> but keeps
     /// the raw keys the symbolic path needs.
     /// </summary>
+    /// <summary>
+    /// The RAW code→gid map of the cmap subtable at <paramref name="offset"/> in
+    /// <paramref name="data"/> (formats 0/4/6/12; empty for any other). The
+    /// #1920 glyph editor reads each subtable through the same decode.
+    /// </summary>
+    internal static Dictionary<int, int> ReadCmapSubtable(byte[] data, int offset)
+    {
+        var map = new Dictionary<int, int>();
+        ParseSubtableInto(new BE(data), offset, map);
+        return map;
+    }
+
     private static void ParseSubtableInto(BE r, int sub, Dictionary<int, int> map)
     {
         ushort format = r.U16(sub);

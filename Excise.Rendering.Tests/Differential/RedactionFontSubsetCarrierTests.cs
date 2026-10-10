@@ -88,16 +88,30 @@ public sealed class RedactionFontSubsetCarrierTests : IDisposable
     /// <summary>
     /// The property #1920 asks for: once no text draws a character any more, no
     /// font in the saved file maps a code to it and no glyph outline for it
-    /// remains. Fails today on every fixture and both profiles (measured
-    /// 2026-10-10: every removed character keeps its /ToUnicode entry and its
-    /// non-empty outline).
+    /// remains. Measured 2026-10-10 before the fix: every removed character
+    /// kept its /ToUnicode entry and its non-empty outline, on every fixture and
+    /// both profiles.
     /// </summary>
-    [Theory(Skip = "#1920: redaction does not rebuild the font subset or /ToUnicode yet; enable with the fix")]
+    /// <remarks>
+    /// Read twice. Through the saved /ToUnicode, as a reader would; and, since
+    /// pruning /ToUnicode alone would satisfy that read while the glyphs stay,
+    /// through the codes and glyph ids the term used BEFORE the redaction: each
+    /// must be gone from the outlines, from the program's own cmap, from its
+    /// <c>post</c> names, from the Apple <c>Zapf</c> table (it records Unicode
+    /// values) and from /W or /Widths.
+    /// </remarks>
+    [Theory]
     [MemberData(nameof(Cases))]
     public void RemovedCharacters_LeaveNoTraceInAnyFontCarrier(string fixture, string profile)
     {
         Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
         var (before, term, _) = Fixture(fixture);
+        var traces = FontCarrierProbe.Measure(SaveTemp(before), term).Where(c => c.ToUnicodeCodes.Count > 0).ToList();
+        traces.Select(c => c.Character).Distinct().Should().HaveCount(term.Distinct().Count(),
+            "anti-vacuity: before the redaction a font maps every character of the term");
+        traces.Should().OnlyContain(c => c.NonEmptyOutlineGids.Count > 0 && c.InWidths,
+            "anti-vacuity: before the redaction each character has an outline and a width");
+
         var afterPath = SaveTemp(Redact(before, term, profile));
 
         var survivors = FontCarrierProbe.Measure(afterPath, term)
@@ -105,6 +119,95 @@ public sealed class RedactionFontSubsetCarrierTests : IDisposable
             .ToList();
         survivors.Should().BeEmpty(
             "a character no text draws any more must not survive in a /ToUnicode CMap or as a glyph outline");
+
+        var residue = FontCarrierProbe.Residue(afterPath, traces);
+        foreach (var r in residue) _out.WriteLine(r);
+        residue.Should().BeEmpty(
+            "the codes and glyphs the term used must leave the outlines, the program's cmap, post and Zapf tables, and the widths");
+    }
+
+    /// <summary>
+    /// The planted failure for the test above: the same redaction without the
+    /// font edit leaves residue the probe reports, both through /ToUnicode and
+    /// through the pre-redaction glyph ids. A probe that found nothing here
+    /// would pass any fix.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(Cases))]
+    public void WithoutTheFontEdit_TheProbeFindsTheRemovedCharacters(string fixture, string profile)
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        var (before, term, _) = Fixture(fixture);
+        var traces = FontCarrierProbe.Measure(SaveTemp(before), term).Where(c => c.ToUnicodeCodes.Count > 0).ToList();
+        var afterPath = SaveTemp(Redact(before, term, profile, scrubFonts: false));
+
+        FontCarrierProbe.Measure(afterPath, term).Where(c => c.ToUnicodeCodes.Count > 0 && c.NonEmptyOutlineGids.Count > 0)
+            .Should().NotBeEmpty("without the edit the font keeps the term's characters");
+        FontCarrierProbe.Residue(afterPath, traces).Should().NotBeEmpty("without the edit the glyphs stay");
+    }
+
+    public static TheoryData<string, string> IdentityCases()
+    {
+        var data = Cases();
+        foreach (var profile in new[] { "standard", "maximum" })
+            data.Add("excise-shared-latin", profile);
+        return data;
+    }
+
+    /// <summary>
+    /// The owner's constraint: the font edit changes nothing that stays. The
+    /// same redaction with and without it must render to identical pixels in two
+    /// independent renderers (MuPDF, Poppler) and extract to identical text in
+    /// two independent extractors and in excise, page by page.
+    /// "excise-shared-latin" removes a word most of whose letters are drawn
+    /// elsewhere in the same font, so kept glyphs sit next to emptied ones.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(IdentityCases))]
+    public void TheFontEdit_ChangesNoRenderedPixelAndNoExtractedCharacter(string fixture, string profile)
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+        Assert.SkipUnless(PdftoppmReferenceRenderer.IsAvailable, "pdftoppm not installed");
+        Assert.SkipUnless(PdftotextTextExtractor.IsAvailable, "pdftotext not installed");
+        var (before, term, _) = Fixture(fixture);
+        var scrubbed = Redact(before, term, profile);
+        var plain = Redact(before, term, profile, scrubFonts: false);
+        scrubbed.Should().NotEqual(plain, "anti-vacuity: the font edit must have changed the file");
+
+        var scrubbedPath = SaveTemp(scrubbed);
+        var plainPath = SaveTemp(plain);
+        using var a = PdfDocument.Open(scrubbed);
+        using var b = PdfDocument.Open(plain);
+        a.PageCount.Should().Be(b.PageCount);
+        for (var page = 1; page <= a.PageCount; page++)
+        {
+            a.GetPage(page).Text.Should().Be(b.GetPage(page).Text, $"excise reads page {page} the same");
+            MutoolTextExtractor.ExtractPage(scrubbedPath, page).Should().Be(MutoolTextExtractor.ExtractPage(plainPath, page),
+                $"mutool reads page {page} the same");
+            PdftotextTextExtractor.ExtractPage(scrubbedPath, page).Should().Be(PdftotextTextExtractor.ExtractPage(plainPath, page),
+                $"pdftotext reads page {page} the same");
+            AssertSamePixels(MutoolReferenceRenderer.RenderPage(scrubbedPath, page, 110), MutoolReferenceRenderer.RenderPage(plainPath, page, 110),
+                $"mutool, page {page}");
+            AssertSamePixels(PdftoppmReferenceRenderer.RenderPage(scrubbedPath, page, 110), PdftoppmReferenceRenderer.RenderPage(plainPath, page, 110),
+                $"pdftoppm, page {page}");
+        }
+    }
+
+    private static void AssertSamePixels(SkiaSharp.SKBitmap? x, SkiaSharp.SKBitmap? y, string label)
+    {
+        using (x)
+        using (y)
+        {
+            x.Should().NotBeNull(label);
+            y.Should().NotBeNull(label);
+            x!.Width.Should().Be(y!.Width, label);
+            x.Height.Should().Be(y.Height, label);
+            var differing = 0;
+            for (var row = 0; row < x.Height; row++)
+                for (var col = 0; col < x.Width; col++)
+                    if (x.GetPixel(col, row) != y.GetPixel(col, row)) differing++;
+            differing.Should().Be(0, $"{label}: the font edit must not change a rendered pixel");
+        }
     }
 
     // ---- fixtures ------------------------------------------------------------
@@ -117,6 +220,7 @@ public sealed class RedactionFontSubsetCarrierTests : IDisposable
         {
             case "excise-type0-cyrillic": return (ExciseWriterFixture("Жуков"), "Жуков", "approved");
             case "excise-type0-latin": return (ExciseWriterFixture("QJXZ"), "QJXZ", "approved");
+            case "excise-shared-latin": return (ExciseWriterFixture("Vance"), "Vance", "approved");
             case "weasyprint-cidcff-hangul":
             {
                 var path = TestRepoLayout.FindFile("test-pdfs", "sample-pdfs", "multilingual-noto-cjk.pdf");
@@ -170,12 +274,15 @@ public sealed class RedactionFontSubsetCarrierTests : IDisposable
         return ms.ToArray();
     }
 
-    private static byte[] Redact(byte[] bytes, string term, string profile)
+    private static byte[] Redact(byte[] bytes, string term, string profile, bool scrubFonts = true)
     {
         using var doc = PdfDocument.Open(bytes);
         var options = RedactionOptions.ForProfile(profile == "maximum" ? RedactionProfile.Maximum : RedactionProfile.Standard)
-            with { DrawBox = false };
-        doc.RedactText(term, options).VerifiedRemovals.Should().BeGreaterThan(0, "the term must be matched and removed");
+            with { DrawBox = false, ScrubFontGlyphs = scrubFonts };
+        var report = doc.RedactText(term, options);
+        report.VerifiedRemovals.Should().BeGreaterThan(0, "the term must be matched and removed");
+        report.Carriers.Where(c => c.Carrier.StartsWith("font ", StringComparison.Ordinal)).Should().BeEmpty(
+            "every font of these fixtures is one the redaction edits, so none may be reported as left unscrubbed");
         return doc.SaveToBytes();
     }
 
@@ -200,7 +307,7 @@ public sealed class RedactionFontSubsetCarrierTests : IDisposable
 /// <summary>One removed character, as one font in the saved file still carries it.</summary>
 internal sealed record FontCarrierHit(
     string Font, string Subtype, char Character,
-    IReadOnlyList<int> ToUnicodeCodes, IReadOnlyList<int> NonEmptyOutlineGids, bool InWidths)
+    IReadOnlyList<int> ToUnicodeCodes, IReadOnlyList<int> NonEmptyOutlineGids, bool InWidths, string? BaseFont = null)
 {
     public override string ToString() =>
         $"{Font} ({Subtype}) U+{(int)Character:X4} '{Character}': ToUnicode codes " +
@@ -270,7 +377,7 @@ internal static class FontCarrierProbe
                 hits.Add(new FontCarrierHit(
                     (Name(dict, "BaseFont") ?? $"obj {num}") + $" obj {num}",
                     cidKind == null ? subtype! : $"Type0/{cidKind}",
-                    ch, codes, nonEmpty, codes.Any(widths.Contains)));
+                    ch, codes, nonEmpty, codes.Any(widths.Contains), Name(dict, "BaseFont")));
             }
         }
         return hits;
@@ -451,23 +558,38 @@ internal static class FontCarrierProbe
         throw new InvalidDataException($"CFF Top DICT has no operator {op}");
     }
 
-    /// <summary>Code-to-gid from every cmap subtable in format 0, 4 or 6, merged.</summary>
+    /// <summary>Code-to-gid from every cmap subtable in format 0, 4, 6 or 12, merged (first subtable wins).</summary>
     private static Dictionary<int, int> SfntCmap(byte[] f)
     {
         var map = new Dictionary<int, int>();
+        foreach (var (code, gid) in SfntCmapAll(f)) map.TryAdd(code, gid);
+        return map;
+    }
+
+    /// <summary>Every (code, gid) entry of every cmap subtable in format 0, 4, 6 or 12, in subtable order.</summary>
+    private static List<(int Code, int Gid)> SfntCmapAll(byte[] f)
+    {
+        var all = new List<(int, int)>();
         var t = SfntTables(f);
-        if (!t.TryGetValue("cmap", out var cm)) return map;
+        if (!t.TryGetValue("cmap", out var cm)) return all;
         for (int i = 0, n = U16(f, cm.Offset + 2); i < n; i++)
         {
             int s = cm.Offset + U32(f, cm.Offset + 8 + 8 * i);
             switch (U16(f, s))
             {
                 case 0:
-                    for (int c = 0; c < 256; c++) if (f[s + 6 + c] != 0) map.TryAdd(c, f[s + 6 + c]);
+                    for (int c = 0; c < 256; c++) if (f[s + 6 + c] != 0) all.Add((c, f[s + 6 + c]));
                     break;
                 case 6:
                     for (int c = 0, first = U16(f, s + 6), cnt = U16(f, s + 8); c < cnt; c++)
-                        if (U16(f, s + 10 + 2 * c) is var g and not 0) map.TryAdd(first + c, g);
+                        if (U16(f, s + 10 + 2 * c) is var g and not 0) all.Add((first + c, g));
+                    break;
+                case 12:
+                    for (int k = 0, groups = U32(f, s + 12); k < groups; k++)
+                    {
+                        int p = s + 16 + 12 * k;
+                        for (int c = U32(f, p); c <= U32(f, p + 4); c++) all.Add((c, U32(f, p + 8) + (c - U32(f, p))));
+                    }
                     break;
                 case 4:
                 {
@@ -483,12 +605,68 @@ internal static class FontCarrierProbe
                             g = U16(f, ranges + 2 * k + ro + 2 * (c - U16(f, starts + 2 * k)));
                             if (g != 0) g = (g + S16(f, deltas + 2 * k)) & 0xFFFF;
                         }
-                        if (g != 0) map.TryAdd(c, g);
+                        if (g != 0) all.Add((c, g));
                     }
                     break;
                 }
             }
         }
-        return map;
+        return all;
+    }
+
+    /// <summary>
+    /// What a font in <paramref name="pdfPath"/> still holds of the codes and
+    /// glyph ids <paramref name="traces"/> recorded before the redaction, found
+    /// by BaseFont: non-empty outlines, program cmap entries selecting those
+    /// glyphs, <c>post</c> 2.0 names, a <c>Zapf</c> table, and width entries.
+    /// </summary>
+    public static IReadOnlyList<string> Residue(string pdfPath, IReadOnlyList<FontCarrierHit> traces)
+    {
+        var dump = QpdfReferenceTool.DecodedObjectDump(pdfPath);
+        dump.Should().NotBeNull("qpdf must rewrite the file");
+        var dumpPath = Path.Combine(Path.GetTempPath(), $"font-subset-qdf-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(dumpPath, dump!);
+        try
+        {
+            var objects = SplitObjects(Encoding.Latin1.GetString(dump!));
+            var found = new List<string>();
+            foreach (var group in traces.GroupBy(t => t.BaseFont))
+            {
+                var codes = group.SelectMany(t => t.ToUnicodeCodes).ToHashSet();
+                var gids = group.SelectMany(t => t.NonEmptyOutlineGids).ToHashSet();
+                var fonts = objects.Where(o => Regex.IsMatch(o.Value, @"/Type\s*/Font\b") &&
+                                               Name(o.Value, "BaseFont") == group.Key &&
+                                               Name(o.Value, "Subtype") is "Type0" or "TrueType").ToList();
+                fonts.Should().NotBeEmpty($"the redacted file must still hold font {group.Key}");
+                foreach (var (num, dict) in fonts)
+                {
+                    var subtype = Name(dict, "Subtype")!;
+                    var descendant = subtype == "Type0" && Regex.Match(dict, @"/DescendantFonts\s*\[\s*(\d+)\s+0\s+R") is { Success: true } m
+                        ? objects[int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture)] : dict;
+                    var widths = WidthCodes(descendant, subtype);
+                    foreach (var code in codes.Where(widths.Contains))
+                        found.Add($"{group.Key} obj {num}: code {code:X} keeps a width entry");
+                    var fd = Ref(descendant, "FontDescriptor") is int f ? objects[f] : null;
+                    var programRef = fd == null ? null : Ref(fd, "FontFile2") ?? Ref(fd, "FontFile3");
+                    if (programRef == null) continue;
+                    var program = Stream(dumpPath, programRef.Value);
+                    var isGlyf = Ref(fd!, "FontFile2") != null;
+                    var outlines = isGlyf ? GlyfLengths(program) : CffCharStringLengths(program);
+                    foreach (var g in gids.Where(g => g < outlines.Count && outlines[g] > (isGlyf ? 0 : 2)))
+                        found.Add($"{group.Key} obj {num}: glyph {g} keeps its outline ({outlines[g]} bytes)");
+                    if (Encoding.ASCII.GetString(program, 0, 4) != "OTTO" && !(program[0] == 0 && program[1] == 1)) continue;
+                    var tables = SfntTables(program);
+                    foreach (var (code, g) in SfntCmapAll(program).Where(e => gids.Contains(e.Gid)))
+                        found.Add($"{group.Key} obj {num}: the program's cmap maps {code:X} to removed glyph {g}");
+                    if (tables.ContainsKey("Zapf"))
+                        found.Add($"{group.Key} obj {num}: the program keeps a Zapf table (glyph Unicode values)");
+                    if (tables.TryGetValue("post", out var post) && U32(program, post.Offset) == 0x00020000)
+                        foreach (var g in gids.Where(g => g < U16(program, post.Offset + 32) && U16(program, post.Offset + 34 + 2 * g) != 0))
+                            found.Add($"{group.Key} obj {num}: glyph {g} keeps its post name");
+                }
+            }
+            return found;
+        }
+        finally { try { File.Delete(dumpPath); } catch (IOException) { } }
     }
 }

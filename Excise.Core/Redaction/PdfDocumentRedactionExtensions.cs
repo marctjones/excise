@@ -106,6 +106,11 @@ public static class PdfDocumentRedactionExtensions
 
         int totalMatches = 0;
 
+        // #1920: what every font draws before anything is removed; compared with
+        // what it draws at the end, so only characters this redaction stopped
+        // drawing everywhere leave the fonts.
+        var fontUsageBefore = options.ScrubFontGlyphs ? FontGlyphUsage.Collect(document) : null;
+
         // #1572: attachments. Everything that can refuse runs first, so a
         // refused redaction leaves the document exactly as it was: a portfolio
         // (whose attachments ARE the documents) when they would be removed,
@@ -562,6 +567,11 @@ public static class PdfDocumentRedactionExtensions
             profileRemovals.Add(new RedactedFeatureRemoval(
                 "appearance of a redacted form field's widget", termScrubState.DroppedUndecidedAppearances,
                 "it could not be shown free of the term, or the field formats the value it shows"));
+
+        // #1920: the removed characters' glyphs, widths and /ToUnicode entries,
+        // from every font that no longer draws them anywhere in the document.
+        if (fontUsageBefore != null)
+            carrierResults.AddRange(FontGlyphScrubber.Scrub(document, fontUsageBefore, FontGlyphUsage.Collect(document)));
 
         var attachmentResults = keptAttachments != null
             ? AttachmentCarrierScrubber.Reconcile(document, keptAttachments)
