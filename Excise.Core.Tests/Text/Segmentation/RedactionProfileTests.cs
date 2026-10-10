@@ -689,6 +689,114 @@ public class RedactionProfileTests
         report.IsCleanSuccess.Should().BeFalse();
     }
 
+    /// <summary>
+    /// A tagged page with two links whose only copy of a term is the link target,
+    /// a Screen annotation (neither Link nor markup, so Maximum keeps it), and a
+    /// structure tree that names all three through §14.7.5.3 <c>/OBJR</c>.
+    /// </summary>
+    private static byte[] TaggedLinks(string catalog = "") => CarrierTrapFixtures.WithCatalog(
+        $"/StructTreeRoot 9 0 R /MarkInfo << /Marked true >> {catalog}",
+        "/Annots [6 0 R 7 0 R 8 0 R] /StructParents 0",
+        "<< /Type /Annot /Subtype /Link /Rect [72 600 272 620] /Border [0 0 0] /StructParent 1 " +
+        "/Contents (Visit LINKONESECRET) /A << /S /URI /URI (https://example.test/LINKONESECRET) >> >>",
+        "<< /Type /Annot /Subtype /Link /Rect [72 560 272 580] /Border [0 0 0] /StructParent 2 " +
+        "/A << /S /URI /URI (https://example.test/LINKTWOSECRET) >> >>",
+        "<< /Type /Annot /Subtype /Screen /Rect [72 500 272 540] /StructParent 3 /Contents (KEPTSCREEN) >>",
+        "<< /Type /StructTreeRoot /K 10 0 R >>",
+        "<< /Type /StructElem /S /Document /P 9 0 R /K [11 0 R 12 0 R 13 0 R] >>",
+        "<< /Type /StructElem /S /Link /P 10 0 R /K << /Type /OBJR /Pg 3 0 R /Obj 6 0 R >> >>",
+        "<< /Type /StructElem /S /Link /P 10 0 R /K [ << /Type /OBJR /Obj 7 0 R >> ] >>",
+        "<< /Type /StructElem /S /Annot /P 10 0 R /K << /Type /OBJR /Obj 8 0 R >> >>");
+
+    /// <summary>
+    /// #2045: Maximum emptied <c>/Annots</c>, but the structure tree's <c>/OBJR</c>
+    /// still reached each link, so the saved file kept its <c>/URI</c> and
+    /// <c>/Contents</c> while the report said only "link annotation(s)".
+    /// </summary>
+    [Theory]
+    [InlineData(EntryPoint.RedactText)]
+    [InlineData(EntryPoint.RedactArea)]
+    [InlineData(EntryPoint.SafetyPass)]
+    public void Maximum_CutsARemovedLinkTheStructureTreeStillNames(EntryPoint entry)
+    {
+        var standard = RunProfile(TaggedLinks(), entry, RedactionOptions.Default);
+        SavedPdfLeakScanner.FindTerm(standard.Saved, "LINKTWOSECRET").Should().NotBeEmpty(
+            "planted failure: Standard keeps the link, and its target, when the term is elsewhere");
+        standard.Removals.Should().NotContain(r => r.Feature == CutItems, "Standard removes no annotation");
+        AllText(standard.Saved).Should().Contain("/Link").And.Contain("/OBJR");
+
+        var max = RunProfile(TaggedLinks(), entry, RedactionOptions.Maximum);
+
+        foreach (var token in new[] { "LINKONESECRET", "LINKTWOSECRET" })
+            SavedPdfLeakScanner.FindTerm(max.Saved, token).Should().BeEmpty(
+                $"{token}: the /OBJR kept the removed link, and its /URI, in the file");
+        max.Removals.Should().ContainSingle(r => r.Feature == "link annotation(s)").Which.Count.Should().Be(2);
+        max.Removals.Should().ContainSingle(r => r.Feature == CutItems).Which.Count.Should().Be(2,
+            "CLAUDE.md rule 6: every removal is reported, and the /OBJR to the kept Screen annotation is not one");
+        SavedPdfLeakScanner.FindTerm(max.Saved, "KEPTSCREEN").Should().NotBeEmpty("the kept annotation stays");
+        AllText(max.Saved).Should().Contain("/OBJR", "the content item naming the kept annotation is untouched");
+        max.Refusals.Should().NotContain(r => r.Contains("taken off its page"), "nothing reaches a removed link once its /OBJR is gone");
+    }
+
+    /// <summary>#2045: the term that is only in the link target, redacted, under each profile.</summary>
+    [Fact]
+    public void TheLinkTargetTerm_LeavesTheFile_UnderBothProfiles()
+    {
+        foreach (var options in new[] { RedactionOptions.Default, RedactionOptions.Maximum })
+        {
+            using var doc = PdfDocument.Open(TaggedLinks());
+            doc.RedactText("LINKONESECRET", options);
+            SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), "LINKONESECRET").Should().BeEmpty(options.Profile.ToString());
+        }
+    }
+
+    /// <summary>
+    /// #2045: two redactions in one session, then a third after a save and reopen.
+    /// The first cuts both <c>/OBJR</c>s; the later ones find nothing left to cut
+    /// and must not report a cut they did not make.
+    /// </summary>
+    [Fact]
+    public void Maximum_SequentialRedactions_CutOnce_AndStayClean()
+    {
+        byte[] saved;
+        using (var doc = PdfDocument.Open(TaggedLinks()))
+        {
+            var first = doc.RedactText("LINKONESECRET", RedactionOptions.Maximum);
+            first.Removals.Should().ContainSingle(r => r.Feature == CutItems).Which.Count.Should().Be(2);
+            var second = doc.RedactText("LINKTWOSECRET", RedactionOptions.Maximum);
+            second.Removals.Should().NotContain(r => r.Feature == CutItems || r.Feature == "link annotation(s)");
+            saved = doc.SaveToBytes();
+        }
+        using (var reopened = PdfDocument.Open(saved))
+        {
+            var third = reopened.RedactText("KEPTSCREEN", RedactionOptions.Maximum);
+            third.Removals.Should().NotContain(r => r.Feature == CutItems);
+            saved = reopened.SaveToBytes();
+        }
+        foreach (var token in new[] { "LINKONESECRET", "LINKTWOSECRET" })
+            SavedPdfLeakScanner.FindTerm(saved, token).Should().BeEmpty(token);
+    }
+
+    /// <summary>
+    /// #2045: a route the cut does not know (here a private catalog key) still
+    /// reaches a removed link, so Maximum says so rather than reporting clean.
+    /// </summary>
+    [Fact]
+    public void Maximum_RefusesARemovedLinkAnotherRouteStillReaches()
+    {
+        using var doc = PdfDocument.Open(TaggedLinks("/PrivateIndex [7 0 R]"));
+
+        var report = doc.RedactText("NOMATCHXYZ", RedactionOptions.Maximum);
+        var saved = doc.SaveToBytes();
+
+        SavedPdfLeakScanner.FindTerm(saved, "LINKTWOSECRET").Should().NotBeEmpty(
+            "the refusal is only honest if the target really is still there");
+        report.Carriers.Should().ContainSingle(c => c.Carrier == "annotation 7 0 R")
+            .Which.RefusedReason.Should().Contain("/Link");
+        report.IsCleanSuccess.Should().BeFalse();
+        SavedPdfLeakScanner.FindTerm(saved, "LINKONESECRET").Should().BeEmpty();
+    }
+
     // ── the report is the contract ──────────────────────────────────────────
 
     [Fact]

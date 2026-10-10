@@ -166,11 +166,15 @@ internal static class RedactionFeatureStripper
             Row("document outline (bookmarks)", 1);
         }
 
+        var cutItems = 0;
         if (options.RemoveLinkAnnotations || options.RemoveMarkupAnnotations)
         {
+            var removedAnnots = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
             var (links, markup, reanchoredFromAnnots) = RemoveAnnotations(
                 document, options.RemoveLinkAnnotations, options.RemoveMarkupAnnotations,
-                options.KeepAttachments);
+                options.KeepAttachments, removedAnnots);
+            // #2045: off the page is not out of the file while the structure tree names it.
+            if (removedAnnots.Count > 0) cutItems += CutRemovedAnnotations(document, removedAnnots, refusals);
             Row("link annotation(s)", links);
             Row("comment/markup annotation(s)", markup);
             Row("embedded file(s) re-anchored at document level", reanchoredFromAnnots,
@@ -180,7 +184,6 @@ internal static class RedactionFeatureStripper
         }
 
         // Before the name strip (#1857): the flatten removes /AcroForm, names and all.
-        var cutItems = 0;
         if (options.FlattenInteractiveContent)
         {
             var (flattened, signatures, unpainted, formRemains) = FlattenInteractive(document);
@@ -197,7 +200,7 @@ internal static class RedactionFeatureStripper
                 "each named its signer; its /Perms entry (DocMDP, UR3) and every other reference to it went too");
             Row("/DSS document security store", dss, "the certificates, OCSP responses and CRLs that name the signers");
             // #1881: after RemoveSignatures, whose walk reaches a signature through its widget.
-            if (!formRemains) cutItems = CutFormObjects(document, Reachable(), refusals);
+            if (!formRemains) cutItems += CutFormObjects(document, Reachable(), refusals);
         }
 
         if (options.RemoveFieldNames)
@@ -213,7 +216,7 @@ internal static class RedactionFeatureStripper
             "filed in a /Resources /XObject that no content stream left in the file invokes, or invoked with no "
             + "/Subtype a reader draws (neither /Form nor /Image), so no reader shows it");
         Row(CutItemsRow, cutItems + cutXObjects,
-            "an /OBJR or /MCR that named a flattened form field or an XObject no content stream draws, "
+            "an /OBJR or /MCR that named a removed annotation, a flattened form field or an XObject no content stream draws, "
             + "and would have kept it and its text in the file");
         foreach (var (form, row) in unreadableForms)
             if (!freed.Contains(form)) refusals.Add(row);
@@ -1125,10 +1128,12 @@ internal static class RedactionFeatureStripper
     /// <c>FileAttachment</c>, <c>Sound</c> and <c>Movie</c>, so removing the
     /// annotation is the only reference to the file — and a caller who
     /// explicitly said to keep attachments losing one silently is the defect,
-    /// not the removal.
+    /// not the removal. Each annotation taken off a page is added to
+    /// <paramref name="removed"/>, for <see cref="CutRemovedAnnotations"/>.
     /// </summary>
     private static (int Links, int Markup, int ReanchoredFiles) RemoveAnnotations(
-        PdfDocument document, bool removeLinks, bool removeMarkup, bool keepAttachments)
+        PdfDocument document, bool removeLinks, bool removeMarkup, bool keepAttachments,
+        HashSet<PdfDictionary> removed)
     {
         int links = 0, markup = 0;
         var orphanedFileSpecs = new List<PdfObject>();
@@ -1147,6 +1152,7 @@ internal static class RedactionFeatureStripper
                     {
                         if (keepAttachments) orphanedFileSpecs.AddRange(FileSpecsUnder(document, annot));
                         links++;
+                        removed.Add(annot);
                         continue;
                     }
                     if (removeMarkup && subtype != null && MarkupSubtypes.Contains(subtype))
@@ -1162,6 +1168,7 @@ internal static class RedactionFeatureStripper
                             if (annot.GetOptional("Sound") != null) { keep.Add(item); continue; }
                         }
                         markup++;
+                        removed.Add(annot);
                         continue;
                     }
                 }
@@ -1277,6 +1284,26 @@ internal static class RedactionFeatureStripper
             refusals.Add(new CarrierResult($"form field {field.ObjectNumber ?? 0} {field.GenerationNumber ?? 0} R", false,
                 "the flatten took it off its page and out of /AcroForm, but the object graph still reaches it, "
                 + "so its /V, /DV and /TU are still in the file"));
+        return cut;
+    }
+
+    /// <summary>
+    /// #2045: the Maximum annotation removal empties <c>/Annots</c>, but a tagged
+    /// document's structure tree still names each annotation (§14.7.5.3
+    /// <c>/OBJR</c>), and the writer ships what is reachable: a link's
+    /// <c>/URI</c> and <c>/Contents</c> with it. Every content item that names a
+    /// <paramref name="removed"/> annotation is cut; one the graph still reaches
+    /// after is refused.
+    /// </summary>
+    private static int CutRemovedAnnotations(
+        PdfDocument document, HashSet<PdfDictionary> removed, ICollection<CarrierResult> refusals)
+    {
+        var cut = CutContentItems(document, ReachableDictionaries(document),
+            r => Resolve(document, r) is PdfDictionary d && removed.Contains(d));
+        foreach (var annot in ReachableDictionaries(document).Where(removed.Contains))
+            refusals.Add(new CarrierResult($"annotation {annot.ObjectNumber ?? 0} {annot.GenerationNumber ?? 0} R", false,
+                $"the /{annot.GetNameOrNull("Subtype")} annotation was taken off its page, but the object graph still "
+                + "reaches it, so its /Contents and action (a link's /URI) are still in the file"));
         return cut;
     }
 
