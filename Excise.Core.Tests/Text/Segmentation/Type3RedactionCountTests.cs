@@ -1,3 +1,4 @@
+using System.IO;
 using System.Linq;
 using AwesomeAssertions;
 using Excise.Core.Document;
@@ -39,8 +40,15 @@ public sealed class Type3RedactionCountTests
             }
         }
 
+        var inputBytes = File.ReadAllBytes(path!);
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(inputBytes).Should().Contain("ababab", "control: MuPDF reads the term in the input");
+
         using var doc = PdfDocument.Open(path!);
         doc.RedactText("ababab", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals
             .Should().BeGreaterThan(0, "Type3 redaction must REPORT the removal, not 0 (#1190)");
+        var saved = doc.SaveToBytes();
+        MutoolTextOracle.ExtractFolded(saved).Should().NotContain("ababab", "MuPDF must not read the term out of the saved Type3 file");
+        SavedPdfLeakScanner.FindTerm(saved, "ababab").Should().BeEmpty();
     }
 }

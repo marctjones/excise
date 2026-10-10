@@ -1,8 +1,10 @@
+using System.Linq;
 using System.IO;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Tests.Content;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text.Segmentation;
@@ -77,6 +79,10 @@ public class OverprintedTextRedactionTests
         doc.GetPage(1).Text.Should().Contain("SSSS",
             "four stamps of the same run interleave character-by-character in " +
             "the letter sequence — which is precisely why a plain search fails");
+        // Independent structural reading of the input: 4 stamps per glyph.
+        var tjCount = SavedPdfLeakScanner.StreamBodies(OverprintedPdf())
+            .Sum(body => System.Text.RegularExpressions.Regex.Matches(body, @"\)\s*Tj").Count);
+        tjCount.Should().Be(Secret.Length * 4, "the scanner's own reading of the bytes agrees on the stamping");
     }
 
     [Fact]

@@ -5,6 +5,8 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
 using Excise.Rendering;
+using Excise.Rendering.Differential;
+using Excise.TestSupport;
 using SkiaSharp;
 using Xunit;
 
@@ -69,6 +71,18 @@ public class CombinedRedactionRenderTests
         CountDarkPixels(before, TextRectInPixels()).Should()
             .BeGreaterThan(5, "pre-redaction text should be visibly dark");
 
+        // Independent input-side controls: MuPDF's renderer sees the red image,
+        // MuPDF's text extractor reads the text, and the scanner finds the literal.
+        SavedPdfLeakScanner.FindTerm(pdfBytes, "SECRET TEXT").Should().NotBeEmpty(
+            "control: the scanner sees the text literal in the input");
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+        using (var mutoolBefore = RenderWithMutool(pdfBytes))
+        {
+            CountRedPixels(mutoolBefore, ImageRectInPixels()).Should().BeGreaterThan(0,
+                "control: MuPDF renders the red image in the input");
+        }
+        MutoolText(pdfBytes).Should().Contain("SECRET TEXT", "control: MuPDF reads the text in the input");
+
         // ------- REDACT via the public API -------
         byte[] redactedBytes;
         using (var doc = PdfDocument.Open(pdfBytes))
@@ -92,6 +106,19 @@ public class CombinedRedactionRenderTests
                 "text literal must be dropped from content stream");
         }
 
+        // Independent reading of the saved file (not excise's content stream).
+        SavedPdfLeakScanner.FindTerm(redactedBytes, "SECRET TEXT").Should().BeEmpty(
+            "the text literal must be absent from every (decompressed) stream of the saved file");
+        SavedPdfLeakScanner.FindTerm(redactedBytes, "SECRET").Should().BeEmpty();
+        MutoolText(redactedBytes).Should().NotContain("SECRET", "MuPDF must not read the redacted text");
+        using (var mutoolAfter = RenderWithMutool(redactedBytes))
+        {
+            CountRedPixels(mutoolAfter, ImageRectInPixels()).Should().Be(0,
+                "MuPDF must render no red pixel where the image was");
+            FractionBlackPixels(mutoolAfter, TextRectInPixels()).Should().BeGreaterThan(0.95,
+                "MuPDF renders the covering box over the text region");
+        }
+
         // ------- AFTER: render the redacted doc and check pixels -------
         SKBitmap after;
         using (var doc = PdfDocument.Open(redactedBytes))
@@ -112,6 +139,30 @@ public class CombinedRedactionRenderTests
         var textRowBlackFraction = FractionBlackPixels(after, TextRectInPixels());
         textRowBlackFraction.Should().BeGreaterThan(0.95,
             "the redaction overlay should cover the text region; >95% of the row should be pure black");
+    }
+
+    private static SKBitmap RenderWithMutool(byte[] pdf)
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"excise-combined-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(path, pdf);
+        try
+        {
+            return MutoolReferenceRenderer.RenderPage(path, 1, DpiRender)
+                ?? throw new InvalidOperationException("mutool produced no render");
+        }
+        finally { File.Delete(path); }
+    }
+
+    private static string MutoolText(byte[] pdf)
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"excise-combined-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(path, pdf);
+        try
+        {
+            return MutoolTextExtractor.ExtractPage(path, 1)
+                ?? throw new InvalidOperationException("mutool produced no text");
+        }
+        finally { File.Delete(path); }
     }
 
     // Pre/post PNG files are left on disk at /tmp/combined-{before,after}.png

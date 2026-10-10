@@ -4,6 +4,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Tests.Text;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text.Segmentation;
@@ -62,6 +63,9 @@ public class ArabicPresentationFormRedactionTests
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("(CBA)",
             "sanity: the glyph-code carrier must be present before redaction");
 
+        var inputBytes = doc.SaveToBytes();
+        SavedPdfLeakScanner.FindTerm(inputBytes, "CBA").Should().NotBeEmpty(
+            "control: the scanner sees the glyph-code carrier in the input");
         var removed = doc.RedactText(BaseWord, RedactionOptions.Default).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
@@ -76,6 +80,9 @@ public class ArabicPresentationFormRedactionTests
         searchable.Should().NotContain(Reverse(ShapedWord), "nor in visual (reversed) order");
         searchable.Should().NotContain("(CBA)", "nor as its raw character codes");
         searchable.Should().NotContain("(ABC)", "nor as reversed character codes");
+        SavedPdfLeakScanner.FindTerm(saved, "CBA").Should().BeEmpty("the glyph-code carrier must be gone from every stream");
+        SavedPdfLeakScanner.FindTerm(saved, BaseWord).Should().BeEmpty();
+        SavedPdfLeakScanner.FindTerm(saved, ShapedWord).Should().BeEmpty();
 
         using var reopened = PdfDocument.Open(saved);
         reopened.GetPage(1).Text.Should().NotContainAny(
