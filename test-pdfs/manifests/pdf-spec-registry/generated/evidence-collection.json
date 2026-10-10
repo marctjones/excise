@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1656,
-  "indexedContentSha256": "f7b09ecb5a138398c9cb708898ab7dd7474e94b275bd3632497836c8d5673432",
+  "indexedFileCount": 1657,
+  "indexedContentSha256": "3055a1bcd69e0fdf8768c05573e1bba73f2fc410b73c4851135ba3d596114591",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -66588,6 +66588,7 @@
           "matchedTerms": [
             "forms",
             "widgets",
+            "xfa",
             "action",
             "annotation",
             "redact"
@@ -66807,7 +66808,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 284
+      "candidateReferenceCount": 285
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -67985,9 +67986,21 @@
             "annotation",
             "redact"
           ]
+        },
+        {
+          "path": "docs/architecture/xfa-rendering.md",
+          "kind": "architecture",
+          "matchedTerms": [
+            "applications",
+            "groups",
+            "acroform",
+            "action",
+            "annotation",
+            "redact"
+          ]
         }
       ],
-      "candidateReferenceCount": 16
+      "candidateReferenceCount": 17
     },
     {
       "id": "pdf.17.multimedia.media",
@@ -72666,7 +72679,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 845
+      "candidateReferenceCount": 846
     },
     {
       "id": "pdf.20.extension.developer",
@@ -74973,6 +74986,15 @@
           ]
         },
         {
+          "path": "Excise.Core/Writing/PdfDocumentOptimizer.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "pdfx",
+            "profile",
+            "pdfa"
+          ]
+        },
+        {
           "path": "Excise.Rendering/Differential/VeraPdfReferenceValidator.cs",
           "kind": "source",
           "matchedTerms": [
@@ -75124,7 +75146,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 25
+      "candidateReferenceCount": 26
     },
     {
       "id": "pdfe.product.safety.limited-editing",

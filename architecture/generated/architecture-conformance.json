@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "be2b549c8b7df490d88ef23ea7c435e467787f83",
+  "sourceRevision": "2d5980a5407da6f1378bf52886511daccaa7527b",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8746,
+    "retainedSymbols": 8747,
     "observedComponentDependencies": 85,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -276,14 +276,14 @@
     {
       "source": "core",
       "target": "core-document",
-      "references": 366,
+      "references": 368,
       "typeDependencyCount": 67,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Xfa.PdfXfaLayout",
           "target": "Excise.Core.Document.PdfDocument",
-          "references": 26
+          "references": 28
         }
       ]
     },
@@ -318,7 +318,7 @@
     {
       "source": "core",
       "target": "core-primitives",
-      "references": 534,
+      "references": 540,
       "typeDependencyCount": 115,
       "classification": "declared",
       "evidence": [
@@ -909,13 +909,13 @@
     {
       "source": "core-writing",
       "target": "core",
-      "references": 2,
-      "typeDependencyCount": 1,
+      "references": 4,
+      "typeDependencyCount": 2,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Core.Writing.PdfDocumentWriter",
-          "target": "Excise.Core.Authoring.PdfAIdentityXmp",
+          "source": "Excise.Core.Writing.PdfDocumentOptimizer",
+          "target": "Excise.Core.Xfa.PdfXfaLayout",
           "references": 2
         }
       ]
@@ -984,14 +984,14 @@
     {
       "source": "core-writing",
       "target": "core-primitives",
-      "references": 234,
+      "references": 236,
       "typeDependencyCount": 43,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Writing.PdfDocumentOptimizer",
           "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 29
+          "references": 31
         }
       ]
     },
