@@ -37,14 +37,17 @@ internal sealed record RedactionPreferences
 
     /// <summary>
     /// How the removed run's WIDTH is handled (#1189): a layout choice and a
-    /// SECURITY choice at once. The default, FixedMarker (#1715), removes the
-    /// advance and draws a box of one fixed size (#1725). CollapsePreserveLayout
-    /// draws the box to the exact extent of the removed run, which makes it a
-    /// ruler for the removed string's length (#1140); Overshoot rounds that box
-    /// up; CloseGap removes the advance and draws nothing.
+    /// SECURITY choice at once. The default is the engine's
+    /// (<see cref="RedactionOptions.Width"/>, OvershootPreserveLayout since
+    /// 2026-10-10, Refs #1715): nothing on the page moves and the box is rounded
+    /// up, but the removed text's width stays measurable from the file.
+    /// FixedMarker removes the advance and draws a box of one fixed size (#1725);
+    /// CollapsePreserveLayout draws the box to the exact extent of the removed
+    /// run, a ruler for the removed string's length (#1140); CloseGap removes
+    /// the advance and draws nothing.
     /// </summary>
     [JsonConverter(typeof(JsonStringEnumConverter<WidthPolicy>))]
-    public WidthPolicy Width { get; set; } = WidthPolicy.FixedMarker;
+    public WidthPolicy Width { get; set; } = RedactionOptions.Default.Width;
 
     /// <summary>
     /// The output profile (#1586). ⚠️ Maximum produces output that is no longer
@@ -95,7 +98,10 @@ internal sealed record RedactionPreferences
             CarrierPolicy = policy,
             WholeWord = WholeWord,
             KeepAttachments = KeepAttachments,
-            Width = Width,
+            // Same rule for the width: still at the Standard default means
+            // follow the profile, so Maximum keeps closing the width
+            // (FixedMarker) instead of being reset to the keep-layout default.
+            Width = Width == RedactionOptions.Default.Width ? options.Width : Width,
         };
     }
 }

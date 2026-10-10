@@ -12,9 +12,11 @@ public enum WidthPolicy
 {
     /// <summary>
     /// Keep each glyph's advance so surrounding layout does not reflow, but
-    /// collapse the removed glyph to zero ink (#1045). The default until
-    /// #1715: the kept advance and the box drawn to it both state the removed
-    /// run's width.
+    /// collapse the removed glyph to zero ink (#1045). The covering box is
+    /// drawn to the removed run's exact extent, so the kept advance and the box
+    /// both state the removed run's width (#1715: 91% of names recovered at
+    /// rank 5). <see cref="OvershootPreserveLayout"/> keeps the same layout with
+    /// a box that is not a ruler.
     /// </summary>
     CollapsePreserveLayout,
 
@@ -28,9 +30,20 @@ public enum WidthPolicy
     /// As <see cref="CollapsePreserveLayout"/>, but draw the covering box WIDER
     /// than the removed run — out to the surviving neighbours on the line —
     /// so the box's width no longer encodes how long the removed string was
-    /// (#1189). Layout does not reflow.
+    /// (#1189). Layout does not reflow. The default for
+    /// <see cref="RedactionProfile.Standard"/> since 2026-10-10 (owner decision,
+    /// Refs #1715): nothing on the page moves.
     /// </summary>
     /// <remarks>
+    /// <para>⚠️ <b>The cost of the default, stated plainly:</b> the removed
+    /// text's WIDTH is still recoverable by a determined analyst who has the
+    /// font metrics. #1715 recovered 91% of names at rank 5 from that width
+    /// under <see cref="CollapsePreserveLayout"/>; this policy blurs the box,
+    /// not the content-stream advance. <see cref="FixedMarker"/>
+    /// (<see cref="RedactionProfile.Maximum"/>, CLI <c>--profile maximum</c> or
+    /// <c>--fixed-marker</c>) and <see cref="CloseGap"/> close that channel, at
+    /// the cost of reflowing the line.</para>
+    /// <para>
     /// ⚠️ <b>This closes the RENDERED width channel, not the whole width side
     /// channel.</b> Preserving layout means the content stream still carries one
     /// <c>TJ</c> adjustment equal to the removed run's total advance
@@ -40,7 +53,7 @@ public enum WidthPolicy
     /// pixel-level measurement of the redacted region; it does not defeat a
     /// content-stream one. <see cref="CloseGap"/> is what destroys that, at the
     /// cost of reflowing the line. Saying otherwise would be a gate that claims
-    /// a property the code does not have.
+    /// a property the code does not have.</para>
     /// </remarks>
     OvershootPreserveLayout,
 
@@ -53,7 +66,9 @@ public enum WidthPolicy
     /// channel; 0% once the gap is closed) and #1725 (no box at all is drawn
     /// today when the gap is closed, so a width-closed redaction is
     /// indistinguishable from an editing mistake) at the same time, rather
-    /// than trading one for the other. The default.
+    /// than trading one for the other. The <see cref="RedactionProfile.Maximum"/>
+    /// policy; the Standard default from #1715 until 2026-10-10, when the owner
+    /// chose layout over it (see <see cref="OvershootPreserveLayout"/>).
     /// </summary>
     /// <remarks>
     /// <para><b>What "content-independent" means here.</b> Every redacted run
@@ -98,8 +113,9 @@ public enum WidthPolicy
 /// enforced by the <b>engine</b> (Excise.Core). The defaults reproduced the
 /// pre-#1187 behaviour exactly until 2026-09-17, when
 /// <see cref="KeepAttachments"/> made attachment removal the default (#1572),
-/// and <see cref="Width"/> has been <see cref="WidthPolicy.FixedMarker"/> since
-/// 2026-09-27 (#1715).
+/// and <see cref="Width"/> has been <see cref="WidthPolicy.OvershootPreserveLayout"/>
+/// since 2026-10-10 (Refs #1715; <see cref="WidthPolicy.FixedMarker"/> from
+/// 2026-09-27, and still under <see cref="RedactionProfile.Maximum"/>).
 ///
 /// <para><b>Knobs NOT in this record, and why.</b> This type deliberately holds
 /// only what Core can honour; a field Core would silently ignore is the
@@ -157,15 +173,25 @@ public sealed record RedactionOptions
     public GlyphRemovalStrategy Strategy { get; init; } = GlyphRemovalStrategy.AnyOverlap;
 
     /// <summary>How the removed glyphs' width residue is handled.
-    /// Default <see cref="WidthPolicy.FixedMarker"/>. Enforced by: Core.</summary>
+    /// Default <see cref="WidthPolicy.OvershootPreserveLayout"/>;
+    /// <see cref="Maximum"/> sets <see cref="WidthPolicy.FixedMarker"/>.
+    /// Enforced by: Core.</summary>
     /// <remarks>
-    /// The owner's decision on #1715 and #1725: the old default,
-    /// <see cref="WidthPolicy.CollapsePreserveLayout"/>, left 91% of names
-    /// recoverable at rank 5 from the width residue; FixedMarker closes that
-    /// channel and still draws a visible mark. Layout preservation is now the
-    /// explicit choice (CLI <c>--preserve-layout</c>).
+    /// <para>The owner's decision of 2026-10-10 (Refs #1715): by default a
+    /// redaction must not reflow, move or redraw anything else on the page. Each
+    /// removed glyph keeps its advance, so no neighbour moves, and the covering
+    /// box is rounded up to a whole em into the space beside it without
+    /// covering surviving text, so the box is not a ruler (#1189).</para>
+    /// <para>⚠️ <b>What this default does NOT protect:</b> the removed text's
+    /// width survives in the content stream, and a determined analyst with the
+    /// font metrics can measure it and narrow the candidates (#1715: 91% of
+    /// names recovered at rank 5 from that width). To close it, use
+    /// <see cref="RedactionProfile.Maximum"/> or set
+    /// <see cref="WidthPolicy.FixedMarker"/> / <see cref="WidthPolicy.CloseGap"/>
+    /// (CLI <c>--profile maximum</c>, <c>--fixed-marker</c>, <c>--close-width</c>);
+    /// the line then reflows.</para>
     /// </remarks>
-    public WidthPolicy Width { get; init; } = WidthPolicy.FixedMarker;
+    public WidthPolicy Width { get; init; } = WidthPolicy.OvershootPreserveLayout;
 
     /// <summary>Draw the covering box over each redacted run or area (visual
     /// confirmation only — removal is what secures). Default true. Enforced by: Core.</summary>
@@ -404,7 +430,8 @@ public sealed record RedactionOptions
     /// <summary>
     /// <see cref="RedactionProfile.Maximum"/>: every Standard removal, plus
     /// remove-whole on each kept carrier, bookmarks / links / markup / field
-    /// names stripped, and forms and annotations flattened.
+    /// names stripped, forms and annotations flattened, and the removed text's
+    /// width closed (<see cref="WidthPolicy.FixedMarker"/>: the line reflows).
     /// </summary>
     /// <remarks>
     /// The <see cref="CarrierPolicy"/> is <see cref="Operations.CarrierScrubMode.RemoveWhole"/>
@@ -418,6 +445,9 @@ public sealed record RedactionOptions
     public static RedactionOptions Maximum { get; } = new()
     {
         Profile = RedactionProfile.Maximum,
+        // Stated, not inherited: Standard keeps the layout and leaves the width
+        // measurable; Maximum closes it (Refs #1715).
+        Width = WidthPolicy.FixedMarker,
         RemoveBookmarks = true,
         RemoveLinkAnnotations = true,
         RemoveMarkupAnnotations = true,

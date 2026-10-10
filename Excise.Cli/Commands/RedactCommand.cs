@@ -23,24 +23,24 @@ internal static class RedactCommand
         {
             Description = "Close the width gap so the removed text's width can't be recovered (moves " +
                 "surviving text), and draw NO covering box (#1725: the box would itself be a residue " +
-                "oracle). #1715 measured this at 0% recall@5 vs 91% under --preserve-layout.",
+                "oracle). #1715 measured this at 0% recall@5 vs 91% when the width is kept.",
             DefaultValueFactory = _ => false,
         };
         var fixedMarkerOption = new Option<bool>("--fixed-marker")
         {
-            Description = "The default. Close the width gap like --close-width AND draw a covering box of ONE " +
+            Description = "Close the width gap like --close-width AND draw a covering box of ONE " +
                 "CONTENT-INDEPENDENT SIZE, so the redaction stays visibly marked (#1725) without the " +
                 "box's width leaking the removed run's length (#1715: 0% recall@5, same as --close-width, " +
                 "with a mark). The line keeps exactly the marker's width, so the box covers none of the " +
-                "text that follows it.",
+                "text that follows it. The line reflows. What --profile maximum uses.",
             DefaultValueFactory = _ => false,
         };
         var preserveLayoutOption = new Option<bool>("--preserve-layout")
         {
             Description = "Keep the removed text's advance so nothing on the line moves, and draw the " +
-                "covering box to the removed text's exact extent (the default before #1715). Both the " +
-                "kept gap and the box state how wide the removed text was: #1715 recovered 91% of " +
-                "names at rank 5 from that width.",
+                "covering box to the removed text's EXACT extent. Both the kept gap and the box state " +
+                "how wide the removed text was: #1715 recovered 91% of names at rank 5 from that " +
+                "width. The default (--overshoot-box) keeps the same layout with a widened box.",
             DefaultValueFactory = _ => false,
         };
         var quantizeGapOption = new Option<bool>("--quantize-gap")
@@ -101,12 +101,13 @@ internal static class RedactCommand
         };
         var overshootBoxOption = new Option<bool>("--overshoot-box")
         {
-            Description = "Round the covering box's width UP to a whole em, growing into the " +
-                "space beside it without covering neighbouring text, so the box stops being a " +
-                "ruler for the removed string's length (#1189). Layout does not reflow. " +
-                "NOTE: this blurs only the RENDERED width -- the content stream still carries " +
-                "the removed run's advance, so a reader of the file can still measure it. " +
-                "--close-width is what destroys that, at the cost of reflowing the line.",
+            Description = "The default (standard profile): nothing on the page moves. Round the " +
+                "covering box's width UP to a whole em, growing into the space beside it without " +
+                "covering neighbouring text, so the box stops being a ruler for the removed " +
+                "string's length (#1189). NOTE: this blurs only the RENDERED width -- the content " +
+                "stream still carries the removed run's advance, so a determined analyst with the " +
+                "font metrics can still measure how wide the removed text was. --profile maximum, " +
+                "--fixed-marker or --close-width close that, at the cost of reflowing the line.",
             DefaultValueFactory = _ => false,
         };
         var wholeWordOption = new Option<bool>("--whole-word")
@@ -148,8 +149,10 @@ internal static class RedactCommand
                 "tooltips, /Alt, /ActualText, structure titles, field names, bookmark titles, " +
                 "link targets -- are KEPT and term-scrubbed. " +
                 "'maximum' adds: remove the whole value of every kept carrier, strip bookmarks, " +
-                "link annotations, comments and field names, and flatten forms and annotations. " +
-                "THE OUTPUT IS NO LONGER ACCESSIBLE OR INTERACTIVE.",
+                "link annotations, comments and field names, flatten forms and annotations, and " +
+                "close the removed text's width (--fixed-marker: the line reflows). Standard keeps " +
+                "the layout, so the removed text's width stays measurable. " +
+                "THE MAXIMUM OUTPUT IS NO LONGER ACCESSIBLE OR INTERACTIVE.",
             DefaultValueFactory = _ => "standard",
         };
         profileOption.AcceptOnlyFromAmong("standard", "maximum");
@@ -349,6 +352,15 @@ internal static class RedactCommand
                 // between the profile and "the tool mangled my document".
                 foreach (var removal in result.Removals)
                     Console.WriteLine($"  removed: {removal}");
+
+                // Refs #1715: the keep-layout default leaves the removed text's
+                // width in the file. Say so on every run that removed something,
+                // with the way to close it.
+                if (result.Count > 0 && result.WidthMeasurable)
+                    Console.WriteLine(
+                        "  width: layout kept, nothing else on the page moved; the removed text's width is " +
+                        "still measurable from the file by someone with the font metrics. " +
+                        "--profile maximum or --fixed-marker closes it (the line reflows).");
 
                 // The Maximum accessibility warning arrives here, from the
                 // safety pass the GUI dialog reads too (#1857).

@@ -238,6 +238,24 @@ public class RedactionCarrierPolicyPreferenceTests
         main.RedactionPreferences.Width.Should().Be(WidthPolicy.OvershootPreserveLayout);
     }
 
+    [Theory]
+    [InlineData(RedactionProfile.Standard, null, WidthPolicy.OvershootPreserveLayout)]
+    [InlineData(RedactionProfile.Maximum, null, WidthPolicy.FixedMarker)]
+    [InlineData(RedactionProfile.Standard, WidthPolicy.FixedMarker, WidthPolicy.FixedMarker)]
+    [InlineData(RedactionProfile.Maximum, WidthPolicy.CloseGap, WidthPolicy.CloseGap)]
+    [InlineData(RedactionProfile.Maximum, WidthPolicy.CollapsePreserveLayout, WidthPolicy.CollapsePreserveLayout)]
+    public void ToOptions_WidthAtTheDefault_FollowsTheProfile_AnExplicitChoiceWins(
+        RedactionProfile profile, WidthPolicy? chosen, WidthPolicy expected)
+    {
+        // Refs #1715: the GUI's default is the engine's (layout kept), and an
+        // untouched width preference must not reset Maximum's FixedMarker to it.
+        var prefs = new RedactionPreferences { Profile = profile };
+        prefs.Width.Should().Be(RedactionOptions.Default.Width, "the GUI default is the engine default, not a copy");
+        if (chosen is WidthPolicy w) prefs.Width = w;
+
+        prefs.ToOptions().Width.Should().Be(expected);
+    }
+
     [Fact]
     public void RedactionPreferences_SurviveARestart_AndAnOldWindowJsonKeepsItsChoices()
     {

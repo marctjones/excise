@@ -84,9 +84,9 @@ internal sealed class EnumDisplayConverter : IValueConverter
         },
         WidthPolicy v => v switch
         {
-            WidthPolicy.FixedMarker => "Fixed-size marker (default)",
+            WidthPolicy.FixedMarker => "Fixed-size marker, line reflows",
             WidthPolicy.CollapsePreserveLayout => "Exact-width box, layout kept",
-            WidthPolicy.OvershootPreserveLayout => "Widened box, layout kept",
+            WidthPolicy.OvershootPreserveLayout => "Widened box, layout kept (default)",
             WidthPolicy.CloseGap => "Close the gap, no box",
             WidthPolicy.QuantizeGap => "Gap rounded to a whole em, no box",
             _ => null,
