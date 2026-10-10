@@ -83,7 +83,9 @@ public sealed record PdfOptimizationOptions
 
     /// <summary>
     /// Remove <c>/PieceInfo</c> — other applications' private editing data
-    /// (§14.5). It never contributes to what a page shows.
+    /// (§14.5). It never contributes to what a page shows. Excise's own page
+    /// entry (the XFA layout marker and generated-widget record) is kept,
+    /// with only the keys excise writes (#2038).
     /// </summary>
     public bool RemovePrivateApplicationData { get; init; } = true;
 

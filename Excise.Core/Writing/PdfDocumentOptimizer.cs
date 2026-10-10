@@ -163,7 +163,24 @@ public static class PdfDocumentOptimizer
             removed++;
         foreach (var page in document.GetPages())
         {
-            if (page.Dictionary.Remove("PieceInfo"))
+            // #2038: excise's own page entry (the XFA layout marker and generated-widget record) is
+            // not another application's private data, and the laid-out form depends on it.
+            if (page.Dictionary.GetOptional("PieceInfo") is not { } entry)
+                continue;
+            bool droppedAny = true;
+            var kept = TryResolve(document, entry) is PdfDictionary pieceInfo
+                ? Xfa.PdfXfaLayout.KeepOwnPieceInfo(document, pieceInfo, out droppedAny)
+                : null;
+            if (kept == null)
+            {
+                page.Dictionary.Remove("PieceInfo");
+                removed++;
+                continue;
+            }
+            // A fresh dictionary, assigned: a nested edit to a parsed copy could be lost to eviction,
+            // and the old dictionary may be shared with the catalog or another page.
+            page.Dictionary["PieceInfo"] = kept;
+            if (droppedAny)
                 removed++;
         }
 
