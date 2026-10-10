@@ -110,6 +110,7 @@ public sealed class RemovedPageLeakOracleTests : IDisposable
     [Theory]
     [InlineData(Back.Outline)]
     [InlineData(Back.AcroFormFieldKids)]
+    [InlineData(Back.StructureElement)] // the element's /ActualText is an encrypted string (#2014)
     public void EncryptedSource_RemovePage_ThenSaveReEncrypted_RemovedPageIsNotInTheFile(Back back)
     {
         // The cut resolves objects of an encrypted document inside the save: qpdf
