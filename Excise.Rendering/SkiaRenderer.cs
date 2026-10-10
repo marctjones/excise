@@ -332,6 +332,12 @@ internal partial class RenderContext
     private readonly PdfPage _page;
     private readonly RenderOptions _options;
     private readonly Stack<GraphicsState> _stateStack;
+    // #1901: the stack depth on entry to the nested stream (form, Type3
+    // CharProc, tiling cell) being executed; 0 for the page. A `Q` never pops
+    // below it (§8.4.2 q/Q balance within a stream, §8.10.1 implicit q/Q
+    // around a `Do`; mutool ignores the stray `Q` too). Same rule as
+    // ContentStreamWalker's floor.
+    private int _stateStackFloor;
     private GraphicsState _state;
     private SKPath? _currentPath;
     private bool? _pendingClipEvenOdd;
@@ -946,13 +952,21 @@ internal partial class RenderContext
 
     private void RestoreState()
     {
-        if (_stateStack.Count > 0)
+        if (_stateStack.Count > _stateStackFloor)
         {
             _state = _stateStack.Pop();
             if (_state.SavedTextParameters is { } restored)
                 RestoreTextParameters(restored);
             _canvas.Restore();
         }
+    }
+
+    /// <summary>Set the #1901 floor for a nested stream; returns the invoker's floor to restore.</summary>
+    private int EnterNestedStateStackFloor()
+    {
+        var invokerFloor = _stateStackFloor;
+        _stateStackFloor = _stateStack.Count;
+        return invokerFloor;
     }
 
     /// <summary>

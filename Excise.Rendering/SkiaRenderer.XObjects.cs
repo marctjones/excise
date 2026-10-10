@@ -1368,6 +1368,7 @@ internal partial class RenderContext
 
         var savedCanvasCount = _canvas.SaveCount;
         var savedStateStack = SnapshotGraphicsStateStack();
+        var savedStackFloor = EnterNestedStateStackFloor();
         var savedState = _state.Clone();
         var savedTextState = _textState.Clone();
         // §8.10.1: a form XObject's execution is bracketed by an implicit
@@ -1439,6 +1440,7 @@ internal partial class RenderContext
             _currentPath?.Dispose();
             _pendingTextClipPath?.Dispose();
             RestoreGraphicsStateStack(savedStateStack);
+            _stateStackFloor = savedStackFloor;
             _state = savedState;
             _textState = savedTextState;
             _currentFont = savedFont;

@@ -2582,6 +2582,7 @@ internal partial class RenderContext
 
         var savedCanvasCount = _canvas.SaveCount;
         var savedStateStack = SnapshotGraphicsStateStack();
+        var savedStackFloor = EnterNestedStateStackFloor();
         var savedState = _state.Clone();
         var savedTextState = _textState.Clone();
         var savedFont = _currentFont;
@@ -2640,6 +2641,7 @@ internal partial class RenderContext
             _currentPath?.Dispose();
             _pendingTextClipPath?.Dispose();
             RestoreGraphicsStateStack(savedStateStack);
+            _stateStackFloor = savedStackFloor;
             _state = savedState;
             _textState = savedTextState;
             _currentFont = savedFont;

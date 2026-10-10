@@ -347,6 +347,7 @@ internal partial class RenderContext
     {
         var savedCanvasCount = _canvas.SaveCount;
         var savedStateStack = SnapshotGraphicsStateStack();
+        var savedStackFloor = EnterNestedStateStackFloor();
         var savedPath = _currentPath;
         var savedPendingClip = _pendingClipEvenOdd;
         var savedPendingTextClipPath = _pendingTextClipPath;
@@ -370,6 +371,7 @@ internal partial class RenderContext
             _currentPath?.Dispose();
             _pendingTextClipPath?.Dispose();
             RestoreGraphicsStateStack(savedStateStack);
+            _stateStackFloor = savedStackFloor;
             _currentPath = savedPath;
             _pendingClipEvenOdd = savedPendingClip;
             _pendingTextClipPath = savedPendingTextClipPath;
