@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1661,
-  "indexedContentSha256": "df169e763cfda05ca4d296ba48b2656961cd865ac4be182af1ff8dffeb6a5e2d",
+  "indexedFileCount": 1662,
+  "indexedContentSha256": "041c072adb83c549e59d9cdec05aa7ad972e37f14027fb373faaf1dbe59ee58f",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -6747,6 +6747,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/RedactionFontSubsetCarrierTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "collections",
+            "embedded",
+            "pdfdocument"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/Differential/RedactionRoundTripTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -6852,19 +6861,9 @@
             "catalog",
             "pdfdocument"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Fonts/GlyphNameAndMacRomanEncodingOracleTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "collections",
-            "embedded",
-            "catalog",
-            "pdfdocument"
-          ]
         }
       ],
-      "candidateReferenceCount": 98
+      "candidateReferenceCount": 99
     },
     {
       "id": "pdf.17.graphics.state",
@@ -8259,7 +8258,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 774
+      "candidateReferenceCount": 775
     },
     {
       "id": "pdf.17.graphics.color",
@@ -9071,7 +9070,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 363
+      "candidateReferenceCount": 364
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -10947,7 +10946,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 216
+      "candidateReferenceCount": 217
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -13054,7 +13053,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 211
+      "candidateReferenceCount": 212
     },
     {
       "id": "pdf.20.content.operators",
@@ -70497,7 +70496,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 471
+      "candidateReferenceCount": 472
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -72020,7 +72019,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 248
+      "candidateReferenceCount": 249
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -72809,7 +72808,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 849
+      "candidateReferenceCount": 850
     },
     {
       "id": "pdf.20.extension.developer",

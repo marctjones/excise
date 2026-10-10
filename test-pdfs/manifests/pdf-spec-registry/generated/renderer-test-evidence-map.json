@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "fbc83b3d11965be92ac256aa084332c0437b21295e0ea9d267c7f1297fc02181",
+  "sourceFingerprint": "d238c584a48e412d70c5ac6b999980223afa5ae5f9a5b0a7680e4a76382ac9af",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -18899,6 +18899,92 @@
         {
           "capability": "pdf.17.graphics.fonts",
           "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/RedactionFontSubsetCarrierTests.cs::RedactionFontSubsetCarrierTests.Term_IsGoneForIndependentExtractors_FontCarriersMeasured",
+      "path": "Excise.Rendering.Tests/Differential/RedactionFontSubsetCarrierTests.cs",
+      "class": "RedactionFontSubsetCarrierTests",
+      "method": "Term_IsGoneForIndependentExtractors_FontCarriersMeasured",
+      "line": 59,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "content-streams",
+        "fonts",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/RedactionFontSubsetCarrierTests.cs::RedactionFontSubsetCarrierTests.RemovedCharacters_LeaveNoTraceInAnyFontCarrier",
+      "path": "Excise.Rendering.Tests/Differential/RedactionFontSubsetCarrierTests.cs",
+      "class": "RedactionFontSubsetCarrierTests",
+      "method": "RemovedCharacters_LeaveNoTraceInAnyFontCarrier",
+      "line": 97,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "fonts",
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
             "render"
           ]
         },
@@ -56045,12 +56131,12 @@
     }
   ],
   "summary": {
-    "testMethods": 1539,
+    "testMethods": 1541,
     "facets": {
-      "content-streams": 448,
+      "content-streams": 449,
       "content-strings-and-text": 9,
-      "differential-rendering": 925,
-      "fonts": 268,
+      "differential-rendering": 927,
+      "fonts": 270,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 318,
       "images": 250,
@@ -56061,19 +56147,19 @@
     },
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 9,
-      "pdf.17.content.streams:parse": 455,
-      "pdf.17.content.streams:render": 1081,
+      "pdf.17.content.streams:parse": 456,
+      "pdf.17.content.streams:render": 1083,
       "pdf.17.content.text-state:extract": 9,
       "pdf.17.content.text-state:parse": 9,
       "pdf.17.content.text-state:render": 9,
       "pdf.17.graphics.color:parse": 53,
       "pdf.17.graphics.color:render": 53,
-      "pdf.17.graphics.fonts:extract": 268,
-      "pdf.17.graphics.fonts:parse": 268,
-      "pdf.17.graphics.fonts:render": 1074,
+      "pdf.17.graphics.fonts:extract": 270,
+      "pdf.17.graphics.fonts:parse": 270,
+      "pdf.17.graphics.fonts:render": 1076,
       "pdf.17.graphics.images:extract": 250,
       "pdf.17.graphics.images:parse": 250,
-      "pdf.17.graphics.images:render": 1087,
+      "pdf.17.graphics.images:render": 1089,
       "pdf.17.graphics.paths-painting:parse": 318,
       "pdf.17.graphics.paths-painting:render": 318,
       "pdf.17.graphics.patterns-shadings:parse": 53,
@@ -56081,7 +56167,7 @@
       "pdf.17.graphics.state:parse": 318,
       "pdf.17.graphics.state:render": 318,
       "pdf.17.transparency.model:parse": 95,
-      "pdf.17.transparency.model:render": 968
+      "pdf.17.transparency.model:render": 970
     },
     "unclassified": 45,
     "allTestsMapped": true
