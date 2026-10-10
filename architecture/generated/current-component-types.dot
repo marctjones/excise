@@ -12,12 +12,12 @@ digraph excise_architecture {
   subgraph cluster_engine {
     label="engine";
     color="#cbd5e1";
-    "core-content" [label="Content-stream walker and sinks\nimplemented\n287 retained symbols", fillcolor="#d8f3dc"];
+    "core-content" [label="Content-stream walker and sinks\nimplemented\n288 retained symbols", fillcolor="#d8f3dc"];
     "core-document" [label="Document model and mutation boundary\nimplemented\n676 retained symbols", fillcolor="#d8f3dc"];
     "core-fonts" [label="Font decoding, metrics, and subsetting\npartial\n183 retained symbols", fillcolor="#fff3bf"];
-    "core-redaction" [label="Glyph-, image-, and carrier-level redaction\npartial\n723 retained symbols", fillcolor="#fff3bf"];
+    "core-redaction" [label="Glyph-, image-, and carrier-level redaction\npartial\n724 retained symbols", fillcolor="#fff3bf"];
     "core-security" [label="Document conformance and structural validation\npartial\n37 retained symbols", fillcolor="#fff3bf"];
-    "core-text" [label="Text extraction, ordering, search geometry, and selection\nimplemented\n202 retained symbols", fillcolor="#d8f3dc"];
+    "core-text" [label="Text extraction, ordering, search geometry, and selection\nimplemented\n207 retained symbols", fillcolor="#d8f3dc"];
     "core-writing" [label="Fresh-write serialization and encryption preservation\nimplemented\n120 retained symbols", fillcolor="#d8f3dc"];
     "rendering" [label="Excise.Rendering project\npartial\n907 retained symbols", fillcolor="#fff3bf"];
   }
@@ -71,10 +71,10 @@ digraph excise_architecture {
   "core" -> "core-primitives" [label="540 refs / 115 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core" -> "core-redaction" [label="18 refs / 3 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core" -> "core-text" [label="2 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-content" -> "core-document" [label="109 refs / 19 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-content" -> "core-document" [label="112 refs / 19 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-content" -> "core-fonts" [label="66 refs / 17 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-content" -> "core-parsing" [label="6 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-content" -> "core-primitives" [label="324 refs / 45 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-content" -> "core-primitives" [label="328 refs / 45 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core" [label="131 refs / 32 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core-content" [label="27 refs / 4 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
   "core-document" -> "core-encryption" [label="26 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
@@ -92,20 +92,20 @@ digraph excise_architecture {
   "core-primitives" -> "core-writing" [label="2 refs / 1 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
   "core-redaction" -> "core" [label="16 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-redaction" -> "core-content" [label="450 refs / 65 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-redaction" -> "core-document" [label="1358 refs / 157 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-redaction" -> "core-document" [label="1363 refs / 157 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-redaction" -> "core-fonts" [label="11 refs / 4 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-redaction" -> "core-parsing" [label="6 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-redaction" -> "core-primitives" [label="1153 refs / 164 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-redaction" -> "core-text" [label="268 refs / 40 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-redaction" -> "core-primitives" [label="1156 refs / 164 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-redaction" -> "core-text" [label="276 refs / 41 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-security" -> "core" [label="5 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-security" -> "core-content" [label="5 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-security" -> "core-document" [label="54 refs / 7 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-security" -> "core-primitives" [label="44 refs / 15 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-text" -> "core" [label="4 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-text" -> "core-content" [label="39 refs / 5 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-text" -> "core-document" [label="203 refs / 19 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-text" -> "core-content" [label="46 refs / 5 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-text" -> "core-document" [label="207 refs / 19 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-text" -> "core-fonts" [label="6 refs / 1 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-text" -> "core-primitives" [label="83 refs / 14 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-text" -> "core-primitives" [label="105 refs / 16 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-text" -> "core-redaction" [label="4 refs / 3 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
   "core-writing" -> "core" [label="4 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-writing" -> "core-content" [label="10 refs / 3 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];

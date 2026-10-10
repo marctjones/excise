@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "29a6d4dbf55942f67f7f359e21a50cab1d059692",
+  "sourceRevision": "61b3947eff840697d474d161ba8117d4a146f794",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8749,
+    "retainedSymbols": 8756,
     "observedComponentDependencies": 85,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -360,14 +360,14 @@
     {
       "source": "core-content",
       "target": "core-document",
-      "references": 109,
+      "references": 112,
       "typeDependencyCount": 19,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Content.ContentStreamWalker",
           "target": "Excise.Core.Document.PdfPage",
-          "references": 19
+          "references": 21
         }
       ]
     },
@@ -402,14 +402,14 @@
     {
       "source": "core-content",
       "target": "core-primitives",
-      "references": 324,
+      "references": 328,
       "typeDependencyCount": 45,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Content.ContentStreamWalker",
           "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 46
+          "references": 49
         }
       ]
     },
@@ -689,7 +689,7 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1358,
+      "references": 1363,
       "typeDependencyCount": 157,
       "classification": "declared",
       "evidence": [
@@ -731,7 +731,7 @@
     {
       "source": "core-redaction",
       "target": "core-primitives",
-      "references": 1153,
+      "references": 1156,
       "typeDependencyCount": 164,
       "classification": "declared",
       "evidence": [
@@ -745,8 +745,8 @@
     {
       "source": "core-redaction",
       "target": "core-text",
-      "references": 268,
-      "typeDependencyCount": 40,
+      "references": 276,
+      "typeDependencyCount": 41,
       "classification": "declared",
       "evidence": [
         {
@@ -829,21 +829,21 @@
     {
       "source": "core-text",
       "target": "core-content",
-      "references": 39,
+      "references": 46,
       "typeDependencyCount": 5,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.TextExtractor",
           "target": "Excise.Core.Content.ContentStreamWalker",
-          "references": 18
+          "references": 25
         }
       ]
     },
     {
       "source": "core-text",
       "target": "core-document",
-      "references": 203,
+      "references": 207,
       "typeDependencyCount": 19,
       "classification": "declared",
       "evidence": [
@@ -871,14 +871,14 @@
     {
       "source": "core-text",
       "target": "core-primitives",
-      "references": 83,
-      "typeDependencyCount": 14,
+      "references": 105,
+      "typeDependencyCount": 16,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.TextExtractor",
           "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 28
+          "references": 36
         }
       ]
     },
