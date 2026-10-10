@@ -76,12 +76,17 @@ internal static class RedactionFeatureStripper
     /// produces no row.
     /// </summary>
     /// <remarks>
-    /// ⚠️ Never throws for a malformed document: a removal that cannot be made
-    /// is skipped and the row is simply absent, exactly as if the feature were
-    /// not there. The exceptions are the form flatten, whose promise is that no
-    /// interactive object survives (#1857, #1881), a form XObject the hidden-layer
-    /// pass cannot read (#1866), and an XObject it cannot prove unused (#1868,
-    /// #1872): each is added to <paramref name="refusals"/>.
+    /// ⚠️ Never throws for a malformed document, and never skips in silence
+    /// (CLAUDE.md rule 6): what a pass cannot reach is added to
+    /// <paramref name="refusals"/>, which makes <c>IsCleanSuccess</c> false. That
+    /// covers the form flatten, whose promise is that no interactive object
+    /// survives (#1857, #1881); a form XObject the hidden-layer pass cannot read
+    /// (#1866), cannot write back, or reaches only below
+    /// <see cref="MaxHiddenFormNesting"/>; a page whose content it cannot read or
+    /// write back; an XObject it cannot prove unused (#1868, #1872); and a page
+    /// the page tree cannot give. The graph walks (actions and their
+    /// <c>/Next</c> chains, field names, <see cref="ReachableDictionaries"/>)
+    /// have no depth cap to hit: each is a worklist with a visited set.
     /// </remarks>
     internal static IReadOnlyList<RedactedFeatureRemoval> Apply(
         PdfDocument document, RedactionOptions options, ICollection<CarrierResult> refusals)
@@ -153,7 +158,7 @@ internal static class RedactionFeatureStripper
         var unreadableForms = new Dictionary<int, CarrierResult>();
         if (options.RemoveHiddenLayerContent && options.IncludeHiddenLayers)
         {
-            var (spans, groups) = RemoveHiddenOptionalContent(document, dropped, unreadableForms);
+            var (spans, groups) = RemoveHiddenOptionalContent(document, dropped, unreadableForms, refusals);
             Row("hidden optional-content span(s)", spans,
                 "content in layers that are OFF in the default configuration");
             Row("hidden optional-content group(s)", groups);
@@ -229,6 +234,18 @@ internal static class RedactionFeatureStripper
             + "and would have kept it and its text in the file");
         foreach (var (form, row) in unreadableForms)
             if (!freed.Contains(form)) refusals.Add(row);
+
+        // Every pass above walks the pages through SafePages, which skips one the
+        // page tree cannot give: none of them reached it.
+        for (var i = 1; i <= document.PageCount; i++)
+        {
+            try { document.GetPage(i); }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                refusals.Add(new CarrierResult($"page {i}", false,
+                    "it could not be read from the page tree, so the output-profile removals did not reach it"));
+            }
+        }
 
         if (invalidate != PdfDocumentDerivedStateScope.None)
             document.InvalidateDerivedState(invalidate);
@@ -371,41 +388,51 @@ internal static class RedactionFeatureStripper
         void Count(bool isScript) { if (isScript) scripts++; else external++; }
 
         // A kept action's /Next chain (§12.6.1) — a list or a single action.
-        void PruneNext(PdfDictionary action, int depth)
+        // Walked with a worklist and a visited set, not recursion with a depth
+        // cap: the cap used to stop at 33 actions and leave a script further
+        // down the chain in place, unreported. The visited set is the cycle
+        // guard (an action whose /Next leads back to itself is pruned once).
+        var prunedChains = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+        void PruneNext(PdfDictionary head)
         {
-            if (depth > 32) return;
-            var next = action.GetOptional("Next");
-            if (next == null) return;
-            switch (Resolve(document, next))
+            var pending = new Stack<PdfDictionary>();
+            pending.Push(head);
+            while (pending.TryPop(out var action))
             {
-                case PdfDictionary single when single.GetOptional("S") != null:
-                    if (Removable(single, out var isScript))
-                    {
-                        Salvage(single);
-                        // Drop the rest of the chain with it: the actions after
-                        // a removed one were sequenced to run after it, and
-                        // re-splicing them would change what the document does
-                        // in a way nobody asked for.
-                        action.Remove("Next");
-                        Count(isScript);
-                    }
-                    else PruneNext(single, depth + 1);
-                    break;
-
-                case PdfArray array:
-                    var keep = new List<PdfObject>();
-                    foreach (var item in array)
-                    {
-                        if (Resolve(document, item) is PdfDictionary a && a.GetOptional("S") != null)
+                if (!prunedChains.Add(action)) continue;
+                var next = action.GetOptional("Next");
+                if (next == null) continue;
+                switch (Resolve(document, next))
+                {
+                    case PdfDictionary single when single.GetOptional("S") != null:
+                        if (Removable(single, out var isScript))
                         {
-                            if (Removable(a, out var s)) { Salvage(a); Count(s); continue; }
-                            PruneNext(a, depth + 1);
+                            Salvage(single);
+                            // Drop the rest of the chain with it: the actions after
+                            // a removed one were sequenced to run after it, and
+                            // re-splicing them would change what the document does
+                            // in a way nobody asked for.
+                            action.Remove("Next");
+                            Count(isScript);
                         }
-                        keep.Add(item);
-                    }
-                    if (keep.Count == 0) action.Remove("Next");
-                    else if (keep.Count != array.Count) action["Next"] = new PdfArray(keep);
-                    break;
+                        else pending.Push(single);
+                        break;
+
+                    case PdfArray array:
+                        var keep = new List<PdfObject>();
+                        foreach (var item in array)
+                        {
+                            if (Resolve(document, item) is PdfDictionary a && a.GetOptional("S") != null)
+                            {
+                                if (Removable(a, out var s)) { Salvage(a); Count(s); continue; }
+                                pending.Push(a);
+                            }
+                            keep.Add(item);
+                        }
+                        if (keep.Count == 0) action.Remove("Next");
+                        else if (keep.Count != array.Count) action["Next"] = new PdfArray(keep);
+                        break;
+                }
             }
         }
 
@@ -422,7 +449,7 @@ internal static class RedactionFeatureStripper
                 // A real action. /OpenAction may instead be a destination
                 // ARRAY, which Resolve gives us as PdfArray and we never reach.
                 if (Removable(dict, out var isScript)) { Salvage(dict); owner.Remove(key); Count(isScript); }
-                else PruneNext(dict, 0);
+                else PruneNext(dict);
                 return;
             }
 
@@ -720,20 +747,25 @@ internal static class RedactionFeatureStripper
     /// parsed is kept and its row put in <paramref name="unreadable"/> (#1866).
     /// </summary>
     /// <remarks>
-    /// ⚠️ Rewrites the form's stream, but through the #1093 source-preserving
+    /// <para>⚠️ Rewrites the form's stream, but through the #1093 source-preserving
     /// writer: kept operators are copied verbatim, so this cannot reformat a
     /// string or an inline image it merely walked past. A form with no hidden
-    /// span is not rewritten at all (<c>count == 0</c> returns early).
+    /// span is not rewritten at all (<c>count == 0</c> returns early).</para>
+    /// <para><b>Nesting.</b> A form already on the path being walked (one that
+    /// draws itself, directly or through others) is examined where the cycle
+    /// began and skipped after. Recursion stops below
+    /// <see cref="MaxHiddenFormNesting"/> levels, and a form there is REFUSED,
+    /// never skipped in silence: its hidden spans are not examined, so it goes
+    /// into <see cref="HiddenFormWalk.TooDeep"/> unless the walk examines it at
+    /// a shallower level from somewhere else.</para>
     /// </remarks>
     private static int RemoveHiddenSpansInForms(
         PdfDocument document,
         PdfDictionary? xobjects,
-        HashSet<PdfDictionary> hiddenGroups,
-        Dictionary<int, CarrierResult> unreadable,
-        HashSet<int> dropped,
+        HiddenFormWalk walk,
         int depth)
     {
-        if (xobjects == null || depth > 8) return 0;
+        if (xobjects == null) return 0;
 
         var removed = 0;
         foreach (var key in xobjects.Keys.Select(k => k.Value).ToList())
@@ -743,6 +775,18 @@ internal static class RedactionFeatureStripper
             if (form.GetNameOrNull("Subtype") != "Form") continue;
             if (form.GetOptional("OC") is { } oc
                 && !OptionalContentVisibility.IsVisibleByDefault(document, oc)) continue;
+            if (walk.Path.Contains(form)) continue;
+            if (depth > MaxHiddenFormNesting)
+            {
+                if (!walk.Examined.Contains(form))
+                    walk.TooDeep.TryAdd(form, new CarrierResult(
+                        $"form XObject {form.ObjectNumber ?? 0} {form.GenerationNumber ?? 0} R", false,
+                        $"it is drawn more than {MaxHiddenFormNesting + 1} form XObjects deep, so the hidden-layer "
+                        + "pass did not examine it or the forms it draws, and left them in place"));
+                continue;
+            }
+            walk.Examined.Add(form);
+            walk.TooDeep.Remove(form);
 
             var resources = Resolve(document, form.GetOptional("Resources") ?? PdfNull.Instance)
                 as PdfDictionary;
@@ -753,7 +797,11 @@ internal static class RedactionFeatureStripper
                 : Resolve(document, resources.GetOptional("XObject") ?? PdfNull.Instance) as PdfDictionary;
 
             if (resources != null)
-                removed += RemoveHiddenSpansInForms(document, nested, hiddenGroups, unreadable, dropped, depth + 1);
+            {
+                walk.Path.Add(form);
+                try { removed += RemoveHiddenSpansInForms(document, nested, walk, depth + 1); }
+                finally { walk.Path.Remove(form); }
+            }
 
             var why = form.IsFiltered && !form.TryEnsureDecoded()
                 ? $"its /Filter {string.Join(" ", form.Filters.Select(f => "/" + f))} could not be decoded"
@@ -768,14 +816,14 @@ internal static class RedactionFeatureStripper
             if (parsed == null)
             {
                 // #1866: kept and reported once, never skipped in silence.
-                unreadable.TryAdd(form.ObjectNumber ?? 0, new CarrierResult(
+                walk.Unreadable.TryAdd(form.ObjectNumber ?? 0, new CarrierResult(
                     $"form XObject {form.ObjectNumber ?? 0} {form.GenerationNumber ?? 0} R",
                     false, why + ", so the hidden-layer pass could not examine it and left it in place"));
                 continue;
             }
 
             var (kept, count) =
-                FilterHiddenSpans(document, parsed.Operators, properties, nested, hiddenGroups, dropped);
+                FilterHiddenSpans(document, parsed.Operators, properties, nested, walk.HiddenGroups, walk.Dropped);
             if (count == 0) continue;
 
             try
@@ -788,9 +836,45 @@ internal static class RedactionFeatureStripper
                     }, parsed.SourceBytes!);
                 removed += count;
             }
-            catch (Exception ex) when (ex is not OutOfMemoryException) { /* leave as-is */ }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                // Its hidden spans are still in it: kept and reported, like #1866.
+                walk.Unreadable.TryAdd(form.ObjectNumber ?? 0, new CarrierResult(
+                    $"form XObject {form.ObjectNumber ?? 0} {form.GenerationNumber ?? 0} R", false,
+                    "its content could not be written back without its hidden optional-content spans, "
+                    + "so they were left in place"));
+            }
         }
         return removed;
+    }
+
+    /// <summary>
+    /// How many form XObjects deep below a page <see cref="RemoveHiddenSpansInForms"/>
+    /// recurses (levels 0 to this one are examined). A stack guard, not a cycle
+    /// guard (<see cref="HiddenFormWalk.Path"/> is that); a form below it is refused.
+    /// </summary>
+    private const int MaxHiddenFormNesting = 8;
+
+    /// <summary>The state one hidden-layer pass shares across its pages and their forms.</summary>
+    private sealed class HiddenFormWalk(
+        HashSet<PdfDictionary> hiddenGroups, Dictionary<int, CarrierResult> unreadable, HashSet<int> dropped)
+    {
+        public HashSet<PdfDictionary> HiddenGroups { get; } = hiddenGroups;
+
+        /// <summary>Forms kept and refused, by object number (#1866).</summary>
+        public Dictionary<int, CarrierResult> Unreadable { get; } = unreadable;
+
+        /// <summary>XObjects whose <c>Do</c> a removed span held (#1868).</summary>
+        public HashSet<int> Dropped { get; } = dropped;
+
+        /// <summary>The forms between the page and the one being examined: the cycle guard.</summary>
+        public HashSet<PdfStream> Path { get; } = new(ReferenceEqualityComparer.Instance);
+
+        /// <summary>Every form whose own spans the walk examined, at any level.</summary>
+        public HashSet<PdfStream> Examined { get; } = new(ReferenceEqualityComparer.Instance);
+
+        /// <summary>Forms reached only below <see cref="MaxHiddenFormNesting"/>, so never examined.</summary>
+        public Dictionary<PdfStream, CarrierResult> TooDeep { get; } = new(ReferenceEqualityComparer.Instance);
     }
 
     /// <summary>
@@ -799,7 +883,9 @@ internal static class RedactionFeatureStripper
     /// is OFF, and annotations in an OFF layer; then remove the now-unused
     /// groups from <c>/OCProperties</c>. Every XObject whose <c>Do</c> is dropped
     /// goes into <paramref name="dropped"/>, and the row of every form it
-    /// cannot read into <paramref name="unreadable"/> (#1866).
+    /// cannot read into <paramref name="unreadable"/> (#1866). A page whose
+    /// content cannot be read or written back is kept and added to
+    /// <paramref name="refusals"/>.
     /// </summary>
     /// <remarks>
     /// No new parser: this consumes the walker's operators through
@@ -808,7 +894,8 @@ internal static class RedactionFeatureStripper
     /// <see cref="ObstructionStripper"/> (CLAUDE.md "One walk, many sinks").
     /// </remarks>
     private static (int Spans, int Groups) RemoveHiddenOptionalContent(
-        PdfDocument document, HashSet<int> dropped, Dictionary<int, CarrierResult> unreadable)
+        PdfDocument document, HashSet<int> dropped, Dictionary<int, CarrierResult> unreadable,
+        ICollection<CarrierResult> refusals)
     {
         // No /OCProperties means no optional content and nothing to do — and,
         // importantly, no cost on the overwhelming majority of documents.
@@ -816,6 +903,7 @@ internal static class RedactionFeatureStripper
 
         var spans = 0;
         var hiddenGroups = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+        var walk = new HiddenFormWalk(hiddenGroups, unreadable, dropped);
 
         foreach (var page in SafePages(document))
         {
@@ -824,24 +912,32 @@ internal static class RedactionFeatureStripper
             var xobjects = Resolve(document, page.Resources?.GetOptional("XObject") ?? PdfNull.Instance)
                 as PdfDictionary;
 
-            ContentStream content;
-            try { content = page.GetContentStream(trackSourceSpans: true); }
-            catch (Exception ex) when (ex is not OutOfMemoryException) { continue; }
-            if (content.Operators.Count == 0) continue;
-
-            var (kept, pageSpans) =
-                FilterHiddenSpans(document, content.Operators, properties, xobjects, hiddenGroups, dropped);
-
             // A VISIBLE form XObject can hold hidden /OC spans of its own, and
             // its /Properties live in ITS resources (#1586). Without this, the
             // report's "hidden optional-content span(s)" row would overstate:
             // we would have removed the page-level spans and left the ones one
             // level down, which is the kind of partial guarantee this project
-            // treats as worse than none.
-            spans += RemoveHiddenSpansInForms(document, xobjects, hiddenGroups, unreadable, dropped, 0);
+            // treats as worse than none. Walked even when the page's own
+            // content cannot be read: the forms in its resources may well be.
+            spans += RemoveHiddenSpansInForms(document, xobjects, walk, 0);
+
+            ContentStream content;
+            try { content = page.GetContentStream(trackSourceSpans: true); }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                // Measured: one undecodable stream in a /Contents array left the
+                // hidden spans of the readable ones, and of the forms they draw,
+                // in the file and the report clean. Kept and refused instead.
+                refusals.Add(new CarrierResult($"page {page.PageNumber} content stream", false,
+                    "it could not be read, so the hidden-layer pass could not examine it and left it in place"));
+                continue;
+            }
+            if (content.Operators.Count == 0) continue;
+
+            var (kept, pageSpans) =
+                FilterHiddenSpans(document, content.Operators, properties, xobjects, hiddenGroups, dropped);
 
             if (pageSpans == 0) continue;
-            spans += pageSpans;
             try
             {
                 page.SetContentStream(new ContentStream(kept)
@@ -849,9 +945,17 @@ internal static class RedactionFeatureStripper
                     SourceBytes = content.SourceBytes,
                     SourceArrayBoundaries = content.SourceArrayBoundaries,
                 });
+                spans += pageSpans;
             }
-            catch (Exception ex) when (ex is not OutOfMemoryException) { spans -= pageSpans; }
+            catch (Exception ex) when (ex is not OutOfMemoryException)
+            {
+                refusals.Add(new CarrierResult($"page {page.PageNumber} content stream", false,
+                    "it could not be written back without its hidden optional-content spans, so they were left in place"));
+            }
         }
+
+        foreach (var (form, row) in walk.TooDeep)
+            unreadable.TryAdd(form.ObjectNumber ?? 0, row);
 
         // Annotations on a hidden layer: their appearance is already gone if
         // RemoveHiddenAnnotationAppearances ran, but the annotation itself can
@@ -1210,26 +1314,29 @@ internal static class RedactionFeatureStripper
         if (Resolve(document, document.Catalog.GetOptional("AcroForm") ?? PdfNull.Instance)
             is not PdfDictionary acroForm) return 0;
 
+        // A worklist, not recursion with a depth cap: the cap (64, arrays
+        // included) left every name below 32 field levels in place, unreported.
+        // The seen set is the cycle guard, for arrays as well as fields.
         var removed = 0;
-        var seen = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
-
-        void Walk(PdfObject? node, int depth)
+        var seen = new HashSet<PdfObject>(ReferenceEqualityComparer.Instance);
+        var pending = new Stack<PdfObject>();
+        if (acroForm.GetOptional("Fields") is { } fields) pending.Push(fields);
+        while (pending.TryPop(out var node))
         {
-            if (depth > 64) return;
-            switch (Resolve(document, node ?? PdfNull.Instance))
+            var resolved = Resolve(document, node);
+            if (resolved is not (PdfArray or PdfDictionary) || !seen.Add(resolved)) continue;
+            switch (resolved)
             {
                 case PdfArray array:
-                    foreach (var item in array) Walk(item, depth + 1);
+                    foreach (var item in array) pending.Push(item);
                     break;
-                case PdfDictionary field when seen.Add(field):
+                case PdfDictionary field:
                     if (field.Remove("T")) removed++;
                     if (field.Remove("TU")) removed++;
-                    Walk(field.GetOptional("Kids"), depth + 1);
+                    if (field.GetOptional("Kids") is { } kids) pending.Push(kids);
                     break;
             }
         }
-
-        Walk(acroForm.GetOptional("Fields"), 0);
         return removed;
     }
 
@@ -1568,6 +1675,7 @@ internal static class RedactionFeatureStripper
         catch (Exception ex) when (ex is not OutOfMemoryException) { return PdfNull.Instance; }
     }
 
+    /// <summary>The pages the page tree gives; <see cref="Apply"/> refuses each one skipped.</summary>
     private static IEnumerable<PdfPage> SafePages(PdfDocument document)
     {
         for (var i = 1; i <= document.PageCount; i++)
@@ -1598,41 +1706,56 @@ internal static class RedactionFeatureStripper
     /// (#1582): enumerate the reachable OBJECT NUMBERS, then descend through
     /// the direct objects inside each.
     /// </summary>
+    /// <remarks>
+    /// <para>The direct objects inside each indirect one are walked with a
+    /// worklist and a visited set, in the same pre-order the recursion had,
+    /// with no depth cap: the cap (64) left an action nested deeper than that
+    /// in direct dictionaries out of the list, so no pass ever saw it and a
+    /// <c>/Launch</c> filename survived a clean report.</para>
+    /// <para>No catch around <c>ComputeReachableObjects</c>: it catches what one
+    /// object throws itself, and an empty list here would make every pass that
+    /// reads it remove and refuse nothing in silence. An object
+    /// <c>GetObject</c> throws on is skipped; the save reads objects through the
+    /// same store and does not write one it cannot read either.</para>
+    /// </remarks>
     internal static List<PdfDictionary> ReachableDictionaries(PdfDocument document)
     {
         var result = new List<PdfDictionary>();
-        HashSet<int> reachable;
-        try { reachable = document.ComputeReachableObjects(); }
-        catch (Exception ex) when (ex is not OutOfMemoryException) { return result; }
+        var reachable = document.ComputeReachableObjects();
 
         var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
-        void Walk(PdfObject obj, int depth)
+        var pending = new Stack<PdfObject>();
+        void Walk(PdfObject root)
         {
-            // A reference is a separate object, enumerated by number below.
-            if (depth > 64 || obj is PdfReference || !visited.Add(obj)) return;
-            switch (obj)
+            pending.Push(root);
+            while (pending.TryPop(out var obj))
             {
-                // PdfStream derives from PdfDictionary, so the dictionary case
-                // covers a stream's own dictionary entries too.
-                case PdfDictionary dict:
-                    result.Add(dict);
-                    foreach (var (_, value) in dict) Walk(value, depth + 1);
-                    break;
-                case PdfArray array:
-                    foreach (var item in array) Walk(item, depth + 1);
-                    break;
+                // A reference is a separate object, enumerated by number below.
+                if (obj is PdfReference || !visited.Add(obj)) continue;
+                switch (obj)
+                {
+                    // PdfStream derives from PdfDictionary, so the dictionary case
+                    // covers a stream's own dictionary entries too.
+                    case PdfDictionary dict:
+                        result.Add(dict);
+                        foreach (var value in dict.Values.Reverse()) pending.Push(value);
+                        break;
+                    case PdfArray array:
+                        for (var i = array.Count - 1; i >= 0; i--) pending.Push(array[i]);
+                        break;
+                }
             }
         }
 
         // The catalog is reachable by definition; include the trailer's own
         // dictionary chain so /Info and /Encrypt are not missed.
-        Walk(document.Catalog, 0);
+        Walk(document.Catalog);
         foreach (var objectNumber in reachable.OrderBy(n => n))
         {
             PdfObject obj;
             try { obj = document.GetObject(objectNumber); }
             catch (Exception ex) when (ex is not OutOfMemoryException) { continue; }
-            Walk(obj, 0);
+            Walk(obj);
         }
         return result;
     }

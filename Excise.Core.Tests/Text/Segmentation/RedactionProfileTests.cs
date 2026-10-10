@@ -1490,7 +1490,9 @@ public class RedactionProfileTests
         var refusals = new List<CarrierResult>();
         RedactionFeatureStripper.Apply(doc, RedactionOptions.Default, refusals)
             .Should().NotContain(r => r.Feature.Contains("XObject"));
-        refusals.Should().BeEmpty();
+        // Only the page itself is refused: no profile removal reached it (rule 6).
+        refusals.Should().ContainSingle().Which.Should().Match<CarrierResult>(c => c.Carrier == "page 2"
+            && !c.Scrubbed && c.RefusedReason!.Contains("could not be read from the page tree"));
         SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), UndrawnFormToken).Should().NotBeEmpty(
             "page 2 draws the form in every reader whose page tree walk reaches it");
     }
