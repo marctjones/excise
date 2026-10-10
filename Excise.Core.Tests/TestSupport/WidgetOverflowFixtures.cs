@@ -110,11 +110,68 @@ internal static class WidgetOverflowFixtures
             widget($"/FT /Tx /T (Alpha) /V ({SharedValue}) /DA (/Helv 10 Tf 0 g)", AlphaRect, normal, $"/D {down} 0 R ");
         });
 
-    private delegate int AppearanceFactory(string bbox, string body);
+    /// <summary>
+    /// #2043: how a state appearance (<c>/AP /D</c>, <c>/AP /R</c>) draws its text so that excise's
+    /// extractor cannot read the term, while the term's bytes are still in the stream (the byte
+    /// scanner sees them; a viewer painting the codes with a substitute font shows them).
+    /// </summary>
+    public enum UnreadableFont
+    {
+        /// <summary>A simple font whose <c>/ToUnicode</c> maps every code to U+FFFD.</summary>
+        ReplacementToUnicode,
+
+        /// <summary>A simple font whose <c>/ToUnicode</c> maps every code to the next letter
+        /// (excise reads <c>[bo{jcbs</c> for <c>Zanzibar</c>).</summary>
+        ShiftedToUnicode,
+    }
+
+    public const string StateText = $"State {Term} text";
+
+    /// <summary>
+    /// #2043: a text field whose <c>/AP /N</c> draws <see cref="SharedValue"/> in Helvetica and
+    /// whose <c>/AP /D</c> and/or <c>/AP /R</c> draw <see cref="StateText"/> in a font of kind
+    /// <paramref name="font"/>, which excise cannot read. With <paramref name="readableDown"/> the
+    /// <c>/D</c> draws <see cref="DownText"/> in Helvetica instead (readable, holds the term).
+    /// </summary>
+    public static byte[] BuildWithUnreadableStateAppearances(
+        UnreadableFont font, bool down = true, bool rollover = true, bool readableDown = false)
+        => Assemble((appearance, widget, add) =>
+        {
+            var normal = appearance("[0 0 200 20]", $"/Tx BMC BT /Helv 10 Tf 0 g 2 6 Td ({SharedValue}) Tj ET EMC");
+            var odd = $"/Resources << /Font << /Odd {OddFont(font, add)} >> >>";
+            var extra = "";
+            if (down)
+                extra += readableDown
+                    ? $"/D {appearance("[0 0 200 20]", $"/Tx BMC BT /Helv 10 Tf 0 g 2 6 Td ({DownText}) Tj ET EMC")} 0 R "
+                    : $"/D {appearance("[0 0 200 20]", $"/Tx BMC BT /Odd 10 Tf 0 g 2 6 Td ({StateText}) Tj ET EMC", odd)} 0 R ";
+            if (rollover)
+                extra += $"/R {appearance("[0 0 200 20]", $"/Tx BMC BT /Odd 10 Tf 0 g 2 6 Td ({StateText}) Tj ET EMC", odd)} 0 R ";
+            widget($"/FT /Tx /T (Alpha) /V ({SharedValue}) /DA (/Helv 10 Tf 0 g)", AlphaRect, normal, extra);
+        });
+
+    private static string OddFont(UnreadableFont font, System.Func<string, int> add)
+    {
+        const int first = 32, last = 126;
+        var widths = string.Join(' ', Enumerable.Repeat("500", last - first + 1));
+        var range = font == UnreadableFont.ReplacementToUnicode
+            ? $"<{first:X2}> <{last:X2}> [{string.Concat(Enumerable.Range(first, last - first + 1).Select(_ => "<FFFD>"))}] "
+            : $"<{first:X2}> <{last:X2}> <{first + 1:X4}> ";
+        var cmap = "/CIDInit /ProcSet findresource begin 12 dict begin begincmap " +
+                   "/CMapName /Odd def /CMapType 2 def 1 begincodespacerange <00> <FF> endcodespacerange " +
+                   $"1 beginbfrange {range}endbfrange endcmap CMapName currentdict /CMap defineresource pop end end";
+        var toUnicode = add(RawStream("", cmap));
+        return $"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /FirstChar {first} /LastChar {last} " +
+               $"/Widths [{widths}] /ToUnicode {toUnicode} 0 R >>";
+    }
+
+    private delegate int AppearanceFactory(string bbox, string body, string? resources = null);
 
     private delegate int WidgetFactory(string extra, double[] rect, int appearance, string apExtra = "");
 
     private static byte[] Assemble(System.Action<AppearanceFactory, WidgetFactory> build)
+        => Assemble((appearance, widget, _) => build(appearance, widget));
+
+    private static byte[] Assemble(System.Action<AppearanceFactory, WidgetFactory, System.Func<string, int>> build)
     {
         var objects = new List<string>();
         int Add(string body) { objects.Add(body); return objects.Count; }
@@ -130,13 +187,14 @@ internal static class WidgetOverflowFixtures
 
         var annots = new List<int>();
         build(
-            (bbox, body) => Add(RawStream($"/Type /XObject /Subtype /Form /BBox {bbox} {fonts}", body)),
+            (bbox, body, resources) => Add(RawStream($"/Type /XObject /Subtype /Form /BBox {bbox} {resources ?? fonts}", body)),
             (extra, rect, ap, apExtra) =>
             {
                 var n = Add($"<< /Type /Annot /Subtype /Widget /F 4 /Rect {RectOf(rect)} /P {page} 0 R {extra} /AP << /N {ap} 0 R {apExtra}>> >>");
                 annots.Add(n);
                 return n;
-            });
+            },
+            Add);
 
         var refs = string.Join(' ', annots.Select(n => $"{n} 0 R"));
         var acroForm = Add($"<< /Fields [{refs}] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv {helv} 0 R >> >> >>");
