@@ -53285,7 +53285,7 @@
       "path": "Excise.Rendering.Tests/Visual/CombinedRedactionRenderTests.cs",
       "class": "CombinedRedactionRenderTests",
       "method": "PrePostRedaction_Pixels_ShowImageAndTextGone",
-      "line": 48,
+      "line": 50,
       "xunitKind": "fact",
       "evidenceKind": "differential-candidate",
       "facets": [
