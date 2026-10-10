@@ -52,6 +52,11 @@ internal static class InteractiveRedactionScrubber
 
         /// <summary>The copies this redaction wrote: already free of the term.</summary>
         public HashSet<PdfStream> Clean { get; } = new(ReferenceEqualityComparer.Instance);
+
+        /// <summary>#2043: down (<c>/D</c>) and rollover (<c>/R</c>) appearances dropped from a
+        /// scrubbed widget because they could not be rewritten free of the term, one per widget
+        /// and state. <c>RedactText</c> reports them as a removal.</summary>
+        public int DroppedStateAppearances { get; set; }
     }
 
     /// <summary>
@@ -608,31 +613,53 @@ internal static class InteractiveRedactionScrubber
         // widget is pressed or hovered, and are in the file regardless. They
         // used to be left as they were: a redaction reported the term removed
         // while /D still drew it. One that reads the term is rewritten the same
-        // way, or the whole /AP goes; one that does not is left alone.
+        // way.
+        //
+        // #2043: one that does NOT read the term is dropped and reported, never
+        // left. "Does not read the term" cannot be told apart from "cannot be
+        // read": a font whose /ToUnicode maps every code to U+FFFD, or to another
+        // letter, reads as something else while the stream still holds the
+        // term's codes, and a viewer painting them shows it. Such a state was
+        // left in place and the term counted as removed. The states are optional
+        // (§12.5.5: the viewer falls back to /N), and once the field's value is
+        // cut they show the old one anyway. A state that is not a stream (a
+        // dictionary of states) goes the same way. The rewritten /N is kept:
+        // only the state that could not be rewritten goes.
+        var dropped = new List<string>();
         foreach (var key in new[] { "D", "R" })
         {
-            if (document.Resolve(ap.GetOptional(key) ?? PdfNull.Instance) is not PdfStream other
-                || state.Clean.Contains(other))
+            var resolved = document.Resolve(ap.GetOptional(key) ?? PdfNull.Instance);
+            if (resolved is not PdfStream other)
+            {
+                if (resolved is PdfDictionary)
+                    dropped.Add(key);
+                continue;
+            }
+            if (state.Clean.Contains(other))
                 continue;
             if (!state.Rewritten.TryGetValue(other, out var otherReplacement))
             {
-                if (!AppearanceStreamRedactor.Holds(page, other, defaultResources, term, caseSensitive, wholeWord))
-                    continue;
-                otherReplacement = RewriteIntoCopy(page, other, defaultResources, term, caseSensitive, wholeWord, state);
+                otherReplacement = AppearanceStreamRedactor.Holds(page, other, defaultResources, term, caseSensitive, wholeWord)
+                    ? RewriteIntoCopy(page, other, defaultResources, term, caseSensitive, wholeWord, state)
+                    : null;
                 state.Rewritten[other] = otherReplacement;
             }
             if (otherReplacement == null)
-                return holder.Remove("AP");
-            replaced[key] = otherReplacement;
+                dropped.Add(key);
+            else
+                replaced[key] = otherReplacement;
         }
 
-        if (replaced.Count == 0)
+        if (replaced.Count == 0 && dropped.Count == 0)
             return false;
         var own = new PdfDictionary();
         foreach (var entry in ap)
             own[entry.Key] = entry.Value;
         foreach (var (key, value) in replaced)
             own[key] = value;
+        foreach (var key in dropped)
+            own.Remove(key);
+        state.DroppedStateAppearances += dropped.Count;
         holder["AP"] = own;
         return true;
     }

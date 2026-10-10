@@ -520,6 +520,14 @@ public static class PdfDocumentRedactionExtensions
                 "underline, box or highlight sized to a redacted word", imageCounts.DecorationsRemoved,
                 "at the old width beside the closed gap it would state the removed word's width"));
 
+        // #2043: a scrubbed field's pressed (/D) or hovered (/R) appearance that
+        // could not be rewritten free of the term (its font reads as something
+        // else, or it is not one stream) was dropped, not kept and counted clean.
+        if (termScrubState.DroppedStateAppearances > 0)
+            profileRemovals.Add(new RedactedFeatureRemoval(
+                "pressed or hovered appearance of a redacted form field", termScrubState.DroppedStateAppearances,
+                "its text could not be rewritten free of the term; the field shows its normal appearance instead"));
+
         var attachmentResults = keptAttachments != null
             ? AttachmentCarrierScrubber.Reconcile(document, keptAttachments)
             : removedAttachments.ToList();
