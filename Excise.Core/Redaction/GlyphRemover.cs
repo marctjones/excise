@@ -145,6 +145,14 @@ internal class GlyphRemover
         IReadOnlyList<Letter> letters,
         IReadOnlyList<PdfRectangle> redactionAreas,
         GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap)
+        => ProcessOperations(operations, letters, GlyphArea.Of(redactionAreas), strategy);
+
+    /// <summary>As above, over areas that may carry a turned line's frame (#2055).</summary>
+    internal List<ContentOperator> ProcessOperations(
+        IReadOnlyList<ContentOperator> operations,
+        IReadOnlyList<Letter> letters,
+        IReadOnlyList<GlyphArea> redactionAreas,
+        GlyphRemovalStrategy strategy = GlyphRemovalStrategy.AnyOverlap)
     {
         var blocks = IdentifyTextBlocks(operations);
 
@@ -242,7 +250,7 @@ internal class GlyphRemover
         IReadOnlyList<ContentOperator> operations,
         BlockInfo block,
         IReadOnlyList<Letter> letters,
-        IReadOnlyList<PdfRectangle> redactionAreas,
+        IReadOnlyList<GlyphArea> redactionAreas,
         GlyphRemovalStrategy strategy,
         Dictionary<int, WidthClosureLedger.Removal> removals)
     {
@@ -259,7 +267,7 @@ internal class GlyphRemover
             if (matches.Count == 0) continue;
 
             var matchesToRemove = matches
-                .Where(m => redactionAreas.Any(area => strategy.Selects(m.Letter.GlyphRectangle, area)))
+                .Where(m => redactionAreas.Any(area => strategy.Selects(m.Letter, area)))
                 .ToList();
             if (matchesToRemove.Count == 0) continue;
 
@@ -272,7 +280,7 @@ internal class GlyphRemover
         BlockInfo block,
         Dictionary<int, WidthClosureLedger.Removal> removals,
         WidthClosureLedger? ledger,
-        IReadOnlyList<PdfRectangle> redactionAreas,
+        IReadOnlyList<GlyphArea> redactionAreas,
         GlyphRemovalStrategy strategy,
         List<ContentOperator> output)
     {
@@ -642,7 +650,7 @@ internal class GlyphRemover
 
     private List<ContentOperator> BuildReconstructedOps(
         List<ReconstructionJob> jobs,
-        IReadOnlyList<PdfRectangle> redactionAreas,
+        IReadOnlyList<GlyphArea> redactionAreas,
         GlyphRemovalStrategy strategy,
         WidthClosureLedger? ledger)
     {

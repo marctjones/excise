@@ -1076,9 +1076,39 @@ public static class TextSelectionEngine
         double h = az >= ac ? (boxW - w * ac) / az : (boxH - w * az) / ac;
         if (!(h > 1e-6)) h = Math.Max(Math.Min(boxW, boxH), 1e-3);
 
-        double u = c * l.StartX + s * l.StartY;
-        double v = -s * l.StartX + c * l.StartY;
+        var (u, v) = IntoLineFrame(l.BaselineAngle, l.StartX, l.StartY);
         return (new PdfRectangle(u, v, u + w, v + h), v);
+    }
+
+    /// <summary>A user-space point in the frame of a line advancing along
+    /// <paramref name="angle"/>: user space turned back by that angle.</summary>
+    internal static (double U, double V) IntoLineFrame(double angle, double x, double y)
+    {
+        double c = Math.Cos(angle), s = Math.Sin(angle);
+        return (c * x + s * y, -s * x + c * y);
+    }
+
+    /// <summary>
+    /// #2055: a glyph's box in the frame of a line advancing along
+    /// <paramref name="angle"/>. A glyph written along that same direction is
+    /// its own turned cell (<see cref="LineFrame"/>); any other glyph is the
+    /// bounding box of its user-space box turned into the frame, which holds
+    /// the whole glyph and errs toward overlap.
+    /// </summary>
+    internal static PdfRectangle BoxInLineFrame(Letter l, double angle)
+    {
+        if (IsTurned(l) && Math.Abs(Math.IEEERemainder(l.BaselineAngle - angle, 2 * Math.PI)) <= SameDirectionTolerance)
+            return LineFrame(l).Box;
+
+        var r = l.GlyphRectangle.Normalize();
+        double minU = double.MaxValue, minV = double.MaxValue, maxU = double.MinValue, maxV = double.MinValue;
+        foreach (var (x, y) in new[] { (r.Left, r.Bottom), (r.Right, r.Bottom), (r.Left, r.Top), (r.Right, r.Top) })
+        {
+            var (u, v) = IntoLineFrame(angle, x, y);
+            minU = Math.Min(minU, u); maxU = Math.Max(maxU, u);
+            minV = Math.Min(minV, v); maxV = Math.Max(maxV, v);
+        }
+        return new PdfRectangle(minU, minV, maxU, maxV);
     }
 
     private static bool SameLine(Letter a, Letter b) => SameLine(a.GlyphRectangle, b.GlyphRectangle);
