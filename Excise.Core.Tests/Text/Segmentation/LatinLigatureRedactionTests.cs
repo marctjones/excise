@@ -6,6 +6,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Tests.Text;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text.Segmentation;
@@ -63,6 +64,9 @@ public class LatinLigatureRedactionTests
             "sanity: the plain spelling must NOT be extractable, or matching would succeed without folding");
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("(ABCD)",
             "sanity: the glyph-code carrier must be present before redaction");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdf).Should().Contain(PlainWord,
+            "control: the independent oracle must read the word in the input");
 
         var removed = doc.RedactText(PlainWord, RedactionOptions.Default).VerifiedRemovals;
 
@@ -76,6 +80,9 @@ public class LatinLigatureRedactionTests
         searchable.Should().NotContain(PlainWord, "the word must not survive in plain letters");
         searchable.Should().NotContain(LigatedWord, "nor with its ligature code point");
         searchable.Should().NotContain("(ABCD)", "nor as its raw character codes");
+        MutoolTextOracle.ExtractFolded(saved).Should().NotContain(PlainWord,
+            "MuPDF must not read the word out of the saved file");
+        SavedPdfLeakScanner.FindTerm(saved, "(ABCD)").Should().BeEmpty();
 
         using var reopened = PdfDocument.Open(saved);
         reopened.GetPage(1).Text.Should().NotContainAny(PlainWord, LigatedWord);
@@ -120,15 +127,21 @@ public class LatinLigatureRedactionTests
 
         var storedWord = prefix + (char)ligature + suffix;
         doc.GetPage(1).Text.Should().Contain(storedWord, "sanity: raw ligature must extract");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdf).Should().Contain(MutoolTextOracle.Fold(plainWord),
+            "control: the independent oracle must read the word in the input");
 
         var removed = doc.RedactText(plainWord, RedactionOptions.Default).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             $"needle '{plainWord}' must match stored '{storedWord}' (U+{ligature:X4})");
 
-        var searchable = SearchableTextOf(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        var searchable = SearchableTextOf(saved);
         searchable.Should().NotContain(storedWord);
         searchable.Should().NotContain(plainWord);
+        MutoolTextOracle.ExtractFolded(saved).Should().NotContain(MutoolTextOracle.Fold(plainWord),
+            "MuPDF must not read the word out of the saved file");
     }
 
     [Fact]
@@ -139,15 +152,23 @@ public class LatinLigatureRedactionTests
         var scalars = LigatedScalars.Append(' ').Concat("xyz".Select(c => (int)c)).ToArray();
         var pdf = RtlPdfFixtures.SingleTj(scalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        var inputText = MutoolTextOracle.ExtractFolded(pdf);
+        inputText.Should().Contain(PlainWord, "control: the independent oracle must read the word in the input");
+        inputText.Should().Contain("xyz", "control: and the neighbour");
 
         var removed = doc.RedactText(PlainWord, RedactionOptions.Default).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
-        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        using var reopened = PdfDocument.Open(saved);
         var text = reopened.GetPage(1).Text;
         text.Should().Contain("xyz", "unrelated text on the same line must survive");
         text.Should().NotContainAny(PlainWord, LigatedWord);
+        var mutoolText = MutoolTextOracle.ExtractFolded(saved);
+        mutoolText.Should().Contain("xyz", "MuPDF must still read the neighbour");
+        mutoolText.Should().NotContain(PlainWord, "MuPDF must not read the word out of the saved file");
     }
 
     [Fact]

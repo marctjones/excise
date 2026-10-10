@@ -5,6 +5,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Tests.Text;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text.Segmentation;
@@ -74,6 +75,10 @@ public class HarakatNiqqudRedactionTests
             "sanity: the bare spelling must NOT be extractable, or matching would succeed without harakat folding");
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("(FEDCBA)",
             "sanity: the glyph-code carrier must be present before redaction");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        // MuPDF orders RTL runs its own way, so compare the base letters, not the sequence.
+        MutoolTextOracle.ExtractFolded(pdf).Should().ContainAll(BareArabic.Select(c => c.ToString()),
+            "control: the independent oracle must read the word in the input");
 
         var removed = doc.RedactText(BareArabic, RedactionOptions.Default).VerifiedRemovals;
 
@@ -87,6 +92,9 @@ public class HarakatNiqqudRedactionTests
         searchable.Should().NotContain(VocalizedArabic, "the word must not survive vocalized");
         searchable.Should().NotContain(BareArabic, "nor bare");
         searchable.Should().NotContain("(FEDCBA)", "nor as its raw character codes");
+        MutoolTextOracle.ExtractFolded(saved).Should().NotContainAny(BareArabic.Select(c => c.ToString()),
+            "MuPDF must not read any letter of the word out of the saved file");
+        SavedPdfLeakScanner.FindTerm(saved, "(FEDCBA)").Should().BeEmpty();
 
         using var reopened = PdfDocument.Open(saved);
         reopened.GetPage(1).Text.Should().NotContainAny(VocalizedArabic, BareArabic);
@@ -122,16 +130,23 @@ public class HarakatNiqqudRedactionTests
             "sanity: the bare spelling must NOT be extractable");
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("(GFEDCBA)",
             "sanity: the glyph-code carrier must be present before redaction");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdf).Should().ContainAll(BareHebrew.Select(c => c.ToString()),
+            "control: the independent oracle must read the word in the input");
 
         var removed = doc.RedactText(BareHebrew, RedactionOptions.Default).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             "a bare needle must match pointed (niqqud) text (#725)");
 
-        var searchable = SearchableTextOf(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        var searchable = SearchableTextOf(saved);
         searchable.Should().NotContain(PointedHebrew);
         searchable.Should().NotContain(BareHebrew);
         searchable.Should().NotContain("(GFEDCBA)");
+        MutoolTextOracle.ExtractFolded(saved).Should().NotContainAny(BareHebrew.Select(c => c.ToString()),
+            "MuPDF must not read any letter of the word out of the saved file");
+        SavedPdfLeakScanner.FindTerm(saved, "(GFEDCBA)").Should().BeEmpty();
     }
 
     [Fact]
@@ -142,15 +157,25 @@ public class HarakatNiqqudRedactionTests
         // Tj — the common producer encoding.
         var pdf = RtlPdfFixtures.SingleTjWithLatinPrefix("xyz ", VocalizedArabicScalars);
         using var doc = PdfDocument.Open(pdf);
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        var inputText = MutoolTextOracle.ExtractFolded(pdf);
+        inputText.Should().ContainAll(BareArabic.Select(c => c.ToString()),
+            "control: the independent oracle must read the word in the input");
+        inputText.Should().Contain("xyz", "control: and the neighbour");
 
         var removed = doc.RedactText(BareArabic, RedactionOptions.Default).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
-        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        using var reopened = PdfDocument.Open(saved);
         var text = reopened.GetPage(1).Text;
         text.Should().Contain("xyz", "unrelated text on the same line must survive");
         text.Should().NotContainAny(VocalizedArabic, BareArabic);
+        var mutoolText = MutoolTextOracle.ExtractFolded(saved);
+        mutoolText.Should().Contain("xyz", "MuPDF must still read the neighbour");
+        mutoolText.Should().NotContainAny(BareArabic.Select(c => c.ToString()),
+            "MuPDF must not read any letter of the word out of the saved file");
     }
 
     [Fact]

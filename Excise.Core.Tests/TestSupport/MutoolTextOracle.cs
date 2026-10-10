@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
 
 namespace Excise.TestSupport;
 
@@ -50,6 +52,20 @@ internal static class MutoolTextOracle
             File.Delete(path);
         }
     }
+
+    /// <summary>
+    /// MuPDF's text with all whitespace and invisible format characters (soft hyphen, ZWSP, ...) removed and Unicode-folded (NFKC by
+    /// default), so a comparison does not depend on spelling form (NFC/NFD,
+    /// width, ligature, presentation form) or on the spaces MuPDF inserts around
+    /// separate combining-mark glyphs. Fold the needle with <see cref="Fold"/>.
+    /// </summary>
+    public static string ExtractFolded(byte[] pdf, NormalizationForm form = NormalizationForm.FormKC) =>
+        Fold(ExtractAllPages(pdf), form);
+
+    /// <summary>Whitespace-stripped, normalised form used by <see cref="ExtractFolded"/>.</summary>
+    public static string Fold(string text, NormalizationForm form = NormalizationForm.FormKC) =>
+        string.Concat(text.Where(c => !char.IsWhiteSpace(c)
+            && char.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.Format)).Normalize(form);
 
     private static string? FindOnPath(string executable)
     {
