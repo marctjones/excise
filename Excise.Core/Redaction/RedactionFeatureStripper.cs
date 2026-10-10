@@ -184,6 +184,14 @@ internal static class RedactionFeatureStripper
         // #2045: off the page is not out of the file while the structure tree names it.
         var cutItems = removedAnnots.Count > 0 ? CutRemovedAnnotations(document, Reachable(), removedAnnots, refusals) : 0;
 
+        // #2042: the rewrite voids a certification; before the flatten, so Maximum's /Legal goes too.
+        if (options.RemoveVoidedCertification && Excise.Core.Signatures.CertificationStripper.HasCertification(document))
+        {
+            var certification = Excise.Core.Signatures.CertificationStripper.Strip(document);
+            Row("certification entry(ies) voided by the rewrite", certification.Count,
+                Excise.Core.Signatures.CertificationStripper.Summary + " " + string.Join("; ", certification));
+        }
+
         // Before the name strip (#1857): the flatten removes /AcroForm, names and all.
         if (options.FlattenInteractiveContent)
         {

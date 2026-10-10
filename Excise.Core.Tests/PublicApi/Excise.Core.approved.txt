@@ -2233,6 +2233,7 @@ namespace Excise.Core.Text.Segmentation
         public bool RemovePieceInfo { get; init; }
         public bool RemoveScripts { get; init; }
         public bool RemoveThumbnails { get; init; }
+        public bool RemoveVoidedCertification { get; init; }
         public bool ScrubDocumentCarriers { get; init; }
         public Excise.Core.Text.Segmentation.GlyphRemovalStrategy Strategy { get; init; }
         public bool StripDocumentMetadata { get; init; }
