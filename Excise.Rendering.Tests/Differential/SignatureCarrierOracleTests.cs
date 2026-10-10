@@ -63,7 +63,12 @@ public sealed class SignatureCarrierOracleTests : IDisposable
         RedactionReport report;
         using (var document = PdfDocument.Open(input))
         {
-            report = document.RedactText("NOMATCHXYZ", RedactionOptions.ForProfile(profile));
+            var options = RedactionOptions.ForProfile(profile);
+            // #2042: the rewrite voids the certification, so both profiles now strip /Perms by default.
+            // The Standard control keeps it off so the oracle still proves it can see a kept /Perms.
+            if (profile == RedactionProfile.Standard)
+                options = options with { RemoveVoidedCertification = false };
+            report = document.RedactText("NOMATCHXYZ", options);
             document.Save(output);
         }
 
@@ -83,7 +88,10 @@ public sealed class SignatureCarrierOracleTests : IDisposable
         CarrierTrapIndependentCorroborationTests.QpdfDump(output).Should().NotContain("/ByteRange",
             "no signature dictionary is left for qpdf to dump");
         SavedPdfLeakScanner.FindTerm(saved, marker).Should().BeEmpty("#1861: the certificate named the signer");
-        report.Removals.Should().Contain(r => r.Feature == "signature dictionary(ies) removed" && r.Count == 1);
+        // The certification strip runs first and leaves the field unsigned, so the flatten
+        // removes the signature FIELD (and the report names the voided certification).
+        report.Removals.Should().Contain(r => r.Feature == "signature field(s) removed" && r.Count == 1);
+        report.Removals.Should().Contain(r => r.Feature == "certification entry(ies) voided by the rewrite");
     }
 
     private static string Show(string path, string what) =>
