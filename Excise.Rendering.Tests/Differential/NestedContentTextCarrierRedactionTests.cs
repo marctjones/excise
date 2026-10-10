@@ -87,6 +87,31 @@ public class NestedContentTextCarrierRedactionTests : IDisposable
         again.Carriers.Should().NotContain(c => c.Carrier.StartsWith("text inside"));
     }
 
+    /// <summary>
+    /// The carrier is rewritten in place, in an object reached only through
+    /// /Resources. The store may forget a cached object and re-read the file's
+    /// original (#1207): offer every reachable object to the evictor, after a
+    /// releasing render, and the saved file must still be the rewrite.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(TextCarriers))]
+    public void RedactText_CarrierRewrite_SurvivesForcedEviction(string carrier, string term, string kind)
+    {
+        using var doc = PdfDocument.Open(Build(carrier, term, visibleCopy: false));
+        doc.ComputeReachableObjects();
+        using (new SkiaRenderer().RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 36 })) { }
+
+        var report = doc.RedactText(term, RedactionOptions.Default);
+        report.Carriers.Should().Contain(c => c.Scrubbed && c.Carrier.Contains(kind));
+
+        using (new SkiaRenderer().RenderPage(doc.GetPage(1), new RenderOptions { Dpi = 36 })) { }
+        foreach (var number in doc.ComputeReachableObjects().Order())
+            doc.TryEvictFromCache(doc.GetObject(number));
+
+        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), term).Should().BeEmpty(
+            $"the rewritten {kind} came back from the file through an eviction");
+    }
+
     [Fact]
     public void RedactText_CarrierItCannotRewrite_IsReportedNotCalledClean()
     {
