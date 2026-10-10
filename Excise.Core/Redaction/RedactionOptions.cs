@@ -331,6 +331,21 @@ public sealed record RedactionOptions
     /// </remarks>
     public bool StripDocumentMetadata { get; init; } = true;
 
+    /// <summary>
+    /// Remove the certification a redacted copy can no longer carry: the catalog
+    /// <c>/Perms</c> DocMDP and UR3 signatures, the signature dictionaries they name, the
+    /// <c>/Legal</c> attestation and the AppendOnly bit, each reported (#2042, the policy of
+    /// #2024). Default true. Enforced by: Core.
+    /// </summary>
+    /// <remarks>
+    /// excise rewrites the whole file, so the digest of a signature's <c>/ByteRange</c> can never
+    /// verify again; a copy that kept <c>/Perms</c> would claim a certification it does not have
+    /// and keep the signer's name and certificate chain. Read from this flag in both profiles,
+    /// never from <see cref="Profile"/>. Approval signatures are not certification and stay
+    /// (Maximum flattens them).
+    /// </remarks>
+    public bool RemoveVoidedCertification { get; init; } = true;
+
     // ── Maximum-only removals (off by default) ──────────────────────────────
 
     /// <summary>

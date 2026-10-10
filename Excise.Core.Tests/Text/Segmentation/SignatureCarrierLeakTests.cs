@@ -27,6 +27,13 @@ public class SignatureCarrierLeakTests
 
     public enum Entry { RedactText, ScrubTerms }
 
+    /// <summary>
+    /// Standard with the #2042 certification strip off: these tests measure how the signer strings
+    /// of a signature that is KEPT are cut, and the default now removes the DocMDP signature whole.
+    /// </summary>
+    private static readonly RedactionOptions KeepsCertification =
+        RedactionOptions.Default with { RemoveVoidedCertification = false };
+
     private static byte[] Signed() => CarrierTrapFixtures.Signed(null, Signer, Subject);
 
     [Theory]
@@ -35,11 +42,13 @@ public class SignatureCarrierLeakTests
     [InlineData(EntryPoint.SafetyPass)]
     public void Maximum_RemovesTheSignatureDictionaryAndTheDss_AndReportsBoth(EntryPoint entry)
     {
-        var standard = RedactionProfileTests.RunProfile(Signed(), entry, RedactionOptions.Default);
+        var standard = RedactionProfileTests.RunProfile(Signed(), entry, KeepsCertification);
         SavedPdfLeakScanner.FindTerm(standard.Saved, Signer).Should().NotBeEmpty("planted failure: Standard keeps the signature");
         SavedPdfLeakScanner.FindTerm(standard.Saved, Subject).Should().NotBeEmpty();
 
-        var max = RedactionProfileTests.RunProfile(Signed(), entry, RedactionOptions.Maximum);
+        // The flag is off here so the flatten's own signature removal is what is measured; the
+        // certification strip that now precedes it is pinned in RedactedCopyCertificationTests (#2042).
+        var max = RedactionProfileTests.RunProfile(Signed(), entry, RedactionOptions.Maximum with { RemoveVoidedCertification = false });
 
         SavedPdfLeakScanner.FindTerm(max.Saved, Signer).Should().BeEmpty(
             "#1861: /Perms /DocMDP kept the signature dictionary, and its /Name, after the widget went");
@@ -91,7 +100,7 @@ public class SignatureCarrierLeakTests
     {
         using var document = PdfDocument.Open(Signed());
         if (entry == Entry.RedactText)
-            document.RedactText(Signer, RedactionOptions.Default).Carriers
+            document.RedactText(Signer, KeepsCertification).Carriers
                 .Should().ContainSingle(c => c.Carrier == Row).Which.Scrubbed.Should().BeTrue();
         else
             PdfDocumentSanitizer.ScrubTerms(document, new[] { Signer }, caseSensitive: false,
@@ -145,7 +154,7 @@ public class SignatureCarrierLeakTests
     {
         using (var leaking = PdfDocument.Open(Signed()))
         {
-            leaking.RedactText(Signer, RedactionOptions.Default with
+            leaking.RedactText(Signer, KeepsCertification with
                 { Carriers = RedactionCarriers.All & ~RedactionCarriers.Signatures });
             SavedPdfLeakScanner.FindTerm(leaking.SaveToBytes(), Signer).Should().NotBeEmpty("the planted failure");
 
