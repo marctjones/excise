@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1659,
-  "indexedContentSha256": "8453b42a381ae1e8b264c923b9c9e6971b23708312432e0d6b8c54e11aef9215",
+  "indexedFileCount": 1660,
+  "indexedContentSha256": "e691d3fb7d2112aba0543791c3326f4e4b4afbccae78087029472afbfd6c523b",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -8259,7 +8259,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 772
+      "candidateReferenceCount": 773
     },
     {
       "id": "pdf.17.graphics.color",
@@ -9070,7 +9070,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 362
+      "candidateReferenceCount": 363
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -10101,7 +10101,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 292
+      "candidateReferenceCount": 294
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -11682,7 +11682,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 206
+      "candidateReferenceCount": 207
     },
     {
       "id": "pdf.17.compatibility.versions",
@@ -44149,6 +44149,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/TestSupport/MutoolImageOracle.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/AdversarialRedactionRegressionTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -44159,7 +44168,34 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Text/Segmentation/CanonicalAccentRedactionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Text/Segmentation/FormXObjectRedactionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/FullwidthFormsRedactionTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "lab",
+            "image"
+          ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/ImageRedactionTests.cs",
           "kind": "test",
           "matchedTerms": [
             "image",
@@ -44304,49 +44340,9 @@
             "lab",
             "image"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.FilterByteOracle.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image",
-            "jbig2",
-            "jpx"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/ImageRequirementVerificationDifferentialTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image",
-            "jpx"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/ImageStampTransparencyTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image"
-          ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/Jbig2RetainedContextTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "lab",
-            "image",
-            "jbig2"
-          ]
         }
       ],
-      "candidateReferenceCount": 156
+      "candidateReferenceCount": 160
     },
     {
       "id": "pdf.20.image.requirement-032",
