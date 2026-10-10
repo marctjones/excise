@@ -41,9 +41,20 @@ public class RedactionSourceBytePreservationTests
     [Fact]
     public void RedactingAWord_LeavesUntouchedOperatorsBytewiseAlone()
     {
-        using var doc = PdfDocument.Open(BuildPdfWithContent(AwkwardContent));
+        var inputBytes = BuildPdfWithContent(AwkwardContent);
+        SavedPdfLeakScanner.FindTerm(inputBytes, "SECRET").Should().NotBeEmpty("control: the scanner sees the term in the input");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(inputBytes).Should().Contain("KEEPME").And.Contain("SECRET",
+            "control: MuPDF reads both words in the input");
+        using var doc = PdfDocument.Open(inputBytes);
 
         doc.RedactText("SECRET", RedactionOptions.Default).MatchesLocated.Should().BeGreaterThan(0);
+
+        var saved = doc.SaveToBytes();
+        SavedPdfLeakScanner.FindTerm(saved, "SECRET").Should().BeEmpty();
+        var mutoolAfter = MutoolTextOracle.ExtractFolded(saved);
+        mutoolAfter.Should().NotContain("SECRET", "MuPDF must not read the redacted word");
+        mutoolAfter.Should().Contain("KEEPME", "MuPDF must still read the untouched word");
 
         var after = Encoding.Latin1.GetString(doc.GetPage(1).GetContentStreamBytes());
 

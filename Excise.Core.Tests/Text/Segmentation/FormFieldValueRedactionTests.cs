@@ -4,6 +4,7 @@ using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text.Segmentation;
@@ -121,6 +122,8 @@ public class FormFieldValueRedactionTests
         using var doc = PdfDocument.Open(BuildPdfWithLongTextFieldValue());
         doc.GetPage(1).Text.Should().Contain(Secret,
             "the fixture must put the term where excise can find it, or this class proves nothing");
+        SavedPdfLeakScanner.FindTerm(doc.SaveToBytes(), Secret).Should().NotBeEmpty(
+            "the independent scanner must also see the term in the fixture, or the saved-bytes assertions below prove nothing");
     }
 
     [Fact]
@@ -178,5 +181,7 @@ public class FormFieldValueRedactionTests
         // and nothing matches, so nothing may change.
         doc.GetPage(1).Text.Should().Contain(Secret,
             "a term that is not in the document must not cost the document anything");
+        SavedPdfLeakScanner.FindTerm(saved, Secret).Should().NotBeEmpty(
+            "the independent scanner must still find the untouched value in the saved bytes");
     }
 }

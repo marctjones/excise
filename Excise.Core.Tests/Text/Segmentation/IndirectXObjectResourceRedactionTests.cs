@@ -5,6 +5,7 @@ using Excise.Core.Document;
 using Excise.Core.Primitives;
 using Excise.Core.Tests.Content;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text.Segmentation;
@@ -86,6 +87,11 @@ public class IndirectXObjectResourceRedactionTests
         doc.GetPage(1).Text.Should().Contain(Secret,
             "the fixture must put the term somewhere excise can actually find it, " +
             "or this class proves nothing");
+        SavedPdfLeakScanner.FindTerm(BuildPdfWithIndirectXObjectResource(), Secret).Should().NotBeEmpty(
+            "the independent scanner must see the term in the fixture too");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(BuildPdfWithIndirectXObjectResource()).Should().Contain(Secret,
+            "MuPDF must read the form's text through the indirect /XObject dictionary");
     }
 
     [Fact]
@@ -126,6 +132,13 @@ public class IndirectXObjectResourceRedactionTests
         using var doc = PdfDocument.Open(saved);
         doc.GetPage(1).Text.Should().Contain("Louise",
             "redacting the surname must not take the rest of the form's text with it");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(BuildPdfWithIndirectXObjectResource()).Should().Contain("Louise").And.Contain(Secret,
+            "control: MuPDF reads the whole line in the input");
+        var mutoolAfter = MutoolTextOracle.ExtractFolded(saved);
+        mutoolAfter.Should().Contain("Louise", "MuPDF must still read the surrounding text");
+        mutoolAfter.Should().NotContain(Secret, "MuPDF must not read the redacted surname");
+        SavedPdfLeakScanner.FindTerm(saved, Secret).Should().BeEmpty();
     }
 
     [Fact]

@@ -90,13 +90,33 @@ public class PdfDocumentRedactionExtensionsTests
         result.Should().Be(0);
     }
 
+    /// <summary>
+    /// Independent check of a "Hello World" page redacted for "Hello": the saved
+    /// bytes carry no "Hello" in any carrier and MuPDF reads only "World", with an
+    /// input-side control proving both readers see "Hello" before redaction.
+    /// </summary>
+    private static void AssertHelloGoneWorldKept(byte[] inputBytes, byte[] saved)
+    {
+        SavedPdfLeakScanner.FindTerm(inputBytes, "Hello").Should().NotBeEmpty("control: the scanner sees the term in the input");
+        SavedPdfLeakScanner.FindTerm(saved, "Hello").Should().BeEmpty("the term must not remain in any (decompressed) stream");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(inputBytes).Should().Contain("HelloWorld", "control: MuPDF reads the input line");
+        var after = MutoolTextOracle.ExtractFolded(saved);
+        after.Should().NotContain("Hello", "MuPDF must not read the redacted word");
+        after.Should().Contain("World", "MuPDF must still read the neighbour");
+    }
+
     [Fact]
     public void RedactText_WithDrawBlackRectTrue_AppendsBlackRectangle()
     {
         var doc = OpenDoc("BT /F1 12 Tf 100 700 Td (Hello World) Tj ET");
 
+        var inputBytes = doc.SaveToBytes();
         var originalPageOps = doc.GetPage(1).GetContentStream().Count;
         var result = doc.RedactText("Hello", RedactionOptions.Default with { DrawBox = true }).VerifiedRemovals;
+        var saved = doc.SaveToBytes();
+        AssertHelloGoneWorldKept(inputBytes, saved);
+        SavedPdfLeakScanner.FindTerm(saved, "Hello").Should().BeEmpty("the term must not remain in any carrier");
 
         var newPageOps = doc.GetPage(1).GetContentStream().Count;
         if (result > 0)
@@ -110,7 +130,11 @@ public class PdfDocumentRedactionExtensionsTests
     {
         var doc = OpenDoc("BT /F1 12 Tf 100 700 Td (Hello World) Tj ET");
 
+        var inputBytes = doc.SaveToBytes();
         var result = doc.RedactText("Hello", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals;
+        var saved = doc.SaveToBytes();
+        AssertHelloGoneWorldKept(inputBytes, saved);
+        SavedPdfLeakScanner.FindTerm(saved, "Hello").Should().BeEmpty("the term must not remain in any carrier");
 
         if (result > 0)
         {
@@ -519,8 +543,18 @@ public class PdfDocumentRedactionExtensionsTests
         using var doc = OpenDoc(
             "BT /F1 1 Tf 10 0 0 10 50 700 Tm " +
             "(your target) Tj 0 -0.95 Td (remote line survives) Tj ET");
+        var inputBytes = doc.SaveToBytes();
+        SavedPdfLeakScanner.FindTerm(inputBytes, "your").Should().NotBeEmpty("control: the scanner sees the term in the input");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(inputBytes).Should().Contain("yourtarget").And.Contain("remotelinesurvives",
+            "control: MuPDF reads both lines in the input");
 
         doc.RedactText("your", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(1);
+        var saved = doc.SaveToBytes();
+        SavedPdfLeakScanner.FindTerm(saved, "your").Should().BeEmpty();
+        var mutoolAfter = MutoolTextOracle.ExtractFolded(saved);
+        mutoolAfter.Should().NotContain("your", "MuPDF must not read the redacted word");
+        mutoolAfter.Should().Contain("target").And.Contain("remotelinesurvives", "MuPDF must still read the adjacent line");
 
         doc.GetPage(1).Text.Should().NotContain("your");
         doc.GetPage(1).Text.Should().Contain("remote line survives");

@@ -4,6 +4,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Tests.Content;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text.Segmentation;
@@ -71,7 +72,15 @@ public class UnterminatedTextObjectRedactionTests
             before.GetPage(1).Text.Should().Contain("Greetings",
                 "guard: the fixture must actually contain the text this test claims to protect");
 
+        SavedPdfLeakScanner.FindTerm(pdf, "world").Should().NotBeEmpty("control: the scanner sees the term in the input");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdf).Should().Contain("Greetings,world!", "control: MuPDF reads the unterminated block");
+
         var saved = RedactAndSave(pdf, "world", out _);
+        var mutoolAfter = MutoolTextOracle.ExtractFolded(saved);
+        mutoolAfter.Should().Contain("Greetings", "MuPDF must still read the unterminated block's other text");
+        mutoolAfter.Should().NotContain("world", "MuPDF must not read the redacted word");
+        SavedPdfLeakScanner.FindTerm(saved, "world").Should().BeEmpty();
 
         using var after = PdfDocument.Open(saved);
         after.GetPage(1).Text.Should().Contain("Greetin",
@@ -96,6 +105,9 @@ public class UnterminatedTextObjectRedactionTests
     public void TheRewrittenStream_DoesNotNestTextObjects()
     {
         var saved = RedactAndSave(BuildPdfWithUnterminatedBlock(), "world", out _);
+        SavedPdfLeakScanner.FindTerm(saved, "world").Should().BeEmpty();
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(saved).Should().NotContain("world", "MuPDF must not read the redacted word").And.Contain("Greetings");
 
         using var doc = PdfDocument.Open(saved);
         var content = Encoding.Latin1.GetString(doc.GetPage(1).GetContentStreamBytes());

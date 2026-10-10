@@ -3,6 +3,7 @@ using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text.Segmentation;
@@ -78,7 +79,13 @@ public class TiledDocumentRedactionCountTests
                 "page 2's window ends at y=400, so y=700 is off-window — the tiling premise");
         }
 
-        RedactAndSave(pdf, out var verified);
+        SavedPdfLeakScanner.FindTerm(pdf, Secret).Should().NotBeEmpty("control: the scanner sees the term in the input");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdf).Should().Contain(Secret, "control: MuPDF reads the visible occurrence in the input");
+
+        var saved = RedactAndSave(pdf, out var verified);
+        SavedPdfLeakScanner.FindTerm(saved, Secret).Should().BeEmpty("the redacted file must carry the term in no stream");
+        MutoolTextOracle.ExtractFolded(saved).Should().NotContain(Secret, "MuPDF must not read the visible occurrence after redaction");
 
         verified.Should().Be(1,
             "the term is VISIBLE once (page 1's window); before #1101 RedactText "
