@@ -69,7 +69,7 @@ digraph excise_architecture {
   "cli" -> "core-security" [label="observed via parent boundary\n28 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-text" [label="observed via parent boundary\n8 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-writing" [label="observed via parent boundary\n34 refs", color="#2563eb", style="dashed", penwidth=1];
-  "cli" -> "ocr" [label="target + observed\n85 refs", color="#15803d", style="solid", penwidth=2];
+  "cli" -> "ocr" [label="target + observed\n86 refs", color="#15803d", style="solid", penwidth=2];
   "cli" -> "rendering" [label="target + observed\n27 refs", color="#15803d", style="solid", penwidth=2];
   "core" -> "core-document" [label="observed via parent boundary\n368 refs", color="#2563eb", style="dashed", penwidth=1];
   "core" -> "core-fonts" [label="observed via parent boundary\n46 refs", color="#2563eb", style="dashed", penwidth=1];
@@ -99,11 +99,11 @@ digraph excise_architecture {
   "core-primitives" -> "core-writing" [label="observed, undeclared\n2 refs", color="#d97706", style="dashed", penwidth=2];
   "core-redaction" -> "core" [label="observed via parent boundary\n16 refs", color="#2563eb", style="dashed", penwidth=1];
   "core-redaction" -> "core-content" [label="target + observed\n450 refs", color="#15803d", style="solid", penwidth=2];
-  "core-redaction" -> "core-document" [label="target + observed\n1363 refs", color="#15803d", style="solid", penwidth=2];
+  "core-redaction" -> "core-document" [label="target + observed\n1365 refs", color="#15803d", style="solid", penwidth=2];
   "core-redaction" -> "core-fonts" [label="target + observed\n11 refs", color="#15803d", style="solid", penwidth=2];
   "core-redaction" -> "core-parsing" [label="target + observed\n6 refs", color="#15803d", style="solid", penwidth=2];
   "core-redaction" -> "core-primitives" [label="target + observed\n1156 refs", color="#15803d", style="solid", penwidth=2];
-  "core-redaction" -> "core-text" [label="target + observed\n276 refs", color="#15803d", style="solid", penwidth=2];
+  "core-redaction" -> "core-text" [label="target + observed\n277 refs", color="#15803d", style="solid", penwidth=2];
   "core-redaction" -> "core-writing" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "core-security" -> "core" [label="observed via parent boundary\n5 refs", color="#2563eb", style="dashed", penwidth=1];
   "core-security" -> "core-content" [label="target + observed\n5 refs", color="#15803d", style="solid", penwidth=2];
@@ -124,7 +124,7 @@ digraph excise_architecture {
   "ocr" -> "core" [label="target + observed\n10 refs", color="#15803d", style="solid", penwidth=2];
   "ocr" -> "core-document" [label="observed via parent boundary\n82 refs", color="#2563eb", style="dashed", penwidth=1];
   "ocr" -> "core-encryption" [label="observed via parent boundary\n2 refs", color="#2563eb", style="dashed", penwidth=1];
-  "ocr" -> "core-redaction" [label="observed via parent boundary\n42 refs", color="#2563eb", style="dashed", penwidth=1];
+  "ocr" -> "core-redaction" [label="observed via parent boundary\n47 refs", color="#2563eb", style="dashed", penwidth=1];
   "ocr" -> "ocr-native" [label="target + observed\n5 refs", color="#15803d", style="solid", penwidth=2];
   "ocr" -> "rendering" [label="target + observed\n16 refs", color="#15803d", style="solid", penwidth=2];
   "rendering" -> "core" [label="target + observed\n163 refs", color="#15803d", style="solid", penwidth=2];

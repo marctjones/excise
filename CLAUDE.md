@@ -88,7 +88,7 @@ re-derived by `scripts/check-doc-claim-freshness.sh`:
 
 ```
 Excise.Rendering/Differential/
-    MutoolReferenceRenderer.cs        # 548 uses in Differential tests
+    MutoolReferenceRenderer.cs        # 551 uses in Differential tests
     GhostscriptReferenceRenderer.cs   # 121 uses in Differential tests
     PdftocairoReferenceRenderer.cs    # 83 uses in Differential tests
     PdftoppmReferenceRenderer.cs      # 22 uses in Differential tests

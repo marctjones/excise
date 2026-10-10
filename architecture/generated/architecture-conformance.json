@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "078e71b4d9d6dafa1f2fefc2f4fcb90de002cede",
+  "sourceRevision": "f676d00a73561b9db238b88187e6c5750ecdff38",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8756,
+    "retainedSymbols": 8757,
     "observedComponentDependencies": 85,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -248,14 +248,14 @@
     {
       "source": "cli",
       "target": "ocr",
-      "references": 85,
+      "references": 86,
       "typeDependencyCount": 26,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Cli.Commands.RedactCommand",
           "target": "Excise.Ocr.TermRedactionResult",
-          "references": 10
+          "references": 11
         }
       ]
     },
@@ -689,7 +689,7 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1363,
+      "references": 1365,
       "typeDependencyCount": 157,
       "classification": "declared",
       "evidence": [
@@ -745,14 +745,14 @@
     {
       "source": "core-redaction",
       "target": "core-text",
-      "references": 276,
+      "references": 277,
       "typeDependencyCount": 41,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.Segmentation.PdfDocumentRedactionExtensions",
           "target": "Excise.Core.Text.Letter",
-          "references": 41
+          "references": 42
         }
       ]
     },
@@ -1110,8 +1110,8 @@
     {
       "source": "ocr",
       "target": "core-redaction",
-      "references": 42,
-      "typeDependencyCount": 14,
+      "references": 47,
+      "typeDependencyCount": 15,
       "classification": "declared",
       "evidence": [
         {

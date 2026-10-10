@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1662,
-  "indexedContentSha256": "041c072adb83c549e59d9cdec05aa7ad972e37f14027fb373faaf1dbe59ee58f",
+  "indexedFileCount": 1663,
+  "indexedContentSha256": "ec56778189dfcea20ce4e87870baf74311216516b78ffa1655fb68957f0b2572",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -4162,7 +4162,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 233
+      "candidateReferenceCount": 234
     },
     {
       "id": "pdf.17.document.navigation",
@@ -8258,7 +8258,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 775
+      "candidateReferenceCount": 776
     },
     {
       "id": "pdf.17.graphics.color",
@@ -10548,6 +10548,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Redaction/RedactionOptions.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "glyph",
+            "metrics"
+          ]
+        },
+        {
           "path": "Excise.Core/Redaction/WidthClosureLedger.cs",
           "kind": "source",
           "matchedTerms": [
@@ -10934,19 +10942,9 @@
             "fonts",
             "glyph"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Fonts/FontParserFuzzTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "cmaps",
-            "fonts",
-            "glyph",
-            "metrics"
-          ]
         }
       ],
-      "candidateReferenceCount": 217
+      "candidateReferenceCount": 218
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -13895,7 +13893,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 161
+      "candidateReferenceCount": 162
     },
     {
       "id": "pdf.17.content.text-state",
@@ -15163,6 +15161,15 @@
           ]
         },
         {
+          "path": "Excise.Cli.Tests/UnredactCommandTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "marked",
+            "property",
+            "textextractor"
+          ]
+        },
+        {
           "path": "Excise.Cli.Tests/UnredactExitStatusTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -15213,17 +15220,9 @@
             "contentoperator",
             "contentstream"
           ]
-        },
-        {
-          "path": "tests/code-health/dependencies.md",
-          "kind": "test",
-          "matchedTerms": [
-            "artifacts",
-            "property"
-          ]
         }
       ],
-      "candidateReferenceCount": 86
+      "candidateReferenceCount": 87
     },
     {
       "id": "pdf.20.content.operator-001",
@@ -24531,14 +24530,6 @@
       },
       "candidateReferences": [
         {
-          "path": "Excise.Core/Redaction/RedactionOptions.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "annotations",
-            "preservation"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Invariants/NonAuthorableAnnotationPreservationTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -24637,7 +24628,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 12
+      "candidateReferenceCount": 11
     },
     {
       "id": "pdf.20.renderer.requirement-018",
@@ -72808,7 +72799,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 850
+      "candidateReferenceCount": 851
     },
     {
       "id": "pdf.20.extension.developer",
