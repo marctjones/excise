@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "45e91072e39f579be898b5faa9c8c6489cf7e818",
+  "sourceRevision": "be2b549c8b7df490d88ef23ea7c435e467787f83",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -22,8 +22,8 @@
     "commitsRequested": 200,
     "commitsObserved": 198,
     "broadCommitsExcluded": 1,
-    "newestProductionCommit": "85b41d8ed38219050153ad428438bf727abaf197",
-    "oldestProductionCommit": "f5a2c38f8fad258d627326121494026577441574"
+    "newestProductionCommit": "15fd5918c1a0589ad8374b616fd98d37123a7095",
+    "oldestProductionCommit": "1a57b5a5ff4a671a04dd2b138bf50087e7fdcea8"
   },
   "files": [
     {
@@ -211,6 +211,10 @@
       "commits": 4
     },
     {
+      "path": "Excise.Core/Content/ContentStreamWalker.cs",
+      "commits": 4
+    },
+    {
       "path": "Excise.Core/Document/PdfAnnotationAuthoring.cs",
       "commits": 4
     },
@@ -236,6 +240,14 @@
     },
     {
       "path": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
+      "commits": 4
+    },
+    {
+      "path": "Excise.Rendering/SkiaRenderer.Text.cs",
+      "commits": 4
+    },
+    {
+      "path": "Excise.Rendering/SkiaRenderer.cs",
       "commits": 4
     },
     {
@@ -315,10 +327,6 @@
       "commits": 3
     },
     {
-      "path": "Excise.Core/Content/ContentStreamWalker.cs",
-      "commits": 3
-    },
-    {
       "path": "Excise.Core/Document/AcroFormFlattener.cs",
       "commits": 3
     },
@@ -360,14 +368,6 @@
     },
     {
       "path": "Excise.Rendering/SkiaRenderer.Paths.cs",
-      "commits": 3
-    },
-    {
-      "path": "Excise.Rendering/SkiaRenderer.Text.cs",
-      "commits": 3
-    },
-    {
-      "path": "Excise.Rendering/SkiaRenderer.cs",
       "commits": 3
     },
     {
@@ -592,6 +592,14 @@
     },
     {
       "path": "Excise.Core/Xfa/XfaWidgetWriter.cs",
+      "commits": 2
+    },
+    {
+      "path": "Excise.Rendering/SkiaRenderer.Patterns.cs",
+      "commits": 2
+    },
+    {
+      "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
       "commits": 2
     },
     {
@@ -835,14 +843,6 @@
       "commits": 1
     },
     {
-      "path": "Excise.Core/Document/PdfDocumentObjectStore.cs",
-      "commits": 1
-    },
-    {
-      "path": "Excise.Core/Document/PdfDocumentOpenPipeline.cs",
-      "commits": 1
-    },
-    {
       "path": "Excise.Core/Document/PdfRasterPageAuthoring.cs",
       "commits": 1
     },
@@ -1003,19 +1003,11 @@
       "commits": 1
     },
     {
-      "path": "Excise.Rendering/SkiaRenderer.Patterns.cs",
-      "commits": 1
-    },
-    {
       "path": "Excise.Rendering/SkiaRenderer.SoftMaskSampling.cs",
       "commits": 1
     },
     {
       "path": "Excise.Rendering/SkiaRenderer.TextLayout.cs",
-      "commits": 1
-    },
-    {
-      "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
       "commits": 1
     }
   ],
@@ -2605,12 +2597,6 @@
       "jaccard": 0.25
     },
     {
-      "source": "Excise.Core/Content/ContentStreamWalker.cs",
-      "target": "Excise.Core/Text/TextExtractor.cs",
-      "cochanges": 2,
-      "jaccard": 0.25
-    },
-    {
       "source": "Excise.Core/Document/PdfDocument.cs",
       "target": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
       "cochanges": 2,
@@ -2697,6 +2683,12 @@
     {
       "source": "Excise.Cli/Commands/RedactCommandHandler.cs",
       "target": "Excise.Core/Redaction/PdfPageRedactionExtensions.cs",
+      "cochanges": 2,
+      "jaccard": 0.2222
+    },
+    {
+      "source": "Excise.Core/Content/ContentStreamWalker.cs",
+      "target": "Excise.Core/Text/TextExtractor.cs",
       "cochanges": 2,
       "jaccard": 0.2222
     },

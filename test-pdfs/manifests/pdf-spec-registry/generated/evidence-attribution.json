@@ -93677,6 +93677,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/StrayRestoreInNestedStreamTests.cs::StrayRestoreInNestedStreamTests.UnclosedqInForm_DoesNotLeakIntoThePage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StrayRestoreInNestedStreamTests.cs::StrayRestoreInNestedStreamTests.RedactText_AfterAFormWithAStrayQ_RemovesTheTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/AcroFormReadOnlyTests.cs::AcroFormReadOnlyTests.TextField_RedactionThroughSearch_CanFindFormValue",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -94677,20 +94691,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.Attachment_IsReportedAsAPresentOnlyLeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.ADocumentWithNoThumbnailOrAttachment_ReportsNeither",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.BoxInsideAFormXObject_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95019,6 +95019,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/StrayRestoreInNestedStreamTests.cs::StrayRestoreInNestedStreamTests.UnclosedqInForm_DoesNotLeakIntoThePage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StrayRestoreInNestedStreamTests.cs::StrayRestoreInNestedStreamTests.RedactText_AfterAFormWithAStrayQ_RemovesTheTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/AcroFormReadOnlyTests.cs::AcroFormReadOnlyTests.TextField_RedactionThroughSearch_CanFindFormValue",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -96019,20 +96033,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.Attachment_IsReportedAsAPresentOnlyLeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.ADocumentWithNoThumbnailOrAttachment_ReportsNeither",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.BoxInsideAFormXObject_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -96375,6 +96375,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/StrayRestoreInNestedStreamTests.cs::StrayRestoreInNestedStreamTests.UnclosedqInForm_DoesNotLeakIntoThePage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StrayRestoreInNestedStreamTests.cs::StrayRestoreInNestedStreamTests.RedactText_AfterAFormWithAStrayQ_RemovesTheTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/AcroFormReadOnlyTests.cs::AcroFormReadOnlyTests.TextField_RedactionThroughSearch_CanFindFormValue",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97375,20 +97389,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.Attachment_IsReportedAsAPresentOnlyLeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.ADocumentWithNoThumbnailOrAttachment_ReportsNeither",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.BoxInsideAFormXObject_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97757,6 +97757,20 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Content/StrayRestoreInNestedStreamTests.cs::StrayRestoreInNestedStreamTests.UnclosedqInForm_DoesNotLeakIntoThePage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Content/StrayRestoreInNestedStreamTests.cs::StrayRestoreInNestedStreamTests.RedactText_AfterAFormWithAStrayQ_RemovesTheTerm",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/AcroFormReadOnlyTests.cs::AcroFormReadOnlyTests.TextField_RedactionThroughSearch_CanFindFormValue",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98757,20 +98771,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.Attachment_IsReportedAsAPresentOnlyLeak",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.ADocumentWithNoThumbnailOrAttachment_ReportsNeither",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.BoxInsideAFormXObject_IsAMarkAndItsTextIsRecovered",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112582,8 +112582,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 8709,
-    "testMethodsWithCapabilityCandidate": 5666,
+    "testMethods": 8718,
+    "testMethodsWithCapabilityCandidate": 5669,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

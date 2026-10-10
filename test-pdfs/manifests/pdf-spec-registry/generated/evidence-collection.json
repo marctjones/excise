@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1654,
-  "indexedContentSha256": "f7ceb359c61f199edba2d03f0b09b179f899df991447c858e7df8f735f42f083",
+  "indexedFileCount": 1656,
+  "indexedContentSha256": "f7b09ecb5a138398c9cb708898ab7dd7474e94b275bd3632497836c8d5673432",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -8240,7 +8240,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 768
+      "candidateReferenceCount": 770
     },
     {
       "id": "pdf.17.graphics.color",
@@ -10082,7 +10082,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 289
+      "candidateReferenceCount": 290
     },
     {
       "id": "pdf.17.graphics.fonts",
@@ -12980,6 +12980,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Content/StrayRestoreInNestedStreamTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "form",
+            "xobjects",
+            "contentstream",
+            "textextractor"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/AcroFormReadOnlyTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -13021,17 +13031,9 @@
             "xobjects",
             "contentstream"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Document/ImageStampSoftMaskTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "form",
-            "xobjects"
-          ]
         }
       ],
-      "candidateReferenceCount": 207
+      "candidateReferenceCount": 208
     },
     {
       "id": "pdf.20.content.operators",
@@ -53240,6 +53242,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Content/StrayRestoreInNestedStreamTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "line",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/AcroFormReadOnlyTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -53278,18 +53290,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Document/PageCollectionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "line",
-            "annotation"
-          ]
         }
       ],
-      "candidateReferenceCount": 254
+      "candidateReferenceCount": 255
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -58307,6 +58310,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Content/StrayRestoreInNestedStreamTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "redact",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/AcroFormReadOnlyTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -58325,19 +58338,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Document/PageCollectionPageNumberTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "redact",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 215
+      "candidateReferenceCount": 216
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -62837,6 +62840,17 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Content/StrayRestoreInNestedStreamTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "appearances",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/AcroFormFlattenerPushButtonTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -62845,22 +62859,9 @@
             "acroform",
             "annotation"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Document/AcroFormReadOnlyTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "annotations",
-            "appearances",
-            "acroform",
-            "action",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 248
+      "candidateReferenceCount": 249
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -66806,7 +66807,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 283
+      "candidateReferenceCount": 284
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -72665,7 +72666,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 843
+      "candidateReferenceCount": 845
     },
     {
       "id": "pdf.20.extension.developer",

@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "04fb68243bfda77d6b2f198449895006e0403b5da8fe97768f50fd3b0853e152",
+  "sourceFingerprint": "f78223a849ac2169c975c2ec382eaa9d9b67d4a22e3dfbd9fe5b043b6a3616ac",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -26539,6 +26539,45 @@
           "capability": "pdf.17.content.streams",
           "modes": [
             "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.transparency.model",
+          "modes": [
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/Differential/StrayRestoreInFormRenderTests.cs::StrayRestoreInFormRenderTests.StrayQInForm_DrawsTheRestOfTheFormUnderThePageState",
+      "path": "Excise.Rendering.Tests/Differential/StrayRestoreInFormRenderTests.cs",
+      "class": "StrayRestoreInFormRenderTests",
+      "method": "StrayQInForm_DrawsTheRestOfTheFormUnderThePageState",
+      "line": 32,
+      "xunitKind": "theory",
+      "evidenceKind": "differential-candidate",
+      "facets": [
+        "differential-rendering"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
             "render"
           ]
         },
@@ -55649,11 +55688,11 @@
     }
   ],
   "summary": {
-    "testMethods": 1527,
+    "testMethods": 1528,
     "facets": {
       "content-streams": 441,
       "content-strings-and-text": 9,
-      "differential-rendering": 915,
+      "differential-rendering": 916,
       "fonts": 269,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 320,
@@ -55666,7 +55705,7 @@
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 9,
       "pdf.17.content.streams:parse": 448,
-      "pdf.17.content.streams:render": 1072,
+      "pdf.17.content.streams:render": 1073,
       "pdf.17.content.text-state:extract": 9,
       "pdf.17.content.text-state:parse": 9,
       "pdf.17.content.text-state:render": 9,
@@ -55674,10 +55713,10 @@
       "pdf.17.graphics.color:render": 53,
       "pdf.17.graphics.fonts:extract": 269,
       "pdf.17.graphics.fonts:parse": 269,
-      "pdf.17.graphics.fonts:render": 1065,
+      "pdf.17.graphics.fonts:render": 1066,
       "pdf.17.graphics.images:extract": 249,
       "pdf.17.graphics.images:parse": 249,
-      "pdf.17.graphics.images:render": 1076,
+      "pdf.17.graphics.images:render": 1077,
       "pdf.17.graphics.paths-painting:parse": 320,
       "pdf.17.graphics.paths-painting:render": 320,
       "pdf.17.graphics.patterns-shadings:parse": 53,
@@ -55685,7 +55724,7 @@
       "pdf.17.graphics.state:parse": 320,
       "pdf.17.graphics.state:render": 320,
       "pdf.17.transparency.model:parse": 95,
-      "pdf.17.transparency.model:render": 958
+      "pdf.17.transparency.model:render": 959
     },
     "unclassified": 43,
     "allTestsMapped": true
