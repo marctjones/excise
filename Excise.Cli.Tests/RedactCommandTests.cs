@@ -1001,23 +1001,24 @@ public class RedactCommandTests : IDisposable
     }
 
     [Fact]
-    public async Task RunAsync_Redact_NoWidthFlag_ClosesTheGapAndDrawsTheMarker_PreserveLayoutDoesNot()
+    public async Task RunAsync_Redact_FixedMarker_ClosesTheGapAndDrawsTheMarker_PreserveLayoutDoesNot()
     {
-        // #1715/#1725: no width flag means FixedMarker — the text after the
-        // redaction moves left and a box is still drawn. --preserve-layout is
-        // the old default, and leaves the text where it was. Measured on
-        // mutool's pixels, not excise's own geometry.
+        // #1715/#1725: --fixed-marker (Maximum's policy; the default until
+        // 2026-10-10) — the text after the redaction moves left and a box is
+        // still drawn. --preserve-layout leaves the text where it was.
+        // Measured on mutool's pixels, not excise's own geometry.
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
         var inputPath = TempPath(".pdf");
         File.WriteAllBytes(inputPath, TestPdfBuilder.SinglePage("HELLO SECRETSECRET WORLD"));
-        var defaultPath = TempPath(".pdf");
+        var markerPath = TempPath(".pdf");
         var layoutPath = TempPath(".pdf");
 
         var prevOut = Console.Out;
         Console.SetOut(new StringWriter());
         try
         {
-            (await Program.RunAsync(new[] { "redact", inputPath, defaultPath, "SECRETSECRET" })).Should().Be(0);
+            (await Program.RunAsync(new[] { "redact", inputPath, markerPath, "SECRETSECRET", "--fixed-marker" }))
+                .Should().Be(0);
             (await Program.RunAsync(new[] { "redact", inputPath, layoutPath, "SECRETSECRET", "--preserve-layout" }))
                 .Should().Be(0);
         }
@@ -1026,13 +1027,13 @@ public class RedactCommandTests : IDisposable
             Console.SetOut(prevOut);
         }
 
-        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(defaultPath), "SECRET").Should().BeEmpty();
-        AppendedFillBoxColors(defaultPath).Should().NotBeEmpty("FixedMarker still draws a visible mark (#1725)");
-        var defaultRight = RightmostInkColumn(defaultPath);
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(markerPath), "SECRET").Should().BeEmpty();
+        AppendedFillBoxColors(markerPath).Should().NotBeEmpty("FixedMarker still draws a visible mark (#1725)");
+        var markerRight = RightmostInkColumn(markerPath);
         var layoutRight = RightmostInkColumn(layoutPath);
         // 72 dpi: SECRETSECRET is ~80 pt at 12 pt Helvetica, the marker 2 em (24 pt).
-        (layoutRight - defaultRight).Should().BeGreaterThan(30,
-            "the default closes the removed run's width, so WORLD ends further left than under --preserve-layout");
+        (layoutRight - markerRight).Should().BeGreaterThan(30,
+            "--fixed-marker closes the removed run's width, so WORLD ends further left than under --preserve-layout");
     }
 
     [Fact]

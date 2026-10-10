@@ -72,8 +72,9 @@ public class RedactionProfileTests
         o.RemoveFieldNames.Should().BeFalse();
         o.FlattenInteractiveContent.Should().BeFalse();
 
-        // #1715/#1725: the width closes, and a fixed-size box still marks it.
-        o.Width.Should().Be(WidthPolicy.FixedMarker);
+        // Owner decision 2026-10-10 (Refs #1715): Standard keeps the layout and
+        // widens the box; the removed width stays measurable, Maximum closes it.
+        o.Width.Should().Be(WidthPolicy.OvershootPreserveLayout);
 
         RedactionOptions.ForProfile(RedactionProfile.Standard).Should().Be(o);
     }
@@ -97,6 +98,8 @@ public class RedactionProfileTests
         max.RemoveMarkupAnnotations.Should().BeTrue();
         max.RemoveFieldNames.Should().BeTrue();
         max.FlattenInteractiveContent.Should().BeTrue();
+        // Maximum closes the width and marks it with a fixed-size box (#1715/#1725).
+        max.Width.Should().Be(WidthPolicy.FixedMarker);
 
         RedactionOptions.ForProfile(RedactionProfile.Maximum).Should().Be(max);
     }
