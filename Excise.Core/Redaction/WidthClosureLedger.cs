@@ -178,7 +178,7 @@ internal sealed class WidthClosureLedger
         IReadOnlyList<ContentOperator> operations,
         IReadOnlyList<Letter> letters,
         IReadOnlyList<Removal> removals,
-        IReadOnlyList<PdfRectangle> areas,
+        IReadOnlyList<GlyphArea> areas,
         GlyphRemovalStrategy strategy,
         Func<PdfRectangle, IReadOnlyList<Letter>, double, double, double>? keep,
         WidthPolicy policy,
@@ -211,14 +211,14 @@ internal sealed class WidthClosureLedger
     /// same gap in its own pen chain (see <see cref="Removed"/>).
     /// </summary>
     private void Keep(
-        IReadOnlyList<PdfRectangle> areas, Func<PdfRectangle, IReadOnlyList<Letter>, double, double, double> keep)
+        IReadOnlyList<GlyphArea> areas, Func<PdfRectangle, IReadOnlyList<Letter>, double, double, double> keep)
     {
         foreach (var group in _runsByOp.Values.SelectMany(r => r).Where(r => r.Area >= 0).GroupBy(r => r.Area))
         {
             var runs = group.OrderBy(r => r.StartX).ToList();
             var removed = runs.SelectMany(r => r.Letters).ToList();
             var width = _lines.Sum(line => Removed(line.Runs.Where(r => r.Area == group.Key)).Sum(span => span.Width));
-            var reserve = Math.Max(0, keep(areas[group.Key], removed, runs[0].StartX, width));
+            var reserve = Math.Max(0, keep(areas[group.Key].Box, removed, runs[0].StartX, width));
             var end = runs[0].StartX + runs[0].Width;
             foreach (var run in _lines.First(line => line.Runs.Contains(runs[0])).Runs)
                 if (ReferenceEquals(run, runs[0]) || (run.Area == group.Key && Overlays(run, end)))
@@ -462,7 +462,7 @@ internal sealed class WidthClosureLedger
 
     private void AddRuns(
         Removal removal, IReadOnlyList<Letter> letters,
-        IReadOnlyList<PdfRectangle> areas, GlyphRemovalStrategy strategy, PdfRectangle? page)
+        IReadOnlyList<GlyphArea> areas, GlyphRemovalStrategy strategy, PdfRectangle? page)
     {
         if (UnitOf(removal.Op) is not double unit)
         {
@@ -505,7 +505,7 @@ internal sealed class WidthClosureLedger
                 StartX = first.StartX,
                 Width = thousandths * unit,
                 Unit = unit,
-                Area = IndexOf(areas, a => strategy.Selects(first.GlyphRectangle, a)),
+                Area = IndexOf(areas, a => strategy.Selects(first, a)),
             };
             runs.Add(run);
             LineAt(first, runLetters, letters, page).Runs.Add(run);
@@ -713,7 +713,7 @@ internal sealed class WidthClosureLedger
         return unit > 1e-9 && double.IsFinite(unit) ? unit : null;
     }
 
-    private static int IndexOf(IReadOnlyList<PdfRectangle> areas, Func<PdfRectangle, bool> match)
+    private static int IndexOf(IReadOnlyList<GlyphArea> areas, Func<GlyphArea, bool> match)
     {
         for (var i = 0; i < areas.Count; i++)
             if (match(areas[i])) return i;

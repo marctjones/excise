@@ -284,25 +284,222 @@ public class WordWrapRedactionTests
         }
     }
 
+    public static TheoryData<int, Shape, bool, string, int> TurnedWraps()
+    {
+        // #2055: the oblique angles of ObliqueWraps, and the right angles and
+        // upright text through the same turn about the block, which must not move.
+        var data = ObliqueWraps();
+        foreach (var degrees in new[] { 0, 90, 180, 270 })
+            foreach (var shape in new[] { Shape.Tj, Shape.KernedTj, Shape.TrailingSpace, Shape.TjPerWord, Shape.TjPerGlyph })
+                foreach (var viaTm in new[] { false, true })
+                {
+                    data.Add(degrees, shape, viaTm, "Quentin Barnaby Holloway", 2);
+                    data.Add(degrees, shape, viaTm, "Quentin A Holloway", 2);
+                    data.Add(degrees, shape, viaTm, "Quentin A Holloway", 1);
+                }
+        return data;
+    }
+
     [Theory]
-    [MemberData(nameof(ObliqueWraps))]
+    [MemberData(nameof(TurnedWraps))]
     public void ANameWrappedInTextTurnedByANonRightAngle_KeepsTheNeighbouringLines(
         int degrees, Shape shape, bool viaTm, string name, int wrapAfter)
     {
-        Assert.SkipWhen(degrees != 2,
-            "#2055: removal boxes are axis-aligned; at an oblique angle they take glyphs of the neighbouring lines");
+        // #2055: each line of a match was removed through one axis-aligned box
+        // around its glyph centres. Around a diagonal run that box is a square,
+        // and it took glyphs of the lines above and below the match ("his ag"
+        // and "ny." at 45 degrees) while the report said clean success. Judged
+        // by the delta: MuPDF reads the input's glyphs minus the name's, no more.
         RequireOracles();
-        var (_, _, output) = Redact(ObliqueWrap(degrees, shape, viaTm, name, wrapAfter), name);
+        var pdf = ObliqueWrap(degrees, shape, viaTm, name, wrapAfter);
+        var input = Path.Combine(Path.GetTempPath(), $"excise-2055-in-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(input, pdf);
+        var (report, saved, output) = Redact(pdf, name);
         try
         {
+            report.VerifiedRemovals.Should().Be(1, report.ToString());
+            report.IsCleanSuccess.Should().BeTrue(report.ToString());
+            foreach (var word in name.Split(' ').Where(w => w.Length >= 3))
+                SavedPdfLeakScanner.FindTerm(saved, word).Should().BeEmpty($"'{word}' of the name must leave the file");
+
+            AssertOnlyRemoved(input, output, name);
+
             var mutool = Regex.Replace(MutoolTextExtractor.ExtractPage(output, 1) ?? "", @"\s+", " ");
-            foreach (var neighbour in new[] { "signed by", "on behalf of the company" })
+            foreach (var neighbour in new[] { Lead, Tail })
                 mutool.Should().Contain(neighbour, $"MuPDF must still read the neighbouring text '{neighbour}'");
         }
         finally
         {
+            File.Delete(input);
             File.Delete(output);
         }
+    }
+
+    /// <summary>#2055: the issue's own case, a phrase inside one line of a
+    /// turned block, and phrases in a block turned through a mirror or a skew.</summary>
+    public static TheoryData<string, int, string> TurnedPhrases()
+    {
+        var data = new TheoryData<string, int, string>();
+        foreach (var degrees in new[] { 30, 45, 135, 315 })
+            data.Add("turned", degrees, "signed by");
+        foreach (var degrees in new[] { 0, 30, 45, 135 })
+        {
+            data.Add("mirrored", degrees, "signed by");
+            data.Add("skewed", degrees, "signed by");
+            // A mirror puts the second line above the first, which is not a wrap
+            // the matcher joins (it is reported); the skew keeps the line order.
+            data.Add("skewed", degrees, "Quentin Barnaby Holloway");
+        }
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(TurnedPhrases))]
+    public void APhraseInTextTurnedByANonRightAngle_KeepsTheNeighbouringLines(string kind, int degrees, string term)
+    {
+        RequireOracles();
+        var r = degrees * Math.PI / 180;
+        var (c, s) = (Math.Cos(r), Math.Sin(r));
+        double[] linear = kind switch
+        {
+            "mirrored" => [c, s, s, -c],
+            "skewed" => [c, s, 0.3 * c - s, 0.3 * s + c],
+            _ => [c, s, -s, c],
+        };
+        var pdf = BuildPdf(Shape.Tj, AboutTheBlock(linear), viaTm: false,
+            (72, 500, $"{Lead} Quentin Barnaby"),
+            (72, 486, $"Holloway {Tail}"));
+        var input = Path.Combine(Path.GetTempPath(), $"excise-2055-in-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(input, pdf);
+        var (report, saved, output) = Redact(pdf, term);
+        try
+        {
+            report.VerifiedRemovals.Should().Be(1, report.ToString());
+            report.IsCleanSuccess.Should().BeTrue(report.ToString());
+            foreach (var word in term.Split(' ').Where(w => w.Length >= 3))
+                SavedPdfLeakScanner.FindTerm(saved, word).Should().BeEmpty($"'{word}' must leave the file");
+            AssertOnlyRemoved(input, output, term);
+        }
+        finally
+        {
+            File.Delete(input);
+            File.Delete(output);
+        }
+    }
+
+    [Theory]
+    [InlineData(30)]
+    [InlineData(45)]
+    [InlineData(135)]
+    [InlineData(315)]
+    public void TextTurnedByANonRightAngle_TwoSequentialRedactions_WithACurlyQuoteADollarAndParentheses(int degrees)
+    {
+        // CLAUDE.md rule 9 at an oblique angle (#2055): the second redaction runs
+        // on the stream the first rebuilt, and neither takes a neighbour's glyph.
+        RequireOracles();
+        var pdf = BuildPdf(Shape.Tj, TurnedAboutTheBlock(degrees), viaTm: false,
+            (72, 500, "Paid $1,250 \\(net\\) to Siobhan O\\222Rourke"),
+            (72, 486, "Brannigan on behalf of the company."));
+        var input = Path.Combine(Path.GetTempPath(), $"excise-2055-in-{Guid.NewGuid():N}.pdf");
+        var output = Path.Combine(Path.GetTempPath(), $"excise-2055-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(input, pdf);
+        try
+        {
+            using (var doc = PdfDocument.Open(pdf))
+            {
+                var first = doc.RedactText("Siobhan O'Rourke Brannigan", RedactionOptions.Default);
+                first.VerifiedRemovals.Should().Be(1, first.ToString());
+                first.IsCleanSuccess.Should().BeTrue(first.ToString());
+                var second = doc.RedactText("$1,250 (net)", RedactionOptions.Default);
+                second.VerifiedRemovals.Should().Be(1, second.ToString());
+                second.IsCleanSuccess.Should().BeTrue(second.ToString());
+                doc.Save(output);
+            }
+
+            var saved = File.ReadAllBytes(output);
+            foreach (var fragment in new[] { "Siobhan", "Rourke", "Brannigan", "1,250" })
+                SavedPdfLeakScanner.FindTerm(saved, fragment).Should().BeEmpty($"'{fragment}' must leave the file");
+            AssertOnlyRemoved(input, output, "Siobhan O’Rourke Brannigan $1,250 (net)");
+            var mutool = Regex.Replace(MutoolTextExtractor.ExtractPage(output, 1) ?? "", @"\s+", " ");
+            mutool.Should().Contain("Paid", "MuPDF must still read the text before the first term");
+            mutool.Should().Contain("on behalf of the company.", "MuPDF must still read the second line");
+        }
+        finally
+        {
+            File.Delete(input);
+            File.Delete(output);
+        }
+    }
+
+    [Theory]
+    [InlineData(30)]
+    [InlineData(45)]
+    [InlineData(135)]
+    public void ADrawnAreaOverTextTurnedByANonRightAngle_RemovesEveryGlyphItsBoxOverlaps(int degrees)
+    {
+        // #2055 changed how a matched line of turned text selects its glyphs,
+        // not how a drawn area does: a rectangle still takes every glyph whose
+        // page-space box it touches, the leak-safe reading of AnyOverlap.
+        RequireOracles();
+        var pdf = BuildPdf(Shape.Tj, TurnedAboutTheBlock(degrees), viaTm: false,
+            (72, 500, $"{Lead} Quentin Barnaby"),
+            (72, 486, $"Holloway {Tail}"));
+        var area = new PdfRectangle(296, 386, 316, 406);
+        var input = Path.Combine(Path.GetTempPath(), $"excise-2055-in-{Guid.NewGuid():N}.pdf");
+        var output = Path.Combine(Path.GetTempPath(), $"excise-2055-{Guid.NewGuid():N}.pdf");
+        File.WriteAllBytes(input, pdf);
+        try
+        {
+            string overlapped;
+            using (var doc = PdfDocument.Open(pdf))
+            {
+                var page = doc.GetPage(1);
+                overlapped = string.Concat(page.Letters
+                    .Where(l => l.GlyphRectangle.Normalize().IntersectsWith(area))
+                    .Select(l => l.Value));
+                overlapped.Count(c => !char.IsWhiteSpace(c)).Should().BeGreaterThan(4,
+                    "fixture sanity: the area lies across both lines");
+                page.RedactArea(area, RedactionOptions.Default with { DrawBox = false });
+                doc.Save(output);
+            }
+            AssertOnlyRemoved(input, output, overlapped);
+        }
+        finally
+        {
+            File.Delete(input);
+            File.Delete(output);
+        }
+    }
+
+    /// <summary>
+    /// #2055, judged by the delta: MuPDF reads the input's glyphs minus those
+    /// of <paramref name="removed"/>, no more and no fewer.
+    /// </summary>
+    private static void AssertOnlyRemoved(string input, string output, string removed)
+    {
+        var before = Glyphs(MutoolTextExtractor.ExtractPage(input, 1));
+        var after = Glyphs(MutoolTextExtractor.ExtractPage(output, 1));
+        foreach (var c in removed.Where(c => !char.IsWhiteSpace(c)))
+            before[c] = before.GetValueOrDefault(c) - 1;
+        var lost = before.Where(kv => kv.Value > after.GetValueOrDefault(kv.Key))
+            .Select(kv => $"{kv.Key}x{kv.Value - after.GetValueOrDefault(kv.Key)}").ToList();
+        var left = after.Where(kv => kv.Value > before.GetValueOrDefault(kv.Key))
+            .Select(kv => $"{kv.Key}x{kv.Value - before.GetValueOrDefault(kv.Key)}").ToList();
+        var reading = Regex.Replace(MutoolTextExtractor.ExtractPage(output, 1) ?? "", @"\s+", " ");
+        lost.Should().BeEmpty($"only the requested glyphs leave (lost: {string.Join(", ", lost)}); MuPDF reads {reading}");
+        left.Should().BeEmpty($"every requested glyph leaves (left: {string.Join(", ", left)}); MuPDF reads {reading}");
+
+        static Dictionary<char, int> Glyphs(string? text) =>
+            (text ?? "").Where(c => !char.IsWhiteSpace(c)).GroupBy(c => c).ToDictionary(g => g.Key, g => g.Count());
+    }
+
+    /// <summary>#2055: <paramref name="linear"/> (a b c d) applied about the
+    /// block's middle, so every glyph stays on the page.</summary>
+    private static double[] AboutTheBlock(double[] linear)
+    {
+        var (a, b, c, d) = (Math.Round(linear[0], 6), Math.Round(linear[1], 6), Math.Round(linear[2], 6), Math.Round(linear[3], 6));
+        const double cx = 200, cy = 493, px = 306, py = 396;
+        return [a, b, c, d, Math.Round(px - (a * cx + c * cy), 4), Math.Round(py - (b * cx + d * cy), 4)];
     }
 
     /// <summary>#1891: <paramref name="name"/> wrapped after <paramref name="wrapAfter"/>

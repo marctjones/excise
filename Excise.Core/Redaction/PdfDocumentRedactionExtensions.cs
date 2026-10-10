@@ -202,7 +202,7 @@ public static class PdfDocumentRedactionExtensions
                     break;
 
                 {
-                    var contentAreas = new List<PdfRectangle>();
+                    var contentAreas = new List<GlyphArea>();
                     // #1195: the image pass needs the full glyph bbox (real
                     // height), not the thin glyph-match centreline in
                     // contentAreas — else region blackout zeroes a 1-sample strip
@@ -287,9 +287,7 @@ public static class PdfDocumentRedactionExtensions
                             var lineBox = BoundingBoxOf(line);
                             if (!interactiveOnly)
                             {
-                                contentAreas.Add(options.Strategy == GlyphRemovalStrategy.FullyContained
-                                    ? lineBox
-                                    : CenterlineBoxOf(line));
+                                contentAreas.Add(GlyphAreaOf(line, lineBox, options.Strategy));
                                 imageAreas.Add(lineBox); // full height for the image pass (#1195)
                             }
                             // #1189: under the overshoot policy the covering box is
@@ -684,12 +682,55 @@ public static class PdfDocumentRedactionExtensions
     /// tight leading. The small padding keeps single-glyph and axis-aligned
     /// horizontal/vertical matches non-degenerate (#942).
     /// </summary>
-    private static PdfRectangle CenterlineBoxOf(IReadOnlyList<Letter> letters)
+    /// <summary>
+    /// #2055: the area one line of a match removes glyphs from. Upright text,
+    /// and text a quarter turn turns, is the page-space box as before: the
+    /// centreline (#942), or under <see cref="GlyphRemovalStrategy.FullyContained"/>
+    /// the line's box. A line turned by any other angle keeps that box for the
+    /// carrier passes, and carries the same centreline (or box) in its own line
+    /// frame for the glyph decision: around a diagonal run the page-space box
+    /// is a square, and it took glyphs of the lines above and below.
+    /// </summary>
+    private static GlyphArea GlyphAreaOf(IReadOnlyList<Letter> line, PdfRectangle lineBox, GlyphRemovalStrategy strategy)
+    {
+        var contained = strategy == GlyphRemovalStrategy.FullyContained;
+        var box = contained ? lineBox : CenterlineBoxOf(line);
+        if (ObliqueDirectionOf(line) is not double angle)
+            return box;
+
+        var cells = line.Select(l => TextSelectionEngine.LineFrame(l).Box.Normalize()).ToList();
+        var frame = contained
+            ? new PdfRectangle(cells.Min(c => c.Left), cells.Min(c => c.Bottom), cells.Max(c => c.Right), cells.Max(c => c.Top))
+            : CenterlineBoxOf(cells);
+        return new GlyphArea(box, angle, frame);
+    }
+
+    /// <summary>
+    /// The direction a line of a match advances along, when every glyph of it
+    /// shares one direction that is not a multiple of 90 degrees; null
+    /// otherwise, and the line is removed through its page-space box.
+    /// </summary>
+    private static double? ObliqueDirectionOf(IReadOnlyList<Letter> line)
+    {
+        // Below this |sin 2θ| the turn is a quarter turn (or none), whose glyph
+        // cells are their own page-space boxes.
+        const double quarterTurnTolerance = 1e-3;
+        if (line.Count == 0 || !line.All(TextSelectionEngine.IsTurned)
+            || line.Any(l => TextSelectionEngine.DirectionChanges(line[0], l)))
+            return null;
+        var angle = line[0].BaselineAngle;
+        return Math.Abs(Math.Sin(2 * angle)) > quarterTurnTolerance ? angle : null;
+    }
+
+    private static PdfRectangle CenterlineBoxOf(IReadOnlyList<Letter> letters) =>
+        CenterlineBoxOf(letters.Select(l => l.GlyphRectangle));
+
+    private static PdfRectangle CenterlineBoxOf(IEnumerable<PdfRectangle> glyphs)
     {
         const double padding = 0.01;
-        var centers = letters.Select(l =>
+        var centers = glyphs.Select(g =>
         {
-            var r = l.GlyphRectangle.Normalize();
+            var r = g.Normalize();
             return (X: (r.Left + r.Right) * 0.5, Y: (r.Bottom + r.Top) * 0.5);
         }).ToList();
 

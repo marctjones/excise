@@ -189,7 +189,7 @@ public static class PdfPageRedactionExtensions
     /// </summary>
     internal static ImageRedactionCounts RedactAreaInternal(
         this PdfPage page,
-        PdfRectangle area,
+        GlyphArea glyphArea,
         PdfRectangle imageArea,
         GlyphRemovalStrategy strategy,
         bool scrubDocumentCarriers,
@@ -200,7 +200,7 @@ public static class PdfPageRedactionExtensions
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
 
-        area = area.Normalize();
+        var area = glyphArea.Box.Normalize();
         imageArea = imageArea.Normalize();
 
         // #1572: refuse a portfolio BEFORE anything changes.
@@ -291,7 +291,7 @@ public static class PdfPageRedactionExtensions
         if (letters.Count > 0)
         {
             var remover = NewGlyphRemover(page, width, markerIsArea);
-            working = remover.ProcessOperations(working, letters, area, strategy);
+            working = remover.ProcessOperations(working, letters, new[] { glyphArea with { Box = area } }, strategy);
             RecordWidthNotes(page, remover);
         }
 
@@ -344,7 +344,7 @@ public static class PdfPageRedactionExtensions
         var metadataRow = RedactionFeatureStripper.ApplyMetadataStrip(page.Document, options);
         var list = areas.Select(a => a.Normalize()).ToList();
         var xfaRowsBefore = page.Document.RedactionLedger.XfaRemovals.Count;
-        var imageCounts = page.RedactAreasInternal(list, list, options.Strategy,
+        var imageCounts = page.RedactAreasInternal(GlyphArea.Of(list), list, options.Strategy,
             options.ScrubDocumentCarriers, options.Width,
             removeAttachments: !options.KeepAttachments,
             markerIsArea: true);
@@ -449,7 +449,7 @@ public static class PdfPageRedactionExtensions
     /// </summary>
     internal static ImageRedactionCounts RedactAreasInternal(
         this PdfPage page,
-        System.Collections.Generic.IReadOnlyList<PdfRectangle> glyphAreas,
+        System.Collections.Generic.IReadOnlyList<GlyphArea> glyphAreas,
         System.Collections.Generic.IReadOnlyList<PdfRectangle> imageAreas,
         GlyphRemovalStrategy strategy,
         bool scrubDocumentCarriers,
@@ -460,13 +460,14 @@ public static class PdfPageRedactionExtensions
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
 
-        var list = glyphAreas.Select(a => a.Normalize()).ToList();
+        var glyphList = glyphAreas.Select(a => a with { Box = a.Box.Normalize() }).ToList();
+        var list = glyphList.Select(a => a.Box).ToList();
         var imageList = imageAreas.Select(a => a.Normalize()).ToList();
         if (list.Count == 0) return default;
         if (list.Count == 1)
         {
             return page.RedactAreaInternal(
-                list[0], imageList.Count > 0 ? imageList[0] : list[0],
+                glyphList[0], imageList.Count > 0 ? imageList[0] : list[0],
                 strategy, scrubDocumentCarriers, width, removeAttachments, markerIsArea, removeWordDecorations);
         }
 
@@ -513,7 +514,7 @@ public static class PdfPageRedactionExtensions
         if (letters.Count > 0)
         {
             var remover = NewGlyphRemover(page, width, markerIsArea);
-            working = remover.ProcessOperations(working, letters, list, strategy);
+            working = remover.ProcessOperations(working, letters, glyphList, strategy);
             RecordWidthNotes(page, remover);
         }
 
