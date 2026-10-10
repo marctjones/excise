@@ -105,8 +105,8 @@ public sealed class RemovedPageLeakTests
     [Fact]
     public void RemovePage_ThenUndoByReinserting_PageComesBack()
     {
-        // The App's undo re-inserts the captured page (Insert clones it): the
-        // cut must not take the clone's content with it.
+        // The App's undo re-inserts the captured page (Insert relinks it,
+        // #2058): the cut must not take its content with it.
         byte[] saved;
         using (var doc = PdfDocument.Open(F.Build(Back.Outline, "1.7")))
         {

@@ -365,7 +365,8 @@ public class PageCollection : IReadOnlyList<PdfPage>
 
     /// <summary>
     /// Insert a page at the specified index.
-    /// Creates a copy of the page.
+    /// Creates a copy of the page, except for a page <see cref="RemoveAt"/> took
+    /// out of this document: that page itself goes back (#2058).
     /// </summary>
     /// <param name="index">Index at which to insert the page.</param>
     /// <param name="page">The page to insert.</param>
@@ -375,6 +376,9 @@ public class PageCollection : IReadOnlyList<PdfPage>
             throw new ArgumentOutOfRangeException(nameof(index), $"Insert index must be between 0 and {_pages.Count}");
 
         EnsureFlatKids();
+
+        if (TryRelinkRemovedPage(index, page))
+            return;
 
         // Clone the page dictionary and any indirect objects the page owns
         // (content streams, resources, annotations) via the shared cloner
@@ -407,6 +411,36 @@ public class PageCollection : IReadOnlyList<PdfPage>
 
         // Reload pages to get correct page numbers
         ReloadAfterStructureMutation();
+    }
+
+    /// <summary>
+    /// Put a page <see cref="RemoveAt"/> took out of this document back into the
+    /// tree as itself, not as a copy (#2058). Everything that pointed at it (a
+    /// bookmark, a link, a destination, the open action, a structure element's
+    /// <c>/Pg</c>, its widgets in <c>/AcroForm/Fields</c>) then points at a live
+    /// page again, so the pre-save cut (#2012) leaves it alone. A copy has new
+    /// object numbers nothing points at, while the original stays recorded as
+    /// removed and the cut takes those references, the page's structure
+    /// elements and its form fields out of the saved file.
+    /// </summary>
+    /// <returns>False for a page of another document, a page still in the tree
+    /// (Insert duplicates it), or an inline page (never recorded as removed).</returns>
+    private bool TryRelinkRemovedPage(int index, PdfPage page)
+    {
+        if (!ReferenceEquals(page.Document, _document)
+            || page.Reference is not { } original
+            || _removedPageObjects?.Contains(original.ObjectNum) != true
+            || _pageNumbers.ContainsKey(original)
+            || _document.GetObject(original) is not PdfDictionary pageDict)
+            return false;
+
+        pageDict["Parent"] = _document.Catalog.GetReference("Pages");
+        _removedPageObjects.Remove(original.ObjectNum);
+        _kidsArray.Insert(index, original);
+        _pagesDict["Kids"] = _kidsArray;
+        _pagesDict.SetInt("Count", _pages.Count + 1);
+        ReloadAfterStructureMutation();
+        return true;
     }
 
     /// <summary>
