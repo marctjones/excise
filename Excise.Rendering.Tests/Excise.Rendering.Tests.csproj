@@ -73,6 +73,7 @@
     <Compile Include="../Excise.Core.Tests/TestSupport/StaleAppearanceFixtures.cs" Link="TestSupport/StaleAppearanceFixtures.cs" />
     <Compile Include="../Excise.Core.Tests/TestSupport/WidgetDisplayTextFixtures.cs" Link="TestSupport/WidgetDisplayTextFixtures.cs" />
     <Compile Include="../Excise.Core.Tests/TestSupport/WidgetOverflowFixtures.cs" Link="TestSupport/WidgetOverflowFixtures.cs" />
+    <Compile Include="../Excise.Core.Tests/TestSupport/MultiPageWidgetFixtures.cs" Link="TestSupport/MultiPageWidgetFixtures.cs" />
     <Compile Include="../Excise.Core.Tests/TestSupport/MarkedContentCarrierFixtures.cs" Link="TestSupport/MarkedContentCarrierFixtures.cs" />
     <!-- ONE fixture/corpus locator, same reasoning (#1527). Thirteen
          hand-rolled copies of "walk up N directories" is what put the

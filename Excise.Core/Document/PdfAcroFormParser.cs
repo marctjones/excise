@@ -203,7 +203,23 @@ internal static class PdfAcroFormParser
             rawDictionary: fieldDict,
             widgetDictionaries: widgetDicts.AsReadOnly(),
             flags: flags,
-            widgets: widgets.AsReadOnly());
+            widgets: widgets.AsReadOnly(),
+            widgetPageNumbers: widgetDicts.Select(w => WidgetPage(doc, w, widgetToPage, consultP)).ToList());
+    }
+
+    /// <summary>
+    /// #2040: the page a widget is drawn on: the page whose <c>/Annots</c>
+    /// lists it (ISO 32000-2 12.5.2), else the page its optional <c>/P</c>
+    /// names. <see cref="ExtractWidgetInfo"/> prefers <c>/P</c> for the public
+    /// <see cref="PdfFieldWidget.PageNumber"/>; where the two disagree, the
+    /// <c>/Annots</c> page is the one a reader paints.
+    /// </summary>
+    private static int? WidgetPage(
+        PdfDocument doc, PdfDictionary widget, Dictionary<PdfDictionary, int> widgetToPage, bool consultP)
+    {
+        if (widgetToPage.TryGetValue(widget, out var page))
+            return page;
+        return consultP && doc.TryGetPageNumber(widget.GetOptional("P"), out var pn) ? pn : null;
     }
 
     /// <summary>

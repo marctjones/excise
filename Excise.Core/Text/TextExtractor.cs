@@ -156,13 +156,17 @@ public class TextExtractor
     private void EmitFormFieldLetters()
     {
         IReadOnlyList<PdfField> fields;
-        try { fields = _page.GetFormFields(); }
+        // #2040: every field with a widget on this page, not only those whose
+        // first widget is here.
+        try { fields = _page.GetFormFieldsWithWidgetsOnPage(); }
         catch (Exception __ex) when (__ex is not OutOfMemoryException) { return; }
 
         var pageWidgets = PageWidgetSet();
         foreach (var field in fields)
         {
-            if (field.Rect == null) continue;
+            // The rect of the field's widget on THIS page: Field.Rect is the
+            // first widget's, on whichever page that is (#2040).
+            if (FieldRectOnThisPage(field) is not { } rect) continue;
             var fontName = $"AcroForm:{field.FieldType}";
 
             var drawn = ReadFieldAppearanceLetters(field, pageWidgets, fontName, out var hidden);
@@ -179,7 +183,7 @@ public class TextExtractor
                 {
                     var text = ExtractWidgetAppearanceText(widget);
                     if (!string.IsNullOrEmpty(text))
-                        EmitMultiLineLettersInRect(text, field.Rect.Value, fontName);
+                        EmitMultiLineLettersInRect(text, rect, fontName);
                 }
                 continue;
             }
@@ -193,7 +197,7 @@ public class TextExtractor
             {
                 var missing = options.Where(o => !AppearanceReads(drawn, o)).ToList();
                 if (missing.Count > 0)
-                    EmitMultiLineLettersInRect(string.Join("\n", missing), field.Rect.Value, fontName);
+                    EmitMultiLineLettersInRect(string.Join("\n", missing), rect, fontName);
                 continue;
             }
 
@@ -207,9 +211,9 @@ public class TextExtractor
             // single-line EmitLettersInRect silently truncates to whatever
             // fits the rect's width, which is wrong for one long line.
             if (field.IsMultiline)
-                EmitMultiLineLettersInRect(value, field.Rect.Value, fontName);
+                EmitMultiLineLettersInRect(value, rect, fontName);
             else
-                EmitLettersInRect(value, field.Rect.Value, fontName);
+                EmitLettersInRect(value, rect, fontName);
         }
     }
 
@@ -244,9 +248,9 @@ public class TextExtractor
 
     /// <summary>
     /// The letters a field's widgets on this page draw, at their drawn
-    /// positions. A single-widget field is on this page by construction
-    /// (<see cref="PdfPage.GetFormFields"/>); a widget of a multi-widget field
-    /// must be in this page's <c>/Annots</c>.
+    /// positions. Each widget is read on its own page
+    /// (<see cref="PdfField.WidgetPageNumbers"/>: the page whose <c>/Annots</c>
+    /// lists it, #2040); a widget on another page contributes nothing here.
     /// </summary>
     /// <remarks>
     /// A widget flagged Hidden or NoView (§12.5.3 Table 167) paints nothing on
@@ -254,8 +258,9 @@ public class TextExtractor
     /// <paramref name="hidden"/> and keeps the reading it had before #2039. Its
     /// appearance is a carrier the redaction profile removes and reports
     /// (<c>RemoveHiddenAnnotationAppearances</c>, #1581). A widget of a
-    /// multi-widget field that is not in this page's <c>/Annots</c> is listed
-    /// there too.
+    /// multi-widget field that no page's <c>/Annots</c> lists is not drawn
+    /// either: it is listed there too, on the page its <c>/P</c> names, or with
+    /// no <c>/P</c>, on the field's first page.
     /// </remarks>
     private List<Letter> ReadFieldAppearanceLetters(
         PdfField field, HashSet<PdfDictionary> pageWidgets, string fontName, out List<PdfDictionary> hidden)
@@ -263,12 +268,15 @@ public class TextExtractor
         var letters = new List<Letter>();
         hidden = new List<PdfDictionary>();
         var widgets = field.WidgetDictionaries;
-        foreach (var widget in widgets)
+        for (var i = 0; i < widgets.Count; i++)
         {
+            var widget = widgets[i];
+            if (!WidgetIsOnThisPage(field, i))
+                continue;   // read on its own page (#2040)
             if (widgets.Count > 1 && !pageWidgets.Contains(widget))
             {
-                // Not painted on this page: the pre-#2039 reading, as for a
-                // hidden widget (a field's other pages are #2040).
+                // Not painted on any page: the pre-#2039 reading, as for a
+                // hidden widget.
                 hidden.Add(widget);
                 continue;
             }
@@ -281,6 +289,28 @@ public class TextExtractor
             letters.AddRange(ReadWidgetAppearanceLetters(widget, fontName));
         }
         return letters;
+    }
+
+    /// <summary>#2040: whether a field's widget <paramref name="index"/> is on this page; one on no page belongs to the field's first page.</summary>
+    private bool WidgetIsOnThisPage(PdfField field, int index)
+        => (field.WidgetPageNumbers[index] ?? field.PageNumber) == _page.PageNumber;
+
+    /// <summary>
+    /// #2040: the <c>/Rect</c> of the field's first widget on this page, where
+    /// its value carriers are laid out when no appearance reads them; the
+    /// field's first widget's rect when none of its widgets here parses one.
+    /// </summary>
+    private PdfRectangle? FieldRectOnThisPage(PdfField field)
+    {
+        var widgets = field.WidgetDictionaries;
+        for (var i = 0; i < widgets.Count; i++)
+        {
+            if (WidgetIsOnThisPage(field, i)
+                && _page.Document.Resolve(widgets[i].GetOptional("Rect") ?? PdfNull.Instance) is PdfArray rectArray
+                && AppearanceMapping.TryGetNumbers(_page.Document, rectArray, 4, out var r))
+                return new PdfRectangle(r[0], r[1], r[2], r[3]);
+        }
+        return field.Rect;
     }
 
     private const int AnnotationFlagHidden = 1 << 1;
