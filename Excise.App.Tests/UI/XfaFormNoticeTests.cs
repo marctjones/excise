@@ -130,6 +130,9 @@ public class XfaFormNoticeTests : IDisposable
         vm.IsXfaNoticeOpen.Should().BeTrue();
         vm.XfaNoticeSeverity.Should().Be(FAInfoBarSeverity.Informational);
         vm.XfaNoticeTitle.Should().Be(MainWindowViewModel.StaticXfaNoticeTitle);
+        // #2044: a fill keeps the XFA datasets in step, so the notice must not warn of a differing XFA copy.
+        vm.XfaNoticeMessage.Should().Be(MainWindowViewModel.StaticXfaNoticeMessage)
+            .And.NotContain("may show");
     }
 
     [FixedAvaloniaFact]

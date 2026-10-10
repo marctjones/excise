@@ -38,7 +38,7 @@ internal partial class MainWindowViewModel
     internal const string CertificationRemovedToastTitle = "Certification removed from the saved copy";
     internal const string StaticXfaNoticeTitle = "This form also contains XFA data.";
     internal const string StaticXfaNoticeMessage =
-        "excise fills the standard form fields. Adobe Acrobat may show the XFA copy of the values instead.";
+        "excise fills the standard form fields and keeps the form's XFA copy of each value in step. Fields it can't match are listed when you save.";
 
     private PdfXfaFormKind _xfaFormKind;
     private bool _isXfaFormLaidOut;
