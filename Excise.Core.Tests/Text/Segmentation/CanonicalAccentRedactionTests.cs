@@ -5,6 +5,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Tests.Text;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text.Segmentation;
@@ -66,6 +67,11 @@ public class CanonicalAccentRedactionTests
             "sanity: the precomposed spelling must NOT be extractable, or matching would succeed without canonical folding");
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("(ABCDE)",
             "sanity: the glyph-code carrier must be present before redaction");
+        // Independent control: MuPDF must see the word in the INPUT, or its
+        // absence after redaction proves nothing.
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolNfc(pdf).Should().Contain(PrecomposedWord.Normalize(NormalizationForm.FormC),
+            "control: the independent oracle must read the word in the input");
 
         var removed = doc.RedactText(PrecomposedWord, RedactionOptions.Default).VerifiedRemovals;
 
@@ -79,6 +85,12 @@ public class CanonicalAccentRedactionTests
         searchable.Should().NotContain(PrecomposedWord, "the word must not survive precomposed");
         searchable.Should().NotContain(DecomposedWord, "nor decomposed");
         searchable.Should().NotContain("(ABCDE)", "nor as its raw character codes");
+        // Independent oracles: MuPDF text of the saved file and the
+        // decompressing scanner over the raw codes.
+        MutoolNfc(saved).Should().NotContain(PrecomposedWord.Normalize(NormalizationForm.FormC),
+            "MuPDF must not read the word out of the saved file");
+        SavedPdfLeakScanner.FindTerm(saved, "(ABCDE)").Should().BeEmpty(
+            "no raw glyph-code carrier may remain in any decompressed stream");
 
         using var reopened = PdfDocument.Open(saved);
         reopened.GetPage(1).Text.Should().NotContainAny(PrecomposedWord, DecomposedWord);
@@ -97,16 +109,23 @@ public class CanonicalAccentRedactionTests
         doc.GetPage(1).Text.Should().NotContain(DecomposedWord);
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("(ABCD)",
             "sanity: the glyph-code carrier must be present before redaction");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolNfc(pdf).Should().Contain(PrecomposedWord.Normalize(NormalizationForm.FormC),
+            "control: the independent oracle must read the word in the input");
 
         var removed = doc.RedactText(DecomposedWord, RedactionOptions.Default).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             "a decomposed needle must match canonically equivalent precomposed text (#724)");
 
-        var searchable = SearchableTextOf(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        var searchable = SearchableTextOf(saved);
         searchable.Should().NotContain(PrecomposedWord);
         searchable.Should().NotContain(DecomposedWord);
         searchable.Should().NotContain("(ABCD)");
+        MutoolNfc(saved).Should().NotContain(PrecomposedWord.Normalize(NormalizationForm.FormC),
+            "MuPDF must not read the word out of the saved file");
+        SavedPdfLeakScanner.FindTerm(saved, "(ABCD)").Should().BeEmpty();
     }
 
     [Theory]
@@ -121,15 +140,21 @@ public class CanonicalAccentRedactionTests
 
         var storedWord = string.Concat(decomposedScalars.Select(char.ConvertFromUtf32));
         doc.GetPage(1).Text.Should().Contain(storedWord, "sanity: raw decomposed text must extract");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolNfc(pdf).Should().Contain(precomposedNeedle.Normalize(NormalizationForm.FormC),
+            "control: the independent oracle must read the word in the input");
 
         var removed = doc.RedactText(precomposedNeedle, RedactionOptions.Default).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             $"needle '{precomposedNeedle}' must match its canonical decomposition");
 
-        var searchable = SearchableTextOf(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        var searchable = SearchableTextOf(saved);
         searchable.Should().NotContain(storedWord);
         searchable.Should().NotContain(precomposedNeedle);
+        MutoolNfc(saved).Should().NotContain(precomposedNeedle.Normalize(NormalizationForm.FormC),
+            "MuPDF must not read the word out of the saved file");
     }
 
     [Fact]
@@ -141,14 +166,25 @@ public class CanonicalAccentRedactionTests
         var pdf = RtlPdfFixtures.SingleTj(scalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
 
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        var inputText = MutoolNfc(pdf);
+        inputText.Should().Contain(PrecomposedWord.Normalize(NormalizationForm.FormC),
+            "control: the independent oracle must read the word in the input");
+        inputText.Should().Contain("xyz", "control: and the neighbour");
+
         var removed = doc.RedactText(PrecomposedWord, RedactionOptions.Default).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
-        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        using var reopened = PdfDocument.Open(saved);
         var text = reopened.GetPage(1).Text;
         text.Should().Contain("xyz", "unrelated text on the same line must survive");
         text.Should().NotContainAny(PrecomposedWord, DecomposedWord);
+        var mutoolText = MutoolNfc(saved);
+        mutoolText.Should().Contain("xyz", "MuPDF must still read the neighbour");
+        mutoolText.Should().NotContain(PrecomposedWord.Normalize(NormalizationForm.FormC),
+            "MuPDF must not read the word out of the saved file");
     }
 
     [Fact]
@@ -173,6 +209,15 @@ public class CanonicalAccentRedactionTests
         reopened.GetPage(1).Text.Should().Contain(PrecomposedWord,
             "the accented word must be untouched by a non-equivalent needle");
     }
+
+    /// <summary>
+    /// MuPDF's text of the file, NFC-folded so spelling form cannot matter and
+    /// with whitespace removed (MuPDF puts a space after a separate
+    /// combining-mark glyph, which would split the word).
+    /// </summary>
+    private static string MutoolNfc(byte[] pdf) =>
+        string.Concat(MutoolTextOracle.ExtractAllPages(pdf).Where(c => !char.IsWhiteSpace(c)))
+            .Normalize(NormalizationForm.FormC);
 
     /// <summary>
     /// Carrier-agnostic view of the saved file, per the redaction test rules:

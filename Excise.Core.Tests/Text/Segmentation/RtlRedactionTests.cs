@@ -60,6 +60,10 @@ public class RtlRedactionTests
         // nothing. The fixture encodes the word as codes 'DCBA' (visual order).
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("DCBA",
             "sanity: the carrier must be present before redaction for its absence after to mean anything");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        // MuPDF orders RTL runs its own way, so compare the letters, not the sequence.
+        MutoolTextOracle.ExtractFolded(pdf).Should().ContainAll(ArabicWord.Select(c => c.ToString()),
+            "control: the independent oracle must read the word in the input");
 
         var removed = doc.RedactText(ArabicWord, RedactionOptions.Default).VerifiedRemovals;
 
@@ -73,6 +77,9 @@ public class RtlRedactionTests
         searchable.Should().NotContain(Reverse(ArabicWord), "nor in visual order");
         searchable.Should().NotContain("DCBA", "nor as its raw character codes");
         searchable.Should().NotContain("ABCD", "nor as reversed character codes");
+        MutoolTextOracle.ExtractFolded(saved).Should().NotContainAny(ArabicWord.Select(c => c.ToString()),
+            "MuPDF must not read any letter of the word out of the saved file");
+        SavedPdfLeakScanner.FindTerm(saved, "(DCBA)").Should().BeEmpty();
 
         using var reopened = PdfDocument.Open(saved);
         reopened.GetPage(1).Text.Should().NotContainAny(ArabicWord, Reverse(ArabicWord));
@@ -174,6 +181,10 @@ public class RtlDigitIslandRedactionTests
         // carrier must be present, or the absence assertions prove nothing.
         doc.GetPage(1).Text.Should().Contain(LogicalPhrase);
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("ABCDEFGHIJ");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdf).Should().ContainAll(
+            MutoolTextOracle.Fold(LogicalPhrase).Select(c => c.ToString()),
+            "control: the independent oracle must read the line in the input");
 
         var removed = doc.RedactText(LogicalPhrase, RedactionOptions.Default).VerifiedRemovals;
 
@@ -181,7 +192,12 @@ public class RtlDigitIslandRedactionTests
             "a logical-order phrase spanning a number must match the visual-order line; " +
             "0 matches is the silent-failure mode this test exists to prevent");
 
-        var searchable = SearchableTextOf(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        var searchable = SearchableTextOf(saved);
+        MutoolTextOracle.ExtractFolded(saved).Should().NotContainAny(
+            MutoolTextOracle.Fold(LogicalPhrase).Select(c => c.ToString()),
+            "MuPDF must not read any letter or digit of the line out of the saved file");
+        SavedPdfLeakScanner.FindTerm(saved, "(ABCDEFGHIJ)").Should().BeEmpty();
         searchable.Should().NotContain(LogicalPhrase, "the phrase must not survive in logical order");
         searchable.Should().NotContain(ReverseString(LogicalPhrase), "nor fully reversed");
         searchable.Should().NotContainAny("سنة", "عمر", "ةنس", "رمع");
@@ -201,12 +217,19 @@ public class RtlDigitIslandRedactionTests
 
         // The number's stream codes are 'E' ('3') and 'F' ('0').
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("DEF");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdf).Should().Contain("30",
+            "control: the independent oracle must read the number in the input");
 
         var removed = doc.RedactText("30", RedactionOptions.Default).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
-        var searchable = SearchableTextOf(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        var mutoolText = MutoolTextOracle.ExtractFolded(saved);
+        mutoolText.Should().NotContain("30", "MuPDF must not read the number out of the saved file");
+        mutoolText.Should().ContainAll("سنة".Select(c => c.ToString()), "MuPDF must still read the neighbouring words");
+        var searchable = SearchableTextOf(saved);
         searchable.Should().NotContain("DEF",
             "the number's raw character codes must be gone from the saved bytes");
 

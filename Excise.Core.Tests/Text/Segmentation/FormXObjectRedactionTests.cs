@@ -158,10 +158,22 @@ public class FormXObjectRedactionTests
                    "BT /F1 12 Tf 100 700 Td (FORMGONE) Tj ET " +
                    "BT /F1 12 Tf 100 600 Td (FORMKEEP) Tj ET"));
 
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        var mutoolBefore = MutoolTextOracle.ExtractFolded(pdf);
+        mutoolBefore.Should().Contain("FORMGONE").And.Contain("FORMKEEP").And.Contain("PAGEOWNTEXT",
+            "control: MuPDF reads the form and page text in the input");
+        SavedPdfLeakScanner.FindTerm(pdf, "FORMGONE").Should().NotBeEmpty("control: the scanner sees the term in the input");
+
         using var doc = PdfDocument.Open(pdf);
         doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 250, 716), RedactionOptions.Default with { DrawBox = false });
 
-        using var re = PdfDocument.Open(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        var mutoolAfter = MutoolTextOracle.ExtractFolded(saved);
+        mutoolAfter.Should().NotContain("FORMGONE", "MuPDF must not read the redacted form string");
+        mutoolAfter.Should().Contain("FORMKEEP").And.Contain("PAGEOWNTEXT",
+            "MuPDF must still read the surviving form string and the page text (fonts resolve)");
+        SavedPdfLeakScanner.FindTerm(saved, "FORMGONE").Should().BeEmpty();
+        using var re = PdfDocument.Open(saved);
         var text = string.Concat(re.GetPage(1).Letters.Select(l => l.Value));
         text.Should().NotContain("FORMGONE", "the redacted form string is removed");
         text.Should().Contain("FORMKEEP", "the form string outside the band survives with a resolvable font");
@@ -250,13 +262,20 @@ public class FormXObjectRedactionTests
                    "/Resources << /Font << /F1 5 0 R >> >>",
                    "BT /F1 12 Tf 100 700 Td (INHERITEDRES) Tj ET"));
 
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdf).Should().Contain("INHERITEDRES",
+            "control: MuPDF reads the form text (inherited resources) in the input");
+
         using var doc = PdfDocument.Open(pdf);
         doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 260, 716), RedactionOptions.Default with { DrawBox = false });
 
         // The form is reached via the Pages node's /Resources, so it stays
         // reachable (every page under that node inherits it) and is NOT pruned
         // — like a shared form. The page's inlined copy is still redacted.
-        using var re = PdfDocument.Open(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        MutoolTextOracle.ExtractFolded(saved).Should().NotContain("INHERITEDRES",
+            "MuPDF must not read the redacted text out of the saved file");
+        using var re = PdfDocument.Open(saved);
         var pageContent = Encoding.Latin1.GetString(re.GetPage(1).GetContentStreamBytes());
         pageContent.Should().NotContain("INHERITEDRES",
             "the flattened page content must have the form text removed");
@@ -281,10 +300,19 @@ public class FormXObjectRedactionTests
             Obj("<< /Type /ExtGState /ca 1 >>"),    // page's GS0
             Obj("<< /Type /ExtGState /ca 0.5 >>")); // form's GS0 (different object)
 
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdf).Should().Contain("GSCOLLIDE",
+            "control: MuPDF reads the form text in the input");
+        SavedPdfLeakScanner.FindTerm(pdf, "GSCOLLIDE").Should().NotBeEmpty("control: the scanner sees the term in the input");
+
         using var doc = PdfDocument.Open(pdf);
         doc.GetPage(1).RedactArea(new PdfRectangle(90, 695, 300, 716), RedactionOptions.Default with { DrawBox = false });
 
-        using var re = PdfDocument.Open(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        MutoolTextOracle.ExtractFolded(saved).Should().NotContain("GSCOLLIDE",
+            "MuPDF must not read the redacted text out of the saved file");
+        SavedPdfLeakScanner.FindTerm(saved, "GSCOLLIDE").Should().BeEmpty();
+        using var re = PdfDocument.Open(saved);
         var page = re.GetPage(1);
         Encoding.Latin1.GetString(page.GetContentStreamBytes())
             .Should().NotContain("GSCOLLIDE", "the matrix-positioned form text is redacted");

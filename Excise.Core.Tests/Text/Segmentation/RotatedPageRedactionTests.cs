@@ -3,6 +3,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Primitives;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text.Segmentation;
@@ -42,6 +43,12 @@ public class RotatedPageRedactionTests
         page.Rotation = rotation;
 
         page.Text.Should().Contain(Secret).And.Contain(Keep, "fixture sanity");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        var inputBytes = pdf.SaveToBytes();
+        var mutoolBefore = MutoolTextOracle.ExtractFolded(inputBytes);
+        mutoolBefore.Should().Contain(Secret).And.Contain(Keep,
+            $"control: MuPDF reads both words in the input at /Rotate {rotation}");
+        SavedPdfLeakScanner.FindTerm(inputBytes, Secret).Should().NotBeEmpty("control: the scanner sees the term in the input");
 
         // Where the user actually drags: the on-screen (visual) box over SECRET.
         var visualRect = VisualRectOf(page, Secret);
@@ -53,6 +60,12 @@ public class RotatedPageRedactionTests
             .Normalize();
 
         page.RedactArea(contentRect, RedactionOptions.Default with { DrawBox = false });
+
+        var savedBytes = pdf.SaveToBytes();
+        var mutoolAfter = MutoolTextOracle.ExtractFolded(savedBytes);
+        mutoolAfter.Should().NotContain(Secret, $"MuPDF must not read the word out of the saved file at /Rotate {rotation}");
+        mutoolAfter.Should().Contain(Keep, $"MuPDF must still read the neighbour at /Rotate {rotation}");
+        SavedPdfLeakScanner.FindTerm(savedBytes, Secret).Should().BeEmpty();
 
         var after = page.Text;
         after.Should().NotContain(Secret,
@@ -123,11 +136,19 @@ public class RotatedPageRedactionTests
         pagesDict!.SetInt("Rotate", 90);
 
         page.Rotation.Should().Be(90, "rotation must be inherited from the Pages node");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        var mutoolBefore = MutoolTextOracle.ExtractFolded(pdf.SaveToBytes());
+        mutoolBefore.Should().Contain(Secret).And.Contain(Keep, "control: MuPDF reads both words in the input");
 
         var visualRect = VisualRectOf(page, Secret);
         var contentRect = PdfCoordinateMapper.ToContentPoints(page, visualRect).ToPdfRectangle().Normalize();
         page.RedactArea(contentRect, RedactionOptions.Default with { DrawBox = false });
 
+        var savedBytes = pdf.SaveToBytes();
+        var mutoolAfter = MutoolTextOracle.ExtractFolded(savedBytes);
+        mutoolAfter.Should().NotContain(Secret, "MuPDF must not read the word out of the saved file");
+        mutoolAfter.Should().Contain(Keep, "MuPDF must still read the neighbour");
+        SavedPdfLeakScanner.FindTerm(savedBytes, Secret).Should().BeEmpty();
         page.Text.Should().NotContain(Secret, "inherited /Rotate must be applied to the redaction mapping");
         page.Text.Should().Contain(Keep);
     }

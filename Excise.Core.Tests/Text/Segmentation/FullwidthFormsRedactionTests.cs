@@ -5,6 +5,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Tests.Text;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text.Segmentation;
@@ -61,6 +62,9 @@ public class FullwidthFormsRedactionTests
             "sanity: the ASCII spelling must NOT be extractable, or matching would succeed without width folding");
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("(ABC)",
             "sanity: the glyph-code carrier must be present before redaction");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdf).Should().Contain(MutoolTextOracle.Fold(plainNeedle),
+            "control: the independent oracle must read the text in the input");
 
         var removed = doc.RedactText(plainNeedle, RedactionOptions.Default).VerifiedRemovals;
 
@@ -73,6 +77,9 @@ public class FullwidthFormsRedactionTests
         searchable.Should().NotContain(plainNeedle, "the text must not survive in ASCII");
         searchable.Should().NotContain(storedText, "nor fullwidth");
         searchable.Should().NotContain("(ABC)", "nor as its raw character codes");
+        MutoolTextOracle.ExtractFolded(saved).Should().NotContain(MutoolTextOracle.Fold(plainNeedle),
+            "MuPDF must not read the text out of the saved file");
+        SavedPdfLeakScanner.FindTerm(saved, "(ABC)").Should().BeEmpty();
 
         using var reopened = PdfDocument.Open(saved);
         reopened.GetPage(1).Text.Should().NotContainAny(plainNeedle, storedText);
@@ -91,16 +98,23 @@ public class FullwidthFormsRedactionTests
         doc.GetPage(1).Text.Should().Contain(storedText,
             "sanity: the fixture must extract halfwidth");
         doc.GetPage(1).Text.Should().NotContain(typedNeedle);
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdf).Should().Contain(MutoolTextOracle.Fold(typedNeedle),
+            "control: the independent oracle must read the katakana in the input");
 
         var removed = doc.RedactText(typedNeedle, RedactionOptions.Default).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             "a regular-katakana needle must match halfwidth katakana (#727)");
 
-        var searchable = SearchableTextOf(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        var searchable = SearchableTextOf(saved);
         searchable.Should().NotContain(storedText);
         searchable.Should().NotContain(typedNeedle);
         searchable.Should().NotContain("(ABCD)");
+        MutoolTextOracle.ExtractFolded(saved).Should().NotContain(MutoolTextOracle.Fold(typedNeedle),
+            "MuPDF must not read the katakana out of the saved file");
+        SavedPdfLeakScanner.FindTerm(saved, "(ABCD)").Should().BeEmpty();
     }
 
     [Fact]
@@ -154,14 +168,24 @@ public class FullwidthFormsRedactionTests
         var pdf = RtlPdfFixtures.SingleTj(scalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
 
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        var inputText = MutoolTextOracle.ExtractFolded(pdf);
+        inputText.Should().Contain("ABC", "control: the independent oracle must read the word in the input");
+        inputText.Should().Contain("xyz", "control: and the neighbour");
+
         var removed = doc.RedactText("ABC", RedactionOptions.Default).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
-        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        using var reopened = PdfDocument.Open(saved);
         var text = reopened.GetPage(1).Text;
         text.Should().Contain("xyz", "unrelated text on the same line must survive");
         text.Should().NotContain("ABC");
+        var mutoolText = MutoolTextOracle.ExtractFolded(saved);
+        mutoolText.Should().Contain("xyz", "MuPDF must still read the neighbour");
+        mutoolText.Should().NotContain("ABC", "MuPDF must not read the word out of the saved file");
+        SavedPdfLeakScanner.FindTerm(saved, "(ABC").Should().BeEmpty();
     }
 
     [Theory]

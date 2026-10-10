@@ -71,6 +71,9 @@ public sealed class WholeWordRedactionTests
     [Fact]
     public void WholeWord_MatchesOnlyTheStandaloneOccurrence()
     {
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(SleemanPdf()).Should().Be("SleemanmetLee",
+            "control: MuPDF reads the standalone 'Lee' in the input");
         using var doc = PdfDocument.Open(SleemanPdf());
         var report = doc.RedactText("Lee", RedactionOptions.Default with { WholeWord = true });
 
@@ -78,6 +81,8 @@ public sealed class WholeWordRedactionTests
             "'Lee' inside 'Sleeman' is bounded by word characters on both sides");
         report.Survived.Should().Be(0);
 
+        MutoolTextOracle.ExtractFolded(doc.SaveToBytes()).Should().Be("Sleemanmet",
+            "MuPDF must read the longer word intact and no standalone 'Lee'");
         var text = doc.GetPage(1).Text;
         text.Should().Contain("Sleeman", "the longer word is left intact");
         text.Should().NotContain("Lee", "the standalone occurrence is gone");

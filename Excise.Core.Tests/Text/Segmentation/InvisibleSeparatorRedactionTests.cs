@@ -5,6 +5,7 @@ using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Tests.Text;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text.Segmentation;
@@ -59,6 +60,9 @@ public class InvisibleSeparatorRedactionTests
             "sanity: the unbroken spelling must NOT be extractable, or matching would succeed without separator folding");
         SearchableTextOf(doc.SaveToBytes()).Should().Contain("(ABCDEFG)",
             "sanity: the glyph-code carrier must be present before redaction");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdf).Should().Contain("secret",
+            "control: the independent oracle must read the word (separator folded away) in the input");
 
         var removed = doc.RedactText("secret", RedactionOptions.Default).VerifiedRemovals;
 
@@ -72,6 +76,9 @@ public class InvisibleSeparatorRedactionTests
         searchable.Should().NotContain("secret", "the word must not survive unbroken");
         searchable.Should().NotContain(storedWord, "nor with the invisible separator");
         searchable.Should().NotContain("(ABCDEFG)", "nor as its raw character codes");
+        MutoolTextOracle.ExtractFolded(saved).Should().NotContain("secret",
+            "MuPDF must not read the word out of the saved file");
+        SavedPdfLeakScanner.FindTerm(saved, "(ABCDEFG)").Should().BeEmpty();
 
         using var reopened = PdfDocument.Open(saved);
         reopened.GetPage(1).Text.Should().NotContainAny("secret", storedWord);
@@ -90,16 +97,23 @@ public class InvisibleSeparatorRedactionTests
 
         doc.GetPage(1).Text.Should().Contain(storedText,
             "sanity: the fixture must extract with the raw NBSP");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdf).Should().Contain(MutoolTextOracle.Fold("top secret"),
+            "control: the independent oracle must read the text in the input");
 
         var removed = doc.RedactText("top secret", RedactionOptions.Default).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0,
             "a needle typed with a plain space must match text stored with U+00A0 (#726)");
 
-        var searchable = SearchableTextOf(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        var searchable = SearchableTextOf(saved);
         searchable.Should().NotContain(storedText);
         searchable.Should().NotContain("top secret");
         searchable.Should().NotContain("(ABCDEFGHIJ)");
+        MutoolTextOracle.ExtractFolded(saved).Should().NotContain(MutoolTextOracle.Fold("top secret"),
+            "MuPDF must not read the text out of the saved file");
+        SavedPdfLeakScanner.FindTerm(saved, "(ABCDEFGHIJ)").Should().BeEmpty();
     }
 
     [Fact]
@@ -130,15 +144,23 @@ public class InvisibleSeparatorRedactionTests
             .Append(' ').Concat("xyz".Select(c => (int)c)).ToArray();
         var pdf = RtlPdfFixtures.SingleTj(scalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        var inputText = MutoolTextOracle.ExtractFolded(pdf);
+        inputText.Should().Contain("secret", "control: the independent oracle must read the word in the input");
+        inputText.Should().Contain("xyz", "control: and the neighbour");
 
         var removed = doc.RedactText("secret", RedactionOptions.Default).VerifiedRemovals;
 
         removed.Should().BeGreaterThan(0);
 
-        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+        var saved = doc.SaveToBytes();
+        using var reopened = PdfDocument.Open(saved);
         var text = reopened.GetPage(1).Text;
         text.Should().Contain("xyz", "unrelated text on the same line must survive");
         text.Should().NotContain("secret");
+        var mutoolText = MutoolTextOracle.ExtractFolded(saved);
+        mutoolText.Should().Contain("xyz", "MuPDF must still read the neighbour");
+        mutoolText.Should().NotContain("secret", "MuPDF must not read the word out of the saved file");
     }
 
     [Fact]

@@ -111,13 +111,24 @@ public sealed class AdversarialRedactionRegressionTests
             "JBIG2 scan fixture absent [requires: corpus:pdfjs]");
         using var doc = PdfDocument.Open(path);
         var before = CountImageDo(doc.GetPage(1));
+        // Independent control: the byte scanner sees the original JBIG2 stream
+        // in the input, so its absence from the output means something.
+        // Independent control: MuPDF finds the page-1 JBIG2 scan in the input.
+        Assert.SkipUnless(MutoolImageOracle.IsAvailable, "mutool not installed");
+        MutoolImageOracle.Images(File.ReadAllBytes(path), 1)
+            .Should().Contain(i => i.Filter == "JBIG2" && i.Width == 2480,
+                "control: MuPDF must see the page-1 JBIG2 scan in the input");
         var report = doc.RedactText("V1HH", RedactionOptions.Default);
         report.ImageRegionsRedacted.Should().BeGreaterThan(0,
             "the JBIG2 scan's matched region is destroyed in place (#1197)");
         report.ImagesDroppedWhole.Should().Be(0,
             "a successfully decoded JBIG2 scan must not be destructively dropped");
 
-        using var reopened = PdfDocument.Open(doc.SaveToBytes());
+        var savedJbig2 = doc.SaveToBytes();
+        MutoolImageOracle.Images(savedJbig2, 1)
+            .Should().NotContain(i => i.Filter == "JBIG2",
+                "MuPDF must find no original JBIG2 scan on the redacted page");
+        using var reopened = PdfDocument.Open(savedJbig2);
         var page = reopened.GetPage(1);
         CountImageDo(page).Should().Be(before,
             "the image is retained as a region-redacted replacement, not dropped");
@@ -398,6 +409,8 @@ public sealed class AdversarialRedactionRegressionTests
             Obj("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>"));
 
         using var doc = PdfDocument.Open(pdf);
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdf).Should().Be("AB", "control: MuPDF reads both glyphs in the input");
         var page = doc.GetPage(1);
         var b = page.Letters.Single(l => l.Value == "B");
         var partialB = new PdfRectangle(
@@ -409,6 +422,9 @@ public sealed class AdversarialRedactionRegressionTests
         page.RedactArea(partialB, RedactionOptions.Default with { DrawBox = false });
 
         var saved = doc.SaveToBytes();
+        MutoolTextOracle.ExtractFolded(saved).Should().Be("A",
+            "MuPDF must read only the unredacted neighbour from the saved file");
+        SavedPdfLeakScanner.FindTerm(saved, "(B)").Should().BeEmpty();
         using var reopened = PdfDocument.Open(saved);
         var text = string.Concat(reopened.GetPage(1).Letters.Select(l => l.Value));
         text.Should().Be("A");
@@ -635,12 +651,24 @@ public sealed class AdversarialRedactionRegressionTests
             string.Concat(probe.GetPage(1).Letters.Select(l => l.Value))
                 .Should().Contain("yoursoftware");
 
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        var inputText = MutoolTextOracle.ExtractAllPages(pdf);
+        inputText.Should().Contain("your").And.Contain("software", "control: MuPDF reads both words in the input");
+        inputText.Should().NotContain("yours", "MuPDF agrees there is no 'yours' on the page (word gap)");
+
         using var doc = PdfDocument.Open(pdf);
         doc.RedactText("yours", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(0,
             "'yours' must not match across the your|software word gap (#1177)");
+        // Nothing was removed, so MuPDF must still read both words.
+        var untouched = MutoolTextOracle.ExtractAllPages(doc.SaveToBytes());
+        untouched.Should().Contain("your").And.Contain("software");
         // sanity: the real words still match.
         using var doc2 = PdfDocument.Open(pdf);
         doc2.RedactText("software", RedactionOptions.Default with { DrawBox = false }).VerifiedRemovals.Should().Be(1);
+        var saved2 = doc2.SaveToBytes();
+        MutoolTextOracle.ExtractAllPages(saved2).Should().NotContain("software")
+            .And.Contain("your", "MuPDF reads the neighbour but not the redacted word");
+        SavedPdfLeakScanner.FindTerm(saved2, "software").Should().BeEmpty();
     }
 
     private static string Obj(string body) => body;

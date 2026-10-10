@@ -3,6 +3,7 @@ using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text.Segmentation;
@@ -31,6 +32,11 @@ public class PdfPageRedactionEndToEndTests
         var initialText = string.Concat(page.Letters.Select(l => l.Value));
         initialText.Should().Contain("WORLD");
         initialText.Should().Contain("HELLO");
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdfBytes).Should().Be("HELLOWORLD",
+            "control: MuPDF reads both words in the input");
+        SavedPdfLeakScanner.FindTerm(pdfBytes, "WORLD").Should().NotBeEmpty(
+            "control: the scanner sees the term in the input");
 
         // Locate the bounding box of WORLD in the initially-extracted letters
         // so we know exactly where to target the redaction.
@@ -48,6 +54,9 @@ public class PdfPageRedactionEndToEndTests
         // stream to be re-serialized and re-parsed — catches anything that
         // only works in the mutated in-memory copy.
         var savedBytes = doc.SaveToBytes();
+        MutoolTextOracle.ExtractFolded(savedBytes).Should().Be("HELLO",
+            "MuPDF must read only the surviving word from the saved file");
+        SavedPdfLeakScanner.FindTerm(savedBytes, "WORLD").Should().BeEmpty();
         using var reopened = PdfDocument.Open(savedBytes);
         var afterText = string.Concat(reopened.GetPage(1).Letters.Select(l => l.Value));
 
@@ -72,6 +81,9 @@ public class PdfPageRedactionEndToEndTests
         using var doc = PdfDocument.Open(pdfBytes);
         var page = doc.GetPage(1);
         var originalContent = page.GetContentStreamBytes();
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdfBytes).Should().Be("HELLOWORLD",
+            "control: MuPDF reads both words in the input");
 
         // Far from where the text actually is.
         page.RedactArea(new PdfRectangle(500, 50, 600, 100), RedactionOptions.Default with { DrawBox = false });
@@ -83,6 +95,10 @@ public class PdfPageRedactionEndToEndTests
         var afterText = string.Concat(page.Letters.Select(l => l.Value));
         afterText.Should().Contain("HELLO");
         afterText.Should().Contain("WORLD");
+        var saved = doc.SaveToBytes();
+        MutoolTextOracle.ExtractFolded(saved).Should().Be("HELLOWORLD",
+            "MuPDF must still read both words: an area that hits nothing removes nothing");
+        SavedPdfLeakScanner.FindTerm(saved, "WORLD").Should().NotBeEmpty();
     }
 
     [Fact]
@@ -93,6 +109,10 @@ public class PdfPageRedactionEndToEndTests
         using var doc = PdfDocument.Open(pdfBytes);
         var page = doc.GetPage(1);
 
+        Assert.SkipUnless(MutoolTextOracle.IsAvailable, "mutool not installed");
+        MutoolTextOracle.ExtractFolded(pdfBytes).Should().Be("APPLEBANANACHERRY",
+            "control: MuPDF reads all three words in the input");
+
         var apple = page.Letters.Take(5).ToList();
         var cherry = page.Letters.Skip(13).Take(6).ToList();
 
@@ -101,6 +121,11 @@ public class PdfPageRedactionEndToEndTests
 
         page.RedactAreas(new[] { appleBox, cherryBox }, RedactionOptions.Default with { DrawBox = false });
 
+        var saved = doc.SaveToBytes();
+        MutoolTextOracle.ExtractFolded(saved).Should().Be("BANANA",
+            "MuPDF must read only the middle word from the saved file");
+        SavedPdfLeakScanner.FindTerm(saved, "APPLE").Should().BeEmpty();
+        SavedPdfLeakScanner.FindTerm(saved, "CHERRY").Should().BeEmpty();
         var rawContent = Encoding.Latin1.GetString(page.GetContentStreamBytes());
         rawContent.Should().NotContain("APPLE");
         rawContent.Should().NotContain("CHERRY");

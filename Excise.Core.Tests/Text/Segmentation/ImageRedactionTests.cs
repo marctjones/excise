@@ -3,6 +3,7 @@ using System.Text;
 using AwesomeAssertions;
 using Excise.Core.Document;
 using Excise.Core.Text.Segmentation;
+using Excise.TestSupport;
 using Xunit;
 
 namespace Excise.Core.Tests.Text.Segmentation;
@@ -16,6 +17,9 @@ namespace Excise.Core.Tests.Text.Segmentation;
 /// </summary>
 public class ImageRedactionTests
 {
+    /// <summary>The fixture image's four raw pixel bytes, as a Latin-1 string.</summary>
+    private const string ImagePixels = "\u0000\u0080\u0080\u00FF";
+
     [Fact]
     public void RedactArea_OverlappingImage_DoOperatorIsRemoved()
     {
@@ -29,8 +33,18 @@ public class ImageRedactionTests
 
         var before = Encoding.Latin1.GetString(page.GetContentStreamBytes());
         before.Should().Contain("/Im0 Do", "sanity: image is invoked in content stream");
+        Assert.SkipUnless(MutoolImageOracle.IsAvailable, "mutool not installed");
+        MutoolImageOracle.Images(pdfBytes, 1).Should().ContainSingle(
+            i => i.Width == 2 && i.Height == 2, "control: MuPDF finds the image in the input");
+        SavedPdfLeakScanner.FindTerm(pdfBytes, ImagePixels).Should().NotBeEmpty(
+            "control: the scanner sees the pixel bytes in the input");
 
         page.RedactArea(new PdfRectangle(50, 550, 250, 750), RedactionOptions.Default with { DrawBox = false });
+        var saved = doc.SaveToBytes();
+        MutoolImageOracle.Images(saved, 1).Should().BeEmpty(
+            "MuPDF must find no image on the redacted page");
+        SavedPdfLeakScanner.FindTerm(saved, ImagePixels).Should().BeEmpty(
+            "the image's pixel bytes must not remain in any (decompressed) stream of the saved file");
 
         var after = Encoding.Latin1.GetString(page.GetContentStreamBytes());
         after.Should().NotContain("/Im0 Do",
@@ -46,8 +60,16 @@ public class ImageRedactionTests
 
         using var doc = PdfDocument.Open(pdfBytes);
         var page = doc.GetPage(1);
+        Assert.SkipUnless(MutoolImageOracle.IsAvailable, "mutool not installed");
+        MutoolImageOracle.Images(pdfBytes, 1).Should().ContainSingle(
+            i => i.Width == 2 && i.Height == 2, "control: MuPDF finds the image in the input");
+        SavedPdfLeakScanner.FindTerm(pdfBytes, ImagePixels).Should().NotBeEmpty(
+            "control: the scanner sees the pixel bytes in the input");
 
         page.RedactArea(new PdfRectangle(0, 0, 100, 100), RedactionOptions.Default with { DrawBox = false });
+        var saved = doc.SaveToBytes();
+        MutoolImageOracle.Images(saved, 1).Should().ContainSingle(
+            i => i.Width == 2 && i.Height == 2, "MuPDF must still find the untouched image");
 
         var after = Encoding.Latin1.GetString(page.GetContentStreamBytes());
         after.Should().Contain("/Im0 Do", "image must survive when it doesn't overlap redaction");
@@ -63,8 +85,21 @@ public class ImageRedactionTests
 
         using var doc = PdfDocument.Open(pdfBytes);
         var page = doc.GetPage(1);
+        Assert.SkipUnless(MutoolImageOracle.IsAvailable, "mutool not installed");
+        MutoolImageOracle.Images(pdfBytes, 1).Should().ContainSingle(
+            i => i.Width == 2 && i.Height == 2, "control: MuPDF finds the image in the input");
+        SavedPdfLeakScanner.FindTerm(pdfBytes, ImagePixels).Should().NotBeEmpty(
+            "control: the scanner sees the pixel bytes in the input");
 
         page.RedactArea(new PdfRectangle(90, 590, 110, 610), RedactionOptions.Default with { DrawBox = false });  // 10pt overlap
+        var saved = doc.SaveToBytes();
+        // A corner clip is redacted in place: the original image is replaced by
+        // a region-blackened copy, so MuPDF still finds ONE image, but the
+        // original pixel bytes must be gone.
+        MutoolImageOracle.Images(saved, 1).Should().ContainSingle(
+            i => i.Width == 2 && i.Height == 2, "MuPDF finds the replacement image");
+        SavedPdfLeakScanner.FindTerm(saved, ImagePixels).Should().BeEmpty(
+            "the image's pixel bytes must not remain in any (decompressed) stream of the saved file");
 
         var after = Encoding.Latin1.GetString(page.GetContentStreamBytes());
         after.Should().NotContain("/Im0 Do");
@@ -80,8 +115,16 @@ public class ImageRedactionTests
 
         using var doc = PdfDocument.Open(pdfBytes);
         var page = doc.GetPage(1);
+        Assert.SkipUnless(MutoolImageOracle.IsAvailable, "mutool not installed");
+        MutoolImageOracle.Images(pdfBytes, 1).Should().ContainSingle(
+            i => i.Width == 2 && i.Height == 2, "control: MuPDF finds the image in the input");
+        SavedPdfLeakScanner.FindTerm(pdfBytes, ImagePixels).Should().NotBeEmpty(
+            "control: the scanner sees the pixel bytes in the input");
 
         page.RedactArea(new PdfRectangle(90, 590, 150, 650), RedactionOptions.Default with { DrawBox = false, Strategy = GlyphRemovalStrategy.FullyContained });
+        var saved = doc.SaveToBytes();
+        MutoolImageOracle.Images(saved, 1).Should().ContainSingle(
+            i => i.Width == 2 && i.Height == 2, "MuPDF must still find the untouched image");
 
         var after = Encoding.Latin1.GetString(page.GetContentStreamBytes());
         after.Should().Contain("/Im0 Do",
