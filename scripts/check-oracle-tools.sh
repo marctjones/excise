@@ -29,9 +29,20 @@ note() { printf '  \033[32m✓\033[0m %-12s %s\n' "$1" "$2"; }
 fail() { printf '  \033[31m✗\033[0m %-12s %s\n' "$1" "$2"; missing=1; }
 
 echo "reference oracles:"
-for t in mutool gs pdftocairo pdftoppm pdftotext pdfsig qpdf tesseract; do
+# pdfimages/pdfinfo/pdfcpu added for #1781: Excise.Core.Tests' recovery and
+# writer oracles shell out to them, and nothing checked they resolve.
+for t in mutool gs pdftocairo pdftoppm pdftotext pdfimages pdfinfo pdfsig qpdf pdfcpu tesseract; do
     p="$(command -v "$t" 2>/dev/null)" && note "$t" "$p" || fail "$t" "NOT FOUND on PATH"
 done
+# veraPDF: the only independent check of PdfUaValidator and the PDF/A writer
+# (#772, #1781). The tests look in ~/verapdf/verapdf, then PATH; so does this.
+if [ -x "$HOME/verapdf/verapdf" ]; then
+    note "verapdf" "$HOME/verapdf/verapdf"
+elif p="$(command -v verapdf 2>/dev/null)"; then
+    note "verapdf" "$p"
+else
+    fail "verapdf" "NOT FOUND in ~/verapdf/verapdf or on PATH"
+fi
 
 # Optional-but-wired oracles. These are not required to be on PATH, but if the
 # artifact is present the env var must point at it, or the tests silently skip

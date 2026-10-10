@@ -16,8 +16,8 @@ namespace Excise.Core.Tests.Validation;
 /// (veraPDF) is available, excise's <see cref="PdfUaValidator"/> verdict must
 /// AGREE with it on controlled fixtures whose expected verdict is known by
 /// construction — a conformant builder document, and a document with /Lang
-/// removed. Skips cleanly when veraPDF is not installed (as on a dev box);
-/// CI installs it, so the cross-check runs there.
+/// removed. Skips when veraPDF is not installed, and that skip turns the
+/// core-oracle-tool-skips gate red (#1781): a skipped cross-check is not a pass.
 /// </summary>
 public class PdfUaVeraPdfCrossCheckTests
 {
@@ -93,10 +93,19 @@ public class PdfUaVeraPdfCrossCheckTests
             if (!proc.WaitForExit(120_000))
             {
                 try { proc.Kill(entireProcessTree: true); } catch { /* gone */ }
+                // #1781: a killed run has no verdict. Returning false here made
+                // the NEGATIVE test (…_OnUntaggedFixture) pass on a timeout.
+                throw new TimeoutException($"veraPDF ({verapdf}) gave no verdict within 120 s; the cross-check is undecided, not non-conformant.");
             }
             string report = stdoutTask.GetAwaiter().GetResult();
-            _ = stderrTask.GetAwaiter().GetResult();
-            return report.Contains("isCompliant=\"true\"", StringComparison.Ordinal);
+            string stderr = stderrTask.GetAwaiter().GetResult();
+            // #1781: only an explicit verdict counts. A crash, an empty report or
+            // an unparsable file must not read as "veraPDF says non-conformant".
+            if (report.Contains("isCompliant=\"true\"", StringComparison.Ordinal)) return true;
+            if (report.Contains("isCompliant=\"false\"", StringComparison.Ordinal)) return false;
+            throw new InvalidOperationException(
+                $"veraPDF ({verapdf}) exited {proc.ExitCode} without an isCompliant verdict; the cross-check is undecided. " +
+                $"stderr: {stderr[..Math.Min(stderr.Length, 400)]}");
         }
         finally
         {
