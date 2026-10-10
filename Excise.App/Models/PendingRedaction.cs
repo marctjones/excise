@@ -1,5 +1,6 @@
 using System;
 using Excise.Core.Document;
+using Excise.Core.Primitives;
 
 namespace Excise.App.Models;
 
@@ -28,6 +29,19 @@ internal class PendingRedaction
         PdfPageRect.FromContentPoints(1, new PdfRectangle(0, 0, 0, 0));
 
     /// <summary>
+    /// The page node this mark was drawn on. <see cref="PageNumber"/> is only where that page
+    /// sits NOW: delete, move or insert pages (or undo one) and the number changes while the
+    /// page, and the text on it, does not. Null for a mark made with no document to anchor to.
+    /// </summary>
+    public PdfDictionary? PageIdentity { get; set; }
+
+    /// <summary>
+    /// True when the page this mark was drawn on is no longer in the document (it was deleted;
+    /// undo brings it, and the mark, back). Such a mark redacts nothing.
+    /// </summary>
+    public bool IsOnRemovedPage { get; set; }
+
+    /// <summary>
     /// Preview of text that will be removed (for user review)
     /// </summary>
     public string PreviewText { get; set; } = string.Empty;
@@ -41,5 +55,5 @@ internal class PendingRedaction
     /// User-friendly display text
     /// </summary>
     public string DisplayText =>
-        $"Page {PageNumber}: {(string.IsNullOrWhiteSpace(PreviewText) ? "[Area]" : PreviewText)}";
+        $"{(IsOnRemovedPage ? "Removed page" : $"Page {PageNumber}")}: {(string.IsNullOrWhiteSpace(PreviewText) ? "[Area]" : PreviewText)}";
 }

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using Excise.App.Models;
 using Excise.Core.Document;
+using Excise.Core.Primitives;
 using ReactiveUI;
 
 namespace Excise.App.ViewModels;
@@ -47,6 +48,57 @@ internal class RedactionWorkflowManager : ReactiveObject
     }
 
     /// <summary>
+    /// Looks up the page node currently at a 1-based page number, so a new mark can be tied to
+    /// the page itself and not only to the number the page has today. Null: marks stay unanchored.
+    /// </summary>
+    public Func<int, PdfDictionary?>? PageIdentityProvider { get; set; }
+
+    /// <summary>
+    /// A drawn rectangle is in viewer coordinates, which mean something else once the page is
+    /// rotated. Call just BEFORE rotating <paramref name="pageNumber"/>: the marks on it are
+    /// kept in the page's own coordinates, so the rotation moves them with the text.
+    /// </summary>
+    public void FreezeToPageCoordinates(PdfDocument document, int pageNumber)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        if (pageNumber < 1 || pageNumber > document.PageCount)
+            return;
+
+        var page = document.Pages[pageNumber - 1];
+        foreach (var pending in _pending)
+        {
+            if (pending.IsOnRemovedPage || pending.PageNumber != pageNumber ||
+                pending.PageArea.Space == PdfCoordinateSpace.ContentPoints)
+            {
+                continue;
+            }
+
+            pending.PageArea = PdfCoordinateMapper.ToContentPoints(page, pending.PageArea);
+        }
+    }
+
+    /// <summary>
+    /// Re-read where each pending mark's page now sits. Call after anything that changes the page
+    /// order or count (delete, move, insert, and the undo of each), so the marks, the red outlines
+    /// and the Apply step all follow the pages.
+    /// </summary>
+    public void SyncPages(PdfDocument document)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        foreach (var pending in _pending)
+        {
+            var page = PendingRedactionPages.CurrentPageNumber(document, pending);
+            pending.IsOnRemovedPage = page == 0;
+            if (page == 0 || page == pending.PageNumber)
+                continue;
+            pending.PageNumber = page;
+            pending.PageArea = PendingRedactionPages.OnPage(pending.PageArea, page);
+        }
+
+        this.RaisePropertyChanged(nameof(PendingRedactions)); // marks moved: redraw the outlines
+    }
+
+    /// <summary>
     /// Mark a page-scoped area for redaction (adds to pending list).
     /// </summary>
     public void MarkArea(PdfPageRect area, string previewText)
@@ -54,6 +106,7 @@ internal class RedactionWorkflowManager : ReactiveObject
         var pending = new PendingRedaction
         {
             PageNumber = area.PageNumber,
+            PageIdentity = PageIdentityProvider?.Invoke(area.PageNumber),
             PageArea = area,
             PreviewText = previewText,
             MarkedTime = DateTime.Now
@@ -112,7 +165,7 @@ internal class RedactionWorkflowManager : ReactiveObject
     /// </summary>
     public IEnumerable<PendingRedaction> GetPendingForPage(int pageNumber)
     {
-        return _pending.Where(p => p.PageNumber == pageNumber);
+        return _pending.Where(p => !p.IsOnRemovedPage && p.PageNumber == pageNumber);
     }
 
     /// <summary>

@@ -358,6 +358,7 @@ internal partial class MainWindowViewModel
         {
             var document = _documentService.GetCurrentDocument()
                 ?? throw new InvalidOperationException("Document is null");
+            SyncPendingRedactionPages();
             var application = _redactionWorkflowService.ApplyToDocument(
                 RedactionApplicationRequest.Capture(
                     document,

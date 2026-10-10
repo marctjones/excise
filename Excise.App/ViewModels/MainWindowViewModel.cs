@@ -162,6 +162,10 @@ internal partial class MainWindowViewModel : ViewModelBase
         _settingsStore = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
         _recentFilesStore = recentFilesStore ?? throw new ArgumentNullException(nameof(recentFilesStore));
         _documentService.DocumentReleased += OnDocumentReleased;
+        RedactionWorkflow.PageIdentityProvider = pageNumber =>
+            _documentService.GetCurrentDocument() is { } open && pageNumber >= 1 && pageNumber <= open.PageCount
+                ? open.Pages[pageNumber - 1].Dictionary
+                : null;
         PropertyChanged += RaiseCanPrintWithDocumentState;
         PropertyChanged += RaiseWindowTitleWithDocumentState;
 
@@ -1687,8 +1691,25 @@ internal partial class MainWindowViewModel : ViewModelBase
         return files.Count == 0 ? null : files[0];
     }
 
+    /// <summary>Point every pending redaction mark at where its page is now.</summary>
+    private void SyncPendingRedactionPages()
+    {
+        if (_documentService.GetCurrentDocument() is { } document)
+            RedactionWorkflow.SyncPages(document);
+    }
+
+    private void FreezePendingMarksBeforeRotation(int pageIndex)
+    {
+        if (_documentService.GetCurrentDocument() is { } document)
+            RedactionWorkflow.FreezeToPageCoordinates(document, pageIndex + 1);
+    }
+
     private void MarkPageOrganizationChanged(bool removedPage = false, int removedPageCount = 1)
     {
+        // Every page-structure change passes through here, undo and redo included: the pending
+        // redaction marks follow their pages instead of keeping the old page numbers.
+        SyncPendingRedactionPages();
+
         if (removedPage)
             FileState.RemovedPagesCount += Math.Max(1, removedPageCount);
         else
@@ -2145,6 +2166,7 @@ internal partial class MainWindowViewModel : ViewModelBase
         try
         {
             var rotatedIndex = CommandTargetPageIndex; // #1650
+            FreezePendingMarksBeforeRotation(rotatedIndex);
             _documentService.RotatePage(rotatedIndex, degrees, IgnoreDocumentPermissions);
             MarkPageOrganizationChanged();
             _history.Push(historyLabel,
