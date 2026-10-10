@@ -1,3 +1,4 @@
+using Excise.Core.Redaction;
 using Excise.Core.Text.Segmentation;
 
 namespace Excise.App.Services;
@@ -48,7 +49,9 @@ internal sealed class RedactedCopyDialogFormatter
         {
             lines.Add(string.Empty);
             lines.Add("Warnings:");
-            lines.AddRange(report.Warnings.Select(warning => $"- {warning}"));
+            // #2057: survivors and refusals first; the per-line width notes become one
+            // summary line. The report itself still holds every one of them.
+            lines.AddRange(RedactionNoteSummary.Condense(report.Warnings).Select(warning => $"- {warning}"));
         }
 
         return string.Join(Environment.NewLine, lines);

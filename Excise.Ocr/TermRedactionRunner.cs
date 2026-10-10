@@ -1,4 +1,5 @@
 using Excise.Core.Document;
+using Excise.Core.Redaction;
 using Excise.Core.Text.Segmentation;
 
 namespace Excise.Ocr;
@@ -278,7 +279,7 @@ public static class TermRedactionRunner
         if (!redaction.IsCleanSuccess)
         {
             carrierNotes.Add(
-                "This redaction was NOT clean -- see the notes above. Review the output " +
+                $"{RedactionNoteSummary.NotCleanClosingPrefix} -- see the notes above. Review the output " +
                 "before treating the term as removed.");
         }
 

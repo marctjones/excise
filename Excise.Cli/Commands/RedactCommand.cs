@@ -159,6 +159,13 @@ internal static class RedactCommand
             DefaultValueFactory = _ => false,
         };
 
+        var verboseOption = new Option<bool>("--verbose")
+        {
+            Description = "Print every per-line 'WIDTH NOT CLOSED' note. By default they are summarised in one line " +
+                          "(count, pages, largest shift) after the notes about text that was not removed.",
+            DefaultValueFactory = _ => false,
+        };
+
         var command = new Command(
             "redact",
             "Remove text from a PDF (glyph-level removal; text extraction will not find it)")
@@ -185,6 +192,7 @@ internal static class RedactCommand
             carrierPolicyOption,
             keepAttachmentsOption,
             progressOption,
+            verboseOption,
         };
 
         command.SetAction(parseResult =>
@@ -344,8 +352,8 @@ internal static class RedactCommand
 
                 // The Maximum accessibility warning arrives here, from the
                 // safety pass the GUI dialog reads too (#1857).
-                foreach (var note in result.CarrierNotes)
-                    Console.WriteLine($"  note: {note}");
+                // #2057: survivors first, the per-line width notes rolled up unless --verbose.
+                PrintNotes(result.CarrierNotes, parseResult.GetValue(verboseOption), Console.Out);
                 Console.WriteLine($"Output: {result.OutputPath}");
                 // #1750: a term excise located but could not structurally
                 // remove (a hyphen- or line-wrapped occurrence) is still fully
@@ -361,6 +369,18 @@ internal static class RedactCommand
         });
 
         return command;
+    }
+
+    /// <summary>
+    /// Print the run's notes (#2057). Presentation only: <paramref name="notes"/> is the
+    /// structured list and is not changed. Without <paramref name="verbose"/> the per-line
+    /// width notes become one summary line; every other note prints, in order, before it.
+    /// </summary>
+    internal static void PrintNotes(IReadOnlyList<string> notes, bool verbose, TextWriter writer)
+    {
+        foreach (var note in Excise.Core.Redaction.RedactionNoteSummary.Condense(
+                     notes, verbose, "Run with --verbose to list every line."))
+            writer.WriteLine($"  note: {note}");
     }
 
     /// <summary>

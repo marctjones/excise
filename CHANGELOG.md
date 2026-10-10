@@ -8,6 +8,7 @@ semantic versioning.
 
 ### Changed
 
+- The redaction report no longer buries the lines that matter under one "WIDTH NOT CLOSED" line per affected text line. The command line and the redacted-copy dialog now list text that was not removed, attachments and carriers excise could not clean first, then one summary line for the layout notes (how many lines, on how many pages, the largest shift in points). `excise redact --verbose` prints every per-line note as before. The saved report data, the batch JSON and the exit codes are unchanged (#2057).
 - The window now uses the operating system's own title bar on every platform instead of drawing a 40-pixel one of its own. Dragging, snapping, double-click zoom, full screen and the macOS proxy icon are the system's; the title shows the document name, with the unsaved-changes mark each platform uses.
 
 ### Fixed

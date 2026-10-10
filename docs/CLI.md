@@ -11,7 +11,7 @@ excise render            <file>           -o out.png  [--page N] [--dpi N] [--pa
 excise commands          [id]             [--json]
 excise batch             <workflow.json>  [--json] [--progress] [--output report.json]
 excise draw              <file>                                 # graphics-API demo
-excise redact            <input> <output> <text>  [--case-sensitive]
+excise redact            <input> <output> <text>  [--case-sensitive] [--verbose]
 excise optimize          <input> <output> [--preset lossless|high|standard|screen] [--password P] [--json]
 excise fill-form         <input> <output> --field Name=Value [...] [--flatten]
 excise add-field         <input> <output> --type T --name N --page P --rect "l,b,r,t" [--value v] [--option o]...
@@ -45,6 +45,10 @@ excise render report.pdf -o report-p1.png --page 1 --dpi 200
 
 # Glyph-level redact a phrase
 excise redact report.pdf report-redacted.pdf "ACCOUNT 9876"
+
+# Same, listing every per-line "WIDTH NOT CLOSED" layout note (by default they are
+# summarised in one line, after the notes about text that was not removed)
+excise redact report.pdf report-redacted.pdf "ACCOUNT 9876" --verbose
 
 # Write a smaller copy for email: downsample images above 188 dpi to 150 dpi
 excise optimize scan.pdf scan-small.pdf --preset standard
