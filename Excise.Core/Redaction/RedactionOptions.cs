@@ -233,6 +233,14 @@ public sealed record RedactionOptions
     /// </remarks>
     public bool KeepAttachments { get; init; } = false;
 
+    /// <summary>
+    /// #1920: remove the glyphs, widths and /ToUnicode entries of the removed
+    /// characters from the embedded fonts. Always on in both profiles; internal
+    /// so a test can produce the same redaction without it and prove the font
+    /// edit changes no rendered pixel and no extracted character.
+    /// </summary>
+    internal bool ScrubFontGlyphs { get; init; } = true;
+
     // ── #1586: output profile ───────────────────────────────────────────────
 
     /// <summary>
