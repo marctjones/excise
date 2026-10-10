@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1652,
-  "indexedContentSha256": "289066abcd14fc3458c046c6d4da36be504f00e86dd52f0d11cefed3add8381e",
+  "indexedFileCount": 1654,
+  "indexedContentSha256": "3149ea13461372a16a6254243ce66036f86b68606dab94418e4214e071e66f25",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -4960,6 +4960,15 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/RedactionWorkflowManager.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "outlines",
+            "viewer",
+            "pdfdocument"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/ShapeAnnotationKind.cs",
           "kind": "source",
           "matchedTerms": [
@@ -5067,20 +5076,9 @@
             "catalog",
             "pdfdocument"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Document/PdfOutlineParserDestinationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "destinations",
-            "named",
-            "outlines",
-            "catalog",
-            "pdfdocument"
-          ]
         }
       ],
-      "candidateReferenceCount": 187
+      "candidateReferenceCount": 188
     },
     {
       "id": "pdf.17.document.metadata",
@@ -8242,7 +8240,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 767
+      "candidateReferenceCount": 768
     },
     {
       "id": "pdf.17.graphics.color",
@@ -70355,7 +70353,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 468
+      "candidateReferenceCount": 469
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -72667,7 +72665,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 842
+      "candidateReferenceCount": 843
     },
     {
       "id": "pdf.20.extension.developer",
