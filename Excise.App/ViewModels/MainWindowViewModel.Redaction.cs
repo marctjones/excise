@@ -132,6 +132,7 @@ internal partial class MainWindowViewModel
                 return;
             }
 
+            SyncPendingRedactionPages();
             var request = RedactedCopyRequest.Capture(
                 document,
                 RedactionWorkflow.PendingRedactions,

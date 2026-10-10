@@ -87,7 +87,8 @@ internal sealed class RedactionWorkflowService
         var safetyReport = RedactedCopySafetyPolicy.Evaluate(
             request.Document,
             RedactedCopySafetyRequest.ForAreas(
-                request.Redactions.Select(ToSafetyArea).ToArray(),
+                request.Redactions.Where(r => r.PageNumber >= 1 && r.PageNumber <= request.Document.PageCount)
+                    .Select(ToSafetyArea).ToArray(),
                 request.Redaction,
                 skippedCount));
 
@@ -141,7 +142,8 @@ internal sealed record RedactionAreaTransaction(
     public static RedactionAreaTransaction FromPending(PendingRedaction pending)
     {
         ArgumentNullException.ThrowIfNull(pending);
-        return new(pending.PageNumber, pending.PageArea, pending.PreviewText);
+        // Page 0: the marked page was deleted. Apply skips such a mark and says so.
+        return new(pending.IsOnRemovedPage ? 0 : pending.PageNumber, pending.PageArea, pending.PreviewText);
     }
 }
 

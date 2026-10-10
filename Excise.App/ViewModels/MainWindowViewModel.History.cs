@@ -113,6 +113,7 @@ internal partial class MainWindowViewModel
 
     private async Task ApplyPageRotationAsync(int pageIndex, int degrees)
     {
+        FreezePendingMarksBeforeRotation(pageIndex);
         _documentService.RotatePage(pageIndex, degrees, ignorePermissions: true);
         MarkPageOrganizationChanged();
         await RefreshAfterDocumentMutationAsync();

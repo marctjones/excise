@@ -112,6 +112,7 @@ internal partial class MainWindowViewModel
             return;
         }
 
+        SyncPendingRedactionPages();
         DocumentPrintWorkflowResult result;
         using var cancellation = new CancellationTokenSource();
         _printCancellation = cancellation;
