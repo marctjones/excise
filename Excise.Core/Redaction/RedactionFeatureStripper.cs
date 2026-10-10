@@ -428,6 +428,11 @@ internal static class RedactionFeatureStripper
 
             if (!isAdditionalActions) return;
 
+            // #2059: a field that formats its value keeps showing it formatted
+            // after its script is gone; the term scrub must still know.
+            if (dict.GetOptional("F") != null || dict.GetOptional("K") != null)
+                document.RedactionLedger.RecordFormatAction(owner);
+
             // /AA: §12.6.3 Table 197-200 event names. Prune each slot; drop the
             // dictionary when nothing is left, so no empty /AA survives to look
             // like a document that never had one.

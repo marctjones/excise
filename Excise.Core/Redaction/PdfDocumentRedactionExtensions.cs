@@ -528,6 +528,13 @@ public static class PdfDocumentRedactionExtensions
                 "pressed or hovered appearance of a redacted form field", termScrubState.DroppedStateAppearances,
                 "its text could not be rewritten free of the term; the field shows its normal appearance instead"));
 
+        // #2059: a scrubbed field's widget whose normal appearance neither read
+        // the term nor could be shown free of it was dropped, not kept.
+        if (termScrubState.DroppedUndecidedAppearances > 0)
+            profileRemovals.Add(new RedactedFeatureRemoval(
+                "appearance of a redacted form field's widget", termScrubState.DroppedUndecidedAppearances,
+                "it could not be shown free of the term, or the field formats the value it shows"));
+
         var attachmentResults = keptAttachments != null
             ? AttachmentCarrierScrubber.Reconcile(document, keptAttachments)
             : removedAttachments.ToList();
