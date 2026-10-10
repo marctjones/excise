@@ -936,24 +936,34 @@ def grade_registry():
     text = read_text(path)
     if text is None:
         return f"registry NO DATA — {rel(path)} missing — measures paperwork, not code (milestone RC22)"
-    header, overall = None, None
+    # No overall row since #1758: sum the per-section rows (they partition the
+    # registry) and print raw counts, never a percentage (#1739).
+    header, rows, in_table = None, [], False
     for ln in text.splitlines():
         if ln.startswith("| Area"):
             header = [c.strip() for c in ln.strip().strip("|").split("|")]
-        elif ln.startswith("| overall |"):
-            overall = [c.strip() for c in ln.strip().strip("|").split("|")]
-    if not header or not overall:
-        return f"registry NO DATA — no '| overall |' row in {rel(path)} — measures paperwork, not code (milestone RC22)"
-    cells = dict(zip(header, overall))
-    target = cells.get("Target modes", "?")
+            in_table = True
+        elif in_table and ln.startswith("| ---"):
+            continue
+        elif in_table and ln.startswith("|"):
+            rows.append([c.strip() for c in ln.strip().strip("|").split("|")])
+        elif in_table:
+            break
+    if not header or not rows:
+        return f"registry NO DATA — no per-section rows in {rel(path)} — measures paperwork, not code (milestone RC22)"
+    def total(col):
+        i = header.index(col) if col in header else None
+        if i is None:
+            return "?"
+        try:
+            return sum(int(r[i]) for r in rows)
+        except (ValueError, IndexError):
+            return "?"
     # #1346/#1347: graded from evidence -- a passing explicit test contract,
     # not a human-reviewed "strict" state or a keyword testCandidate match.
-    # Strict stays a column for the redaction-security work that still needs
-    # it (capability-scorecard.md); it is not the headline any more.
-    implemented = cells.get("Implemented", "?")
-    verified = cells.get("Verified", "?")
-    unknown = cells.get("Unknown", "?")
-    return f"registry implemented {implemented} verified {verified} ({unknown}/{target} modes unknown, graded #1346/#1347)"
+    return (f"registry {total('Target modes')} modes: implemented {total('Implemented')} "
+            f"verified {total('Verified')} unknown {total('Unknown')} "
+            f"(raw counts, graded #1346/#1347)")
 
 
 def grade_extraction(start, end, rows_by):

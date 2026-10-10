@@ -258,7 +258,7 @@ KNOWN    gate-asymmetry         BLOCK    #1358 OPEN   log matches /base=a87dc32a
 IMPROVE  held: unwired-api 123 baselined (=)
 GRADES vs reference tools
   conformance   NO DATA — no corpus-scan-* agreement line in this run
-                registry strict 0.5% (929/964 modes unknown) — measures paperwork, not code (milestone RC22)
+                registry 899 modes: implemented 879 verified 666 unknown 20 (raw counts, graded #1346/#1347)
   extraction    0.9999 of mutool's letters over 332 pages, worst coverage floor 0.946 (=)   [baseline tests/extraction-parity/baseline.json 2026-08-13 (not from this run)]
   redaction     secure 0.969 A-  vs iText 0.469 F · PyMuPDF 0.629 C · raster 0.984 A   n=127 (=)   [redaction-bench history 2026-08-27 (not from this run)]
   render perf   wall ×3.5 mutool / ×1.5 pdftocairo / ×2.6 gs / ×0.6 pdfbox (median of 6 fixtures); RSS ×1.7 mutool; regressionGate PASS (=)   [2026-08-29 (not from this run)]
@@ -294,7 +294,7 @@ a `t0`/`t1` report restates the newest artifact on disk with its own date and
 | grade line | producing row | the number | oracle |
 |---|---|---|---|
 | `conformance` | `corpus-scan-verapdf`, `-pdfjs`, `-pdfium`, `-isartor` | each scan's "excise behaves correctly on N/M" — pages agreeing with the oracle majority, per corpus | mutool, pdftocairo, Ghostscript, PDFBox, PDFium |
-| (`registry`, printed under conformance) | none — reads the generated capability scorecard | strict-mode share of the PDF-spec capability registry; **measures paperwork, not code** (milestone RC22) | none |
+| (`registry`, printed under conformance) | none — reads the generated capability scorecard | raw counts of implemented / verified / unknown modes in the PDF-spec capability registry (no percentage, #1758); **measures paperwork, not code** (milestone RC22) | none |
 | `extraction` | `extraction-parity` | letters extracted as a fraction of mutool's, over the smoke corpus, plus the worst page floor | mutool |
 | `redaction` | `redaction-bench` | security × fidelity score vs the comparison redactors, n fixtures; scored by the ONE scorer `scripts/archive-bench-run.sh` (`REDACTION_BENCH_HISTORY` redirects its history line into the run directory) | iText, PyMuPDF, raster |
 | `render perf` | `reference-performance` | excise's in-process `renderMs` relative to the oracles measured in the SAME run (absolute ms are load-dependent); `regressionGate` ENFORCED in tier `full` since 2026-09-13 (row is BLOCK with `--fail-on-regression`): render ms relative to the same-run oracles ≤1.5× and excise peak RSS ≤1.25× of the committed baseline; absolute ms and wall stay report-only. `--fixture <id>` / `--cohort <name>` narrow it to a ~2 s dev loop, and the ratio then uses only oracles present on both sides. The CLI self-reports `jit` vs `aot` and the gate REFUSES to compare across codegen modes (#1389) | mutool, pdftocairo, Ghostscript, PDFBox |

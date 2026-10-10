@@ -6,8 +6,8 @@ before quoting one.
 
 This replaces the capability registry's percentage scorecard as the answer to
 "how conformant is excise". That number counted claims we wrote and tests we
-cited; the audit that re-scoped it moved it from 84.8% to 59.3% and it was
-still measuring our own paperwork. Conformance is measured here against
+cited, so it measured our own paperwork; the registry no longer generates a
+percentage (#1739, #1758) and keeps raw counts and per-row state. Conformance is measured here against
 structured data the PDF Association publishes and against tools that are not
 excise.
 
