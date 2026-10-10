@@ -313,14 +313,14 @@
         "PDF/A-1 saves stay on classic xref path",
         "PDF/A-2-marked saves can use compressed path",
         "PDF/A-2b compressed writer output is checked with veraPDF when available",
-        "AES-128 and AES-256 encrypted saves stay on classic xref path",
+        "AES-128 and AES-256 encrypted saves use object streams and an unencrypted xref stream (#2053)",
         "Document carrier dictionaries stay top-level in compressed saves"
       ],
       "plannedCoverage": [],
       "locations": [
         "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:PrePdf15Saves_UseClassicXRefTable",
-        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesClassicXRefTableEvenForPdf15",
-        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesClassicXRefTableForEverySupportedAlgorithm",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesObjectStreamsAndAnUnencryptedXRefStreamForPdf15",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesAnXRefStreamForEverySupportedAlgorithm",
         "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:PdfA1MarkedSave_UsesClassicXRefTable",
         "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:PdfA2MarkedSave_CanUseCompressedXRefStreams",
         "Excise.Core.Tests/PdfATests.cs:PdfA2B_RoundTripThroughCompressedWriter_IsConformant_PerVeraPdf",
@@ -328,8 +328,8 @@
       ],
       "evidence": [
         "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:PrePdf15Saves_UseClassicXRefTable",
-        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesClassicXRefTableEvenForPdf15",
-        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesClassicXRefTableForEverySupportedAlgorithm",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesObjectStreamsAndAnUnencryptedXRefStreamForPdf15",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesAnXRefStreamForEverySupportedAlgorithm",
         "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:PdfA1MarkedSave_UsesClassicXRefTable",
         "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:PdfA2MarkedSave_CanUseCompressedXRefStreams",
         "Excise.Core.Tests/PdfATests.cs:PdfA2B_RoundTripThroughCompressedWriter_IsConformant_PerVeraPdf",
@@ -595,20 +595,20 @@
     {
       "feature": "encryption",
       "classicXrefStatus": "implemented",
-      "compressedXrefStatus": "not_applicable",
+      "compressedXrefStatus": "implemented",
       "locations": [
         "Excise.Core.Tests/Writing/PdfDocumentWriterEncryptionTests.cs",
-        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesClassicXRefTableEvenForPdf15",
-        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesClassicXRefTableForEverySupportedAlgorithm",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesObjectStreamsAndAnUnencryptedXRefStreamForPdf15",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesAnXRefStreamForEverySupportedAlgorithm",
         "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs"
       ],
       "evidence": [
         "Excise.Core.Tests/Writing/PdfDocumentWriterEncryptionTests.cs",
-        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesClassicXRefTableEvenForPdf15",
-        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesClassicXRefTableForEverySupportedAlgorithm",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesObjectStreamsAndAnUnencryptedXRefStreamForPdf15",
+        "Excise.Core.Tests/Writing/PdfDocumentWriterTests.cs:EncryptedSave_UsesAnXRefStreamForEverySupportedAlgorithm",
         "Excise.Rendering.Tests/Differential/EncryptionWriterInteropTests.cs"
       ],
-      "notes": "Compressed writer path is intentionally disabled for encrypted output."
+      "notes": "Encrypted output uses object streams; the xref stream and /Encrypt dictionary are never encrypted (#2053)."
     },
     {
       "feature": "PDF/A",

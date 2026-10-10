@@ -47,8 +47,7 @@ internal static class OptimizeCommandHandler
             {
                 diagnostics.Add(
                     "Note: source is encrypted; output is re-encrypted with the same permissions and " +
-                    "the same password (#643). Encrypted files cannot use object streams, so they " +
-                    "shrink less.");
+                    "the same password (#643).");
             }
 
             // The optimizer works on what an ordinary save writes, never on the
