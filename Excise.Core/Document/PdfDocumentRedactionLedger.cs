@@ -65,6 +65,25 @@ internal sealed class PdfDocumentRedactionLedger
         if (!_widthNotes.Contains(note)) _widthNotes.Add(note);
     }
 
+    private readonly List<Excise.Core.Text.Segmentation.CarrierResult> _annotationCutRefusals = new();
+
+    /// <summary>
+    /// #2045/#1753: structure-tree <c>/OBJR</c> items cut because they named an
+    /// annotation a redaction took off its page (one over a redacted area, or
+    /// sized to a redacted word). Recorded here because the scrubber runs
+    /// below the report-building callers, and the GUI drops the report.
+    /// </summary>
+    internal int AnnotationStructureItemsCut { get; private set; }
+
+    /// <summary>A removed annotation the object graph still reaches after the cut: its text is still in the file.</summary>
+    internal IReadOnlyList<Excise.Core.Text.Segmentation.CarrierResult> AnnotationCutRefusals => _annotationCutRefusals;
+
+    internal void RecordAnnotationCut(int cut, IEnumerable<Excise.Core.Text.Segmentation.CarrierResult> refusals)
+    {
+        AnnotationStructureItemsCut += cut;
+        _annotationCutRefusals.AddRange(refusals);
+    }
+
     private readonly HashSet<PdfDictionary> _formattedFields = new(ReferenceEqualityComparer.Instance);
 
     /// <summary>

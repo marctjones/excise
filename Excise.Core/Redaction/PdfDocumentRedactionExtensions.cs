@@ -158,6 +158,9 @@ public static class PdfDocumentRedactionExtensions
         if (RedactionFeatureStripper.ApplyMetadataStrip(document, options) is { } metadataRow)
             profileRemovals.Add(metadataRow);
         profileRemovals.AddRange(RedactionFeatureStripper.Apply(document, options, carrierResults));
+        // #2045/#1753: what the page loop's annotation removal cut from the structure tree.
+        var annotationCutBefore = document.RedactionLedger.AnnotationStructureItemsCut;
+        var annotationRefusalsBefore = document.RedactionLedger.AnnotationCutRefusals.Count;
 
         var pageCount = document.PageCount;
         progress?.Invoke(0, pageCount);
@@ -331,8 +334,14 @@ public static class PdfDocumentRedactionExtensions
                         // every RedactText call — including the documented case
                         // where a term below the sanitizer's 3-character floor
                         // deliberately leaves carriers alone.
+                        // #1753: word-sized decorations go under EVERY width policy.
+                        // Beside a closed gap one states the word's width; under a
+                        // keep-layout box an underline below it, or an annotation
+                        // drawn on top of it, states the width the box was widened
+                        // to blur. Matched against imageAreas (the word's own
+                        // extent), never the widened marker.
                         imageCounts += page.RedactAreasInternal(contentAreas, imageAreas, options.Strategy, scrubDocumentCarriers: false, width: options.Width, removeAttachments: false,
-                            removeWordDecorations: options.CloseWidth);   // #1753
+                            removeWordDecorations: true);
                     }
 
                     // A box whose width equals the removed run is itself a
@@ -551,7 +560,12 @@ public static class PdfDocumentRedactionExtensions
         if (imageCounts.DecorationsRemoved > 0)
             profileRemovals.Add(new RedactedFeatureRemoval(
                 "underline, box or highlight sized to a redacted word", imageCounts.DecorationsRemoved,
-                "at the old width beside the closed gap it would state the removed word's width"));
+                "left in place it would state the removed word's width, beside a closed gap or around "
+                + "or on top of the covering box"));
+
+        // #2045: an annotation the page loop removed is out of the file only once
+        // the structure tree stops naming it; one the graph still reaches is refused.
+        AddAnnotationCutRows(document, annotationCutBefore, annotationRefusalsBefore, profileRemovals, carrierResults);
 
         // #2043: a scrubbed field's pressed (/D) or hovered (/R) appearance that
         // could not be rewritten free of the term (its font reads as something
@@ -643,6 +657,30 @@ public static class PdfDocumentRedactionExtensions
                 "reference the original, including the redacted area's pixels, and the saved file keeps it; " +
                 "redact those pages too (#1493)");
         }
+    }
+
+    /// <summary>
+    /// #2045/#1753: the structure-tree items the redaction's own annotation
+    /// removal cut since the ledger read <paramref name="cutBefore"/> and
+    /// <paramref name="refusalsBefore"/>, added to the profile's row of the same
+    /// name (one row, whichever pass cut), and every annotation still reachable
+    /// after the cut, as a refused carrier.
+    /// </summary>
+    internal static void AddAnnotationCutRows(
+        PdfDocument document, int cutBefore, int refusalsBefore,
+        List<RedactedFeatureRemoval> removals, ICollection<CarrierResult> carriers)
+    {
+        var ledger = document.RedactionLedger;
+        foreach (var refusal in ledger.AnnotationCutRefusals.Skip(refusalsBefore))
+            carriers.Add(refusal);
+        var cut = ledger.AnnotationStructureItemsCut - cutBefore;
+        if (cut <= 0) return;
+        var index = removals.FindIndex(r => r.Feature == RedactionFeatureStripper.CutItemsRow);
+        if (index >= 0)
+            removals[index] = removals[index] with { Count = removals[index].Count + cut };
+        else
+            removals.Add(new RedactedFeatureRemoval(RedactionFeatureStripper.CutItemsRow, cut,
+                "an /OBJR that named an annotation the redaction removed, and would have kept it and its text in the file"));
     }
 
     /// <summary>

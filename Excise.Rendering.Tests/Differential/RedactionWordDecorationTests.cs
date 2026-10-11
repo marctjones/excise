@@ -10,15 +10,18 @@ namespace Excise.Rendering.Tests.Differential;
 
 /// <summary>
 /// #1753 — an underline, box, strike-through or highlight drawn to one
-/// redacted word's extent goes with the word. Left at the old width beside a
-/// closed gap it states the removed word's width: the issue recovered 8 of 8
-/// words that way. A decoration spanning more than the word (a sentence
-/// highlight, a rule across the line) says nothing about the word's width and
-/// is kept.
+/// redacted word's extent goes with the word, under every width policy.
+/// Left at the old width beside a closed gap it states the removed word's
+/// width: the issue recovered 8 of 8 words that way. Under the keep-layout
+/// default an underline below the covering box, or an annotation drawn on top
+/// of it, states the width the box was widened to blur. A decoration spanning
+/// more than the word (a sentence highlight, a rule across the line), under a
+/// neighbouring word, or above or below the line says nothing about the word's
+/// width and is kept.
 /// </summary>
 /// <remarks>
 /// The secret ends its line, so closing the gap moves nothing into the
-/// word's old extent, and no box is drawn: whatever ink mutool renders there
+/// word's old extent; with no box drawn, whatever ink mutool renders there
 /// afterwards is the decoration.
 /// </remarks>
 public class RedactionWordDecorationTests : IDisposable
@@ -26,26 +29,45 @@ public class RedactionWordDecorationTests : IDisposable
     private const string Secret = "ALBERTINA";
     private const int Dpi = 150;
     private const double PageHeight = 120;
+    private const string CutItemsRow = "structure-tree reference(s) to a removed object";
 
     // 20 pt Helvetica from x=20 at baseline 50. "Name: " advances 3.223 em
     // (64.46 pt) and ALBERTINA 5.557 em (111.14 pt), so the word spans
-    // 84.46..195.60.
+    // 84.46..195.60. "Name" spans 20..73.34; " Smith" (space 0.278 em, Smith
+    // 2.556 em) puts Smith at 201.16..252.28.
     private const string Line = "BT /F1 20 Tf 20 50 Td (Name: ALBERTINA) Tj ET";
+    private const string LineWithNext = "BT /F1 20 Tf 20 50 Td (Name: ALBERTINA Smith) Tj ET";
     private static readonly PdfRectangle WordExtent = new(84.46, 43, 195.6, 68);
 
     private readonly List<string> _temp = new();
 
-    public static TheoryData<string, string> WordSizedDecorations() => new()
+    private static readonly (string Kind, string Decoration)[] WordSizedDecorations =
     {
-        { "underline", "84.46 46.5 111.14 1.2 re f" },
-        { "box", "2 w 82.46 44 115.14 21 re S" },
-        { "highlight", "1 1 0 rg 84.46 45 111.14 20 re f 0 g" },
-        { "strike-through", "1.5 w 84.46 56 m 195.6 56 l S" },
+        ("underline", "84.46 46.5 111.14 1.2 re f"),
+        ("box", "2 w 82.46 44 115.14 21 re S"),
+        ("highlight", "1 1 0 rg 84.46 45 111.14 20 re f 0 g"),
+        ("strike-through", "1.5 w 84.46 56 m 195.6 56 l S"),
     };
 
+    public static TheoryData<string, string, WidthPolicy> WordSizedDecorationsUnderEveryPolicy()
+    {
+        var data = new TheoryData<string, string, WidthPolicy>();
+        foreach (var (kind, decoration) in WordSizedDecorations)
+            foreach (var policy in Enum.GetValues<WidthPolicy>())
+                data.Add(kind, decoration, policy);
+        return data;
+    }
+
+    public static TheoryData<WidthPolicy> EveryPolicy()
+    {
+        var data = new TheoryData<WidthPolicy>();
+        foreach (var policy in Enum.GetValues<WidthPolicy>()) data.Add(policy);
+        return data;
+    }
+
     [Theory]
-    [MemberData(nameof(WordSizedDecorations))]
-    public void WidthClosing_RemovesTheDecorationSizedToTheWord(string kind, string decoration)
+    [MemberData(nameof(WordSizedDecorationsUnderEveryPolicy))]
+    public void EveryPolicy_RemovesTheDecorationSizedToTheWord(string kind, string decoration, WidthPolicy policy)
     {
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
 
@@ -54,20 +76,21 @@ public class RedactionWordDecorationTests : IDisposable
             InkFractionIn(before!, WordExtent).Should().BeGreaterThan(0.01,
                 $"fixture sanity: the {kind} is drawn before redaction");
 
-        var saved = Redact(source, RedactionOptions.Default with { DrawBox = false, Width = WidthPolicy.FixedMarker }, out var report);
+        var saved = Redact(source, RedactionOptions.Default with { DrawBox = false, Width = policy }, out var report);
         var path = WriteTemp(saved);
 
         SavedPdfLeakScanner.FindTerm(saved, Secret).Should().BeEmpty();
         MutoolTextExtractor.ExtractPage(path, 1).Should().NotContain(Secret).And.Contain("Name");
         using var after = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
         InkFractionIn(after!, WordExtent).Should().BeLessThan(0.001,
-            $"the {kind} was sized to the removed word, so it states its width (#1753)");
+            $"the {kind} was sized to the removed word, so it states its width under {policy} (#1753)");
         report.Removals.Should().Contain(r => r.Feature.Contains("sized to a redacted word") && r.Count == 1,
             "every removal is reported");
     }
 
-    [Fact]
-    public void WidthClosing_KeepsADecorationSpanningMoreThanTheWord()
+    [Theory]
+    [MemberData(nameof(EveryPolicy))]
+    public void EveryPolicy_KeepsADecorationSpanningMoreThanTheWord(WidthPolicy policy)
     {
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
 
@@ -75,7 +98,7 @@ public class RedactionWordDecorationTests : IDisposable
         // across the line: neither is sized to the word, so neither measures it.
         var source = Fixture($"q 0 1 1 rg 18 45 180 20 re f Q q 10 40 380 0.8 re f Q\n{Line}");
 
-        var saved = Redact(source, RedactionOptions.Default with { DrawBox = false, Width = WidthPolicy.FixedMarker }, out var report);
+        var saved = Redact(source, RedactionOptions.Default with { DrawBox = false, Width = policy }, out var report);
         var path = WriteTemp(saved);
 
         SavedPdfLeakScanner.FindTerm(saved, Secret).Should().BeEmpty();
@@ -89,12 +112,14 @@ public class RedactionWordDecorationTests : IDisposable
     }
 
     [Fact]
-    public void PreserveLayout_KeepsTheDecoration_ItsBoxAlreadyStatesTheWidth()
+    public void CollapsePreserveLayout_RemovesTheDecoration_TheBoxIsNotTheOnlyWidthSignal()
     {
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
 
-        // Only the default changed (#1715): an explicit CollapsePreserveLayout
-        // caller gets the output it always got.
+        // Before the owner's 2026-10 decision this test pinned the opposite:
+        // the decoration stayed because the exact-width box already states the
+        // width. With no box drawn the decoration is the only width signal,
+        // and an annotation draws on top of any box, so it goes here too.
         var source = Fixture($"q 84.46 46.5 111.14 1.2 re f Q\n{Line}");
 
         var saved = Redact(source,
@@ -103,34 +128,210 @@ public class RedactionWordDecorationTests : IDisposable
 
         SavedPdfLeakScanner.FindTerm(saved, Secret).Should().BeEmpty();
         using var after = MutoolReferenceRenderer.RenderPage(WriteTemp(saved), 1, Dpi);
-        InkFractionIn(after!, new PdfRectangle(84.46, 46.5, 195.6, 47.7)).Should().BeGreaterThan(0.5);
+        InkFractionIn(after!, new PdfRectangle(84.46, 46.5, 195.6, 47.7)).Should().BeLessThan(0.001);
+        report.Removals.Should().Contain(r => r.Feature.Contains("sized to a redacted word") && r.Count == 1);
+    }
+
+    [Fact]
+    public void Default_RemovesTheUnderlineBelowTheBox_AndStillDrawsTheBox()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // The owner's case: under the keep-layout default the box is widened
+        // to blur the word's width, and an underline sized to the word below
+        // it would state that width exactly. Width is NOT set: the default
+        // itself is pinned.
+        RedactionOptions.Default.Width.Should().Be(WidthPolicy.OvershootPreserveLayout, "this test pins the default");
+        var underline = new PdfRectangle(84.46, 40, 195.6, 41.2);
+        var source = Fixture($"q 84.46 40 111.14 1.2 re f Q\n{Line}");
+        using (var before = MutoolReferenceRenderer.RenderPage(WriteTemp(source), 1, Dpi))
+            InkFractionIn(before!, underline).Should().BeGreaterThan(0.5, "fixture sanity");
+
+        var saved = Redact(source, RedactionOptions.Default, out var report);
+        var path = WriteTemp(saved);
+
+        SavedPdfLeakScanner.FindTerm(saved, Secret).Should().BeEmpty();
+        MutoolTextExtractor.ExtractPage(path, 1).Should().NotContain(Secret).And.Contain("Name");
+        using var after = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
+        InkFractionIn(after!, underline).Should().BeLessThan(0.001,
+            "the underline below the widened box stated the word's exact width");
+        InkFractionIn(after!, new PdfRectangle(100, 50, 180, 60)).Should().BeGreaterThan(0.95,
+            "the covering box still draws over the word: removing the decoration left no hole in it");
+        report.Removals.Should().Contain(r => r.Feature.Contains("sized to a redacted word") && r.Count == 1);
+    }
+
+    [Fact]
+    public void Default_KeepsDecorationsUnderTheNextWord_AcrossBothWords_AndAboveOrBelowTheLine()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // Under Smith only; under ALBERTINA and Smith together; a word-sized
+        // rule on the line above and one on the line below; a paragraph-wide
+        // rule. None belongs to the removed run.
+        var smithUnderline = new PdfRectangle(201.16, 46.5, 252.28, 47.7);
+        var bothUnderline = new PdfRectangle(84.46, 38, 252.28, 39);
+        var above = new PdfRectangle(84.46, 85, 195.6, 86.2);
+        var below = new PdfRectangle(84.46, 20, 195.6, 21.2);
+        var paragraph = new PdfRectangle(10, 10, 390, 11.2);
+        var source = Fixture(string.Join(" ", new[] { smithUnderline, bothUnderline, above, below, paragraph }
+                                 .Select(Rule))
+                             + "\n" + LineWithNext);
+
+        var saved = Redact(source, RedactionOptions.Default with { DrawBox = false }, out var report);
+        var path = WriteTemp(saved);
+
+        SavedPdfLeakScanner.FindTerm(saved, Secret).Should().BeEmpty();
+        MutoolTextExtractor.ExtractPage(path, 1).Should().NotContain(Secret).And.Contain("Smith");
+        using var after = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
+        InkFractionIn(after!, Inset(smithUnderline)).Should().BeGreaterThan(0.5, "the next word's underline is not the removed word's");
+        InkFractionIn(after!, Inset(bothUnderline)).Should().BeGreaterThan(0.5, "an underline across both words spans more than the removed one");
+        InkFractionIn(after!, Inset(above)).Should().BeGreaterThan(0.5, "a rule on the line above is not on the word's line");
+        InkFractionIn(after!, Inset(below)).Should().BeGreaterThan(0.5, "a rule on the line below is not on the word's line");
+        InkFractionIn(after!, Inset(paragraph)).Should().BeGreaterThan(0.5, "a paragraph-wide rule is kept");
         report.Removals.Should().NotContain(r => r.Feature.Contains("sized to a redacted word"));
     }
 
-    public static TheoryData<string, string> WordSizedAnnotations() => new()
+    [Fact]
+    public void Default_MovesNoSurvivingGlyph()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var source = Fixture($"q 84.46 40 111.14 1.2 re f Q q 201.16 46.5 51.12 1.2 re f Q\n{LineWithNext}");
+        var before = MutoolGlyphPositions.ExtractPage(WriteTemp(source), 1);
+        var saved = Redact(source, RedactionOptions.Default, out _);
+        var after = MutoolGlyphPositions.ExtractPage(WriteTemp(saved), 1);
+        before.Should().NotBeNull();
+        after.Should().NotBeNull();
+
+        static bool Survives(MutoolGlyphPositions.Glyph g) =>
+            !string.IsNullOrWhiteSpace(g.Char) && (g.X < WordExtent.Left - 1 || g.X >= WordExtent.Right - 1);
+        var expected = before!.Where(Survives).ToList();
+        expected.Select(g => g.Char).Should().Equal("N", "a", "m", "e", ":", "S", "m", "i", "t", "h");
+        var kept = after!.Where(g => !string.IsNullOrWhiteSpace(g.Char)).ToList();
+        kept.Select(g => g.Char).Should().Equal(expected.Select(g => g.Char));
+        for (var i = 0; i < expected.Count; i++)
+        {
+            kept[i].X.Should().BeApproximately(expected[i].X, 0.01, $"glyph {expected[i].Char} must not move");
+            kept[i].Y.Should().BeApproximately(expected[i].Y, 0.01, $"glyph {expected[i].Char} must not move");
+        }
+    }
+
+    [Fact]
+    public void Default_SequentialRedactions_EachTakeOnlyTheirOwnDecoration()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var nameUnderline = new PdfRectangle(20, 40, 73.34, 41.2);
+        var secretUnderline = new PdfRectangle(84.46, 40, 195.6, 41.2);
+        var smithUnderline = new PdfRectangle(201.16, 40, 252.28, 41.2);
+        var source = Fixture(string.Join(" ", new[] { nameUnderline, secretUnderline, smithUnderline }
+                                 .Select(Rule))
+                             + "\n" + LineWithNext);
+
+        byte[] saved;
+        RedactionReport first, second;
+        using (var doc = PdfDocument.Open(source))
+        {
+            first = doc.RedactText(Secret, RedactionOptions.Default);
+            second = doc.RedactText("Smith", RedactionOptions.Default);
+            saved = doc.SaveToBytes();
+        }
+        var path = WriteTemp(saved);
+
+        SavedPdfLeakScanner.FindTerm(saved, Secret).Should().BeEmpty();
+        SavedPdfLeakScanner.FindTerm(saved, "Smith").Should().BeEmpty();
+        MutoolTextExtractor.ExtractPage(path, 1).Should().Contain("Name").And.NotContain("Smith");
+        using var after = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
+        InkFractionIn(after!, secretUnderline).Should().BeLessThan(0.001);
+        InkFractionIn(after!, smithUnderline).Should().BeLessThan(0.001);
+        InkFractionIn(after!, Inset(nameUnderline)).Should().BeGreaterThan(0.5, "Name was never redacted");
+        InkFractionIn(after!, new PdfRectangle(100, 50, 180, 60)).Should().BeGreaterThan(0.95,
+            "the first redaction's box is not taken by the second: it is not sized to Smith");
+        InkFractionIn(after!, new PdfRectangle(210, 50, 245, 60)).Should().BeGreaterThan(0.95);
+        first.Removals.Should().Contain(r => r.Feature.Contains("sized to a redacted word") && r.Count == 1);
+        second.Removals.Should().Contain(r => r.Feature.Contains("sized to a redacted word") && r.Count == 1);
+    }
+
+    public static TheoryData<string, string, WidthPolicy> WordSizedAnnotations()
     {
         // The Rect of an Underline or StrikeOut can be the stroke alone, below
         // or through the glyphs rather than around them.
-        { "Highlight", "84.46 43 195.6 68" },
-        { "Underline", "84.46 45.5 195.6 47.5" },
-        { "StrikeOut", "84.46 55 195.6 57" },
-    };
+        var data = new TheoryData<string, string, WidthPolicy>();
+        foreach (var policy in Enum.GetValues<WidthPolicy>())
+        {
+            data.Add("Highlight", "84.46 43 195.6 68", policy);
+            data.Add("Underline", "84.46 45.5 195.6 47.5", policy);
+            data.Add("StrikeOut", "84.46 55 195.6 57", policy);
+            data.Add("Squiggly", "84.46 44 195.6 47", policy);
+        }
+        return data;
+    }
 
     [Theory]
     [MemberData(nameof(WordSizedAnnotations))]
-    public void WidthClosing_RemovesTheMarkupAnnotationSizedToTheWord(string subtype, string rect)
+    public void EveryPolicy_RemovesTheMarkupAnnotationSizedToTheWord(string subtype, string rect, WidthPolicy policy)
     {
         var quads = "84.46 68 195.6 68 84.46 43 195.6 43";
         var source = Fixture(Line,
             $"/Annots [<< /Type /Annot /Subtype /{subtype} /Rect [{rect}] /QuadPoints [{quads}] /C [1 0 0] >>]");
         SavedPdfLeakScanner.FindTerm(source, $"/{subtype}").Should().NotBeEmpty("fixture sanity");
 
-        var saved = Redact(source, RedactionOptions.Default with { DrawBox = false, Width = WidthPolicy.FixedMarker }, out _);
+        var saved = Redact(source, RedactionOptions.Default with { DrawBox = false, Width = policy }, out _);
 
         SavedPdfLeakScanner.FindTerm(saved, Secret).Should().BeEmpty();
         SavedPdfLeakScanner.FindTerm(saved, $"/{subtype}").Should().BeEmpty(
-            $"a {subtype} annotation at the word's width states it (#1753)");
+            $"a {subtype} annotation at the word's width states it under {policy} (#1753)");
     }
+
+    [Theory]
+    [InlineData("Highlight", "84.46 43 195.6 68")]
+    [InlineData("Underline", "84.46 45.5 195.6 47.5")]
+    public void Default_TaggedAnnotation_LeavesTheFile_StructureTreeItemCut(string subtype, string rect)
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // #2045: the structure tree names the annotation (/OBJR) and its Popup
+        // names it as /Parent. Off the page is not out of the file while either
+        // reaches it; DECORATION-NOTE is not the secret, so only the annotation
+        // object leaving the file removes it.
+        const string Note = "DECORATION-NOTE";
+        var quads = "84.46 68 195.6 68 84.46 43 195.6 43";
+        var source = Build(
+            "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 7 0 R /MarkInfo << /Marked true >> >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            $"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 400 {PageHeight}] /Contents 4 0 R " +
+            "/Resources << /Font << /F1 5 0 R >> >> /Annots [6 0 R 9 0 R] >>",
+            Stream(Line),
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+            $"<< /Type /Annot /Subtype /{subtype} /Rect [{rect}] /QuadPoints [{quads}] /C [1 1 0] " +
+            $"/Contents ({Note}) /P 3 0 R /Popup 9 0 R >>",
+            "<< /Type /StructTreeRoot /K 8 0 R >>",
+            "<< /Type /StructElem /S /Annot /P 7 0 R /Pg 3 0 R /K << /Type /OBJR /Obj 6 0 R /Pg 3 0 R >> >>",
+            "<< /Type /Annot /Subtype /Popup /Rect [300 80 390 110] /Parent 6 0 R >>");
+        SavedPdfLeakScanner.FindTerm(source, Note).Should().NotBeEmpty("fixture sanity");
+        using (var before = MutoolReferenceRenderer.RenderPage(WriteTemp(source), 1, Dpi))
+            InkFractionIn(before!, new PdfRectangle(84.46, 43, 195.6, 68)).Should().BeGreaterThan(0.01,
+                $"fixture sanity: mutool draws the {subtype}");
+
+        var saved = Redact(source, RedactionOptions.Default with { DrawBox = false }, out var report);
+        var path = WriteTemp(saved);
+
+        SavedPdfLeakScanner.FindTerm(saved, Secret).Should().BeEmpty();
+        SavedPdfLeakScanner.FindTerm(saved, Note).Should().BeEmpty(
+            "the annotation left the file, not just its page (#2045)");
+        SavedPdfLeakScanner.FindTerm(saved, "/Popup").Should().BeEmpty("its Popup went with it");
+        SavedPdfLeakScanner.FindTerm(saved, "/StructTreeRoot").Should().NotBeEmpty("the tags are kept");
+        using var after = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
+        InkFractionIn(after!, new PdfRectangle(84.46, 43, 195.6, 68)).Should().BeLessThan(0.001);
+        report.Removals.Should().Contain(r => r.Feature == CutItemsRow && r.Count == 1);
+        report.Carriers.Should().NotContain(c => !c.Scrubbed,
+            "nothing reaches the removed annotation after the cut");
+    }
+
+    private static PdfRectangle Inset(PdfRectangle r) => new(r.Left + 3, r.Bottom, r.Right - 3, r.Top);
+
+    private static string Rule(PdfRectangle r) =>
+        FormattableString.Invariant($"q {r.Left} {r.Bottom} {r.Right - r.Left} {r.Top - r.Bottom} re f Q");
 
     private static byte[] Redact(byte[] source, RedactionOptions options, out RedactionReport report)
     {

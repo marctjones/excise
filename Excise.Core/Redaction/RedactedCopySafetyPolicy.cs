@@ -230,6 +230,10 @@ public static class RedactedCopySafetyPolicy
         foreach (var note in document.RedactionLedger.WidthNotes)
             warnings.Add($"{RedactionNoteSummary.WidthNotePrefix}{note}.");
 
+        // #2045: an annotation a redaction removed that the object graph still reaches.
+        foreach (var row in document.RedactionLedger.AnnotationCutRefusals)
+            warnings.Add($"Carrier {row.Carrier}: {row.RefusedReason}");
+
         if (options.RunCarrierAudit)
         {
             // Runs after any surgical scrub so it reports what survived, not

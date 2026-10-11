@@ -344,6 +344,8 @@ public static class PdfPageRedactionExtensions
         var metadataRow = RedactionFeatureStripper.ApplyMetadataStrip(page.Document, options);
         var list = areas.Select(a => a.Normalize()).ToList();
         var xfaRowsBefore = page.Document.RedactionLedger.XfaRemovals.Count;
+        var annotationCutBefore = page.Document.RedactionLedger.AnnotationStructureItemsCut;
+        var annotationRefusalsBefore = page.Document.RedactionLedger.AnnotationCutRefusals.Count;
         // Pattern cells, soft-mask groups and Type3 glyph procedures the page
         // draws BEFORE the area is removed: removing a Type3 glyph stops the
         // page drawing its procedure while the font, and the text the
@@ -359,7 +361,10 @@ public static class PdfPageRedactionExtensions
         // RedactText reports it; a library caller has no other way to learn of it.
         foreach (var xfaRow in page.Document.RedactionLedger.XfaRemovals.Skip(xfaRowsBefore))
             carriers.Add(new CarrierResult(xfaRow, true, null));
-        var removals = RedactionFeatureStripper.Apply(page.Document, options, carriers);
+        var removals = RedactionFeatureStripper.Apply(page.Document, options, carriers).ToList();
+        // #2045: the area's own annotation removal cut the structure tree's /OBJR too.
+        PdfDocumentRedactionExtensions.AddAnnotationCutRows(
+            page.Document, annotationCutBefore, annotationRefusalsBefore, removals, carriers);
         // #1834: RedactText's box rule. A closed gap reflows the rest of the
         // line into the area, so only FixedMarker still draws there.
         if (options.DrawBox && (options.FixedMarker || !options.CloseWidth))
@@ -564,8 +569,8 @@ public static class PdfPageRedactionExtensions
     /// <summary>
     /// #1753: the drawn and annotated decorations sized to one of
     /// <paramref name="words"/>, removed; returns how many. Only
-    /// <c>RedactText</c> asks, and only when the width closes: a dragged area is
-    /// not a word, and a layout-preserving box already states the width.
+    /// <c>RedactText</c> asks, under every width policy: a dragged area is not
+    /// a word.
     /// </summary>
     private static int RemoveWordDecorations(
         PdfPage page, ref IReadOnlyList<ContentOperator> working, IReadOnlyList<PdfRectangle> words)
