@@ -42,6 +42,13 @@ internal class PendingRedaction
     public bool IsOnRemovedPage { get; set; }
 
     /// <summary>
+    /// True when the mark was made from a text selection (right-click Redact, #1659), not a
+    /// dragged rectangle. Its area is then a run of words, and Apply also removes the underline,
+    /// box, strike-through or highlight sized to that run (#1905); a dragged area is not a word.
+    /// </summary>
+    public bool FromTextSelection { get; set; }
+
+    /// <summary>
     /// Preview of text that will be removed (for user review)
     /// </summary>
     public string PreviewText { get; set; } = string.Empty;

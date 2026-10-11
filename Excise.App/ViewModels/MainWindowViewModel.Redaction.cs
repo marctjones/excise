@@ -38,9 +38,10 @@ internal partial class MainWindowViewModel
 
     /// <summary>
     /// The mark itself, shared by the drawn rectangle (which needs redaction mode) and
-    /// the right-click Redact on a text selection (#1659, which does not).
+    /// the right-click Redact on a text selection (#1659, which does not, and whose mark
+    /// <paramref name="fromTextSelection"/> says is a run of words, #1905).
     /// </summary>
-    private void MarkRedactionPageArea(PdfPageRect pageArea)
+    private void MarkRedactionPageArea(PdfPageRect pageArea, bool fromTextSelection = false)
     {
         var mark = _redactionWorkflowService.CaptureMark(
             new RedactionMarkRequest(_currentFilePath, pageArea));
@@ -48,7 +49,7 @@ internal partial class MainWindowViewModel
         _logger.LogInformation("Preview text extracted: '{Text}'",
             Excise.Core.Text.UnicodeTextSafety.EscapeForDisplay(mark.PreviewText));
 
-        RedactionWorkflow.MarkArea(mark.PageArea, mark.PreviewText);
+        RedactionWorkflow.MarkArea(mark.PageArea, mark.PreviewText, fromTextSelection);
         FileState.PendingRedactionsCount = RedactionWorkflow.PendingCount;
         this.RaisePropertyChanged(nameof(SaveButtonText));
         this.RaisePropertyChanged(nameof(StatusBarText));
