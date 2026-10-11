@@ -288,7 +288,9 @@ public class RedactionCarrierPolicyPreferenceTests
             """);
         var upgraded = WindowSettings.Load();
         upgraded.Width.Should().Be(900, "fixture: the file was read");
-        upgraded.Redaction.Should().Be(chosen);
+        // Refs #1715: an unversioned file's FixedMarker is the old default, reset once;
+        // everything else (here the Maximum profile and both carrier policies) is kept.
+        upgraded.Redaction.Should().Be(chosen with { Width = RedactionOptions.Default.Width });
 
         // The restarted window applies what was loaded.
         var restarted = MainWindowViewModelTestFactory.Create();

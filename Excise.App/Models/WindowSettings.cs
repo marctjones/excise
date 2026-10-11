@@ -6,6 +6,8 @@ using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
 using Excise.App.Services;
+using Excise.Core.Operations;
+using Excise.Core.Text.Segmentation;
 
 namespace Excise.App.Models;
 
@@ -52,6 +54,20 @@ internal class WindowSettings
     /// this holds them as six flat keys, which <see cref="Load"/> still reads.
     /// </summary>
     public RedactionPreferences Redaction { get; set; } = new();
+
+    /// <summary>
+    /// The settings schema the file was last saved under (Refs #1715). 0 for a
+    /// window.json written before the field existed. <see cref="Save"/> always
+    /// stamps <see cref="CurrentSettingsVersion"/>; <see cref="Load"/> runs each
+    /// one-time migration for the versions above this value, then saves, so a
+    /// migration runs once and a choice made afterwards is never reverted.
+    /// Version 1: a saved <c>FixedMarker</c> width (the old default) is reset to
+    /// the engine default.
+    /// </summary>
+    public int SettingsVersion { get; set; }
+
+    /// <summary>The schema version <see cref="Save"/> writes.</summary>
+    internal const int CurrentSettingsVersion = 1;
 
     /// <summary>
     /// Print page scaling (#1545). Persisted as a string; parsed back to
@@ -210,6 +226,9 @@ internal class WindowSettings
                     if (!document.RootElement.TryGetProperty(nameof(Redaction), out _))
                         settings.Redaction = ReadFlatRedactionKeys(document.RootElement);
 
+                    if (MigrateToCurrent(settings))
+                        settings.Save();
+
                     // Drop document states whose file is gone. A stale entry
                     // pointing at a deleted /tmp/... fixture from an earlier
                     // test run could otherwise drive the GUI's
@@ -231,6 +250,25 @@ internal class WindowSettings
         }
 
         return new WindowSettings();
+    }
+
+    /// <summary>
+    /// One-time, versioned migrations (Refs #1715). Version 1: the default width
+    /// changed from FixedMarker (closes the gap, reflows the line) to the keep-layout
+    /// engine default, but every window.json saved since 2026-09-27 holds the old
+    /// default as an explicit choice. Reset it once; every other value is left alone.
+    /// A FixedMarker chosen after this runs is saved at the current version and kept.
+    /// </summary>
+    /// <returns>True when the settings changed and should be saved.</returns>
+    private static bool MigrateToCurrent(WindowSettings settings)
+    {
+        if (settings.SettingsVersion >= CurrentSettingsVersion)
+            return false;
+
+        if (settings.Redaction.Width == WidthPolicy.FixedMarker)
+            settings.Redaction.Width = RedactionOptions.Default.Width;
+        settings.SettingsVersion = CurrentSettingsVersion;
+        return true;
     }
 
     /// <summary>
@@ -269,6 +307,7 @@ internal class WindowSettings
         {
             // AppPaths.ConfigDir ensures directory exists. WriteIndented comes
             // from ExciseJsonContext's [JsonSourceGenerationOptions].
+            SettingsVersion = CurrentSettingsVersion;
             var json = JsonSerializer.Serialize(this, ExciseJsonContext.Default.WindowSettings);
             File.WriteAllText(SettingsPath, json);
         }
