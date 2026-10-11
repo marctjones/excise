@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "e30cddf011b884c102ebf9a8dd3b6fbf05a682c1",
+  "sourceRevision": "ce251d8de30bb311fb116975ea31a320c219d4b6",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8881,
+    "retainedSymbols": 8885,
     "observedComponentDependencies": 85,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -520,10 +520,15 @@
     {
       "source": "core-document",
       "target": "core-redaction",
-      "references": 2,
-      "typeDependencyCount": 1,
+      "references": 4,
+      "typeDependencyCount": 2,
       "classification": "undeclared",
       "evidence": [
+        {
+          "source": "Excise.Core.Document.PdfDocumentRedactionLedger",
+          "target": "Excise.Core.Text.Segmentation.CarrierResult",
+          "references": 2
+        },
         {
           "source": "Excise.Core.Document.RemovedPageReferenceScrubber",
           "target": "Excise.Core.Text.Segmentation.StructureTreeRedactionScrubber",
@@ -689,7 +694,7 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1409,
+      "references": 1423,
       "typeDependencyCount": 161,
       "classification": "declared",
       "evidence": [
@@ -731,14 +736,14 @@
     {
       "source": "core-redaction",
       "target": "core-primitives",
-      "references": 1309,
+      "references": 1316,
       "typeDependencyCount": 188,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.Segmentation.RedactionFeatureStripper",
           "target": "Excise.Core.Primitives.PdfDictionary",
-          "references": 100
+          "references": 101
         }
       ]
     },
