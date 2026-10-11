@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "532c835e115f1f0899c769a938619b7e7f4c8401",
+  "sourceRevision": "e30cddf011b884c102ebf9a8dd3b6fbf05a682c1",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -22,8 +22,8 @@
     "commitsRequested": 200,
     "commitsObserved": 199,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "ed9f0eb37e927443e43b7305d81fcad36621dccd",
-    "oldestProductionCommit": "221e7538c5c75044004c1bd06b7252d76eb4f294"
+    "newestProductionCommit": "a41fee2518306191d90861b2dfa26fc18224a5ec",
+    "oldestProductionCommit": "292c41efad601bdb0cc16cafa4e112be8aaa62de"
   },
   "files": [
     {
@@ -59,10 +59,6 @@
       "commits": 10
     },
     {
-      "path": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
-      "commits": 9
-    },
-    {
       "path": "Excise.Core/Text/TextExtractor.cs",
       "commits": 9
     },
@@ -96,6 +92,10 @@
     },
     {
       "path": "Excise.Core/Redaction/PdfPageRedactionExtensions.cs",
+      "commits": 7
+    },
+    {
+      "path": "Excise.Core/Redaction/RedactionFeatureStripper.cs",
       "commits": 7
     },
     {
@@ -255,6 +255,10 @@
       "commits": 3
     },
     {
+      "path": "Excise.App/Models/WindowSettings.cs",
+      "commits": 3
+    },
+    {
       "path": "Excise.App/Services/RedactionService.cs",
       "commits": 3
     },
@@ -343,7 +347,7 @@
       "commits": 3
     },
     {
-      "path": "Excise.Core/Redaction/FormXObjectFlattener.cs",
+      "path": "Excise.Core/Redaction/FontGlyphUsage.cs",
       "commits": 3
     },
     {
@@ -361,10 +365,6 @@
     {
       "path": "Excise.Rendering/SkiaRenderer.Paths.cs",
       "commits": 3
-    },
-    {
-      "path": "Excise.App/Models/WindowSettings.cs",
-      "commits": 2
     },
     {
       "path": "Excise.App/Services/AnnotationWorkflowService.cs",
@@ -507,7 +507,7 @@
       "commits": 2
     },
     {
-      "path": "Excise.Core/Redaction/FontGlyphUsage.cs",
+      "path": "Excise.Core/Redaction/FormXObjectFlattener.cs",
       "commits": 2
     },
     {
@@ -1749,18 +1749,6 @@
       "jaccard": 0.1364
     },
     {
-      "source": "Excise.App/Models/WindowSettings.cs",
-      "target": "Excise.App/ViewModels/MainWindowViewModel.Performance.cs",
-      "cochanges": 2,
-      "jaccard": 1.0
-    },
-    {
-      "source": "Excise.App/Models/WindowSettings.cs",
-      "target": "Excise.App/ViewModels/MainWindowViewModel.Session.cs",
-      "cochanges": 2,
-      "jaccard": 1.0
-    },
-    {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Performance.cs",
       "target": "Excise.App/ViewModels/MainWindowViewModel.Session.cs",
       "cochanges": 2,
@@ -1769,12 +1757,6 @@
     {
       "source": "Excise.Avalonia/Controls/Viewer/ContinuousPageView.Preview.cs",
       "target": "Excise.Avalonia/Controls/Viewer/IPagePreviewSource.cs",
-      "cochanges": 2,
-      "jaccard": 1.0
-    },
-    {
-      "source": "Excise.Core/Redaction/FontGlyphScrubber.cs",
-      "target": "Excise.Core/Redaction/FontGlyphUsage.cs",
       "cochanges": 2,
       "jaccard": 1.0
     },
@@ -1789,6 +1771,18 @@
       "target": "Excise.Core/Xfa/XfaFormSom.cs",
       "cochanges": 2,
       "jaccard": 1.0
+    },
+    {
+      "source": "Excise.App/Models/WindowSettings.cs",
+      "target": "Excise.App/ViewModels/MainWindowViewModel.Performance.cs",
+      "cochanges": 2,
+      "jaccard": 0.6667
+    },
+    {
+      "source": "Excise.App/Models/WindowSettings.cs",
+      "target": "Excise.App/ViewModels/MainWindowViewModel.Session.cs",
+      "cochanges": 2,
+      "jaccard": 0.6667
     },
     {
       "source": "Excise.App/Services/AnnotationWorkflowService.cs",
@@ -1845,14 +1839,14 @@
       "jaccard": 0.6667
     },
     {
-      "source": "Excise.App/App.axaml",
-      "target": "Excise.App/Styles/Brushes.axaml",
+      "source": "Excise.Core/Redaction/FontGlyphScrubber.cs",
+      "target": "Excise.Core/Redaction/FontGlyphUsage.cs",
       "cochanges": 2,
-      "jaccard": 0.5
+      "jaccard": 0.6667
     },
     {
-      "source": "Excise.App/Models/WindowSettings.cs",
-      "target": "Excise.App/ViewModels/PreferencesViewModel.cs",
+      "source": "Excise.App/App.axaml",
+      "target": "Excise.App/Styles/Brushes.axaml",
       "cochanges": 2,
       "jaccard": 0.5
     },
@@ -2035,6 +2029,12 @@
       "target": "Excise.Core/Xfa/FormCalc/FormCalcInterpreter.cs",
       "cochanges": 2,
       "jaccard": 0.5
+    },
+    {
+      "source": "Excise.App/Models/WindowSettings.cs",
+      "target": "Excise.App/ViewModels/PreferencesViewModel.cs",
+      "cochanges": 2,
+      "jaccard": 0.4
     },
     {
       "source": "Excise.App/Services/Input/WindowShortcutResolver.cs",
@@ -2553,12 +2553,6 @@
       "jaccard": 0.2222
     },
     {
-      "source": "Excise.App/Models/WindowSettings.cs",
-      "target": "Excise.App/Views/MainWindow.axaml.cs",
-      "cochanges": 2,
-      "jaccard": 0.2
-    },
-    {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Performance.cs",
       "target": "Excise.App/Views/MainWindow.axaml.cs",
       "cochanges": 2,
@@ -2599,6 +2593,12 @@
       "target": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
       "cochanges": 2,
       "jaccard": 0.2
+    },
+    {
+      "source": "Excise.App/Models/WindowSettings.cs",
+      "target": "Excise.App/Views/MainWindow.axaml.cs",
+      "cochanges": 2,
+      "jaccard": 0.1818
     },
     {
       "source": "Excise.App/Services/PdfDocumentService.cs",
@@ -2733,12 +2733,6 @@
       "jaccard": 0.1333
     },
     {
-      "source": "Excise.App/Models/WindowSettings.cs",
-      "target": "Excise.App/Views/PreferencesWindow.axaml",
-      "cochanges": 2,
-      "jaccard": 0.125
-    },
-    {
       "source": "Excise.App/ViewModels/MainWindowViewModel.Performance.cs",
       "target": "Excise.App/Views/PreferencesWindow.axaml",
       "cochanges": 2,
@@ -2800,6 +2794,12 @@
     },
     {
       "source": "Excise.App/App.axaml",
+      "target": "Excise.App/Views/PreferencesWindow.axaml",
+      "cochanges": 2,
+      "jaccard": 0.1176
+    },
+    {
+      "source": "Excise.App/Models/WindowSettings.cs",
       "target": "Excise.App/Views/PreferencesWindow.axaml",
       "cochanges": 2,
       "jaccard": 0.1176

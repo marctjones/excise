@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1670,
-  "indexedContentSha256": "926f6deffb49d34c48c7500631d84c3c0e9ee3d6f4a2265488df142cd0a37e92",
+  "indexedFileCount": 1671,
+  "indexedContentSha256": "312ff24d6066cb90c4f1b88fd200fe677e6829d10a25bfc8548aeb1bd638b604",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -8251,7 +8251,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 778
+      "candidateReferenceCount": 780
     },
     {
       "id": "pdf.17.graphics.color",
@@ -11795,6 +11795,14 @@
           ]
         },
         {
+          "path": "Excise.App/Models/WindowSettings.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "version",
+            "versions"
+          ]
+        },
+        {
           "path": "Excise.App/Services/Printing/CupsPrintQueues.cs",
           "kind": "source",
           "matchedTerms": [
@@ -12106,7 +12114,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 43
+      "candidateReferenceCount": 44
     },
     {
       "id": "pdf.20.compatibility.deprecated",
@@ -53225,6 +53233,16 @@
           ]
         },
         {
+          "path": "Excise.App/Models/WindowSettings.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "line",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.App/Services/AnnotationWorkflowService.cs",
           "kind": "source",
           "matchedTerms": [
@@ -53413,19 +53431,9 @@
             "annotation",
             "pdfannotation"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Document/MultiLineTextMarkupTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "line",
-            "annotation",
-            "pdfannotation"
-          ]
         }
       ],
-      "candidateReferenceCount": 258
+      "candidateReferenceCount": 259
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -72852,7 +72860,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 856
+      "candidateReferenceCount": 857
     },
     {
       "id": "pdf.20.extension.developer",
