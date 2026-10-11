@@ -328,6 +328,179 @@ public class RedactionWordDecorationTests : IDisposable
             "nothing reaches the removed annotation after the cut");
     }
 
+    // ---- #1905: a mark made from a text selection (the GUI's right-click Redact) ----
+
+    public static TheoryData<string, string> WordSizedDecorationKinds()
+    {
+        var data = new TheoryData<string, string>();
+        foreach (var (kind, decoration) in WordSizedDecorations) data.Add(kind, decoration);
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(WordSizedDecorationKinds))]
+    public void TextSelection_RemovesTheDecorationSizedToTheSelectedWord(string kind, string decoration)
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var source = Fixture($"q {decoration} Q\n{Line}");
+        using (var before = MutoolReferenceRenderer.RenderPage(WriteTemp(source), 1, Dpi))
+            InkFractionIn(before!, WordExtent).Should().BeGreaterThan(0.01, $"fixture sanity: the {kind} is drawn");
+
+        var saved = RedactSelection(source, RedactionOptions.Default with { DrawBox = false }, textSelection: true, out var report);
+        var path = WriteTemp(saved);
+
+        SavedPdfLeakScanner.FindTerm(saved, Secret).Should().BeEmpty();
+        MutoolTextExtractor.ExtractPage(path, 1).Should().NotContain(Secret).And.Contain("Name");
+        using var after = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
+        InkFractionIn(after!, WordExtent).Should().BeLessThan(0.001,
+            $"the {kind} was sized to the selected word, so it states its width (#1905)");
+        report.Removals.Should().Contain(r => r.Feature.Contains("sized to a redacted word") && r.Count == 1,
+            "every removal is reported");
+    }
+
+    [Fact]
+    public void DraggedArea_OverTheSameWord_KeepsTheDecoration()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // The anti-vacuity half: the identical rectangle as a dragged box is not
+        // a word, so its underline stays (today's behaviour, kept on purpose).
+        var underline = new PdfRectangle(84.46, 40, 195.6, 41.2);
+        var source = Fixture($"q {Rule(underline)} Q\n{Line}");
+
+        var saved = RedactSelection(source, RedactionOptions.Default with { DrawBox = false }, textSelection: false, out var report);
+        var path = WriteTemp(saved);
+
+        SavedPdfLeakScanner.FindTerm(saved, Secret).Should().BeEmpty();
+        MutoolTextExtractor.ExtractPage(path, 1).Should().NotContain(Secret);
+        using var after = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
+        InkFractionIn(after!, Inset(underline)).Should().BeGreaterThan(0.5, "a dragged area is not a word");
+        report.Removals.Should().NotContain(r => r.Feature.Contains("sized to a redacted word"));
+    }
+
+    [Fact]
+    public void TextSelection_KeepsTheNextWordsDecoration_TheParagraphRule_AndAnotherOccurrencesDecoration()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        // A second ALBERTINA on the line above, underlined: a selection is that
+        // one run, not the text, so the other occurrence and its underline stay.
+        // "Also " advances 2.223 em (44.46 pt), so it spans 64.46..175.6.
+        const string secondLine = "BT /F1 20 Tf 20 90 Td (Also ALBERTINA) Tj ET";
+        var secretUnderline = new PdfRectangle(84.46, 40, 195.6, 41.2);
+        var smithUnderline = new PdfRectangle(201.16, 40, 252.28, 41.2);
+        var otherUnderline = new PdfRectangle(64.46, 80, 175.6, 81.2);
+        var bothUnderline = new PdfRectangle(84.46, 36, 252.28, 37.2);
+        var paragraph = new PdfRectangle(10, 10, 390, 11.2);
+        var source = Fixture(string.Join(" ", new[] { secretUnderline, smithUnderline, otherUnderline, bothUnderline, paragraph }
+                                 .Select(Rule))
+                             + "\n" + LineWithNext + "\n" + secondLine);
+
+        var saved = RedactSelection(source, RedactionOptions.Default with { DrawBox = false }, textSelection: true, out var report);
+        var path = WriteTemp(saved);
+
+        var text = MutoolTextExtractor.ExtractPage(path, 1)!;
+        text.Split(Secret).Length.Should().Be(2, "exactly one ALBERTINA, the other occurrence, is left");
+        text.Should().Contain("Also").And.Contain("Smith");
+        using var after = MutoolReferenceRenderer.RenderPage(path, 1, Dpi);
+        InkFractionIn(after!, secretUnderline).Should().BeLessThan(0.001, "the selected word's underline goes");
+        InkFractionIn(after!, Inset(smithUnderline)).Should().BeGreaterThan(0.5, "the next word's underline is not the selected word's");
+        InkFractionIn(after!, Inset(otherUnderline)).Should().BeGreaterThan(0.5, "another occurrence was not selected");
+        InkFractionIn(after!, Inset(bothUnderline)).Should().BeGreaterThan(0.5, "an underline across both words spans more than the selection");
+        InkFractionIn(after!, Inset(paragraph)).Should().BeGreaterThan(0.5, "a paragraph-wide rule is kept");
+        report.Removals.Should().Contain(r => r.Feature.Contains("sized to a redacted word") && r.Count == 1);
+    }
+
+    [Fact]
+    public void TextSelection_Default_MovesNoSurvivingGlyph()
+    {
+        Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
+
+        var source = Fixture($"q 84.46 40 111.14 1.2 re f Q q 201.16 46.5 51.12 1.2 re f Q\n{LineWithNext}");
+        var before = MutoolGlyphPositions.ExtractPage(WriteTemp(source), 1);
+        var saved = RedactSelection(source, RedactionOptions.Default, textSelection: true, out var report);
+        var after = MutoolGlyphPositions.ExtractPage(WriteTemp(saved), 1);
+        before.Should().NotBeNull();
+        after.Should().NotBeNull();
+        report.Removals.Should().Contain(r => r.Feature.Contains("sized to a redacted word"), "anti-vacuity: the decoration pass ran");
+
+        static bool Survives(MutoolGlyphPositions.Glyph g) =>
+            !string.IsNullOrWhiteSpace(g.Char) && (g.X < WordExtent.Left - 1 || g.X >= WordExtent.Right - 1);
+        var expected = before!.Where(Survives).ToList();
+        expected.Select(g => g.Char).Should().Equal("N", "a", "m", "e", ":", "S", "m", "i", "t", "h");
+        var kept = after!.Where(g => !string.IsNullOrWhiteSpace(g.Char)).ToList();
+        kept.Select(g => g.Char).Should().Equal(expected.Select(g => g.Char));
+        for (var i = 0; i < expected.Count; i++)
+        {
+            kept[i].X.Should().BeApproximately(expected[i].X, 0.01, $"glyph {expected[i].Char} must not move");
+            kept[i].Y.Should().BeApproximately(expected[i].Y, 0.01, $"glyph {expected[i].Char} must not move");
+        }
+    }
+
+    /// <summary>
+    /// An Underline annotation whose /Rect is the stroke below the glyphs does
+    /// not meet the selection's area, so the area scrub never reached it. As a
+    /// word-sized annotation it goes with a selection, its Popup with it, and
+    /// the structure tree's /OBJR is cut (#2045); a dragged area keeps it.
+    /// </summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void TaggedUnderlineBelowTheWord_GoesWithASelection_StaysWithADraggedArea(bool textSelection)
+    {
+        const string Note = "DECORATION-NOTE";
+        var quads = "84.46 42 195.6 42 84.46 40 195.6 40";
+        var source = Build(
+            "<< /Type /Catalog /Pages 2 0 R /StructTreeRoot 7 0 R /MarkInfo << /Marked true >> >>",
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+            $"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 400 {PageHeight}] /Contents 4 0 R " +
+            "/Resources << /Font << /F1 5 0 R >> >> /Annots [6 0 R 9 0 R] >>",
+            Stream(Line),
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+            $"<< /Type /Annot /Subtype /Underline /Rect [84.46 40 195.6 42] /QuadPoints [{quads}] /C [1 0 0] " +
+            $"/Contents ({Note}) /P 3 0 R /Popup 9 0 R >>",
+            "<< /Type /StructTreeRoot /K 8 0 R >>",
+            "<< /Type /StructElem /S /Annot /P 7 0 R /Pg 3 0 R /K << /Type /OBJR /Obj 6 0 R /Pg 3 0 R >> >>",
+            "<< /Type /Annot /Subtype /Popup /Rect [300 80 390 110] /Parent 6 0 R >>");
+        SavedPdfLeakScanner.FindTerm(source, Note).Should().NotBeEmpty("fixture sanity");
+
+        var saved = RedactSelection(source, RedactionOptions.Default with { DrawBox = false }, textSelection, out var report);
+
+        SavedPdfLeakScanner.FindTerm(saved, Secret).Should().BeEmpty();
+        if (textSelection)
+        {
+            SavedPdfLeakScanner.FindTerm(saved, Note).Should().BeEmpty("the annotation left the file, not just its page");
+            SavedPdfLeakScanner.FindTerm(saved, "/Popup").Should().BeEmpty("its Popup went with it");
+            report.Removals.Should().Contain(r => r.Feature.Contains("sized to a redacted word") && r.Count == 1);
+            report.Removals.Should().Contain(r => r.Feature == CutItemsRow && r.Count == 1);
+            report.Carriers.Should().NotContain(c => !c.Scrubbed, "nothing reaches the removed annotation after the cut");
+        }
+        else
+        {
+            SavedPdfLeakScanner.FindTerm(saved, Note).Should().NotBeEmpty("a dragged area is not a word");
+            report.Removals.Should().NotContain(r => r.Feature.Contains("sized to a redacted word"));
+        }
+    }
+
+    /// <summary>
+    /// Redact the bottom-most ALBERTINA's glyph box on page 1 as the GUI does: a
+    /// text selection (<paramref name="textSelection"/>) or a dragged area.
+    /// </summary>
+    private static byte[] RedactSelection(byte[] source, RedactionOptions options, bool textSelection, out RedactionReport report)
+    {
+        using var doc = PdfDocument.Open(source);
+        var page = doc.GetPage(1);
+        var area = PdfDocumentRedactionExtensions.FindTextMatches(page.Letters, Secret, caseSensitive: true)
+            .Select(PdfDocumentRedactionExtensions.BoundingBoxOf)
+            .OrderBy(box => box.Bottom)
+            .First();
+        report = textSelection
+            ? page.RedactTextRunsWithReport(new[] { area }, options)
+            : page.RedactAreaWithReport(area, options);
+        return doc.SaveToBytes();
+    }
+
     private static PdfRectangle Inset(PdfRectangle r) => new(r.Left + 3, r.Bottom, r.Right - 3, r.Top);
 
     private static string Rule(PdfRectangle r) =>

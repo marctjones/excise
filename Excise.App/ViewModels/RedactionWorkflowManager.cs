@@ -100,8 +100,9 @@ internal class RedactionWorkflowManager : ReactiveObject
 
     /// <summary>
     /// Mark a page-scoped area for redaction (adds to pending list).
+    /// <paramref name="fromTextSelection"/>: the area is a text selection (#1905).
     /// </summary>
-    public void MarkArea(PdfPageRect area, string previewText)
+    public void MarkArea(PdfPageRect area, string previewText, bool fromTextSelection = false)
     {
         var pending = new PendingRedaction
         {
@@ -109,6 +110,7 @@ internal class RedactionWorkflowManager : ReactiveObject
             PageIdentity = PageIdentityProvider?.Invoke(area.PageNumber),
             PageArea = area,
             PreviewText = previewText,
+            FromTextSelection = fromTextSelection,
             MarkedTime = DateTime.Now
         };
 

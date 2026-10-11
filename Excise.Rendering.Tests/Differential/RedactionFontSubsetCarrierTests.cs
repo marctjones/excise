@@ -40,12 +40,17 @@ public sealed class RedactionFontSubsetCarrierTests : IDisposable
 
     public RedactionFontSubsetCarrierTests(ITestOutputHelper output) => _out = output;
 
-    public static TheoryData<string, string> Cases()
+    /// <summary>
+    /// Each fixture and profile through <c>RedactText</c> and, #2066, through an
+    /// area redaction over the term (<c>RedactAreaWithReport</c>, the GUI's apply).
+    /// </summary>
+    public static TheoryData<string, string, bool> Cases()
     {
-        var data = new TheoryData<string, string>();
+        var data = new TheoryData<string, string, bool>();
         foreach (var fixture in new[] { "excise-type0-cyrillic", "excise-type0-latin", "weasyprint-cidcff-hangul", "quartz-truetype-cyrillic" })
         foreach (var profile in new[] { "standard", "maximum" })
-            data.Add(fixture, profile);
+        foreach (var area in new[] { false, true })
+            data.Add(fixture, profile, area);
         return data;
     }
 
@@ -56,7 +61,7 @@ public sealed class RedactionFontSubsetCarrierTests : IDisposable
     /// </summary>
     [Theory]
     [MemberData(nameof(Cases))]
-    public void Term_IsGoneForIndependentExtractors_FontCarriersMeasured(string fixture, string profile)
+    public void Term_IsGoneForIndependentExtractors_FontCarriersMeasured(string fixture, string profile, bool area)
     {
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
         Assert.SkipUnless(PdftotextTextExtractor.IsAvailable, "pdftotext not installed");
@@ -73,7 +78,7 @@ public sealed class RedactionFontSubsetCarrierTests : IDisposable
         beforeCarriers.Where(c => c.ToUnicodeCodes.Count > 0).Should().HaveCount(term.Length,
             "anti-vacuity: the unredacted font's /ToUnicode maps every character of the term");
 
-        var afterPath = SaveTemp(Redact(before, term, profile));
+        var afterPath = SaveTemp(Redact(before, term, profile, area: area));
         foreach (var extracted in new[] { MutoolTextExtractor.ExtractPage(afterPath, 1), PdftotextTextExtractor.ExtractPage(afterPath, 1) })
         {
             extracted.Should().NotBeNull("both extractors must read the redacted file");
@@ -102,7 +107,7 @@ public sealed class RedactionFontSubsetCarrierTests : IDisposable
     /// </remarks>
     [Theory]
     [MemberData(nameof(Cases))]
-    public void RemovedCharacters_LeaveNoTraceInAnyFontCarrier(string fixture, string profile)
+    public void RemovedCharacters_LeaveNoTraceInAnyFontCarrier(string fixture, string profile, bool area)
     {
         Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
         var (before, term, _) = Fixture(fixture);
@@ -112,7 +117,7 @@ public sealed class RedactionFontSubsetCarrierTests : IDisposable
         traces.Should().OnlyContain(c => c.NonEmptyOutlineGids.Count > 0 && c.InWidths,
             "anti-vacuity: before the redaction each character has an outline and a width");
 
-        var afterPath = SaveTemp(Redact(before, term, profile));
+        var afterPath = SaveTemp(Redact(before, term, profile, area: area));
 
         var survivors = FontCarrierProbe.Measure(afterPath, term)
             .Where(c => c.ToUnicodeCodes.Count > 0 || c.NonEmptyOutlineGids.Count > 0)
@@ -134,23 +139,24 @@ public sealed class RedactionFontSubsetCarrierTests : IDisposable
     /// </summary>
     [Theory]
     [MemberData(nameof(Cases))]
-    public void WithoutTheFontEdit_TheProbeFindsTheRemovedCharacters(string fixture, string profile)
+    public void WithoutTheFontEdit_TheProbeFindsTheRemovedCharacters(string fixture, string profile, bool area)
     {
         Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
         var (before, term, _) = Fixture(fixture);
         var traces = FontCarrierProbe.Measure(SaveTemp(before), term).Where(c => c.ToUnicodeCodes.Count > 0).ToList();
-        var afterPath = SaveTemp(Redact(before, term, profile, scrubFonts: false));
+        var afterPath = SaveTemp(Redact(before, term, profile, scrubFonts: false, area: area));
 
         FontCarrierProbe.Measure(afterPath, term).Where(c => c.ToUnicodeCodes.Count > 0 && c.NonEmptyOutlineGids.Count > 0)
             .Should().NotBeEmpty("without the edit the font keeps the term's characters");
         FontCarrierProbe.Residue(afterPath, traces).Should().NotBeEmpty("without the edit the glyphs stay");
     }
 
-    public static TheoryData<string, string> IdentityCases()
+    public static TheoryData<string, string, bool> IdentityCases()
     {
         var data = Cases();
         foreach (var profile in new[] { "standard", "maximum" })
-            data.Add("excise-shared-latin", profile);
+        foreach (var area in new[] { false, true })
+            data.Add("excise-shared-latin", profile, area);
         return data;
     }
 
@@ -164,14 +170,14 @@ public sealed class RedactionFontSubsetCarrierTests : IDisposable
     /// </summary>
     [Theory]
     [MemberData(nameof(IdentityCases))]
-    public void TheFontEdit_ChangesNoRenderedPixelAndNoExtractedCharacter(string fixture, string profile)
+    public void TheFontEdit_ChangesNoRenderedPixelAndNoExtractedCharacter(string fixture, string profile, bool area)
     {
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
         Assert.SkipUnless(PdftoppmReferenceRenderer.IsAvailable, "pdftoppm not installed");
         Assert.SkipUnless(PdftotextTextExtractor.IsAvailable, "pdftotext not installed");
         var (before, term, _) = Fixture(fixture);
-        var scrubbed = Redact(before, term, profile);
-        var plain = Redact(before, term, profile, scrubFonts: false);
+        var scrubbed = Redact(before, term, profile, area: area);
+        var plain = Redact(before, term, profile, scrubFonts: false, area: area);
         scrubbed.Should().NotEqual(plain, "anti-vacuity: the font edit must have changed the file");
 
         var scrubbedPath = SaveTemp(scrubbed);
@@ -274,13 +280,28 @@ public sealed class RedactionFontSubsetCarrierTests : IDisposable
         return ms.ToArray();
     }
 
-    private static byte[] Redact(byte[] bytes, string term, string profile, bool scrubFonts = true)
+    /// <param name="area">#2066: redact the box around the term's glyphs on page 1
+    /// with <c>RedactAreaWithReport</c> instead of the term with <c>RedactText</c>.</param>
+    private static byte[] Redact(byte[] bytes, string term, string profile, bool scrubFonts = true, bool area = false)
     {
         using var doc = PdfDocument.Open(bytes);
         var options = RedactionOptions.ForProfile(profile == "maximum" ? RedactionProfile.Maximum : RedactionProfile.Standard)
             with { DrawBox = false, ScrubFontGlyphs = scrubFonts };
-        var report = doc.RedactText(term, options);
-        report.VerifiedRemovals.Should().BeGreaterThan(0, "the term must be matched and removed");
+        RedactionReport report;
+        if (area)
+        {
+            var page = doc.GetPage(1);
+            var match = PdfDocumentRedactionExtensions.FindTextMatches(page.Letters, term, caseSensitive: true);
+            match.Should().ContainSingle("anti-vacuity: the term is drawn once, on page 1");
+            report = page.RedactAreaWithReport(PdfDocumentRedactionExtensions.BoundingBoxOf(match[0]), options);
+            PdfDocumentRedactionExtensions.FindTextMatches(doc.GetPage(1).Letters, term, caseSensitive: true)
+                .Should().BeEmpty("the area must remove the term");
+        }
+        else
+        {
+            report = doc.RedactText(term, options);
+            report.VerifiedRemovals.Should().BeGreaterThan(0, "the term must be matched and removed");
+        }
         report.Carriers.Where(c => c.Carrier.StartsWith("font ", StringComparison.Ordinal)).Should().BeEmpty(
             "every font of these fixtures is one the redaction edits, so none may be reported as left unscrubbed");
         return doc.SaveToBytes();

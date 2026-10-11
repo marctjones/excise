@@ -63,6 +63,7 @@ internal sealed class RedactionWorkflowService
         ArgumentNullException.ThrowIfNull(request.TypewriterOperations);
 
         var skippedCount = 0;
+        var marks = new List<RedactionServiceMark>();
         foreach (var redaction in request.Redactions)
         {
             if (redaction.PageNumber < 1 || redaction.PageNumber > request.Document.PageCount)
@@ -75,11 +76,14 @@ internal sealed class RedactionWorkflowService
                 continue;
             }
 
-            _redactionService.RedactArea(
+            marks.Add(new RedactionServiceMark(
                 request.Document.Pages[redaction.PageNumber - 1],
                 redaction.PageArea,
-                request.Redaction);
+                redaction.FromTextSelection));
         }
+
+        // One engine batch: every mark, then one font edit for all of them (#2066).
+        _redactionService.RedactMarks(request.Document, marks, request.Redaction);
 
         var appliedTypewriterOperations = PdfTypewriterTextApplier.Apply(
             request.Document,
@@ -134,16 +138,19 @@ internal readonly record struct RedactionMarkRequest(
 
 internal sealed record RedactionMarkResult(PdfPageRect PageArea, string PreviewText);
 
+/// <param name="FromTextSelection">The mark is a text selection, so its runs are words (#1905).</param>
 internal sealed record RedactionAreaTransaction(
     int PageNumber,
     PdfPageRect PageArea,
-    string PreviewText)
+    string PreviewText,
+    bool FromTextSelection = false)
 {
     public static RedactionAreaTransaction FromPending(PendingRedaction pending)
     {
         ArgumentNullException.ThrowIfNull(pending);
         // Page 0: the marked page was deleted. Apply skips such a mark and says so.
-        return new(pending.IsOnRemovedPage ? 0 : pending.PageNumber, pending.PageArea, pending.PreviewText);
+        return new(pending.IsOnRemovedPage ? 0 : pending.PageNumber, pending.PageArea, pending.PreviewText,
+            pending.FromTextSelection);
     }
 }
 

@@ -234,6 +234,16 @@ public static class RedactedCopySafetyPolicy
         foreach (var row in document.RedactionLedger.AnnotationCutRefusals)
             warnings.Add($"Carrier {row.Carrier}: {row.RefusedReason}");
 
+        // #2066: a font the area redaction could not take the removed characters out of.
+        foreach (var row in document.RedactionLedger.FontScrubRefusals)
+            warnings.Add($"Carrier {row.Carrier}: {row.RefusedReason}");
+
+        // #1905: the decorations sized to a redacted text selection went with it.
+        if (document.RedactionLedger.DecorationsRemoved > 0)
+            profileRemovals = profileRemovals
+                .Append(PdfDocumentRedactionExtensions.DecorationRemovalRow(document.RedactionLedger.DecorationsRemoved))
+                .ToList();
+
         if (options.RunCarrierAudit)
         {
             // Runs after any surgical scrub so it reports what survived, not

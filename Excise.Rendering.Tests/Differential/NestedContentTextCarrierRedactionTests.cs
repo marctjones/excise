@@ -175,8 +175,19 @@ public class NestedContentTextCarrierRedactionTests : IDisposable
         textReport.IsCleanSuccess.Should().BeTrue(textReport.ToString());
 
         Redact(source, d => d.Pages[0].RedactAreaWithReport(Drawn, RedactionOptions.Default), out var areaReport);
-        areaReport.IsCleanSuccess.Should().BeTrue(areaReport.ToString());
         areaReport.Carriers.Should().NotContain(c => c.Carrier.StartsWith("text inside"));
+        if (carrier == "type3-charproc")
+        {
+            // #2066: the area removed the Type3 glyph show, and its procedure stays
+            // in the font, which the font edit never changes: reported, not clean.
+            // The text path never touched that glyph.
+            areaReport.Carriers.Where(c => !c.Scrubbed && c.RefusedReason != null).Should().ContainSingle(areaReport.ToString())
+                .Which.RefusedReason.Should().Contain("Type3 font's glyph procedures are not edited");
+        }
+        else
+        {
+            areaReport.IsCleanSuccess.Should().BeTrue(areaReport.ToString());
+        }
     }
 
     [Fact]

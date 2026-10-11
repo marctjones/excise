@@ -1049,12 +1049,13 @@ internal partial class MainWindowViewModel
     /// <summary>
     /// Right-click ▸ Redact on a text selection (#1659): the selection's page area becomes
     /// a pending redaction through the same path a drawn rectangle takes, so the engine, the
-    /// pending list and the apply-all step are shared, not forked.
+    /// pending list and the apply-all step are shared, not forked. The mark remembers it is a
+    /// selection, so Apply also removes the decorations sized to the selected run (#1905).
     /// </summary>
     private Task RedactSelectionAsync()
     {
         if (HasTextSelection && CurrentTextSelectionPageArea is { } area)
-            MarkRedactionPageArea(area);
+            MarkRedactionPageArea(area, fromTextSelection: true);
         return Task.CompletedTask;
     }
     // ── Right-click on an annotation (#1815) ────────────────────────────────

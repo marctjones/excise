@@ -84,6 +84,31 @@ internal sealed class PdfDocumentRedactionLedger
         _annotationCutRefusals.AddRange(refusals);
     }
 
+    private readonly List<Excise.Core.Text.Segmentation.CarrierResult> _fontScrubRefusals = new();
+
+    /// <summary>
+    /// #2066: a font an AREA redaction stopped drawing characters from that the
+    /// #1920 edit could not take them out of. The GUI drops the area report,
+    /// so they are recorded here for the redacted-copy dialog.
+    /// </summary>
+    internal IReadOnlyList<Excise.Core.Text.Segmentation.CarrierResult> FontScrubRefusals => _fontScrubRefusals;
+
+    internal void RecordFontScrubRefusals(IEnumerable<Excise.Core.Text.Segmentation.CarrierResult> refusals)
+    {
+        // One row per font: area after area refuses the same font again.
+        foreach (var refusal in refusals)
+            if (!_fontScrubRefusals.Exists(r => r.Carrier == refusal.Carrier))
+                _fontScrubRefusals.Add(refusal);
+    }
+
+    /// <summary>
+    /// #1905: underlines, boxes and highlights an area redaction of a text
+    /// selection removed because they were sized to the selected run.
+    /// </summary>
+    internal int DecorationsRemoved { get; private set; }
+
+    internal void RecordDecorationsRemoved(int count) => DecorationsRemoved += count;
+
     private readonly HashSet<PdfDictionary> _formattedFields = new(ReferenceEqualityComparer.Instance);
 
     /// <summary>
