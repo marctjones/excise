@@ -94,7 +94,12 @@ internal sealed class PdfDocumentRedactionLedger
     internal IReadOnlyList<Excise.Core.Text.Segmentation.CarrierResult> FontScrubRefusals => _fontScrubRefusals;
 
     internal void RecordFontScrubRefusals(IEnumerable<Excise.Core.Text.Segmentation.CarrierResult> refusals)
-        => _fontScrubRefusals.AddRange(refusals);
+    {
+        // One row per font: area after area refuses the same font again.
+        foreach (var refusal in refusals)
+            if (!_fontScrubRefusals.Exists(r => r.Carrier == refusal.Carrier))
+                _fontScrubRefusals.Add(refusal);
+    }
 
     /// <summary>
     /// #1905: underlines, boxes and highlights an area redaction of a text

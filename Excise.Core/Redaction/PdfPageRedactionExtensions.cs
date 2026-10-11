@@ -709,6 +709,8 @@ internal static class AreaRedactionBatch
         foreach (var mark in marks)
             if (!ReferenceEquals(mark.Page.Document, document))
                 throw new System.ArgumentException("every mark must be on a page of the document", nameof(marks));
+        if (marks.Count == 0)
+            return new AreaRedactionBatchReport(System.Array.Empty<RedactionReport>(), System.Array.Empty<CarrierResult>());
 
         var fontUsageBefore = options.ScrubFontGlyphs ? FontGlyphUsage.Collect(document) : null;
         var perMark = options with { ScrubFontGlyphs = false };
