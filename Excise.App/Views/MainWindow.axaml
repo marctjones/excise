@@ -1292,7 +1292,11 @@
                 Padding="8,6"
                 IsVisible="{Binding IsSearchVisible}">
           <StackPanel Orientation="Vertical" Spacing="4">
-            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+            <!-- Two rows, so the bar never clips or scrolls at a narrow window:
+                 the query, its navigation and the count on the first; the match
+                 options on the second, in a WrapPanel that wraps rather than
+                 hiding any of them. -->
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto">
                 <!-- Search Label -->
                 <TextBlock Grid.Column="0" Text="Find:"
                            VerticalAlignment="Center"
@@ -1307,7 +1311,7 @@
                          Grid.Column="1"
                          Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          PlaceholderText="Search text… (auto-searches as you type, or press Enter)"
-                         MinWidth="300"
+                         MinWidth="120"
                          Margin="0,0,8,0"
                          KeyDown="OnSearchTextBoxKeyDown"
                          AutomationProperties.Name="Search Text"
@@ -1325,33 +1329,8 @@
                         AutomationProperties.Name="Find"
                         AutomationProperties.HelpText="Search for the entered text. Shortcut: Enter."/>
 
-                <!-- Case Sensitive Checkbox -->
-                <CheckBox Grid.Column="3"
-                          IsChecked="{Binding SearchCaseSensitive}"
-                          Content="Case sensitive"
-                          AutomationProperties.Name="Case Sensitive Search"
-                          AutomationProperties.HelpText="Match uppercase and lowercase letters exactly."
-                          Margin="0,0,8,0"/>
-
-                <!-- Whole Words Checkbox -->
-                <CheckBox Grid.Column="4"
-                          IsChecked="{Binding SearchWholeWords}"
-                          Content="Whole words"
-                          AutomationProperties.Name="Whole Word Search"
-                          AutomationProperties.HelpText="Match only complete words."
-                          Margin="0,0,8,0"/>
-
-                <!-- Regex Checkbox -->
-                <CheckBox Grid.Column="5"
-                          IsChecked="{Binding SearchUseRegex}"
-                          Content="Regex"
-                          Margin="0,0,8,0"
-                          AutomationProperties.Name="Regular Expression Search"
-                          AutomationProperties.HelpText="Use regular expression pattern matching."
-                          ToolTip.Tip="Use regular expression pattern matching"/>
-
                 <!-- Previous Button -->
-                <Button Grid.Column="6"
+                <Button Grid.Column="3"
                         Content="◀"
                         Command="{Binding FindPreviousCommand}"
                         Classes="modern-button compact"
@@ -1362,7 +1341,7 @@
                         AutomationProperties.HelpText="Move to the previous search result. Shortcut: Shift+F3."/>
 
                 <!-- Next Button -->
-                <Button Grid.Column="7"
+                <Button Grid.Column="4"
                         Content="▶"
                         Command="{Binding FindNextCommand}"
                         Classes="modern-button compact"
@@ -1373,7 +1352,7 @@
                         AutomationProperties.HelpText="Move to the next search result. Shortcut: F3."/>
 
                 <!-- Result Counter -->
-                <TextBlock Grid.Column="8"
+                <TextBlock Grid.Column="5"
                            Text="{Binding SearchResultText}"
                            VerticalAlignment="Center"
                            FontSize="12"
@@ -1382,7 +1361,7 @@
                            MinWidth="80"/>
 
                 <!-- Close Button -->
-                <Button Grid.Column="9"
+                <Button Grid.Column="6"
                         Content="✕"
                         Command="{Binding CloseSearchCommand}"
                         Classes="modern-button compact"
@@ -1391,6 +1370,45 @@
                         AutomationProperties.Name="Close Search"
                         AutomationProperties.HelpText="Close the search bar. Shortcut: Esc."/>
             </Grid>
+
+            <WrapPanel x:Name="SearchOptionsPanel" Orientation="Horizontal" Margin="4,0,0,0">
+                <!-- Case Sensitive Checkbox -->
+                <CheckBox IsChecked="{Binding SearchCaseSensitive}"
+                          Content="Case sensitive"
+                          AutomationProperties.Name="Case Sensitive Search"
+                          AutomationProperties.HelpText="Match uppercase and lowercase letters exactly."
+                          Margin="0,0,8,0"/>
+
+                <!-- Whole Words Checkbox -->
+                <CheckBox IsChecked="{Binding SearchWholeWords}"
+                          Content="Whole words"
+                          AutomationProperties.Name="Whole Word Search"
+                          AutomationProperties.HelpText="Match only complete words."
+                          Margin="0,0,8,0"/>
+
+                <!-- Hyphen/space equivalence: the same rule term redaction uses by default. -->
+                <CheckBox IsChecked="{Binding SearchHyphenAsSpace}"
+                          Content="Hyphen = space"
+                          Margin="0,0,8,0"
+                          AutomationProperties.Name="Treat Hyphens And Spaces As The Same"
+                          AutomationProperties.HelpText="Treat hyphens and spaces as the same: 'open source' also finds open-source, open–source, open—source and a hyphenated line break, and the reverse. Not applied to a regular expression."
+                          ToolTip.Tip="Treat hyphens and spaces as the same: 'open source' also finds open-source, open–source, open—source and a word hyphenated across a line break (and the reverse). Not applied to Regex."/>
+
+                <!-- Closed compounds: opt-in, it can match across a word boundary. -->
+                <CheckBox IsChecked="{Binding SearchMatchClosedCompounds}"
+                          Content="No space too"
+                          Margin="0,0,8,0"
+                          AutomationProperties.Name="Also Match With No Space"
+                          AutomationProperties.HelpText="Also match with no space: 'open source' also finds opensource. Off by default because it can match across words, such as 'pen nest' in 'pennest'. Not applied to a regular expression."
+                          ToolTip.Tip="Also match with no space (opensource): 'open source' and 'open-source' also find 'opensource'. Off by default: it can match across words ('pen nest' in 'pennest'). Not applied to Regex."/>
+                <!-- Regex Checkbox -->
+                <CheckBox IsChecked="{Binding SearchUseRegex}"
+                          Content="Regex"
+                          Margin="0,0,8,0"
+                          AutomationProperties.Name="Regular Expression Search"
+                          AutomationProperties.HelpText="Use regular expression pattern matching."
+                          ToolTip.Tip="Use regular expression pattern matching"/>
+            </WrapPanel>
 
             <!-- Inline search progress: indeterminate bar + page-progress
                  text. Both visible only while a search is actively running.

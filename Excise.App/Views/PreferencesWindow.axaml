@@ -336,6 +336,48 @@
                     <StackPanel Spacing="4">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
                             <StackPanel Spacing="2" VerticalAlignment="Center">
+                                <Label Content="Treat hyphens and spaces as the same" Target="{Binding #RedactionHyphenAsSpaceCheckBox}" Classes="field-label"/>
+                                <TextBlock Text="On: redacting 'open source' also removes open-source, open–source and open—source." Classes="help"/>
+                            </StackPanel>
+                            <CheckBox x:Name="RedactionHyphenAsSpaceCheckBox" Grid.Column="1"
+                                      VerticalAlignment="Center"
+                                      IsChecked="{Binding RedactionMatchHyphenAsSpace}"
+                                      AutomationProperties.Name="Treat Hyphens And Spaces As The Same In Redaction"
+                                      AutomationProperties.HelpText="A hyphen or a space inside the redacted term also matches the other."/>
+                        </Grid>
+                        <ToggleButton x:Name="DetailsToggle13" Content="Details" Classes="details-toggle"
+                                      AutomationProperties.Name="Details"
+                                      AutomationProperties.HelpText="Show or hide the full explanation of this setting."/>
+                        <TextBlock IsVisible="{Binding #DetailsToggle13.IsChecked}" Text="On (default): a hyphen or a space inside the term matches either, and an en dash or em dash too, so 'open source' and 'open-source' each remove open source, open-source, open–source, open—source and a compound hyphenated across a line break. Search finds the same set with its own 'Hyphen = space' option. Off: each separator matches only itself. A term with no hyphen or space ('Anderson') is unaffected, and a word split by a line-end hyphen ('Ander-' / 'son') is still reported rather than removed. Applies to page text and to metadata, outlines and link targets alike."
+                                       Classes="help"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="settings-row">
+                    <StackPanel Spacing="4">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                            <StackPanel Spacing="2" VerticalAlignment="Center">
+                                <Label Content="Also match with no space" Target="{Binding #RedactionClosedCompoundsCheckBox}" Classes="field-label"/>
+                                <TextBlock Text="On: redacting 'open source' also removes 'opensource'." Classes="help"/>
+                            </StackPanel>
+                            <CheckBox x:Name="RedactionClosedCompoundsCheckBox" Grid.Column="1"
+                                      VerticalAlignment="Center"
+                                      IsChecked="{Binding RedactionMatchClosedCompounds}"
+                                      AutomationProperties.Name="Also Match With No Space In Redaction"
+                                      AutomationProperties.HelpText="A hyphen or a space inside the redacted term also matches no separator at all."/>
+                        </Grid>
+                        <ToggleButton x:Name="DetailsToggle14" Content="Details" Classes="details-toggle"
+                                      AutomationProperties.Name="Details"
+                                      AutomationProperties.HelpText="Show or hide the full explanation of this setting."/>
+                        <TextBlock IsVisible="{Binding #DetailsToggle14.IsChecked}" Text="Off (default). On: a hyphen or a space inside the term may also match nothing, so 'open source' also removes 'opensource'. Off by default because it can match across a word boundary: 'pen nest' would remove the middle of 'pennest'. Search has the same option ('No space too')."
+                                       Classes="help"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="settings-row">
+                    <StackPanel Spacing="4">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                            <StackPanel Spacing="2" VerticalAlignment="Center">
                                 <Label Content="Keep attachments in redacted copies" Target="{Binding #RedactionKeepAttachmentsCheckBox}" Classes="field-label"/>
                                 <TextBlock Text="Off: a redacted copy has no attached files. On: text and PDF attachments are redacted too." Classes="help"/>
                             </StackPanel>

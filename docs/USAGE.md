@@ -18,6 +18,21 @@ recoverable from the file by a determined analyst with the font metrics. To clos
 choose Preferences ▸ Redaction ▸ Output Profile ▸ Maximum, or Covering Box Width ▸
 Fixed-size marker; the rest of the line then moves.
 
+## Find in document
+
+`Ctrl+F` opens the search bar. Its options:
+
+- **Case sensitive**, **Whole words**, **Regex**: as named.
+- **Hyphen = space** (on by default): a hyphen and a space inside the term match each
+  other, so "open source" also finds "open-source", "open–source", "open—source" and a
+  word hyphenated across a line break, and "open-source" finds the same set.
+- **No space too** (off by default): "open source" also finds "opensource". Off because
+  it can match across words ("pen nest" inside "pennest").
+
+The last two do not apply to Regex. Text redaction uses the same rule with the same
+defaults (Preferences ▸ Redaction ▸ Treat hyphens and spaces as the same / Also match
+with no space), so redacting a term removes every spelling search finds for it.
+
 ## Typewriter text on flat PDFs
 
 1. Click **✎ Type** in the toolbar.

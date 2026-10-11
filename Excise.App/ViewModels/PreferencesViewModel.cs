@@ -307,6 +307,18 @@ internal class PreferencesViewModel : ViewModelBase
         set { if (_redactionPreferences.WholeWord == value) return; _redactionPreferences.WholeWord = value; this.RaisePropertyChanged(); }
     }
 
+    public bool RedactionMatchHyphenAsSpace
+    {
+        get => _redactionPreferences.MatchHyphenAsSpace;
+        set { if (_redactionPreferences.MatchHyphenAsSpace == value) return; _redactionPreferences.MatchHyphenAsSpace = value; this.RaisePropertyChanged(); }
+    }
+
+    public bool RedactionMatchClosedCompounds
+    {
+        get => _redactionPreferences.MatchClosedCompounds;
+        set { if (_redactionPreferences.MatchClosedCompounds == value) return; _redactionPreferences.MatchClosedCompounds = value; this.RaisePropertyChanged(); }
+    }
+
     public bool RedactionKeepAttachments
     {
         get => _redactionPreferences.KeepAttachments;
@@ -335,6 +347,8 @@ internal class PreferencesViewModel : ViewModelBase
     {
         this.RaisePropertyChanged(nameof(RedactionProfile));
         this.RaisePropertyChanged(nameof(RedactionWholeWord));
+        this.RaisePropertyChanged(nameof(RedactionMatchHyphenAsSpace));
+        this.RaisePropertyChanged(nameof(RedactionMatchClosedCompounds));
         this.RaisePropertyChanged(nameof(RedactionKeepAttachments));
         this.RaisePropertyChanged(nameof(RedactionWidth));
         this.RaisePropertyChanged(nameof(RedactionLinkUriPolicy));
