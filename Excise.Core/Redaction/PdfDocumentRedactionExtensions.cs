@@ -101,6 +101,8 @@ public static class PdfDocumentRedactionExtensions
                 Pages = pageResults,
                 Carriers = carrierResults,
                 WholeWord = options.WholeWord,
+                MatchHyphenAsSpace = options.MatchHyphenAsSpace,
+                MatchClosedCompounds = options.MatchClosedCompounds,
                 Profile = options.Profile,
             };
 
@@ -123,7 +125,7 @@ public static class PdfDocumentRedactionExtensions
             // A nested PDF is redacted with exactly these options, its own
             // attachments included.
             keptAttachments = AttachmentCarrierScrubber.RedactKept(
-                document, new[] { text }, options.CaseSensitive, options.WholeWord, depth,
+                document, new[] { text }, options.CaseSensitive, options.WholeWord, options.Separators, depth,
                 (nested, term) => RedactTextCore(nested, term, options, null, depth + 1));
         }
         else
@@ -201,7 +203,7 @@ public static class PdfDocumentRedactionExtensions
                 if (searchLetters.Count == 0) break;
 
                 var searchTextSnapshot = string.Concat(searchLetters.Select(l => l.Value));
-                var matches = FindTextMatchLines(searchLetters, text, options.CaseSensitive, options.WholeWord);
+                var matches = FindTextMatchLines(searchLetters, text, options.CaseSensitive, options.WholeWord, options.Separators);
                 if (matches.Count == 0) break;
 
                 // #1090: a stalled page STOPS. It used to fall back to
@@ -321,7 +323,7 @@ public static class PdfDocumentRedactionExtensions
                     if (interactiveAreas.Count > 0)
                         InteractiveRedactionScrubber.ScrubTerm(
                             page, interactiveAreas, drawingWidgets, unattributedAreas,
-                            text, options.CaseSensitive, options.WholeWord, termScrubState);
+                            text, options.CaseSensitive, options.WholeWord, termScrubState, options.Separators);
 
                     if (contentAreas.Count > 0)
                     {
@@ -371,9 +373,10 @@ public static class PdfDocumentRedactionExtensions
             // is not the next line of the same block. Detected after removal so
             // it describes what is still in the output, and reported.
             FindWrappedCandidates(page.Letters, text, options.CaseSensitive, options.WholeWord, pageNum,
-                hyphenCandidates, wordWrapCandidates);
+                hyphenCandidates, wordWrapCandidates, options.Separators);
 
-            var remaining = CountOccurrences(page, text, options.CaseSensitive, options.IncludeHiddenLayers, options.WholeWord);
+            var remaining = CountOccurrences(page, text, options.CaseSensitive, options.IncludeHiddenLayers, options.WholeWord,
+                options.Separators);
             undecodableForms.AddRange(page.UndecodableForms.Select(form => (form, pageNum)));
             nestedTextCarriers.AddRange(page.NestedTextCarriers.Select(c => (c, pageNum)));
             pageResults.Add(new PageRedactionResult(
@@ -438,7 +441,7 @@ public static class PdfDocumentRedactionExtensions
             {
                 var policy = options.CarrierPolicy;
                 var outcome = Excise.Core.Operations.PdfDocumentSanitizer.ScrubTerms(
-                    document, new[] { text }, options.CaseSensitive, options.Carriers, policy, options.WholeWord);
+                    document, new[] { text }, options.CaseSensitive, options.Carriers, policy, options.WholeWord, options.Separators);
 
                 // #1188/#1169: the report says WHICH POLICY RAN on each carrier,
                 // not just "scrubbed". A ReportOnly carrier still holds the term
@@ -522,12 +525,13 @@ public static class PdfDocumentRedactionExtensions
                 rewrite: (carrier, pageNum) =>
                 {
                     if (AppearanceStreamRedactor.RewrittenContent(document.GetPage(pageNum), carrier.Stream,
-                            carrier.Resources, text, options.CaseSensitive, options.WholeWord) is not { } content)
+                            carrier.Resources, text, options.CaseSensitive, options.WholeWord, options.Separators) is not { } content)
                         return false;
                     carrier.Stream.DecodedData = content;
                     rewroteNested = true;
                     return true;
-                }));
+                },
+                options.Separators));
         // A page's letters do not hold the carrier's text, but its record of
         // what each carrier draws does: the next walk must read the rewrite.
         if (rewroteNested)
@@ -595,6 +599,8 @@ public static class PdfDocumentRedactionExtensions
             Pages = pageResults,
             Carriers = carrierResults,
             WholeWord = options.WholeWord,
+            MatchHyphenAsSpace = options.MatchHyphenAsSpace,
+            MatchClosedCompounds = options.MatchClosedCompounds,
             ImageRegionsRedacted = imageCounts.RegionEdited,
             ImagesDroppedWhole = imageCounts.RemovedWhole,
             HyphenatedCandidates = hyphenCandidates,
@@ -721,7 +727,8 @@ public static class PdfDocumentRedactionExtensions
     internal static IEnumerable<CarrierResult> NestedTextCarrierResults(
         IEnumerable<(Excise.Core.Text.NestedTextCarrier Carrier, int Page)> drawn,
         string? term, bool caseSensitive, ISet<int>? reachable,
-        Func<Excise.Core.Text.NestedTextCarrier, int, bool>? rewrite = null)
+        Func<Excise.Core.Text.NestedTextCarrier, int, bool>? rewrite = null,
+        Excise.Core.Text.SeparatorMatching separators = default)
     {
         bool Holds(Excise.Core.Text.NestedTextCarrier c)
         {
@@ -729,7 +736,8 @@ public static class PdfDocumentRedactionExtensions
             var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
             // Over-report rather than miss: the carrier's spacing is not the page's.
             return c.Text.Contains(term, comparison) ||
-                   RemoveWhitespace(c.Text).Contains(RemoveWhitespace(term), comparison);
+                   RemoveWhitespace(c.Text).Contains(RemoveWhitespace(term), comparison) ||
+                   TermMatch.Holds(c.Text, [term], caseSensitive, wholeWord: false, separators);
         }
 
         return drawn
@@ -787,7 +795,7 @@ public static class PdfDocumentRedactionExtensions
     /// </summary>
     private static int CountOccurrences(
         PdfPage page, string text, bool caseSensitive, bool includeHiddenLayers,
-        bool wholeWord = false)
+        bool wholeWord = false, Excise.Core.Text.SeparatorMatching separators = default)
     {
         try
         {
@@ -798,7 +806,7 @@ public static class PdfDocumentRedactionExtensions
             // #1052: the verification pass MUST use the same match rule as the
             // removal pass. A stricter re-read would report "gone" for a match
             // the removal never made.
-            return FindTextMatches(searchLetters, text, caseSensitive, wholeWord).Count;
+            return FindTextMatches(searchLetters, text, caseSensitive, wholeWord, separators).Count;
         }
         catch
         {
@@ -962,11 +970,12 @@ public static class PdfDocumentRedactionExtensions
     /// </remarks>
     internal static void FindWrappedCandidates(
         IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, bool wholeWord, int pageNumber,
-        List<HyphenatedTermCandidate> hyphenated, List<WordWrapTermCandidate> wordWrapped)
+        List<HyphenatedTermCandidate> hyphenated, List<WordWrapTermCandidate> wordWrapped,
+        Excise.Core.Text.SeparatorMatching separators = default)
     {
         var lines = new PageLines(letters);
         var text = BuildSearchText(lines, lines.StreamOrder, joinEveryLineChange: true);
-        foreach (var (_, from, to) in Locate(letters, text, searchText, caseSensitive, wholeWord, accept: _ => true))
+        foreach (var (_, from, to) in Locate(letters, text, searchText, caseSensitive, wholeWord, accept: _ => true, separators))
         {
             // #1884: a break is judged between the glyphs either side of it. A
             // blank glyph left at the end of the line does not bridge it, for
@@ -998,7 +1007,7 @@ public static class PdfDocumentRedactionExtensions
         foreach (var (block, wrap) in lines.GapWraps)
         {
             var gapText = BuildSearchText(lines, block, joinEveryLineChange: true);
-            foreach (var (_, from, to) in Locate(letters, gapText, searchText, caseSensitive, wholeWord, accept: _ => true))
+            foreach (var (_, from, to) in Locate(letters, gapText, searchText, caseSensitive, wholeWord, accept: _ => true, separators))
             {
                 var at = gapText.CharToLetter.IndexOf(wrap, from);
                 if (at <= from || at > to) continue;
@@ -1028,8 +1037,9 @@ public static class PdfDocumentRedactionExtensions
     /// </remarks>
     internal static List<List<Letter>> FindTextMatches(
         IReadOnlyList<Letter> letters, string searchText, bool caseSensitive,
-        bool wholeWord = false) =>   // #1052
-        FindTextMatchLines(letters, searchText, caseSensitive, wholeWord).Select(m => m.Letters).ToList();
+        bool wholeWord = false,   // #1052
+        Excise.Core.Text.SeparatorMatching separators = default) =>
+        FindTextMatchLines(letters, searchText, caseSensitive, wholeWord, separators).Select(m => m.Letters).ToList();
 
     /// <summary>
     /// <see cref="FindTextMatches"/>, each match with its lines
@@ -1037,20 +1047,22 @@ public static class PdfDocumentRedactionExtensions
     /// matched it.
     /// </summary>
     internal static List<(List<Letter> Letters, List<List<Letter>> Lines)> FindTextMatchLines(
-        IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, bool wholeWord = false)
+        IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, bool wholeWord = false,
+        Excise.Core.Text.SeparatorMatching separators = default)
     {
         if (string.IsNullOrEmpty(searchText) || letters.Count == 0)
             return new List<(List<Letter>, List<List<Letter>>)>();
         var lines = new PageLines(letters);
-        return MatchesOn(lines, letters, searchText, caseSensitive, wholeWord)
+        return MatchesOn(lines, letters, searchText, caseSensitive, wholeWord, separators)
             .Select(m => (m, LinesOf(m, lines))).ToList();
     }
 
     private static List<List<Letter>> MatchesOn(
-        PageLines lines, IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, bool wholeWord)
+        PageLines lines, IReadOnlyList<Letter> letters, string searchText, bool caseSensitive, bool wholeWord,
+        Excise.Core.Text.SeparatorMatching separators)
     {
         var matches = Locate(letters, BuildSearchText(lines, lines.StreamOrder, joinEveryLineChange: false),
-                searchText, caseSensitive, wholeWord, slice => IsSpatiallyCoherent(lines, slice))
+                searchText, caseSensitive, wholeWord, slice => IsSpatiallyCoherent(lines, slice), separators)
             .Select(m => m.Letters).ToList();
         if (lines.OffStreamBlocks.Count == 0) return matches;
 
@@ -1059,7 +1071,7 @@ public static class PdfDocumentRedactionExtensions
         {
             var blockText = BuildSearchText(lines, block, joinEveryLineChange: false);
             foreach (var (slice, _, _) in Locate(letters, blockText, searchText, caseSensitive, wholeWord,
-                         m => IsSpatiallyCoherent(lines, m) && lines.CrossesOffStreamWrap(m)))
+                         m => IsSpatiallyCoherent(lines, m) && lines.CrossesOffStreamWrap(m), separators))
             {
                 if (slice.Exists(taken.Contains)) continue;
                 matches.Add(slice);
@@ -1169,7 +1181,7 @@ public static class PdfDocumentRedactionExtensions
     /// </summary>
     private static List<(List<Letter> Letters, int From, int To)> Locate(
         IReadOnlyList<Letter> letters, SearchText text, string searchText, bool caseSensitive, bool wholeWord,
-        Func<List<Letter>, bool> accept)
+        Func<List<Letter>, bool> accept, Excise.Core.Text.SeparatorMatching separators = default)
     {
         var matches = new List<(List<Letter> Letters, int From, int To)>();
         var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
@@ -1188,7 +1200,7 @@ public static class PdfDocumentRedactionExtensions
         int i = 0;
         while (i < fullText.Length)
         {
-            var endIndex = TermMatch.MatchEnd(fullText, i, needle, comparison);
+            var endIndex = TermMatch.MatchEnd(fullText, i, needle, comparison, separators);
             if (endIndex >= 0)
             {
                 // #1052: whole-word matching, when the user asked for it. #1000

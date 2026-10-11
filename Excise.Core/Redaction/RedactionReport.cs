@@ -177,6 +177,19 @@ public sealed class RedactionReport
     public bool WholeWord { get; init; }
 
     /// <summary>
+    /// Whether a hyphen and a space in the term matched each other in this run
+    /// (<see cref="RedactionOptions.MatchHyphenAsSpace"/>). Recorded for the same
+    /// reason as <see cref="WholeWord"/>. Default true, as the option's.
+    /// </summary>
+    public bool MatchHyphenAsSpace { get; init; } = true;
+
+    /// <summary>
+    /// Whether a separator in the term also matched no separator in this run
+    /// (<see cref="RedactionOptions.MatchClosedCompounds"/>).
+    /// </summary>
+    public bool MatchClosedCompounds { get; init; }
+
+    /// <summary>
     /// The output profile this run was asked for (#1586). Recorded for the same
     /// reason as <see cref="WholeWord"/>: the policy that ran is part of the
     /// result.
@@ -267,6 +280,9 @@ public sealed class RedactionReport
     {
         var parts = new List<string> { $"{VerifiedRemovals} removed" };
         if (WholeWord) parts.Add("whole-word matching");
+        // The default rule (hyphen = space, no closed compounds) goes unsaid; a departure is stated.
+        if (!MatchHyphenAsSpace) parts.Add("exact separators");
+        if (MatchClosedCompounds) parts.Add("closed compounds matched");
         if (Survived > 0) parts.Add($"{Survived} STILL PRESENT");
         if (ImagesDroppedWhole > 0)
             parts.Add($"{ImagesDroppedWhole} whole image(s) removed (region redaction unavailable)");

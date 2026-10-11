@@ -31,7 +31,7 @@ internal static class AppearanceStreamRedactor
     /// </summary>
     internal static bool Holds(
         PdfPage page, PdfStream ap, PdfDictionary? defaultResources, string term, bool caseSensitive,
-        bool wholeWord = false)
+        bool wholeWord = false, Excise.Core.Text.SeparatorMatching separators = default)
     {
         try
         {
@@ -39,7 +39,7 @@ internal static class AppearanceStreamRedactor
                 as PdfDictionary ?? defaultResources;
             var letters = new TextExtractor(page) { IncludeFormFieldValues = false }
                 .ExtractLettersFrom(ap.DecodedData, resources);
-            return PdfDocumentRedactionExtensions.FindTextMatches(letters, term, caseSensitive, wholeWord).Count > 0;
+            return PdfDocumentRedactionExtensions.FindTextMatches(letters, term, caseSensitive, wholeWord, separators).Count > 0;
         }
         catch { return false; }
     }
@@ -170,7 +170,7 @@ internal static class AppearanceStreamRedactor
     /// </summary>
     internal static byte[]? RewrittenContent(
         PdfPage page, PdfStream ap, PdfDictionary? defaultResources, string term, bool caseSensitive,
-        bool wholeWord = false)
+        bool wholeWord = false, Excise.Core.Text.SeparatorMatching separators = default)
     {
         byte[] content;
         try { content = ap.DecodedData; }
@@ -195,7 +195,7 @@ internal static class AppearanceStreamRedactor
         catch { return null; }
         if (parsed.Operators.Count == 0 || letters.Count == 0) return null;
 
-        var matches = PdfDocumentRedactionExtensions.FindTextMatchLines(letters, term, caseSensitive, wholeWord);
+        var matches = PdfDocumentRedactionExtensions.FindTextMatchLines(letters, term, caseSensitive, wholeWord, separators);
         if (matches.Count == 0) return null;
 
         // One box per line of a match that wraps (#1791).
@@ -224,7 +224,7 @@ internal static class AppearanceStreamRedactor
         {
             var after = new TextExtractor(page) { IncludeFormFieldValues = false }
                 .ExtractLettersFrom(newBytes, resources);
-            if (PdfDocumentRedactionExtensions.FindTextMatches(after, term, caseSensitive, wholeWord).Count > 0)
+            if (PdfDocumentRedactionExtensions.FindTextMatches(after, term, caseSensitive, wholeWord, separators).Count > 0)
                 return null;
         }
         catch { return null; }
