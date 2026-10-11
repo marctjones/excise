@@ -24,9 +24,24 @@ internal static class TermMatch
     /// or -1. A candidate the whole-word rule rejects is skipped by one character.
     /// </summary>
     internal static int IndexOf(
-        string value, string term, bool caseSensitive, bool wholeWord, int startIndex)
+        string value, string term, bool caseSensitive, bool wholeWord, int startIndex,
+        SeparatorMatching separators = default) =>
+        IndexOf(value, term, caseSensitive, wholeWord, startIndex, separators, out _);
+
+    /// <summary>
+    /// <see cref="IndexOf(string, string, bool, bool, int, SeparatorMatching)"/> with the
+    /// length of the text matched, which differs from the term's when
+    /// <paramref name="separators"/> lets a separator run match a longer or an empty one.
+    /// </summary>
+    internal static int IndexOf(
+        string value, string term, bool caseSensitive, bool wholeWord, int startIndex,
+        SeparatorMatching separators, out int length)
     {
         var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        length = term.Length;
+        if (IsFlexible(term, separators))
+            return FlexibleIndexOf(value, term, comparison, wholeWord, startIndex, separators, out length);
+
         var at = startIndex;
         while (at <= value.Length - term.Length)
         {
@@ -52,8 +67,12 @@ internal static class TermMatch
     /// at a time until its fold is as long as the needle. The page matcher and
     /// the carrier cut both map a folded match back to raw text this way (#1871).
     /// </summary>
-    internal static int MatchEnd(string text, int start, string needle, StringComparison comparison)
+    internal static int MatchEnd(
+        string text, int start, string needle, StringComparison comparison, SeparatorMatching separators = default)
     {
+        if (IsFlexible(needle, separators))
+            return FlexibleMatchEnd(text, start, needle, comparison, separators);
+
         // A window of 4× the needle is the safe upper bound on the raw text that
         // can fold down to it; a raw window SHORTER than the needle can still
         // match, since a lam-alef ligature is one raw char but two needle chars.
@@ -61,8 +80,18 @@ internal static class TermMatch
         if (!MatchingNormalization.Fold(text.Substring(start, window)).StartsWith(needle, comparison))
             return -1;
 
+        return GrowToFoldedLength(text, start, needle.Length);
+    }
+
+    /// <summary>
+    /// The last raw index of the shortest span of <paramref name="text"/> from
+    /// <paramref name="start"/> whose fold is <paramref name="foldedLength"/> long,
+    /// with any combining marks that continue its last cluster; -1 past the end.
+    /// </summary>
+    private static int GrowToFoldedLength(string text, int start, int foldedLength)
+    {
         var end = start;
-        while (end < text.Length && MatchingNormalization.Fold(text.Substring(start, end - start + 1)).Length < needle.Length)
+        while (end < text.Length && MatchingNormalization.Fold(text.Substring(start, end - start + 1)).Length < foldedLength)
             end++;
         if (end >= text.Length) return -1;
 
@@ -79,16 +108,18 @@ internal static class TermMatch
     /// fold, where a soft hyphen, a ligature, a curly quote, a typographic dash or a doubled
     /// space does not hide it (#1871), with whole-word judged on the raw neighbours.
     /// </summary>
-    internal static bool Holds(string? value, IReadOnlyList<string> terms, bool caseSensitive, bool wholeWord)
+    internal static bool Holds(
+        string? value, IReadOnlyList<string> terms, bool caseSensitive, bool wholeWord,
+        SeparatorMatching separators = default)
     {
         if (string.IsNullOrEmpty(value)) return false;
         string? folded = null;
         foreach (var term in terms)
         {
             if (string.IsNullOrEmpty(term)) continue;
-            if (IndexOf(value, term, caseSensitive, wholeWord, 0) >= 0) return true;
+            if (IndexOf(value, term, caseSensitive, wholeWord, 0, separators) >= 0) return true;
             folded ??= MatchingNormalization.Fold(value);
-            if (FoldedSpans(value, folded, term, caseSensitive, wholeWord) is { } next && (!wholeWord || next(0).Start >= 0))
+            if (FoldedSpans(value, folded, term, caseSensitive, wholeWord, separators) is { } next && (!wholeWord || next(0).Start >= 0))
                 return true;
         }
         return false;
@@ -103,9 +134,11 @@ internal static class TermMatch
     /// in the fold after that, which no cut of the raw text reaches: the caller then drops
     /// the whole value.
     /// </summary>
-    internal static string? Mask(string value, IReadOnlyList<string> terms, bool caseSensitive, bool wholeWord)
+    internal static string? Mask(
+        string value, IReadOnlyList<string> terms, bool caseSensitive, bool wholeWord,
+        SeparatorMatching separators = default)
     {
-        if (!Holds(value, terms, caseSensitive, wholeWord)) return null;
+        if (!Holds(value, terms, caseSensitive, wholeWord, separators)) return null;
         var masked = value;
         for (var cut = true; cut;)
         {
@@ -113,25 +146,27 @@ internal static class TermMatch
             cut = false;
             foreach (var term in terms)
             {
-                if (Cut(masked, term, caseSensitive, wholeWord) is not { } shorter) continue;
+                if (Cut(masked, term, caseSensitive, wholeWord, separators) is not { } shorter) continue;
                 masked = shorter;
                 cut = true;
             }
         }
-        return Holds(masked, terms, caseSensitive, wholeWord) ? string.Empty : masked;
+        return Holds(masked, terms, caseSensitive, wholeWord, separators) ? string.Empty : masked;
     }
 
     /// <summary>
     /// <paramref name="value"/> less every occurrence of <paramref name="term"/>: the raw
     /// ones, or when there are none, the spans whose fold is the term's; null when neither.
     /// </summary>
-    private static string? Cut(string value, string term, bool caseSensitive, bool wholeWord)
+    private static string? Cut(
+        string value, string term, bool caseSensitive, bool wholeWord, SeparatorMatching separators)
     {
         if (string.IsNullOrEmpty(term)) return null;
         Func<int, (int Start, int End)>? next = from =>
-            IndexOf(value, term, caseSensitive, wholeWord, from) is var at and >= 0 ? (at, at + term.Length - 1) : (-1, -1);
+            IndexOf(value, term, caseSensitive, wholeWord, from, separators, out var length) is var at and >= 0
+                ? (at, at + length - 1) : (-1, -1);
         var span = next(0);
-        if (span.Start < 0 && (next = FoldedSpans(value, MatchingNormalization.Fold(value), term, caseSensitive, wholeWord)) != null)
+        if (span.Start < 0 && (next = FoldedSpans(value, MatchingNormalization.Fold(value), term, caseSensitive, wholeWord, separators)) != null)
             span = next(0);
         if (span.Start < 0) return null;
 
@@ -153,24 +188,142 @@ internal static class TermMatch
     /// rule <c>FindTextMatches</c> applies on the page.
     /// </summary>
     private static Func<int, (int Start, int End)>? FoldedSpans(
-        string value, string folded, string term, bool caseSensitive, bool wholeWord)
+        string value, string folded, string term, bool caseSensitive, bool wholeWord, SeparatorMatching separators)
     {
         var needle = MatchingNormalization.Fold(term).Trim();
         var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
         if (needle.Length == 0 || (ReferenceEquals(folded, value) && ReferenceEquals(needle, term))
-            || folded.IndexOf(needle, comparison) < 0)
+            || IndexOf(folded, needle, caseSensitive, wholeWord: false, 0, separators) < 0)
             return null;
 
         return from =>
         {
             for (var at = from; at < value.Length; at++)
             {
-                var end = MatchEnd(value, at, needle, comparison);
+                var end = MatchEnd(value, at, needle, comparison, separators);
                 if (end >= 0 && (!wholeWord
                     || ((at == 0 || !IsWordChar(value[at - 1])) && (end + 1 >= value.Length || !IsWordChar(value[end + 1])))))
                     return (at, end);
             }
             return (-1, -1);
         };
+    }
+
+    /// <summary>
+    /// A separator for <see cref="SeparatorMatching"/>: whitespace, a hyphen, the
+    /// hyphen and non-breaking hyphen U+2010/U+2011, and the dashes the fold reads as
+    /// a hyphen (en, em, minus), so a raw value and its fold agree. A soft hyphen is
+    /// not one: it is invisible, the fold removes it, and <c>open&#173;source</c>
+    /// reads as the closed compound.
+    /// </summary>
+    internal static bool IsSeparator(char c) =>
+        c is '-' or '‐' or '‑' or '–' or '—' or '−' || char.IsWhiteSpace(c);
+
+    /// <summary>
+    /// True when <paramref name="separators"/> changes how <paramref name="term"/>
+    /// matches: it is not exact and the term has a separator between two other
+    /// characters. Otherwise every path keeps its literal comparison.
+    /// </summary>
+    internal static bool IsFlexible(string term, SeparatorMatching separators)
+    {
+        if (separators.IsExact) return false;
+        var first = 0;
+        while (first < term.Length && IsSeparator(term[first])) first++;
+        var last = term.Length - 1;
+        while (last > first && IsSeparator(term[last])) last--;
+        for (var i = first + 1; i < last; i++)
+            if (IsSeparator(term[i])) return true;
+        return false;
+    }
+
+    /// <summary>
+    /// The length of the text <paramref name="term"/> matches at <paramref name="at"/>
+    /// of <paramref name="value"/>, or -1. Literal except at a separator run between two
+    /// other characters of the term, which matches a run of separators (any mix, at
+    /// least one) under <see cref="SeparatorMatching.HyphenAsSpace"/> or the same run
+    /// otherwise, and also no separator at all under
+    /// <see cref="SeparatorMatching.AllowNoSeparator"/>. A separator run in the text is
+    /// taken whole, so a whole-word test after the match sees its real neighbour.
+    /// </summary>
+    internal static int FlexibleMatchLength(
+        string value, int at, string term, StringComparison comparison, SeparatorMatching separators)
+    {
+        var lastLiteral = term.Length - 1;
+        while (lastLiteral >= 0 && IsSeparator(term[lastLiteral])) lastLiteral--;
+
+        var v = at;
+        var n = 0;
+        while (n < term.Length)
+        {
+            var interior = n > 0 && n < lastLiteral && IsSeparator(term[n]) && !IsSeparator(term[n - 1]);
+            if (!interior)
+            {
+                // The literal stretch up to the next interior separator run (or the end).
+                var stop = n + 1;
+                while (stop < term.Length && !(stop < lastLiteral && IsSeparator(term[stop]) && !IsSeparator(term[stop - 1])))
+                    stop++;
+                var length = stop - n;
+                if (v + length > value.Length || !value.AsSpan(v, length).Equals(term.AsSpan(n, length), comparison))
+                    return -1;
+                v += length;
+                n = stop;
+                continue;
+            }
+
+            var runEnd = n;
+            while (runEnd < term.Length && IsSeparator(term[runEnd])) runEnd++;
+            var textRunEnd = v;
+            while (textRunEnd < value.Length && IsSeparator(value[textRunEnd])) textRunEnd++;
+
+            if (separators.HyphenAsSpace && textRunEnd > v)
+                v = textRunEnd;
+            else if (!separators.HyphenAsSpace && textRunEnd - v == runEnd - n
+                     && value.AsSpan(v, runEnd - n).Equals(term.AsSpan(n, runEnd - n), StringComparison.Ordinal))
+                v = textRunEnd;
+            else if (!(separators.AllowNoSeparator && textRunEnd == v))
+                return -1;
+            n = runEnd;
+        }
+        return v - at;
+    }
+
+    private static int FlexibleIndexOf(
+        string value, string term, StringComparison comparison, bool wholeWord, int startIndex,
+        SeparatorMatching separators, out int length)
+    {
+        // Every match starts with the term's first character; a cheap prefilter.
+        var head = term.AsSpan(0, 1);
+        for (var at = Math.Max(startIndex, 0); at < value.Length; at++)
+        {
+            var found = value.AsSpan(at).IndexOf(head, comparison);
+            if (found < 0) break;
+            at += found;
+            var matched = FlexibleMatchLength(value, at, term, comparison, separators);
+            if (matched < 0) continue;
+            var end = at + matched;
+            if (!wholeWord
+                || ((at == 0 || !IsWordChar(value[at - 1])) && (end >= value.Length || !IsWordChar(value[end]))))
+            {
+                length = matched;
+                return at;
+            }
+        }
+        length = term.Length;
+        return -1;
+    }
+
+    /// <summary>
+    /// <see cref="MatchEnd"/> for a needle whose separators match flexibly: the fold
+    /// of the raw window from <paramref name="start"/> must open with a match, and the
+    /// raw span grows until its fold is as long as the folded text matched.
+    /// </summary>
+    private static int FlexibleMatchEnd(
+        string text, int start, string needle, StringComparison comparison, SeparatorMatching separators)
+    {
+        // Room for a separator run in the text longer than the needle's one.
+        var window = Math.Min(needle.Length * 4 + 64, text.Length - start);
+        var matched = FlexibleMatchLength(
+            MatchingNormalization.Fold(text.Substring(start, window)), 0, needle, comparison, separators);
+        return matched <= 0 ? -1 : GrowToFoldedLength(text, start, matched);
     }
 }

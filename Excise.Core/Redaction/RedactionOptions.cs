@@ -168,6 +168,32 @@ public sealed record RedactionOptions
     /// </remarks>
     public bool WholeWord { get; init; } = false;
 
+    /// <summary>
+    /// A hyphen and a space inside the term match each other, so <c>open source</c>
+    /// also removes <c>open-source</c>, <c>open–source</c> and <c>open—source</c>, and
+    /// <c>open-source</c> also removes <c>open source</c>. Default true. Enforced by: Core.
+    /// </summary>
+    /// <remarks>
+    /// <para>The GUI search finds these spellings by default with the same rule
+    /// (<see cref="Excise.Core.Text.SeparatorMatching"/>); what search shows,
+    /// redaction must remove. Matching more spellings only removes more, so on is
+    /// the safe default. Applies to page content and to every carrier scrubbed by
+    /// term, together (#896). A term with no separator (<c>opensource</c>,
+    /// <c>Anderson</c>) matches literally, so a word split by a line-end hyphen is
+    /// still reported, not joined (#1372).</para>
+    /// </remarks>
+    public bool MatchHyphenAsSpace { get; init; } = true;
+
+    /// <summary>
+    /// A separator inside the term also matches no separator: <c>open source</c>
+    /// also removes <c>opensource</c>. Default false: it lets <c>pen nest</c> match
+    /// inside <c>pennest</c>, so it is an explicit choice. Enforced by: Core.
+    /// </summary>
+    public bool MatchClosedCompounds { get; init; } = false;
+
+    /// <summary>The separator rule <see cref="MatchHyphenAsSpace"/> and <see cref="MatchClosedCompounds"/> describe.</summary>
+    internal Excise.Core.Text.SeparatorMatching Separators => new(MatchHyphenAsSpace, MatchClosedCompounds);
+
     /// <summary>Which glyph/image overlap rule selects content for removal.
     /// Default <see cref="GlyphRemovalStrategy.AnyOverlap"/>. Enforced by: Core.</summary>
     public GlyphRemovalStrategy Strategy { get; init; } = GlyphRemovalStrategy.AnyOverlap;

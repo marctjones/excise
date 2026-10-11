@@ -25,18 +25,19 @@ internal static class XfaXmlCarrier
     internal static ScrubResult ScrubTerms(
         PdfDocument document,
         IReadOnlyList<string> terms,
-        bool caseSensitive)
+        bool caseSensitive,
+        SeparatorMatching separators = default)
     {
         if (!TryGetXfa(document, out var acroForm, out var xfa))
             return new ScrubResult(false, 0);
 
         if (document.Resolve(xfa) is PdfStream singleStream)
         {
-            if (!TryScrubXml(singleStream.DecodedData, terms, caseSensitive,
+            if (!TryScrubXml(singleStream.DecodedData, terms, caseSensitive, separators,
                     out var rewritten, out var changed, out var hasRemainingTerm))
             {
                 return new ScrubResult(false,
-                    ContainsAnyTerm(singleStream.DecodedData, terms, caseSensitive) ? 1 : 0);
+                    ContainsAnyTerm(singleStream.DecodedData, terms, caseSensitive, separators) ? 1 : 0);
             }
 
             if (changed)
@@ -56,7 +57,7 @@ internal static class XfaXmlCarrier
         // streams (preamble opens xdp:xdp; postamble closes it). Parsing the
         // concatenation is the only way to validate that shape as XML.
         var combined = Concatenate(streams);
-        if (TryScrubXml(combined, terms, caseSensitive,
+        if (TryScrubXml(combined, terms, caseSensitive, separators,
                 out var combinedRewrite, out var combinedChanged, out var combinedHasRemainingTerm))
         {
             if (combinedChanged)
@@ -78,7 +79,7 @@ internal static class XfaXmlCarrier
         var unexamined = 0;
         foreach (var stream in streams)
         {
-            if (TryScrubXml(stream.DecodedData, terms, caseSensitive,
+            if (TryScrubXml(stream.DecodedData, terms, caseSensitive, separators,
                     out var rewritten, out var changed, out var hasRemainingTerm))
             {
                 if (changed)
@@ -88,7 +89,7 @@ internal static class XfaXmlCarrier
                 }
                 if (hasRemainingTerm) unexamined++;
             }
-            else if (ContainsAnyTerm(stream.DecodedData, terms, caseSensitive))
+            else if (ContainsAnyTerm(stream.DecodedData, terms, caseSensitive, separators))
             {
                 unexamined++;
             }
@@ -100,7 +101,8 @@ internal static class XfaXmlCarrier
     internal static int CountUnexaminedPackets(
         PdfDocument document,
         IReadOnlyList<string>? requestedTerms,
-        bool caseSensitive = false)
+        bool caseSensitive = false,
+        SeparatorMatching separators = default)
     {
         if (!TryGetXfa(document, out _, out var xfa)) return 0;
 
@@ -118,16 +120,16 @@ internal static class XfaXmlCarrier
 
         var combined = Concatenate(streams);
         if (TryLoadXml(combined, out var documentXml, out _))
-            return XmlContainsAnyTerm(documentXml, requestedTerms, caseSensitive) ? 1 : 0;
+            return XmlContainsAnyTerm(documentXml, requestedTerms, caseSensitive, separators) ? 1 : 0;
 
         var count = 0;
         foreach (var stream in streams)
         {
             if (TryLoadXml(stream.DecodedData, out var packetXml, out _))
             {
-                if (XmlContainsAnyTerm(packetXml, requestedTerms, caseSensitive)) count++;
+                if (XmlContainsAnyTerm(packetXml, requestedTerms, caseSensitive, separators)) count++;
             }
-            else if (ContainsAnyTerm(stream.DecodedData, requestedTerms, caseSensitive))
+            else if (ContainsAnyTerm(stream.DecodedData, requestedTerms, caseSensitive, separators))
             {
                 count++;
             }
@@ -190,6 +192,7 @@ internal static class XfaXmlCarrier
         byte[] bytes,
         IReadOnlyList<string> terms,
         bool caseSensitive,
+        SeparatorMatching separators,
         out byte[] rewritten,
         out bool changed,
         out bool hasRemainingTerm)
@@ -202,7 +205,7 @@ internal static class XfaXmlCarrier
         foreach (var attribute in document.Descendants().Attributes()
                      .Where(a => !a.IsNamespaceDeclaration))
         {
-            var scrubbed = Excise(attribute.Value, terms, caseSensitive);
+            var scrubbed = Excise(attribute.Value, terms, caseSensitive, separators);
             if (scrubbed == attribute.Value) continue;
             attribute.Value = scrubbed;
             changed = true;
@@ -210,7 +213,7 @@ internal static class XfaXmlCarrier
 
         foreach (var text in document.DescendantNodes().OfType<XText>())
         {
-            var scrubbed = Excise(text.Value, terms, caseSensitive);
+            var scrubbed = Excise(text.Value, terms, caseSensitive, separators);
             if (scrubbed == text.Value) continue;
             text.Value = scrubbed;
             changed = true;
@@ -218,7 +221,7 @@ internal static class XfaXmlCarrier
 
         foreach (var comment in document.DescendantNodes().OfType<XComment>())
         {
-            var scrubbed = Excise(comment.Value, terms, caseSensitive);
+            var scrubbed = Excise(comment.Value, terms, caseSensitive, separators);
             if (scrubbed == comment.Value) continue;
             comment.Value = scrubbed;
             changed = true;
@@ -226,7 +229,7 @@ internal static class XfaXmlCarrier
 
         foreach (var instruction in document.DescendantNodes().OfType<XProcessingInstruction>())
         {
-            var scrubbed = Excise(instruction.Data, terms, caseSensitive);
+            var scrubbed = Excise(instruction.Data, terms, caseSensitive, separators);
             if (scrubbed == instruction.Data) continue;
             instruction.Data = scrubbed;
             changed = true;
@@ -238,7 +241,7 @@ internal static class XfaXmlCarrier
         // A term can be split over XML nodes (for example, inline formatting).
         // We do not guess how to rewrite across those semantic boundaries, but
         // we do detect it so the caller can report the packet as unexamined.
-        hasRemainingTerm = XmlContainsAnyTerm(document, terms, caseSensitive);
+        hasRemainingTerm = XmlContainsAnyTerm(document, terms, caseSensitive, separators);
 
         return true;
     }
@@ -317,9 +320,10 @@ internal static class XfaXmlCarrier
     private static bool XmlContainsAnyTerm(
         XDocument document,
         IReadOnlyList<string> terms,
-        bool caseSensitive)
+        bool caseSensitive,
+        SeparatorMatching separators = default)
     {
-        bool Holds(string value) => TermMatch.Holds(value, terms, caseSensitive, wholeWord: false);
+        bool Holds(string value) => TermMatch.Holds(value, terms, caseSensitive, wholeWord: false, separators);
 
         return document.Descendants().Attributes().Where(a => !a.IsNamespaceDeclaration).Any(a => Holds(a.Value))
             || document.DescendantNodes().OfType<XText>().Any(n => Holds(n.Value))
@@ -331,7 +335,8 @@ internal static class XfaXmlCarrier
     private static bool ContainsAnyTerm(
         byte[] bytes,
         IReadOnlyList<string> terms,
-        bool caseSensitive)
+        bool caseSensitive,
+        SeparatorMatching separators = default)
     {
         var encodings = new[]
         {
@@ -341,10 +346,11 @@ internal static class XfaXmlCarrier
             Encoding.Latin1,
         };
 
-        return encodings.Any(encoding => TermMatch.Holds(encoding.GetString(bytes), terms, caseSensitive, wholeWord: false));
+        return encodings.Any(encoding => TermMatch.Holds(encoding.GetString(bytes), terms, caseSensitive, wholeWord: false, separators));
     }
 
     // Substring, not whole-word: the packet checks above read it that way too.
-    private static string Excise(string value, IReadOnlyList<string> terms, bool caseSensitive) =>
-        TermMatch.Mask(value, terms, caseSensitive, wholeWord: false) ?? value;
+    private static string Excise(
+        string value, IReadOnlyList<string> terms, bool caseSensitive, SeparatorMatching separators) =>
+        TermMatch.Mask(value, terms, caseSensitive, wholeWord: false, separators) ?? value;
 }

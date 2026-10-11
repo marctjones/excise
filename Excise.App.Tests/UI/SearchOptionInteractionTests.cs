@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
@@ -20,8 +21,8 @@ using Xunit;
 namespace Excise.App.Tests.UI;
 
 /// <summary>
-/// Drives the three search-option checkboxes — Case sensitive, Whole words,
-/// Regex (#1086) — with a REAL mouse click, then re-runs the search with real
+/// Drives the search-option checkboxes — Case sensitive, Whole words,
+/// Regex (#1086), Hyphen = space and No space too — with a REAL mouse click, then re-runs the search with real
 /// keyboard input and asserts the match set actually CHANGED in the way the
 /// option promises. Not "the box toggled": #1000 decided whole-word matching,
 /// and until now the checkbox that turns it on was clicked by no test at all,
@@ -37,6 +38,9 @@ namespace Excise.App.Tests.UI;
 public class SearchOptionInteractionTests
 {
     private const string PageText = "alpha alphabet ALPHA";
+
+    /// <summary>The hyphenated and the closed spelling of "open source", nothing else.</summary>
+    private const string SeparatorPageText = "an open-source and an opensource tool";
 
     [FixedAvaloniaFact(Timeout = 60000)]
     public async Task WholeWordsCheckboxClick_StopsMatchingTheSubstringInsideAnotherWord()
@@ -107,18 +111,132 @@ public class SearchOptionInteractionTests
         finally { window.Close(); }
     }
 
+    [FixedAvaloniaFact(Timeout = 60000)]
+    public async Task SeparatorOptions_DefaultToHyphenAsSpaceOn_AndClosedCompoundsOff()
+    {
+        var (window, vm) = await OpenWithSearchBar("separator-defaults", SeparatorPageText);
+        try
+        {
+            vm.SearchHyphenAsSpace.Should().BeTrue("a hyphen and a space match each other by default, as in redaction");
+            vm.SearchMatchClosedCompounds.Should().BeFalse("matching no separator is opt-in");
+            OptionCheckbox(window, "Hyphen = space").IsChecked.Should().Be(true);
+            OptionCheckbox(window, "No space too").IsChecked.Should().Be(false);
+        }
+        finally { window.Close(); }
+    }
+
+    [FixedAvaloniaFact(Timeout = 60000)]
+    public async Task HyphenAsSpaceCheckboxClick_ReRunsTheSearch_AndDropsTheHyphenatedSpelling()
+    {
+        var (window, vm) = await OpenWithSearchBar("hyphenasspace", SeparatorPageText);
+        try
+        {
+            await RunSearch(window, vm, "open source");
+            vm.SearchMatches.Select(m => m.MatchedText).Should().BeEquivalentTo(["open-source"],
+                "by default 'open source' finds the hyphenated spelling and not the closed one");
+
+            await ClickOptionCheckbox(window, "Hyphen = space");
+            vm.SearchHyphenAsSpace.Should().BeFalse("a real click must toggle the bound option");
+            // No Enter: toggling an option re-runs the current search, like the others.
+            await WaitForResults(vm, count: 0);
+            vm.SearchMatches.Should().BeEmpty("with the option off a space matches only a space");
+
+            AssertRecorded("Hyphen = space");
+        }
+        finally { window.Close(); }
+    }
+
+    [FixedAvaloniaFact(Timeout = 60000)]
+    public async Task NoSpaceTooCheckboxClick_ReRunsTheSearch_AndAddsTheClosedSpelling()
+    {
+        var (window, vm) = await OpenWithSearchBar("closedcompounds", SeparatorPageText);
+        try
+        {
+            await RunSearch(window, vm, "open source");
+            vm.SearchMatches.Should().HaveCount(1);
+
+            await ClickOptionCheckbox(window, "No space too");
+            vm.SearchMatchClosedCompounds.Should().BeTrue("a real click must toggle the bound option");
+            await WaitForResults(vm, count: 2);
+            vm.SearchMatches.Select(m => m.MatchedText).Should().BeEquivalentTo(["open-source", "opensource"]);
+
+            AssertRecorded("No space too");
+        }
+        finally { window.Close(); }
+    }
+
+    [FixedAvaloniaTheory(Timeout = 60000)]
+    [InlineData(1600)]
+    [InlineData(1024)]
+    [InlineData(700)]
+    [InlineData(500)]
+    public async Task EverySearchBarControl_StaysWhollyOnTheWindow_AtNarrowWidths(double width)
+    {
+        // Owner rule: a bar never scrolls and never clips a control out of reach.
+        // The options row wraps instead.
+        var (window, vm) = await OpenWithSearchBar($"layout-{width}", SeparatorPageText);
+        try
+        {
+            window.Width = width;
+            window.UpdateLayout();
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+            window.UpdateLayout();
+
+            var searchBox = window.FindControl<TextBox>("SearchTextBox")!;
+            var bar = searchBox.GetLogicalAncestors().OfType<Border>().First();
+            var controls = bar.GetLogicalDescendants().OfType<Control>()
+                .Where(c => c is CheckBox or Button or TextBox).ToList();
+            controls.Should().HaveCountGreaterThanOrEqualTo(10, "five options, the box and four buttons");
+            bar.GetLogicalDescendants().OfType<ScrollViewer>().Should().BeEmpty("the search bar never scrolls");
+
+            foreach (var control in controls)
+            {
+                control.IsEffectivelyVisible.Should().BeTrue($"{Describe(control)} must stay reachable at {width}px");
+                var topLeft = control.TranslatePoint(new Point(0, 0), window)!.Value;
+                var bottomRight = control.TranslatePoint(new Point(control.Bounds.Width, control.Bounds.Height), window)!.Value;
+                topLeft.X.Should().BeGreaterThanOrEqualTo(-0.5, $"{Describe(control)} at {width}px");
+                bottomRight.X.Should().BeLessThanOrEqualTo(window.Bounds.Width + 0.5,
+                    $"{Describe(control)} must end on the {width}px window, not past it");
+                control.Bounds.Width.Should().BeGreaterThan(0, $"{Describe(control)} must not be squeezed to nothing");
+            }
+
+            foreach (var option in new[] { "Case sensitive", "Whole words", "Hyphen = space", "No space too", "Regex" })
+                AutomationProperties.GetName(OptionCheckbox(window, option)).Should().NotBeNullOrWhiteSpace(
+                    $"'{option}' needs an accessible name");
+        }
+        finally { window.Close(); }
+    }
+
+    private static string Describe(Control control) =>
+        $"{control.GetType().Name} '{AutomationProperties.GetName(control)}'";
+
+    private static CheckBox OptionCheckbox(MainWindow window, string content) =>
+        window.GetLogicalDescendants().OfType<CheckBox>().Single(c => (c.Content as string) == content);
+
+    private static async Task WaitForResults(MainWindowViewModel vm, int count)
+    {
+        // The re-run is debounced; wait for it to land with the expected count.
+        for (var i = 0; i < 120; i++)
+        {
+            await KeyboardTestHelpers.FlushDispatcherAsync();
+            if (!vm.IsSearching && vm.SearchMatches.Count == count) return;
+            await Task.Delay(25);
+        }
+    }
+
     private static void AssertRecorded(string checkboxContent) =>
         GuiInteractionRecorder.ObservedIds.Should().Contain(
             id => id.StartsWith($"MainWindow/CheckBox:{checkboxContent}\t", StringComparison.Ordinal),
             $"the real pointer click on the '{checkboxContent}' checkbox must reach the interaction-coverage " +
             "recorder under the id the inventory gives it");
 
-    private static async Task<(MainWindow window, MainWindowViewModel vm)> OpenWithSearchBar(string tag)
+    private static async Task<(MainWindow window, MainWindowViewModel vm)> OpenWithSearchBar(
+        string tag, string pageText = PageText)
     {
         var dir = Path.Combine(Path.GetTempPath(), "excise-search-opts", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
         var path = Path.Combine(dir, $"{tag}.pdf");
-        CreateTextPdf(path);
+        CreateTextPdf(path, pageText);
 
         var vm = MainWindowViewModelTestFactory.Create(thumbnailPrewarmEnabled: false);
         var window = new MainWindow { DataContext = vm, Width = 1280, Height = 900 };
@@ -180,12 +298,12 @@ public class SearchOptionInteractionTests
         await KeyboardTestHelpers.FlushDispatcherAsync();
     }
 
-    private static void CreateTextPdf(string path)
+    private static void CreateTextPdf(string path, string pageText)
     {
         using var doc = PdfDocument.CreateNew();
         var page = doc.Pages.AddBlank();
         using var graphics = page.GetGraphics();
-        graphics.DrawString(PageText, PdfFont.Helvetica(24), PdfBrush.Black, 72, 600);
+        graphics.DrawString(pageText, PdfFont.Helvetica(24), PdfBrush.Black, 72, 600);
         graphics.Flush();
         doc.Save(path);
     }

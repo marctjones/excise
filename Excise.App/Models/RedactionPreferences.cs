@@ -27,6 +27,21 @@ internal sealed record RedactionPreferences
     public bool WholeWord { get; set; }
 
     /// <summary>
+    /// A hyphen and a space inside the term match each other
+    /// (<see cref="RedactionOptions.MatchHyphenAsSpace"/>). Default true, the
+    /// engine's default and the GUI search's: what search finds, redaction
+    /// removes. A window.json saved before this existed has no value and reads
+    /// as true.
+    /// </summary>
+    public bool MatchHyphenAsSpace { get; set; } = true;
+
+    /// <summary>
+    /// A separator inside the term also matches none
+    /// (<see cref="RedactionOptions.MatchClosedCompounds"/>). Default false.
+    /// </summary>
+    public bool MatchClosedCompounds { get; set; }
+
+    /// <summary>
     /// Keep the document's attachments in a redacted copy (#1572). Default
     /// false: since 2026-09-17 every redacted copy is written without them.
     /// When on, kept text attachments have the redacted text cut out, nested
@@ -97,6 +112,8 @@ internal sealed record RedactionPreferences
         {
             CarrierPolicy = policy,
             WholeWord = WholeWord,
+            MatchHyphenAsSpace = MatchHyphenAsSpace,
+            MatchClosedCompounds = MatchClosedCompounds,
             KeepAttachments = KeepAttachments,
             // Same rule for the width: still at the Standard default means
             // follow the profile, so Maximum keeps closing the width

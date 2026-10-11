@@ -316,6 +316,43 @@ public class RedactionCarrierPolicyPreferenceTests
     }
 
     [Fact]
+    public void ASavedRedactionObjectWithoutTheSeparatorKeys_ReadsTheirDefaults_OnAndOff()
+    {
+        // A window.json saved before the separator options existed: the nested
+        // object has no MatchHyphenAsSpace / MatchClosedCompounds. Missing must read
+        // as the default (on / off), never as false for the default-on option.
+        File.WriteAllText(AppPaths.WindowSettingsPath, """
+            { "SettingsVersion": 1, "Redaction": { "WholeWord": true, "Profile": "Standard" } }
+            """);
+
+        var loaded = WindowSettings.Load().Redaction;
+
+        loaded.WholeWord.Should().BeTrue("fixture: the nested object was read");
+        loaded.MatchHyphenAsSpace.Should().BeTrue("absent reads as the default, on");
+        loaded.MatchClosedCompounds.Should().BeFalse("absent reads as the default, off");
+        loaded.ToOptions().MatchHyphenAsSpace.Should().BeTrue();
+
+        // The old flat format had no such keys either.
+        File.WriteAllText(AppPaths.WindowSettingsPath, """{ "RedactionWholeWord": true }""");
+        WindowSettings.Load().Redaction.MatchHyphenAsSpace.Should().BeTrue();
+    }
+
+    [Fact]
+    public void TheSeparatorChoices_RoundTrip_AndReachTheEngineOptions()
+    {
+        var chosen = new RedactionPreferences { MatchHyphenAsSpace = false, MatchClosedCompounds = true };
+        new WindowSettings { Redaction = chosen }.Save();
+
+        var loaded = WindowSettings.Load().Redaction;
+        loaded.Should().Be(chosen);
+        var options = loaded.ToOptions();
+        options.MatchHyphenAsSpace.Should().BeFalse();
+        options.MatchClosedCompounds.Should().BeTrue();
+        new RedactionPreferences { Profile = RedactionProfile.Maximum, MatchClosedCompounds = true }
+            .ToOptions().MatchClosedCompounds.Should().BeTrue("the profile does not reset the match rule");
+    }
+
+    [Fact]
     public void AWindowJsonWithoutAnyRedactionKeys_LoadsTheDefaults()
     {
         File.WriteAllText(AppPaths.WindowSettingsPath, """{ "Width": 1000 }""");

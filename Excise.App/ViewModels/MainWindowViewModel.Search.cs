@@ -22,6 +22,11 @@ internal partial class MainWindowViewModel
     private bool _searchCaseSensitive = false;
     private bool _searchWholeWords = false;
     private bool _searchUseRegex = false;
+    // A hyphen and a space in the term match each other: the same default as
+    // term redaction (RedactionOptions.MatchHyphenAsSpace), so search shows what
+    // redaction removes. Not persisted, like the other search toggles.
+    private bool _searchHyphenAsSpace = true;
+    private bool _searchMatchClosedCompounds = false;
     private int _currentSearchMatchIndex = -1;
     private ObservableCollection<SearchMatch> _searchMatches = new();
     private bool _isSearchVisible = false;
@@ -98,6 +103,34 @@ internal partial class MainWindowViewModel
         set
         {
             this.RaiseAndSetIfChanged(ref _searchUseRegex, value);
+            ScheduleSearchDebounced();
+        }
+    }
+
+    /// <summary>
+    /// "open source" also finds open-source, open–source, open—source and a
+    /// hyphenated line wrap, and the reverse. Default on. Not applied to a regex.
+    /// </summary>
+    public bool SearchHyphenAsSpace
+    {
+        get => _searchHyphenAsSpace;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _searchHyphenAsSpace, value);
+            ScheduleSearchDebounced();
+        }
+    }
+
+    /// <summary>
+    /// "open source" also finds "opensource". Default off: it can match across a
+    /// word boundary ("pen nest" in "pennest"). Not applied to a regex.
+    /// </summary>
+    public bool SearchMatchClosedCompounds
+    {
+        get => _searchMatchClosedCompounds;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _searchMatchClosedCompounds, value);
             ScheduleSearchDebounced();
         }
     }
@@ -279,7 +312,9 @@ internal partial class MainWindowViewModel
             _searchText,
             _searchCaseSensitive,
             _searchWholeWords,
-            _searchUseRegex));
+            _searchUseRegex,
+            _searchHyphenAsSpace,
+            _searchMatchClosedCompounds));
         OperationStatus = "Searching…";
         _ = Task.Run(() => ExecuteSearchAsync(request, debounceDelay));
     }

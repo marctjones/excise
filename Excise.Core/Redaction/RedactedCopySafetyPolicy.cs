@@ -92,7 +92,7 @@ public static class RedactedCopySafetyPolicy
         else if (options.InspectKeptAttachments)
         {
             keptAttachments = AttachmentCarrierScrubber.RedactKept(
-                document, terms, caseSensitive: false, redaction.WholeWord, depth: 0,
+                document, terms, caseSensitive: false, redaction.WholeWord, redaction.Separators, depth: 0,
                 (nested, term) => nested.RedactText(term, redaction));
         }
 
@@ -174,7 +174,7 @@ public static class RedactedCopySafetyPolicy
             {
                 var outcome = PdfDocumentSanitizer.ScrubTerms(
                     document, terms, caseSensitive: false, redaction.Carriers, redaction.CarrierPolicy,
-                    redaction.WholeWord);
+                    redaction.WholeWord, redaction.Separators);
 
                 // #1169: a carrier the user set to ReportOnly still holds the
                 // term, and a refused mode did nothing at all. Both are the
@@ -248,7 +248,7 @@ public static class RedactedCopySafetyPolicy
         {
             // Runs after any surgical scrub so it reports what survived, not
             // what was present before the requested policy executed.
-            var carrierAudit = RedactionCarrierAudit.Inspect(document, terms);
+            var carrierAudit = RedactionCarrierAudit.Inspect(document, terms, redaction.Separators);
             if (carrierAudit.HasUnexaminedCarriers)
                 warnings.AddRange(carrierAudit.Describe());
         }

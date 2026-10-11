@@ -72,7 +72,8 @@ internal sealed class DocumentSearchSession : IDisposable
                 request.Query.WholeWords,
                 request.Query.UseRegex,
                 request.CancellationToken,
-                progress);
+                progress,
+                request.Query.Separators);
         }
         else if (document is not null)
         {
@@ -83,7 +84,8 @@ internal sealed class DocumentSearchSession : IDisposable
                 request.Query.WholeWords,
                 request.Query.UseRegex,
                 request.CancellationToken,
-                progress);
+                progress,
+                request.Query.Separators);
         }
         else if (!string.IsNullOrEmpty(filePath))
         {
@@ -93,7 +95,8 @@ internal sealed class DocumentSearchSession : IDisposable
                 request.Query.CaseSensitive,
                 request.Query.WholeWords,
                 request.Query.UseRegex,
-                progress);
+                progress,
+                request.Query.Separators);
         }
         else
         {
@@ -143,7 +146,13 @@ internal readonly record struct DocumentSearchQuery(
     string Text,
     bool CaseSensitive,
     bool WholeWords,
-    bool UseRegex);
+    bool UseRegex,
+    bool HyphenAsSpace = true,
+    bool MatchClosedCompounds = false)
+{
+    /// <summary>The separator rule the query's two toggles describe (not applied to a regex).</summary>
+    public Excise.Core.Text.SeparatorMatching Separators => new(HyphenAsSpace, MatchClosedCompounds);
+}
 
 internal sealed record DocumentSearchRequest(
     long Generation,

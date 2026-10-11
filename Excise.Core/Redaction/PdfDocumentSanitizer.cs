@@ -96,6 +96,17 @@ public static class PdfDocumentSanitizer
     public static CarrierScrubOutcome ScrubTerms(
         PdfDocument document, IEnumerable<string> terms, bool caseSensitive,
         RedactionCarriers carriers, CarrierScrubPolicy policy, bool wholeWord = false)
+        // The separator rule every front end defaults to (RedactionOptions.MatchHyphenAsSpace).
+        => ScrubTerms(document, terms, caseSensitive, carriers, policy, wholeWord, SeparatorMatching.Default);
+
+    /// <summary>
+    /// <see cref="ScrubTerms(PdfDocument, IEnumerable{string}, bool, RedactionCarriers, CarrierScrubPolicy, bool)"/>
+    /// with the term redaction's separator rule, so a carrier loses every spelling
+    /// the page matcher removed.
+    /// </summary>
+    internal static CarrierScrubOutcome ScrubTerms(
+        PdfDocument document, IEnumerable<string> terms, bool caseSensitive,
+        RedactionCarriers carriers, CarrierScrubPolicy policy, bool wholeWord, SeparatorMatching separators)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(terms);
@@ -165,7 +176,7 @@ public static class PdfDocumentSanitizer
                 return;
             }
 
-            var scrub = new CarrierScrub(stageTerms, caseSensitive, mode, wholeWord);
+            var scrub = new CarrierScrub(stageTerms, caseSensitive, mode, wholeWord, separators);
             var stageChanged = run(scrub);
             changed |= stageChanged;
             if (stageChanged) invalidation |= scope;
@@ -230,12 +241,13 @@ public static class PdfDocumentSanitizer
 
         internal CarrierScrub(
             IReadOnlyList<string> terms, bool caseSensitive, CarrierScrubMode mode,
-            bool wholeWord = false)
+            bool wholeWord = false, SeparatorMatching separators = default)
         {
             _terms = terms;
             _caseSensitive = caseSensitive;
             Mode = mode;
             _wholeWord = wholeWord;
+            Separators = separators;
         }
 
         internal CarrierScrubMode Mode { get; }
@@ -255,10 +267,13 @@ public static class PdfDocumentSanitizer
         internal IReadOnlyList<string> Terms => _terms;
         internal bool CaseSensitive => _caseSensitive;
 
+        /// <summary>The term redaction's separator rule.</summary>
+        internal SeparatorMatching Separators { get; }
+
         /// <summary>Does <paramref name="value"/> hold a term? Records the hit.</summary>
         internal bool Hits(string? value)
         {
-            if (!TermMatch.Holds(value, _terms, _caseSensitive, _wholeWord)) return false;
+            if (!TermMatch.Holds(value, _terms, _caseSensitive, _wholeWord, Separators)) return false;
             TermFound = true;
             return true;
         }
@@ -277,7 +292,7 @@ public static class PdfDocumentSanitizer
 
             // Strip cuts the term out (TermMatch.Mask); RemoveWhole drops the value.
             replacement = Mode == CarrierScrubMode.Strip
-                ? TermMatch.Mask(value!, _terms, _caseSensitive, _wholeWord)!
+                ? TermMatch.Mask(value!, _terms, _caseSensitive, _wholeWord, Separators)!
                 : string.Empty;
             if (trim) replacement = replacement.Trim();
             return true;
@@ -294,12 +309,12 @@ public static class PdfDocumentSanitizer
     {
         if (scrub.Mode == CarrierScrubMode.ReportOnly)
         {
-            if (XfaXmlCarrier.CountUnexaminedPackets(document, scrub.Terms, scrub.CaseSensitive) > 0)
+            if (XfaXmlCarrier.CountUnexaminedPackets(document, scrub.Terms, scrub.CaseSensitive, scrub.Separators) > 0)
                 scrub.MarkTermFound();   // record the hit without touching the packet
             return false;
         }
 
-        var result = XfaXmlCarrier.ScrubTerms(document, scrub.Terms, scrub.CaseSensitive);
+        var result = XfaXmlCarrier.ScrubTerms(document, scrub.Terms, scrub.CaseSensitive, scrub.Separators);
         if (result.Changed || result.UnexaminedPacketCount > 0)
             scrub.MarkTermFound();
         return result.Changed;

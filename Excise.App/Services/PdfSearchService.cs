@@ -41,6 +41,9 @@ internal class PdfSearchService
     /// <param name="caseSensitive">Whether the search should be case sensitive</param>
     /// <param name="wholeWordsOnly">Whether to match whole words only</param>
     /// <param name="useRegex">Whether to treat searchTerm as a regular expression</param>
+    /// <param name="progress">Pages scanned so far.</param>
+    /// <param name="separators">How a hyphen or space inside the term matches; null is
+    /// <see cref="SeparatorMatching.Default"/>. Not applied to a regular expression.</param>
     /// <returns>List of search matches</returns>
     public List<SearchMatch> Search(
         string pdfPath,
@@ -48,7 +51,8 @@ internal class PdfSearchService
         bool caseSensitive = false,
         bool wholeWordsOnly = false,
         bool useRegex = false,
-        IProgress<SearchProgress>? progress = null)
+        IProgress<SearchProgress>? progress = null,
+        SeparatorMatching? separators = null)
     {
         var matches = new List<SearchMatch>();
 
@@ -62,7 +66,7 @@ internal class PdfSearchService
         {
             using var document = PdfDocument.Open(pdfPath);
             return Search(document, searchTerm, caseSensitive, wholeWordsOnly, useRegex,
-                progress: progress);
+                progress: progress, separators: separators);
         }
         catch (Exception ex)
         {
@@ -91,7 +95,8 @@ internal class PdfSearchService
         bool wholeWordsOnly = false,
         bool useRegex = false,
         CancellationToken cancellationToken = default,
-        IProgress<SearchProgress>? progress = null)
+        IProgress<SearchProgress>? progress = null,
+        SeparatorMatching? separators = null)
     {
         var matches = new List<SearchMatch>();
         if (index == null || string.IsNullOrWhiteSpace(searchTerm))
@@ -116,7 +121,8 @@ internal class PdfSearchService
                 if (useRegex)
                     matches.AddRange(SearchWithRegex(pageText, searchTerm, pageWords, i, caseSensitive));
                 else
-                    matches.AddRange(SearchSubstring(pageText, pageWords, searchTerm, i, caseSensitive, wholeWordsOnly));
+                    matches.AddRange(SearchSubstring(pageText, pageWords, searchTerm, i, caseSensitive, wholeWordsOnly,
+                        separators ?? SeparatorMatching.Default));
 
                 if (progress != null && ((i & 3) == 0 || i == totalPages - 1))
                     progress.Report(new SearchProgress(i + 1, totalPages, matches.Count));
@@ -140,7 +146,8 @@ internal class PdfSearchService
         bool wholeWordsOnly = false,
         bool useRegex = false,
         CancellationToken cancellationToken = default,
-        IProgress<SearchProgress>? progress = null)
+        IProgress<SearchProgress>? progress = null,
+        SeparatorMatching? separators = null)
     {
         if (document == null || string.IsNullOrWhiteSpace(searchTerm))
             return new List<SearchMatch>();
@@ -166,7 +173,7 @@ internal class PdfSearchService
                 {
                     var page = document.GetPage(i + 1);
                     var pageMatches = SearchInPage(
-                        page, searchTerm, caseSensitive, wholeWordsOnly, useRegex, i);
+                        page, searchTerm, caseSensitive, wholeWordsOnly, useRegex, i, separators);
 
                     matches.AddRange(pageMatches);
                 }
@@ -207,8 +214,10 @@ internal class PdfSearchService
         bool caseSensitive = false,
         bool wholeWordsOnly = false,
         bool useRegex = false,
-        int pageIndex = 0)
+        int pageIndex = 0,
+        SeparatorMatching? separators = null)
     {
+        var separatorRule = separators ?? SeparatorMatching.Default;
         var matches = new List<SearchMatch>();
 
         try
@@ -226,7 +235,8 @@ internal class PdfSearchService
             }
             else
             {
-                matches.AddRange(SearchSubstring(pageText, words, searchTerm, pageIndex, caseSensitive, wholeWordsOnly));
+                matches.AddRange(SearchSubstring(pageText, words, searchTerm, pageIndex, caseSensitive, wholeWordsOnly,
+                    separatorRule));
             }
 
             // Annotation text (sticky-note bodies, free-text callouts,
@@ -236,7 +246,7 @@ internal class PdfSearchService
             // comment and form value — exactly the case the renderer
             // started covering once /AP / /Contents / /V got wired in.
             matches.AddRange(SearchAnnotations(page, searchTerm, pageIndex,
-                caseSensitive, wholeWordsOnly, useRegex));
+                caseSensitive, wholeWordsOnly, useRegex, separatorRule));
         }
         catch (Exception ex)
         {
@@ -262,7 +272,8 @@ internal class PdfSearchService
         int pageIndex,
         bool caseSensitive,
         bool wholeWordsOnly,
-        bool useRegex)
+        bool useRegex,
+        SeparatorMatching separators)
     {
         if (page.Dictionary.GetOptional("Annots") == null)
             yield break;
@@ -284,7 +295,7 @@ internal class PdfSearchService
             {
                 foreach (var m in MatchAnnotationText(
                     contents!, annot, pageIndex, "annotation",
-                    searchTerm, caseSensitive, wholeWordsOnly, useRegex))
+                    searchTerm, caseSensitive, wholeWordsOnly, useRegex, separators))
                     yield return m;
             }
 
@@ -298,7 +309,7 @@ internal class PdfSearchService
                 {
                     foreach (var m in MatchAnnotationText(
                         vStr.Value, annot, pageIndex, "form value",
-                        searchTerm, caseSensitive, wholeWordsOnly, useRegex))
+                        searchTerm, caseSensitive, wholeWordsOnly, useRegex, separators))
                         yield return m;
                 }
             }
@@ -320,7 +331,8 @@ internal class PdfSearchService
         string searchTerm,
         bool caseSensitive,
         bool wholeWordsOnly,
-        bool useRegex)
+        bool useRegex,
+        SeparatorMatching separators)
     {
         var rect = annot.Rect;
 
@@ -352,13 +364,14 @@ internal class PdfSearchService
         int startIndex = 0;
         while (startIndex < text.Length)
         {
-            int found = TermMatch.IndexOf(text, searchTerm, caseSensitive, wholeWordsOnly, startIndex);
+            int found = TermMatch.IndexOf(text, searchTerm, caseSensitive, wholeWordsOnly, startIndex,
+                separators, out var length);
             if (found < 0) break;
             yield return BuildAnnotationMatch(
                 rect, pageIndex,
-                text.Substring(found, searchTerm.Length),
-                text, found, searchTerm.Length, source);
-            startIndex = found + Math.Max(1, searchTerm.Length);
+                text.Substring(found, length),
+                text, found, length, source);
+            startIndex = found + Math.Max(1, length);
         }
     }
 
@@ -466,7 +479,8 @@ internal class PdfSearchService
         string searchTerm,
         int pageIndex,
         bool caseSensitive,
-        bool wholeWord)
+        bool wholeWord,
+        SeparatorMatching separators)
     {
         var matches = new List<SearchMatch>();
 
@@ -482,28 +496,31 @@ internal class PdfSearchService
         if (searchTerm.Length == 0) return matches;
 
         int index = 0;
-        while ((index = TermMatch.IndexOf(pageText, searchTerm, caseSensitive, wholeWord, index)) != -1)
+        // The matched text can be longer or shorter than the term: a separator
+        // run in the term matches the text's own run (open- source for open source).
+        while ((index = TermMatch.IndexOf(pageText, searchTerm, caseSensitive, wholeWord, index,
+                   separators, out var length)) != -1)
         {
             if (TryFindWordBoundsAtPosition(
                 wordSpans,
                 index,
-                searchTerm.Length,
+                length,
                 out var firstWord,
                 out var lastWord))
             {
                 matches.Add(new SearchMatch
                 {
                     PageIndex = pageIndex,
-                    MatchedText = pageText.Substring(index, searchTerm.Length),
+                    MatchedText = pageText.Substring(index, length),
                     X = firstWord.BoundingBox.Left,
                     Y = firstWord.BoundingBox.Bottom,
                     Width = lastWord.BoundingBox.Right - firstWord.BoundingBox.Left,
                     Height = Math.Max(firstWord.BoundingBox.Height, lastWord.BoundingBox.Height),
-                    Context = GetContext(pageText, index, searchTerm.Length)
+                    Context = GetContext(pageText, index, length)
                 });
             }
 
-            index += searchTerm.Length;
+            index += Math.Max(1, length);
         }
 
         return matches;

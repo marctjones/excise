@@ -2222,6 +2222,8 @@ namespace Excise.Core.Text.Segmentation
         public bool FlattenInteractiveContent { get; init; }
         public bool IncludeHiddenLayers { get; init; }
         public bool KeepAttachments { get; init; }
+        public bool MatchClosedCompounds { get; init; }
+        public bool MatchHyphenAsSpace { get; init; }
         public Excise.Core.Text.Segmentation.RedactionProfile Profile { get; init; }
         public bool RemoveBookmarks { get; init; }
         public bool RemoveExternalActions { get; init; }
@@ -2264,6 +2266,8 @@ namespace Excise.Core.Text.Segmentation
         public int ImageRegionsRedacted { get; init; }
         public int ImagesDroppedWhole { get; init; }
         public bool IsCleanSuccess { get; }
+        public bool MatchClosedCompounds { get; init; }
+        public bool MatchHyphenAsSpace { get; init; }
         public int MatchesLocated { get; }
         public required System.Collections.Generic.IReadOnlyList<Excise.Core.Text.Segmentation.PageRedactionResult> Pages { get; init; }
         public Excise.Core.Text.Segmentation.RedactionProfile Profile { get; init; }

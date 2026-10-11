@@ -109,12 +109,13 @@ internal static class InteractiveRedactionScrubber
     /// </summary>
     public static bool ScrubTerm(
         PdfPage page, PdfRectangle area, string term, bool caseSensitive,
-        bool wholeWord = false)   // #1052
+        bool wholeWord = false,   // #1052
+        SeparatorMatching separators = default)
     {
         if (string.IsNullOrEmpty(term)) return ScrubArea(page, area);
         area = area.Normalize();
         return ScrubTerm(page, [area], Array.Empty<PdfDictionary>(), [area], term, caseSensitive, wholeWord,
-            new TermScrubState());
+            new TermScrubState(), separators);
     }
 
     /// <summary>
@@ -146,7 +147,8 @@ internal static class InteractiveRedactionScrubber
         string term,
         bool caseSensitive,
         bool wholeWord,
-        TermScrubState state)
+        TermScrubState state,
+        SeparatorMatching separators = default)
     {
         var changed = false;
         var pruneCandidates = new HashSet<int>();
@@ -159,7 +161,7 @@ internal static class InteractiveRedactionScrubber
             (p, field, widgets) => drawn.Contains(field.RawDictionary)
                                    || field.WidgetDictionaries.Any(drawn.Contains)
                                    || byRect(p, field, widgets),
-            pruneCandidates, term, caseSensitive, wholeWord, state);
+            pruneCandidates, term, caseSensitive, wholeWord, state, separators);
         foreach (var area in matchAreas)
             changed |= RemoveIntersectingAnnotations(page, area.Normalize(), pruneCandidates, removedAnnots);
 
@@ -183,13 +185,14 @@ internal static class InteractiveRedactionScrubber
         string term,
         bool caseSensitive,
         HashSet<int> pruneCandidates,
-        bool wholeWord = false)
+        bool wholeWord = false,
+        SeparatorMatching separators = default)
     {
         var raw = dictionary.GetOptional(key);
         if (raw == null) return false;
         if (document.Resolve(raw) is not PdfString str) return false;
 
-        var redacted = TermMatch.Mask(str.Value, [term], caseSensitive, wholeWord);
+        var redacted = TermMatch.Mask(str.Value, [term], caseSensitive, wholeWord, separators);
         if (redacted == null) return false;
 
         // The old value may be its own indirect object still holding the term.
@@ -211,7 +214,8 @@ internal static class InteractiveRedactionScrubber
         string term,
         bool caseSensitive,
         HashSet<int> pruneCandidates,
-        bool wholeWord = false)
+        bool wholeWord = false,
+        SeparatorMatching separators = default)
     {
         var raw = field.GetOptional("Opt");
         if (raw == null) return false;
@@ -223,7 +227,7 @@ internal static class InteractiveRedactionScrubber
             switch (document.Resolve(options[i]))
             {
                 case PdfString entry:
-                    if (TermMatch.Mask(entry.Value, [term], caseSensitive, wholeWord) is { } cut)
+                    if (TermMatch.Mask(entry.Value, [term], caseSensitive, wholeWord, separators) is { } cut)
                     {
                         options[i] = new PdfString(cut);
                         changed = true;
@@ -234,7 +238,7 @@ internal static class InteractiveRedactionScrubber
                     for (var j = 0; j < pair.Count; j++)
                     {
                         if (document.Resolve(pair[j]) is PdfString s2 &&
-                            TermMatch.Mask(s2.Value, [term], caseSensitive, wholeWord) is { } cut2)
+                            TermMatch.Mask(s2.Value, [term], caseSensitive, wholeWord, separators) is { } cut2)
                         {
                             pair[j] = new PdfString(cut2);
                             changed = true;
@@ -266,7 +270,8 @@ internal static class InteractiveRedactionScrubber
         string term,
         bool caseSensitive,
         HashSet<int> pruneCandidates,
-        bool wholeWord)
+        bool wholeWord,
+        SeparatorMatching separators)
     {
         if (document.Resolve(field.GetOptional("Opt") ?? PdfNull.Instance) is not PdfArray options)
             return false;
@@ -277,7 +282,7 @@ internal static class InteractiveRedactionScrubber
             if (document.Resolve(item) is not PdfArray { Count: >= 2 } pair
                 || document.Resolve(pair[0]) is not PdfString save
                 || document.Resolve(pair[1]) is not PdfString display
-                || !TermMatch.Holds(display.Value, [term], caseSensitive, wholeWord))
+                || !TermMatch.Holds(display.Value, [term], caseSensitive, wholeWord, separators))
                 continue;
             saves.Add(save.Value);
             pair[0] = new PdfString(string.Empty);
@@ -327,7 +332,8 @@ internal static class InteractiveRedactionScrubber
         string? term = null,
         bool caseSensitive = false,
         bool wholeWord = false,
-        TermScrubState? state = null)
+        TermScrubState? state = null,
+        SeparatorMatching separators = default)
     {
         state ??= new TermScrubState();
         IReadOnlyList<PdfField> fields;
@@ -399,16 +405,16 @@ internal static class InteractiveRedactionScrubber
                     // #1038: cut the term out, keep the rest of the value. See
                     // ScrubTerm for what deleting it instead cost on a real file.
                     var valueCut = RedactStringEntry(
-                        page.Document, field.RawDictionary, "V", term, caseSensitive, pruneCandidates, wholeWord);
+                        page.Document, field.RawDictionary, "V", term, caseSensitive, pruneCandidates, wholeWord, separators);
                     changed |= RedactStringEntry(
-                        page.Document, field.RawDictionary, "DV", term, caseSensitive, pruneCandidates, wholeWord);
+                        page.Document, field.RawDictionary, "DV", term, caseSensitive, pruneCandidates, wholeWord, separators);
                     // #1581: /RV, the rich-text value (§12.7.4.3). It is an
                     // independent carrier — a field can have /RV and NO /V at
                     // all — and mutool DRAWS it, so the term stayed both in
                     // the file and on the page while every /V assertion read
                     // clean.
                     valueCut |= RedactStringEntry(
-                        page.Document, field.RawDictionary, "RV", term, caseSensitive, pruneCandidates, wholeWord);
+                        page.Document, field.RawDictionary, "RV", term, caseSensitive, pruneCandidates, wholeWord, separators);
                     changed |= valueCut;
                     // A producer may hang /AA on each widget rather than the field.
                     valueMayBeRestated = valueCut
@@ -425,7 +431,7 @@ internal static class InteractiveRedactionScrubber
                 // dropping /AP: the same fail-closed policy every other field
                 // type already gets when its widget rect intersects the match.
                 changed |= RewriteOrDropAppearance(
-                    page, field.RawDictionary, defaultResources, term, caseSensitive, processedAp, state, wholeWord,
+                    page, field.RawDictionary, defaultResources, term, caseSensitive, processedAp, state, wholeWord, separators,
                     valueMayBeRestated);
             }
             else
@@ -456,10 +462,10 @@ internal static class InteractiveRedactionScrubber
                 // whose display holds the term can still be told apart.
                 if (term != null)
                     changed |= RedactChoiceSelection(
-                        page.Document, field.RawDictionary, term, caseSensitive, pruneCandidates, wholeWord);
+                        page.Document, field.RawDictionary, term, caseSensitive, pruneCandidates, wholeWord, separators);
                 changed |= term != null
                     ? RedactOptionList(
-                        page.Document, field.RawDictionary, term, caseSensitive, pruneCandidates, wholeWord)
+                        page.Document, field.RawDictionary, term, caseSensitive, pruneCandidates, wholeWord, separators)
                     : field.RawDictionary.Remove("Opt");
             }
 
@@ -468,7 +474,7 @@ internal static class InteractiveRedactionScrubber
                 CaptureObjectGraph(page.Document, widget.GetOptional("AP"), pruneCandidates);
                 changed |= term != null
                     ? RewriteOrDropAppearance(
-                        page, widget, defaultResources, term, caseSensitive, processedAp, state, wholeWord, valueMayBeRestated)
+                        page, widget, defaultResources, term, caseSensitive, processedAp, state, wholeWord, separators, valueMayBeRestated)
                     : widget.Remove("AP");
             }
 
@@ -632,7 +638,7 @@ internal static class InteractiveRedactionScrubber
     private static bool RewriteOrDropAppearance(
         PdfPage page, PdfDictionary holder, PdfDictionary? defaultResources,
         string term, bool caseSensitive, HashSet<PdfDictionary> processedHolders, TermScrubState state,
-        bool wholeWord = false, bool valueMayBeRestated = false)
+        bool wholeWord = false, SeparatorMatching separators = default, bool valueMayBeRestated = false)
     {
         var document = page.Document;
         if (document.Resolve(holder.GetOptional("AP") ?? PdfNull.Instance) is not PdfDictionary ap)
@@ -652,10 +658,10 @@ internal static class InteractiveRedactionScrubber
         {
             if (!state.Rewritten.TryGetValue(normal, out var replacement))
             {
-                replacement = RewriteIntoCopy(page, normal, defaultResources, term, caseSensitive, wholeWord, state);
+                replacement = RewriteIntoCopy(page, normal, defaultResources, term, caseSensitive, wholeWord, separators, state);
                 state.Rewritten[normal] = replacement;
                 if (replacement == null
-                    && !AppearanceStreamRedactor.Holds(page, normal, defaultResources, term, caseSensitive, wholeWord))
+                    && !AppearanceStreamRedactor.Holds(page, normal, defaultResources, term, caseSensitive, wholeWord, separators))
                     state.Undecided.Add(normal);
             }
             if (replacement == null)
@@ -697,8 +703,8 @@ internal static class InteractiveRedactionScrubber
                 continue;
             if (!state.Rewritten.TryGetValue(other, out var otherReplacement))
             {
-                otherReplacement = AppearanceStreamRedactor.Holds(page, other, defaultResources, term, caseSensitive, wholeWord)
-                    ? RewriteIntoCopy(page, other, defaultResources, term, caseSensitive, wholeWord, state)
+                otherReplacement = AppearanceStreamRedactor.Holds(page, other, defaultResources, term, caseSensitive, wholeWord, separators)
+                    ? RewriteIntoCopy(page, other, defaultResources, term, caseSensitive, wholeWord, separators, state)
                     : null;
                 state.Rewritten[other] = otherReplacement;
             }
@@ -735,8 +741,8 @@ internal static class InteractiveRedactionScrubber
 
     private static PdfReference? RewriteIntoCopy(
         PdfPage page, PdfStream original, PdfDictionary? defaultResources, string term, bool caseSensitive,
-        bool wholeWord, TermScrubState state)
-        => AppearanceStreamRedactor.RewrittenContent(page, original, defaultResources, term, caseSensitive, wholeWord)
+        bool wholeWord, SeparatorMatching separators, TermScrubState state)
+        => AppearanceStreamRedactor.RewrittenContent(page, original, defaultResources, term, caseSensitive, wholeWord, separators)
             is { } content
             ? AddRewrittenCopy(page.Document, original, content, state)
             : null;

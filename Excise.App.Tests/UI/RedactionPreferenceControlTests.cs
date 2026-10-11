@@ -72,6 +72,8 @@ public class RedactionPreferenceControlTests
     [FixedAvaloniaTheory(Timeout = 30000)]
     [InlineData("RedactionWholeWordCheckBox")]
     [InlineData("RedactionKeepAttachmentsCheckBox")]
+    [InlineData("RedactionHyphenAsSpaceCheckBox")]
+    [InlineData("RedactionClosedCompoundsCheckBox")]
     public async Task TheRedactionCheckBoxes_ToggleFromARealClick(string name)
     {
         var prefs = new PreferencesViewModel();
