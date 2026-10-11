@@ -106,14 +106,21 @@ require_grep "doc.RedactText delegates to glyph-level RedactArea" \
     "page\.Redact(Areas?|AreasInternal)\(" "$CORE_API" \
     "SECURITY: $CORE_API no longer routes through the glyph-level RedactArea path."
 
-# Check 3: the GUI must delegate to the glyph-level engine (page.RedactArea),
-# NOT draw a black box only. `RedactAreaWithReport` / `RedactAreasWithReport` are the
-# report-returning entry points of the SAME engine path (#2037); a planted bare
-# AppendBlackRectangle in place of the call still fails this check.
-require_grep "GUI delegates to glyph-level page.RedactArea" \
-    "page\.RedactAreas?(WithReport)?\(" "$REDACTION_SERVICE" \
-    "SECURITY: RedactionService no longer calls page.RedactArea — redaction" \
+# Check 3: the GUI must delegate to the glyph-level engine, NOT draw a black box
+# only. The GUI applies its pending marks as one engine batch
+# (`AreaRedactionBatch.Apply`, #2066), and that Core method applies each mark
+# through `page.RedactAreaWithReport` (the report-returning entry point of the
+# SAME glyph-level path, #2037). Two links, two checks: a planted bare
+# AppendBlackRectangle in place of EITHER call fails the matching check. Both
+# patterns pin the CALL form (comments are stripped by require_grep), not a bare name.
+require_grep "GUI delegates to the glyph-level area batch (AreaRedactionBatch.Apply)" \
+    "AreaRedactionBatch\.Apply\(" "$REDACTION_SERVICE" \
+    "SECURITY: RedactionService no longer calls AreaRedactionBatch.Apply — redaction" \
     "may have been downgraded to visual-only (black box without glyph removal)."
+require_grep "area batch redacts each mark through glyph-level page.RedactAreaWithReport" \
+    "mark\.Page\.RedactAreaWithReport\(" "$CORE_EXT" \
+    "SECURITY: AreaRedactionBatch.Apply no longer calls page.RedactAreaWithReport —" \
+    "redaction may have been downgraded to visual-only (black box without glyph removal)."
 
 # Check 4: the core glyph-removal + reconstruction stages must exist.
 require_file "GlyphRemover (glyph-level removal) exists" "$CORE_GLYPH"

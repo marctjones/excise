@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "ce251d8de30bb311fb116975ea31a320c219d4b6",
+  "sourceRevision": "99f9a558bd3e1b8163bdfc61df2acd331e84feb5",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8885,
+    "retainedSymbols": 8900,
     "observedComponentDependencies": 85,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -38,8 +38,8 @@
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 749,
-      "typeDependencyCount": 78,
+      "references": 752,
+      "typeDependencyCount": 79,
       "classification": "declared",
       "evidence": [
         {
@@ -520,14 +520,14 @@
     {
       "source": "core-document",
       "target": "core-redaction",
-      "references": 4,
+      "references": 7,
       "typeDependencyCount": 2,
       "classification": "undeclared",
       "evidence": [
         {
           "source": "Excise.Core.Document.PdfDocumentRedactionLedger",
           "target": "Excise.Core.Text.Segmentation.CarrierResult",
-          "references": 2
+          "references": 5
         },
         {
           "source": "Excise.Core.Document.RemovedPageReferenceScrubber",
@@ -694,8 +694,8 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1423,
-      "typeDependencyCount": 161,
+      "references": 1438,
+      "typeDependencyCount": 165,
       "classification": "declared",
       "evidence": [
         {
@@ -750,8 +750,8 @@
     {
       "source": "core-redaction",
       "target": "core-text",
-      "references": 277,
-      "typeDependencyCount": 41,
+      "references": 281,
+      "typeDependencyCount": 43,
       "classification": "declared",
       "evidence": [
         {
