@@ -119,6 +119,22 @@ internal static class RedactCommand
                 "Applies to page content AND the document-level carrier scrub.",
             DefaultValueFactory = _ => false,
         };
+        var exactSeparatorsOption = new Option<bool>("--exact-separators")
+        {
+            Description = "Match a hyphen or a space inside the term only as itself. By default " +
+                "they match each other, so 'open source' also removes 'open-source', " +
+                "'open–source' and 'open—source' (and the reverse), as the GUI search finds " +
+                "them. Applies to page content AND the document-level carrier scrub.",
+            DefaultValueFactory = _ => false,
+        };
+        var matchClosedCompoundsOption = new Option<bool>("--match-closed-compounds")
+        {
+            Description = "Also match the term with no separator where it has a hyphen or a " +
+                "space: 'open source' also removes 'opensource'. Off by default because it " +
+                "can match across a word boundary ('pen nest' in 'pennest'). Combines with " +
+                "--exact-separators ('open source' then removes 'open source' and 'opensource' only).",
+            DefaultValueFactory = _ => false,
+        };
         var carrierPolicyOption = new Option<string[]>("--carrier-policy")
         {
             Description = "How a document-level carrier holding the term is handled: " +
@@ -192,6 +208,8 @@ internal static class RedactCommand
             profileOption,
             overshootBoxOption,
             wholeWordOption,
+            exactSeparatorsOption,
+            matchClosedCompoundsOption,
             carrierPolicyOption,
             keepAttachmentsOption,
             progressOption,
@@ -267,10 +285,11 @@ internal static class RedactCommand
             var keepAttachments = parseResult.GetValue(keepAttachmentsOption);
             if (flattenOcr &&
                 (ocrImageText || noBox || boxColorSpec != null || closeWidth || overshootBox ||
-                 fixedMarker || quantizeGap || preserveLayout || strict || allowLowConfidence || keepAttachments))
+                 fixedMarker || quantizeGap || preserveLayout || strict || allowLowConfidence || keepAttachments ||
+                 parseResult.GetValue(exactSeparatorsOption) || parseResult.GetValue(matchClosedCompoundsOption)))
             {
                 Console.Error.WriteLine(
-                    "--flatten-ocr cannot be combined with structural-redaction box, width, confidence, OCR-layer, or attachment options.");
+                    "--flatten-ocr cannot be combined with structural-redaction box, width, confidence, OCR-layer, attachment or separator-matching options.");
                 return 1;
             }
 
@@ -331,7 +350,9 @@ internal static class RedactCommand
                     keepAttachments,
                     profile,
                     quantizeGap,
-                    preserveLayout),
+                    preserveLayout,
+                    ExactSeparators: parseResult.GetValue(exactSeparatorsOption),
+                    MatchClosedCompounds: parseResult.GetValue(matchClosedCompoundsOption)),
                     progress);
 
                 foreach (var diagnostic in result.Diagnostics)
@@ -345,7 +366,9 @@ internal static class RedactCommand
                     // 'Sleeman' cannot reason about what was left behind.
                     Console.WriteLine(
                         $"Redacted {result.Count} occurrence(s) of '{result.Text}'" +
-                        (result.WholeWord ? " (whole-word matching)" : ""));
+                        (result.WholeWord ? " (whole-word matching)" : "") +
+                        (parseResult.GetValue(exactSeparatorsOption) ? " (exact separators)" : "") +
+                        (parseResult.GetValue(matchClosedCompoundsOption) ? " (closed compounds matched)" : ""));
 
                 // #1586: a removal made WITHOUT a term match is destruction the
                 // user is entitled to know about. Printing it is the only thing

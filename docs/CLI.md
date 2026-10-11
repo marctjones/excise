@@ -11,7 +11,8 @@ excise render            <file>           -o out.png  [--page N] [--dpi N] [--pa
 excise commands          [id]             [--json]
 excise batch             <workflow.json>  [--json] [--progress] [--output report.json]
 excise draw              <file>                                 # graphics-API demo
-excise redact            <input> <output> <text>  [--case-sensitive] [--verbose]
+excise redact            <input> <output> <text>  [--case-sensitive] [--whole-word]
+                                          [--exact-separators] [--match-closed-compounds] [--verbose]
 excise optimize          <input> <output> [--preset lossless|high|standard|screen] [--password P] [--json]
 excise fill-form         <input> <output> --field Name=Value [...] [--flatten]
 excise add-field         <input> <output> --type T --name N --page P --rect "l,b,r,t" [--value v] [--option o]...
@@ -54,6 +55,18 @@ excise redact report.pdf report-redacted.pdf "ACCOUNT 9876" --fixed-marker
 # Same, listing every per-line "WIDTH NOT CLOSED" layout note (by default they are
 # summarised in one line, after the notes about text that was not removed)
 excise redact report.pdf report-redacted.pdf "ACCOUNT 9876" --fixed-marker --verbose
+
+# A hyphen and a space inside the term match each other by default: this removes
+# "open source", "open-source", "open–source", "open—source" and "open-" / "source"
+# hyphenated across a line break. A term with no hyphen or space matches exactly.
+excise redact report.pdf report-redacted.pdf "open source"
+
+# Only the spelling typed (each separator matches only itself)
+excise redact report.pdf report-redacted.pdf "open source" --exact-separators
+
+# Also the closed compound "opensource" (off by default: "pen nest" would also
+# remove the middle of "pennest")
+excise redact report.pdf report-redacted.pdf "open source" --match-closed-compounds
 
 # Write a smaller copy for email: downsample images above 188 dpi to 150 dpi
 excise optimize scan.pdf scan-small.pdf --preset standard

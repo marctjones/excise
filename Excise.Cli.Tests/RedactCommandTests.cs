@@ -1191,6 +1191,93 @@ public class RedactCommandTests : IDisposable
             "#1052: the rule that ran must be visible in the result");
     }
 
+    /// <summary>Lines with every separator spelling of "open source", and neighbours that must stay.</summary>
+    private static byte[] SeparatorSpellingsPdf()
+    {
+        using var doc = PdfDocument.CreateNew();
+        var page = doc.Pages.AddBlank(612, 792);
+        using (var g = page.GetGraphics())
+        {
+            var font = Excise.Core.Graphics.PdfFont.Helvetica(12);
+            var y = 700.0;
+            foreach (var line in new[]
+                     {
+                         "Line A open source here", "Line B open-source here", "Line C open–source here",
+                         "Line D resource stays", "Line E opensource stays",
+                     })
+            {
+                g.DrawString(line, font, Excise.Core.Graphics.PdfBrush.Black, 72, y);
+                y -= 30;
+            }
+            g.Flush();
+        }
+        return doc.SaveToBytes();
+    }
+
+    [Fact]
+    public async Task RunAsync_Redact_ByDefault_RemovesTheHyphenatedAndDashedSpellings_AsSearchFindsThem()
+    {
+        // The default needs no flag: the GUI search finds open-source for
+        // "open source", so `excise redact "open source"` must remove it.
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, SeparatorSpellingsPdf());
+
+        var (exit, stdout) = await RunCapturedAsync("redact", inputPath, outputPath, "open source");
+
+        exit.Should().Be(0);
+        stdout.Should().Contain("Redacted 3 occurrence(s)").And.NotContain("exact separators");
+        var saved = File.ReadAllBytes(outputPath);
+        SavedPdfLeakScanner.FindTerm(saved, "open-source").Should().BeEmpty();
+        SavedPdfLeakScanner.FindTerm(saved, "open source").Should().BeEmpty();
+        if (MutoolReferenceRenderer.IsAvailable)
+        {
+            var mutool = MutoolTextExtractor.ExtractPage(outputPath, 1) ?? "";
+            mutool.Should().NotContain("open–source").And.NotContain("open-source")
+                .And.Contain("resource stays").And.Contain("opensource stays");
+        }
+    }
+
+    [Fact]
+    public async Task RunAsync_Redact_ExactSeparators_KeepsTheOtherSpellings_AndSaysSo()
+    {
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, SeparatorSpellingsPdf());
+
+        var (exit, stdout) = await RunCapturedAsync("redact", inputPath, outputPath, "open source", "--exact-separators");
+
+        exit.Should().Be(0);
+        stdout.Should().Contain("Redacted 1 occurrence(s)").And.Contain("(exact separators)");
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "open-source").Should().NotBeEmpty(
+            "the opt-out is real: the hyphenated spelling is left");
+    }
+
+    [Fact]
+    public async Task RunAsync_Redact_MatchClosedCompounds_AlsoRemovesTheClosedSpelling()
+    {
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, SeparatorSpellingsPdf());
+
+        var (exit, stdout) = await RunCapturedAsync(
+            "redact", inputPath, outputPath, "open-source", "--match-closed-compounds");
+
+        exit.Should().Be(0);
+        stdout.Should().Contain("Redacted 4 occurrence(s)").And.Contain("(closed compounds matched)");
+        var saved = File.ReadAllBytes(outputPath);
+        SavedPdfLeakScanner.FindTerm(saved, "opensource").Should().BeEmpty();
+        SavedPdfLeakScanner.FindTerm(saved, "resource").Should().NotBeEmpty("'resource' is not the term");
+    }
+
+    [Fact]
+    public void Execute_RejectsSeparatorFlags_WithFlattenOcr_WhoseMatcherDoesNotApplyThem()
+    {
+        var request = new RedactCommandRequest("in.pdf", "out.pdf", "open source", FlattenOcr: true, MatchClosedCompounds: true);
+        FluentActions.Invoking(() => RedactCommandHandler.Execute(request))
+            .Should().Throw<ArgumentException>().WithMessage("*separator-matching*");
+    }
+
     [Fact]
     public void TryParseCarrierPolicy_LeavesUnnamedCarriersAtStrip()
     {
