@@ -558,10 +558,7 @@ public static class PdfDocumentRedactionExtensions
         // all (its name or description held the term) is reported as removed.
         // #1753: an underline, box or highlight sized to a removed word went with it.
         if (imageCounts.DecorationsRemoved > 0)
-            profileRemovals.Add(new RedactedFeatureRemoval(
-                "underline, box or highlight sized to a redacted word", imageCounts.DecorationsRemoved,
-                "left in place it would state the removed word's width, beside a closed gap or around "
-                + "or on top of the covering box"));
+            profileRemovals.Add(DecorationRemovalRow(imageCounts.DecorationsRemoved));
 
         // #2045: an annotation the page loop removed is out of the file only once
         // the structure tree stops naming it; one the graph still reaches is refused.
@@ -658,6 +655,12 @@ public static class PdfDocumentRedactionExtensions
                 "redact those pages too (#1493)");
         }
     }
+
+    /// <summary>#1753/#1905: the report row for the decorations sized to a redacted word that went with it.</summary>
+    internal static RedactedFeatureRemoval DecorationRemovalRow(int count) => new(
+        "underline, box or highlight sized to a redacted word", count,
+        "left in place it would state the removed word's width, beside a closed gap or around "
+        + "or on top of the covering box");
 
     /// <summary>
     /// #2045/#1753: the structure-tree items the redaction's own annotation

@@ -174,6 +174,12 @@ public static class PdfPageRedactionExtensions
     /// the caller asked for was rewritten regardless. Read
     /// <see cref="RedactionReport.Removals"/> and
     /// <see cref="RedactionReport.Carriers"/>.</para>
+    /// <para><b>Fonts (#2066).</b> The characters this call stopped drawing
+    /// everywhere in the document leave the embedded fonts, as with
+    /// <c>RedactText</c> (#1920); a font that cannot be edited is a refused
+    /// carrier. Each call walks the document twice for that: a caller applying
+    /// many areas at once uses <see cref="AreaRedactionBatch"/>, which walks
+    /// it twice in all.</para>
     /// </remarks>
     public static RedactionReport RedactAreaWithReport(
         this PdfPage page, PdfRectangle area, RedactionOptions options)
@@ -196,7 +202,8 @@ public static class PdfPageRedactionExtensions
         WidthPolicy width,
         bool removeAttachments,
         bool markerIsArea = false,
-        bool removeWordDecorations = false)
+        bool removeWordDecorations = false,
+        bool areasAreTextRuns = false)
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
 
@@ -288,6 +295,8 @@ public static class PdfPageRedactionExtensions
 
         // Pass 1: text glyph removal (if there's any text on the page).
         var letters = page.Letters;
+        // #1905: read before the glyph pass removes them.
+        var runs = areasAreTextRuns ? TextRunsIn(letters, new[] { glyphArea with { Box = area } }, strategy) : null;
         if (letters.Count > 0)
         {
             var remover = NewGlyphRemover(page, width, markerIsArea);
@@ -295,8 +304,10 @@ public static class PdfPageRedactionExtensions
             RecordWidthNotes(page, remover);
         }
 
-        // Pass 1.5 (#1753): imageArea is the matched word's full extent.
-        var decorations = removeWordDecorations ? RemoveWordDecorations(page, ref working, new[] { imageArea }) : 0;
+        // Pass 1.5 (#1753): imageArea is the matched word's full extent; a
+        // selection's are the runs it covered (#1905).
+        var decorations = runs != null ? RemoveWordDecorations(page, ref working, runs)
+            : removeWordDecorations ? RemoveWordDecorations(page, ref working, new[] { imageArea }) : 0;
 
         // Pass 2: image XObject redaction (#279, region-level #1195). Uses
         // imageArea (the full glyph bbox), NOT the possibly-thin glyph-match
@@ -334,9 +345,34 @@ public static class PdfPageRedactionExtensions
         this PdfPage page,
         System.Collections.Generic.IEnumerable<PdfRectangle> areas,
         RedactionOptions options)
+        => page.RedactAreasWithReportCore(areas, options, areasAreTextRuns: false);
+
+    /// <summary>
+    /// #1905: <see cref="RedactAreasWithReport"/> for areas that are a text
+    /// selection (the GUI's right-click Redact, #1659), not a dragged rectangle.
+    /// The selected run on each line is a word span, so the underline, box,
+    /// strike-through or highlight sized to it goes, exactly as
+    /// <c>RedactText</c> removes one sized to a matched term (#1753). Only that
+    /// run: other occurrences of the same text are not touched. Everything else,
+    /// the covering box and the width policy included, is the area redaction.
+    /// </summary>
+    internal static RedactionReport RedactTextRunsWithReport(
+        this PdfPage page,
+        System.Collections.Generic.IEnumerable<PdfRectangle> areas,
+        RedactionOptions options)
+        => page.RedactAreasWithReportCore(areas, options, areasAreTextRuns: true);
+
+    private static RedactionReport RedactAreasWithReportCore(
+        this PdfPage page,
+        System.Collections.Generic.IEnumerable<PdfRectangle> areas,
+        RedactionOptions options,
+        bool areasAreTextRuns)
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
         if (options == null) throw new System.ArgumentNullException(nameof(options));
+        // #2066: what every font draws before anything below removes text (the
+        // XFA flatten, the profile, the glyph pass), as RedactText takes it.
+        var fontUsageBefore = options.ScrubFontGlyphs ? FontGlyphUsage.Collect(page.Document) : null;
         // #1586: the profile removals go first, for the same reasons as on the
         // RedactText path — hidden optional content the profile deletes is not
         // then walked for glyph removal, and the #1507 metadata strip runs
@@ -355,7 +391,8 @@ public static class PdfPageRedactionExtensions
         var imageCounts = page.RedactAreasInternal(GlyphArea.Of(list), list, options.Strategy,
             options.ScrubDocumentCarriers, options.Width,
             removeAttachments: !options.KeepAttachments,
-            markerIsArea: true);
+            markerIsArea: true,
+            areasAreTextRuns: areasAreTextRuns);
         var carriers = new System.Collections.Generic.List<CarrierResult>();
         // #2037: what this call's XFA pass did (decision 17's flatten, decision 5's removal), as
         // RedactText reports it; a library caller has no other way to learn of it.
@@ -379,7 +416,23 @@ public static class PdfPageRedactionExtensions
             carriers.AddRange(PdfDocumentRedactionExtensions.NestedTextCarrierResults(
                 nestedTextCarriers.Concat(page.NestedTextCarriers).Select(c => (c, page.PageNumber)),
                 term: null, caseSensitive: false, page.Document.ComputeReachableObjects()));
+        if (fontUsageBefore != null)
+            carriers.AddRange(ScrubFontGlyphs(page.Document, fontUsageBefore));
         return AreaReport(page.Document, options, metadataRow, removals, carriers, imageCounts);
+    }
+
+    /// <summary>
+    /// #2066: remove from every font the codes drawn when <paramref name="before"/>
+    /// was taken and drawn nowhere now (<see cref="FontGlyphScrubber"/>), and
+    /// return the fonts that lost codes and could not be edited. Those are also
+    /// recorded on the ledger: the GUI drops the area report and its
+    /// redacted-copy dialog reads the ledger.
+    /// </summary>
+    internal static IReadOnlyList<CarrierResult> ScrubFontGlyphs(PdfDocument document, FontGlyphUsage before)
+    {
+        var refused = FontGlyphScrubber.Scrub(document, before, FontGlyphUsage.Collect(document));
+        document.RedactionLedger.RecordFontScrubRefusals(refused);
+        return refused;
     }
 
     /// <summary>
@@ -398,6 +451,14 @@ public static class PdfPageRedactionExtensions
         var all = metadataRow == null
             ? removals.ToList()
             : new[] { metadataRow }.Concat(removals).ToList();
+
+        // #1905: a text selection's word-sized decorations (RedactTextRunsWithReport).
+        // On the ledger too: the GUI's dialog reads it, not this report.
+        if (imageCounts.DecorationsRemoved > 0)
+        {
+            all.Add(PdfDocumentRedactionExtensions.DecorationRemovalRow(imageCounts.DecorationsRemoved));
+            document.RedactionLedger.RecordDecorationsRemoved(imageCounts.DecorationsRemoved);
+        }
 
         // #1586 trap: an image was blacked out, and the structure tree
         // describes an image in an /Alt with NO content link. Neither
@@ -471,7 +532,8 @@ public static class PdfPageRedactionExtensions
         WidthPolicy width,
         bool removeAttachments,
         bool markerIsArea = false,
-        bool removeWordDecorations = false)
+        bool removeWordDecorations = false,
+        bool areasAreTextRuns = false)
     {
         if (page == null) throw new System.ArgumentNullException(nameof(page));
 
@@ -483,7 +545,8 @@ public static class PdfPageRedactionExtensions
         {
             return page.RedactAreaInternal(
                 glyphList[0], imageList.Count > 0 ? imageList[0] : list[0],
-                strategy, scrubDocumentCarriers, width, removeAttachments, markerIsArea, removeWordDecorations);
+                strategy, scrubDocumentCarriers, width, removeAttachments, markerIsArea, removeWordDecorations,
+                areasAreTextRuns);
         }
 
         // #1572/#1547/#1574/#2037 — see RedactAreaInternal.
@@ -526,6 +589,7 @@ public static class PdfPageRedactionExtensions
 
         IReadOnlyList<ContentOperator> working = content.Operators;
         var letters = page.Letters;
+        var runs = areasAreTextRuns ? TextRunsIn(letters, glyphList, strategy) : null;   // #1905
         if (letters.Count > 0)
         {
             var remover = NewGlyphRemover(page, width, markerIsArea);
@@ -533,7 +597,8 @@ public static class PdfPageRedactionExtensions
             RecordWidthNotes(page, remover);
         }
 
-        var decorations = removeWordDecorations ? RemoveWordDecorations(page, ref working, imageList) : 0;
+        var decorations = runs != null ? RemoveWordDecorations(page, ref working, runs)
+            : removeWordDecorations ? RemoveWordDecorations(page, ref working, imageList) : 0;
 
         // Image pass uses imageList (full glyph bboxes), not the glyph-match
         // areas — see RedactAreaInternal (#1195).
@@ -567,10 +632,24 @@ public static class PdfPageRedactionExtensions
     };
 
     /// <summary>
+    /// #1905: the extent of the text each area covers, one rectangle per line:
+    /// the letters the glyph pass removes from it (<paramref name="strategy"/>),
+    /// spaces aside, as <c>RedactText</c> boxes one line of a match.
+    /// </summary>
+    private static List<PdfRectangle> TextRunsIn(
+        IReadOnlyList<Letter> letters, IReadOnlyList<GlyphArea> areas, GlyphRemovalStrategy strategy)
+        => areas
+            .SelectMany(area => TextSelectionEngine.GroupIntoLines(letters.Where(l =>
+                !string.IsNullOrWhiteSpace(l.Value) && strategy.Selects(l, area))))
+            .Where(line => line.Count > 0)
+            .Select(PdfDocumentRedactionExtensions.BoundingBoxOf)
+            .ToList();
+
+    /// <summary>
     /// #1753: the drawn and annotated decorations sized to one of
-    /// <paramref name="words"/>, removed; returns how many. Only
-    /// <c>RedactText</c> asks, under every width policy: a dragged area is not
-    /// a word.
+    /// <paramref name="words"/>, removed; returns how many. <c>RedactText</c>
+    /// asks, under every width policy, and so does an area that is a text
+    /// selection (#1905): a dragged area is not a word.
     /// </summary>
     private static int RemoveWordDecorations(
         PdfPage page, ref IReadOnlyList<ContentOperator> working, IReadOnlyList<PdfRectangle> words)
@@ -595,5 +674,52 @@ public static class PdfPageRedactionExtensions
         var removed = Excise.Core.Document.PdfAttachmentGraph.RemoveAll(document);
         if (removed.Count > 0)
             document.RedactionLedger.RecordRemovedAttachments(removed);
+    }
+}
+
+/// <summary>
+/// One mark of an area-redaction batch: an area of <paramref name="Page"/> in
+/// content-stream coordinates. <paramref name="IsTextSelection"/> says it came
+/// from a text selection, so its runs are words (#1905).
+/// </summary>
+internal readonly record struct AreaRedactionMark(PdfPage Page, PdfRectangle Area, bool IsTextSelection);
+
+/// <summary>What a batch of area marks did: each mark's report, and the fonts the one font edit could not touch.</summary>
+internal sealed record AreaRedactionBatchReport(
+    IReadOnlyList<RedactionReport> Marks, IReadOnlyList<CarrierResult> FontRefusals);
+
+/// <summary>
+/// #2066: a batch of area marks applied as one redaction, the GUI's Apply.
+/// </summary>
+internal static class AreaRedactionBatch
+{
+    /// <summary>
+    /// Apply <paramref name="marks"/> in order, then take the removed characters
+    /// out of the fonts once. The font edit compares what the document drew
+    /// before the first mark with what it draws after the last, which is the
+    /// same set N per-mark comparisons would remove, for two document walks
+    /// instead of 2N. A later batch takes its own snapshot.
+    /// </summary>
+    internal static AreaRedactionBatchReport Apply(
+        PdfDocument document, IReadOnlyList<AreaRedactionMark> marks, RedactionOptions options)
+    {
+        System.ArgumentNullException.ThrowIfNull(document);
+        System.ArgumentNullException.ThrowIfNull(marks);
+        System.ArgumentNullException.ThrowIfNull(options);
+        foreach (var mark in marks)
+            if (!ReferenceEquals(mark.Page.Document, document))
+                throw new System.ArgumentException("every mark must be on a page of the document", nameof(marks));
+
+        var fontUsageBefore = options.ScrubFontGlyphs ? FontGlyphUsage.Collect(document) : null;
+        var perMark = options with { ScrubFontGlyphs = false };
+        var reports = new List<RedactionReport>(marks.Count);
+        foreach (var mark in marks)
+            reports.Add(mark.IsTextSelection
+                ? mark.Page.RedactTextRunsWithReport(new[] { mark.Area }, perMark)
+                : mark.Page.RedactAreaWithReport(mark.Area, perMark));
+        var fontRefusals = fontUsageBefore != null
+            ? PdfPageRedactionExtensions.ScrubFontGlyphs(document, fontUsageBefore)
+            : System.Array.Empty<CarrierResult>();
+        return new AreaRedactionBatchReport(reports, fontRefusals);
     }
 }

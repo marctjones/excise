@@ -157,7 +157,94 @@ public sealed class RedactionFontGlyphScrubTests : IDisposable
         FontCarrierProbe.Residue(decrypted, traces).Should().BeEmpty();
     }
 
+    /// <summary>
+    /// #2066: an area redaction refuses the same font the same way, and the
+    /// refusal reaches the redacted-copy safety report the GUI shows, because
+    /// the GUI drops the engine's report.
+    /// </summary>
+    [Fact]
+    public void AreaRedaction_AFontTheEditCannotHandle_IsReportedToTheSafetyReportAndLeftUnedited()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        var before = WithCidToGidMapStream(ExciseDoc(new[] { "Invoice approved by the finance office.", "Signed: " + Term }));
+        byte[] after;
+        using (var doc = PdfDocument.Open(before))
+        {
+            var report = doc.GetPage(1).RedactAreaWithReport(TermBox(doc, 1, Term), RedactionOptions.Default with { DrawBox = false });
+            report.Carriers.Should().ContainSingle(c => c.Carrier.StartsWith("font ", StringComparison.Ordinal))
+                .Which.RefusedReason.Should().Contain("/CIDToGIDMap is a stream");
+            report.IsCleanSuccess.Should().BeFalse("a font that still holds the removed characters is not a clean result");
+            var safety = RedactedCopySafetyPolicy.Evaluate(doc, RedactedCopySafetyRequest.ForAreas(
+                Array.Empty<RedactedCopySafetyArea>(), RedactionOptions.Default));
+            safety.Warnings.Should().ContainSingle(w => w.StartsWith("Carrier font ", StringComparison.Ordinal))
+                .Which.Should().Contain("/CIDToGIDMap is a stream");
+            after = doc.SaveToBytes();
+        }
+
+        FontStreams(after).Should().BeEquivalentTo(FontStreams(before),
+            "a refused font is not half-edited: program and /ToUnicode stay byte for byte");
+        Measure(Save(after), Term).Should().OnlyContain(c => c.ToUnicodeCodes.Count > 0,
+            "anti-vacuity: the reported font really still maps the term");
+    }
+
+    /// <summary>
+    /// #2066: the GUI's apply, a batch of area marks with one font edit at the
+    /// end. A character the batch removes on one page and the next page still
+    /// draws keeps its glyph; a later batch (marks added after the first apply)
+    /// takes its own snapshot and removes what it stops drawing.
+    /// </summary>
+    [Fact]
+    public void AreaBatch_OneFontEditPerBatch_ASecondBatchRemovesWhatItStopsDrawing()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        var before = ExciseDoc(new[] { "Invoice approved by the finance office.", "Signed: " + Term }, new[] { "Жук" });
+        var traces = Measure(Save(before), Term).Where(c => c.ToUnicodeCodes.Count > 0).ToList();
+        traces.Should().HaveCount(Term.Length);
+        var options = RedactionOptions.Default with { DrawBox = false };
+
+        byte[] first, second;
+        using (var doc = PdfDocument.Open(before))
+        {
+            var batch = AreaRedactionBatch.Apply(doc, new[]
+            {
+                new AreaRedactionMark(doc.GetPage(1), TermBox(doc, 1, Term), IsTextSelection: false),
+                new AreaRedactionMark(doc.GetPage(1), TermBox(doc, 1, "approved"), IsTextSelection: true),
+            }, options);
+            batch.FontRefusals.Should().BeEmpty();
+            batch.Marks.Should().HaveCount(2);
+            first = doc.SaveToBytes();
+
+            var again = AreaRedactionBatch.Apply(doc, new[]
+            {
+                new AreaRedactionMark(doc.GetPage(2), TermBox(doc, 2, "Жук"), IsTextSelection: false),
+            }, options);
+            again.FontRefusals.Should().BeEmpty();
+            second = doc.SaveToBytes();
+        }
+
+        var firstPath = Save(first);
+        Measure(firstPath, "Жук").Should().OnlyContain(c => c.NonEmptyOutlineGids.Count > 0 && c.ToUnicodeCodes.Count > 0,
+            "page 2 still draws Ж, у and к after the first batch");
+        Measure(firstPath, "ов").Should().OnlyContain(c => c.ToUnicodeCodes.Count == 0 && c.NonEmptyOutlineGids.Count == 0,
+            "о and в are drawn nowhere after the first batch");
+        MutoolTextExtractor.ExtractPage(firstPath, 2)!.Should().Contain("Жук");
+
+        var secondPath = Save(second);
+        Measure(secondPath, Term).Should().OnlyContain(c => c.ToUnicodeCodes.Count == 0 && c.NonEmptyOutlineGids.Count == 0);
+        FontCarrierProbe.Residue(secondPath, traces).Should().BeEmpty();
+        SavedPdfLeakScanner.FindTerm(second, Term).Should().BeEmpty();
+        MutoolTextExtractor.ExtractPage(secondPath, 1)!.Should().Contain("Invoice").And.NotContain("approved").And.NotContain(Term);
+    }
+
     // ---- helpers ---------------------------------------------------------------
+
+    /// <summary>The box around the one occurrence of <paramref name="text"/> on <paramref name="page"/>.</summary>
+    private static PdfRectangle TermBox(PdfDocument doc, int page, string text)
+    {
+        var match = PdfDocumentRedactionExtensions.FindTextMatches(doc.GetPage(page).Letters, text, caseSensitive: true);
+        match.Should().ContainSingle($"anti-vacuity: '{text}' is drawn once on page {page}");
+        return PdfDocumentRedactionExtensions.BoundingBoxOf(match[0]);
+    }
 
     private static IReadOnlyList<FontCarrierHit> Measure(string path, string chars) => FontCarrierProbe.Measure(path, chars);
 
