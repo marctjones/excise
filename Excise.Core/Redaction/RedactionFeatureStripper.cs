@@ -1388,7 +1388,7 @@ internal static class RedactionFeatureStripper
             Resolve(document, document.Catalog.GetOptional("AcroForm") ?? PdfNull.Instance) is PdfDictionary);
     }
 
-    private const string CutItemsRow = "structure-tree reference(s) to a removed object";
+    internal const string CutItemsRow = "structure-tree reference(s) to a removed object";
 
     /// <summary>
     /// #1881: the flatten takes every widget off its page and <c>/AcroForm</c>
@@ -1416,8 +1416,15 @@ internal static class RedactionFeatureStripper
     /// tree still names each one (§14.7.5.3 <c>/OBJR</c>), and the writer ships
     /// what is reachable: a link's <c>/URI</c>, a note's <c>/Contents</c>. Every
     /// content item that names a <paramref name="removed"/> annotation is cut;
-    /// one the graph still reaches after is refused.
+    /// one the graph still reaches after is refused. The redaction's own
+    /// annotation removal (<see cref="InteractiveRedactionScrubber"/>: an
+    /// annotation over a redacted area, or sized to a redacted word, #1753)
+    /// calls this overload.
     /// </summary>
+    internal static int CutRemovedAnnotations(
+        PdfDocument document, HashSet<PdfDictionary> removed, ICollection<CarrierResult> refusals)
+        => CutRemovedAnnotations(document, ReachableDictionaries(document), removed, refusals);
+
     private static int CutRemovedAnnotations(
         PdfDocument document, List<PdfDictionary> reachable, HashSet<PdfDictionary> removed,
         ICollection<CarrierResult> refusals)

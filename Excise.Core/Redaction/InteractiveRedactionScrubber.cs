@@ -14,12 +14,12 @@ internal static class InteractiveRedactionScrubber
         area = area.Normalize();
         var changed = false;
         var pruneCandidates = new HashSet<int>();
+        var removedAnnots = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
 
         changed |= ScrubFormFields(page, IntersectsAny([area]), pruneCandidates);
-        changed |= RemoveIntersectingAnnotations(page, area, pruneCandidates);
+        changed |= RemoveIntersectingAnnotations(page, area, pruneCandidates, removedAnnots);
 
-        if (pruneCandidates.Count > 0)
-            PruneUnreachableCandidates(page.Document, pruneCandidates);
+        FinishRemoval(page.Document, pruneCandidates, removedAnnots);
 
         if (changed)
             page.InvalidateTextExtractionCache();
@@ -150,6 +150,7 @@ internal static class InteractiveRedactionScrubber
     {
         var changed = false;
         var pruneCandidates = new HashSet<int>();
+        var removedAnnots = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
 
         var drawn = new HashSet<PdfDictionary>(drawingWidgets, ReferenceEqualityComparer.Instance);
         var byRect = IntersectsAny(unattributedAreas.Select(a => a.Normalize()).ToList());
@@ -160,10 +161,9 @@ internal static class InteractiveRedactionScrubber
                                    || byRect(p, field, widgets),
             pruneCandidates, term, caseSensitive, wholeWord, state);
         foreach (var area in matchAreas)
-            changed |= RemoveIntersectingAnnotations(page, area.Normalize(), pruneCandidates);
+            changed |= RemoveIntersectingAnnotations(page, area.Normalize(), pruneCandidates, removedAnnots);
 
-        if (pruneCandidates.Count > 0)
-            PruneUnreachableCandidates(page.Document, pruneCandidates);
+        FinishRemoval(page.Document, pruneCandidates, removedAnnots);
 
         if (changed)
             page.InvalidateTextExtractionCache();
@@ -766,15 +766,17 @@ internal static class InteractiveRedactionScrubber
     /// to one of <paramref name="words"/> (<see cref="WordDecorationRemover.IsSizedTo"/>):
     /// an Underline or StrikeOut whose Rect is the stroke alone misses the
     /// glyph centreline the area scrub tests, and at the word's width it states
-    /// the removed word's width once the gap closes. Returns how many went.
+    /// the removed word's width: beside a closed gap, and on top of the
+    /// covering box under every width policy (an annotation draws above the
+    /// page). Returns how many went.
     /// </summary>
     public static int RemoveWordSizedAnnotations(PdfPage page, IReadOnlyList<PdfRectangle> words)
     {
         var pruneCandidates = new HashSet<int>();
+        var removedAnnots = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
         var removed = RemoveAnnotations(page, rect => words.Any(word => WordDecorationRemover.IsSizedTo(rect, word)),
-            pruneCandidates);
-        if (pruneCandidates.Count > 0)
-            PruneUnreachableCandidates(page.Document, pruneCandidates);
+            pruneCandidates, removedAnnots);
+        FinishRemoval(page.Document, pruneCandidates, removedAnnots);
         if (removed > 0)
             page.InvalidateTextExtractionCache();
         return removed;
@@ -783,13 +785,23 @@ internal static class InteractiveRedactionScrubber
     private static bool RemoveIntersectingAnnotations(
         PdfPage page,
         PdfRectangle area,
-        HashSet<int> pruneCandidates)
-        => RemoveAnnotations(page, rect => rect.IntersectsWith(area), pruneCandidates) > 0;
+        HashSet<int> pruneCandidates,
+        HashSet<PdfDictionary> removedAnnots)
+        => RemoveAnnotations(page, rect => rect.IntersectsWith(area), pruneCandidates, removedAnnots) > 0;
 
+    /// <summary>
+    /// Remove every non-widget annotation whose <c>/Rect</c> <paramref name="matches"/>,
+    /// and the Popup whose <c>/Parent</c> is one of them: its window, whose
+    /// <c>/Parent</c> would keep it in the file (the profile's removal drops it
+    /// the same way). Each removed dictionary is added to
+    /// <paramref name="removedAnnots"/> for <see cref="FinishRemoval"/>.
+    /// Returns how many matched; a Popup removed with its parent is not counted.
+    /// </summary>
     private static int RemoveAnnotations(
         PdfPage page,
         Func<PdfRectangle, bool> matches,
-        HashSet<int> pruneCandidates)
+        HashSet<int> pruneCandidates,
+        HashSet<PdfDictionary> removedAnnots)
     {
         var annotsObj = page.Dictionary.GetOptional("Annots");
         if (annotsObj == null)
@@ -822,10 +834,47 @@ internal static class InteractiveRedactionScrubber
 
             CaptureObjectGraph(page.Document, annotObj, pruneCandidates);
             annots.RemoveAt(i);
+            removedAnnots.Add(annot);
             removed++;
         }
 
+        if (removed > 0)
+        {
+            for (var i = annots.Count - 1; i >= 0; i--)
+            {
+                if (page.Document.Resolve(annots[i]) is PdfDictionary popup
+                    && popup.GetNameOrNull("Subtype") == "Popup"
+                    && page.Document.Resolve(popup.GetOptional("Parent") ?? PdfNull.Instance) is PdfDictionary parent
+                    && removedAnnots.Contains(parent))
+                {
+                    CaptureObjectGraph(page.Document, annots[i], pruneCandidates);
+                    annots.RemoveAt(i);
+                    removedAnnots.Add(popup);
+                }
+            }
+        }
+
         return removed;
+    }
+
+    /// <summary>
+    /// #2045: an annotation taken off its page is still in the file while the
+    /// structure tree names it (§14.7.5.3 <c>/OBJR</c>), <c>/Contents</c> and
+    /// all. The profile's own walk cuts those items; the cut, and any removed
+    /// annotation still reachable after it, go on the ledger (rule 6: reported,
+    /// never silent). Then what nothing reaches any more is freed.
+    /// </summary>
+    private static void FinishRemoval(
+        PdfDocument document, HashSet<int> pruneCandidates, HashSet<PdfDictionary> removedAnnots)
+    {
+        if (removedAnnots.Count > 0)
+        {
+            var refusals = new List<CarrierResult>();
+            var cut = RedactionFeatureStripper.CutRemovedAnnotations(document, removedAnnots, refusals);
+            document.RedactionLedger.RecordAnnotationCut(cut, refusals);
+        }
+        if (pruneCandidates.Count > 0)
+            PruneUnreachableCandidates(document, pruneCandidates);
     }
 
     private static bool TryGetRect(PdfDocument document, PdfObject? rectObj, out PdfRectangle rect)

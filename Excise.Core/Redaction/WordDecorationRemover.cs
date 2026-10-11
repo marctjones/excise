@@ -8,9 +8,12 @@ namespace Excise.Core.Text.Segmentation;
 
 /// <summary>
 /// #1753 — the underline, box, strike-through or highlight a producer drew to
-/// one redacted word's extent goes with the word. Once a width-closing policy
-/// moves the text after the word, a decoration left at the old width states
-/// the removed word's width: the issue recovered 8 of 8 words that way.
+/// one redacted word's extent goes with the word, under every width policy.
+/// Once a width-closing policy moves the text after the word, a decoration
+/// left at the old width states the removed word's width: the issue recovered
+/// 8 of 8 words that way. Under a keep-layout policy an underline below the
+/// covering box, or a box edge beside it, states the width the box was
+/// widened to blur.
 /// </summary>
 /// <remarks>
 /// <para>A decoration is sized to a word when both of its x-edges lie within
