@@ -160,6 +160,52 @@ public class SeparatorEquivalentRedactionTests
     private static Letter L(string v, double x, double y, double w) =>
         new(v, new PdfRectangle(x, y, x + w, y + 12), 12, "F1", x, y, w, v.Length > 0 ? v[0] : ' ');
 
+    /// <summary>"an open-" ending one line and "source text" starting the next.</summary>
+    private static Letter[] HyphenSplitCompound(double secondLineX)
+    {
+        var letters = new List<Letter>();
+        var x = 60.0;
+        foreach (var c in "an open-") { letters.Add(L(c.ToString(), x, 700, 6)); x += 6; }
+        x = secondLineX;
+        foreach (var c in "source text") { letters.Add(L(c.ToString(), x, 686, 6)); x += 6; }
+        return letters.ToArray();
+    }
+
+    [Theory]
+    [InlineData("open source")]
+    [InlineData("open-source")]
+    public void AHyphenSplitCompound_TheMatcherDoesNotJoin_IsReported_NotLeftSilent(string term)
+    {
+        // The second line starts to the RIGHT of where the first ends: another
+        // column, not the next line of this block, so the matcher does not join
+        // it. Search (words joined by a space) still reads "open- source", so
+        // the occurrence must be reported. Before, the net joined the break as
+        // "opensource" and a separated term saw nothing: neither removed nor reported.
+        var letters = HyphenSplitCompound(secondLineX: 300);
+        PdfDocumentRedactionExtensions.FindTextMatches(letters, term, caseSensitive: false,
+            separators: SeparatorMatching.Default).Should().BeEmpty("sanity: the matcher does not join another column");
+
+        var hyphenated = new List<HyphenatedTermCandidate>();
+        var wordWrapped = new List<WordWrapTermCandidate>();
+        PdfDocumentRedactionExtensions.FindWrappedCandidates(
+            letters, term, caseSensitive: false, wholeWord: false, 1, hyphenated, wordWrapped, SeparatorMatching.Default);
+
+        hyphenated.Should().ContainSingle().Which.ToString().Should().Be("\"open-\" / \"source\"");
+        wordWrapped.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void AHyphenSplitCompound_AtARealWrap_IsMatched_AndNotAlsoReported()
+    {
+        var letters = HyphenSplitCompound(secondLineX: 60);
+        PdfDocumentRedactionExtensions.FindTextMatches(letters, "open source", caseSensitive: false,
+            separators: SeparatorMatching.Default).Should().ContainSingle();
+        var hyphenated = new List<HyphenatedTermCandidate>();
+        PdfDocumentRedactionExtensions.FindWrappedCandidates(
+            letters, "open source", caseSensitive: false, wholeWord: false, 1, hyphenated, [], SeparatorMatching.Default);
+        hyphenated.Should().BeEmpty("the matcher bridges a wrap; a match is not a candidate");
+    }
+
     [Fact]
     public void AWordSplitByALineEndHyphen_IsStillReportedNotJoined_WithBothOptionsOn()
     {

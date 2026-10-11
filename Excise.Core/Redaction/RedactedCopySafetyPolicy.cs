@@ -248,7 +248,7 @@ public static class RedactedCopySafetyPolicy
         {
             // Runs after any surgical scrub so it reports what survived, not
             // what was present before the requested policy executed.
-            var carrierAudit = RedactionCarrierAudit.Inspect(document, terms);
+            var carrierAudit = RedactionCarrierAudit.Inspect(document, terms, redaction.Separators);
             if (carrierAudit.HasUnexaminedCarriers)
                 warnings.AddRange(carrierAudit.Describe());
         }

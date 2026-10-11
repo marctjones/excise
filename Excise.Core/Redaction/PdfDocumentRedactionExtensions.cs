@@ -1001,6 +1001,40 @@ public static class PdfDocumentRedactionExtensions
             }
         }
 
+        // A term with a separator in it ('open source', 'open-source') reads a
+        // compound split by a line-end hyphen as 'open-' + 'source', not the
+        // 'opensource' the pass above joins. Where the matcher bridges the break
+        // (a wrap, which keeps the hyphen) it was matched; anywhere else (the next
+        // column's first line) search still finds it, so it is reported here
+        // rather than left neither removed nor reported.
+        if (TermMatch.IsFlexible(MatchingNormalization.Fold(searchText).Trim(), separators))
+        {
+            var kept = BuildSearchText(lines, lines.StreamOrder, joinEveryLineChange: true, keepLineEndHyphen: true);
+            foreach (var (_, from, to) in Locate(letters, kept, searchText, caseSensitive, wholeWord, accept: _ => true, separators))
+            {
+                Letter? last = null;
+                for (var v = kept.CharToLetter[from]; v <= kept.CharToLetter[to]; v++)
+                {
+                    var next = kept.View[v];
+                    if (string.IsNullOrWhiteSpace(next.Value)) continue;
+                    var previous = last;
+                    last = next;
+                    if (previous == null || lines.SameLine(previous, next) || lines.IsWrap(previous, next)) continue;
+                    // Any other break was joined by a space above, and reported there.
+                    if (!IsHyphen(previous.Value)) break;
+
+                    var at = kept.CharToLetter.IndexOf(v, from);
+                    if (at < 0 || at > to) break;
+                    var before = kept.Text[from..at].TrimEnd();
+                    if (before.EndsWith(previous.Value, StringComparison.Ordinal))
+                        before = before[..^previous.Value.Length];
+                    var candidate = new HyphenatedTermCandidate(pageNumber, before, kept.Text[at..(to + 1)]);
+                    if (!hyphenated.Contains(candidate)) hyphenated.Add(candidate);
+                    break;
+                }
+            }
+        }
+
         // #1883: a line with a wide gap inside it may end before the gap (a
         // column of one line beside the block). Not a wrap excise can confirm,
         // and not one to call clean.
@@ -1126,7 +1160,10 @@ public static class PdfDocumentRedactionExtensions
     /// <param name="lines">The page's line model.</param>
     /// <param name="order">The view letters to read, in order: the stream, or one block line after line (#1883).</param>
     /// <param name="joinEveryLineChange">Join every line change (the net) rather than only a wrap.</param>
-    private static SearchText BuildSearchText(PageLines lines, IReadOnlyList<int> order, bool joinEveryLineChange)
+    /// <param name="keepLineEndHyphen">With <paramref name="joinEveryLineChange"/>, keep a line-end hyphen
+    /// as the matcher reads it instead of dropping it.</param>
+    private static SearchText BuildSearchText(
+        PageLines lines, IReadOnlyList<int> order, bool joinEveryLineChange, bool keepLineEndHyphen = false)
     {
         var view = new List<Letter>(order.Count);
         var spanStart = new List<int>(order.Count);
@@ -1153,7 +1190,7 @@ public static class PdfDocumentRedactionExtensions
                         : lines.IsWrap(previous, current));
                 if (lineChange && IsHyphen(previous.Value))
                 {
-                    if (joinEveryLineChange)
+                    if (joinEveryLineChange && !keepLineEndHyphen)
                     {
                         sb.Length -= previous.Value.Length;
                         characterToLetter.RemoveRange(characterToLetter.Count - previous.Value.Length, previous.Value.Length);

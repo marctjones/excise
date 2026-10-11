@@ -69,6 +69,17 @@ internal sealed record RedactionCarrierAudit(
     public static RedactionCarrierAudit Inspect(
         PdfDocument document,
         IEnumerable<string>? requestedTerms = null)
+        => Inspect(document, requestedTerms, SeparatorMatching.Default);
+
+    /// <summary>
+    /// <see cref="Inspect(PdfDocument, IEnumerable{string})"/> under the separator rule
+    /// the redaction's scrub used, so a carrier still holding a spelling the scrub
+    /// matches but did not cut (a ReportOnly carrier) is reported.
+    /// </summary>
+    internal static RedactionCarrierAudit Inspect(
+        PdfDocument document,
+        IEnumerable<string>? requestedTerms,
+        SeparatorMatching separators)
     {
         ArgumentNullException.ThrowIfNull(document);
 
@@ -91,13 +102,13 @@ internal sealed record RedactionCarrierAudit(
         IReadOnlyList<string>? termsToFind = actionableTerms.Count > 0 ? actionableTerms : null;
 
         return new RedactionCarrierAudit(
-            CountOutlineTitles(document, termsToFind),
-            CountAnnotationsWithText(document, termsToFind),
-            CountUnexaminedXfaPackets(document, termsToFind),
-            CountPageLabelPrefixes(document, termsToFind),
-            CountNameTreeKeys(document, termsToFind),
-            CountSignatures(document, termsToFind),
-            CountOptionalContentStrings(document, termsToFind),
+            CountOutlineTitles(document, termsToFind, separators),
+            CountAnnotationsWithText(document, termsToFind, separators),
+            CountUnexaminedXfaPackets(document, termsToFind, separators),
+            CountPageLabelPrefixes(document, termsToFind, separators),
+            CountNameTreeKeys(document, termsToFind, separators),
+            CountSignatures(document, termsToFind, separators),
+            CountOptionalContentStrings(document, termsToFind, separators),
             shortTerms);
     }
 
@@ -173,11 +184,11 @@ internal sealed record RedactionCarrierAudit(
         return lines;
     }
 
-    private static int CountOutlineTitles(PdfDocument document, IReadOnlyList<string>? terms)
+    private static int CountOutlineTitles(PdfDocument document, IReadOnlyList<string>? terms, SeparatorMatching separators)
     {
         try
         {
-            return CountTitles(PdfOutlineParser.Parse(document), terms);
+            return CountTitles(PdfOutlineParser.Parse(document), terms, separators);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
@@ -188,18 +199,19 @@ internal sealed record RedactionCarrierAudit(
         }
     }
 
-    private static int CountTitles(IReadOnlyList<PdfOutlineItem> items, IReadOnlyList<string>? terms)
+    private static int CountTitles(
+        IReadOnlyList<PdfOutlineItem> items, IReadOnlyList<string>? terms, SeparatorMatching separators)
     {
         var n = 0;
         foreach (var item in items)
         {
-            if (!string.IsNullOrWhiteSpace(item.Title) && Matches(item.Title, terms)) n++;
-            n += CountTitles(item.Children, terms);
+            if (!string.IsNullOrWhiteSpace(item.Title) && Matches(item.Title, terms, separators)) n++;
+            n += CountTitles(item.Children, terms, separators);
         }
         return n;
     }
 
-    private static int CountAnnotationsWithText(PdfDocument document, IReadOnlyList<string>? terms)
+    private static int CountAnnotationsWithText(PdfDocument document, IReadOnlyList<string>? terms, SeparatorMatching separators)
     {
         var n = 0;
         for (var p = 1; p <= document.PageCount; p++)
@@ -218,8 +230,8 @@ internal sealed record RedactionCarrierAudit(
                     if (document.Resolve(item) is not PdfDictionary annotation) continue;
                     var contents = annotation.GetStringOrNull("Contents");
                     var title = annotation.GetStringOrNull("T");
-                    if ((!string.IsNullOrWhiteSpace(contents) && Matches(contents, terms)) ||
-                        (!string.IsNullOrWhiteSpace(title) && Matches(title, terms)))
+                    if ((!string.IsNullOrWhiteSpace(contents) && Matches(contents, terms, separators)) ||
+                        (!string.IsNullOrWhiteSpace(title) && Matches(title, terms, separators)))
                     {
                         n++;
                     }
@@ -235,14 +247,14 @@ internal sealed record RedactionCarrierAudit(
         return n;
     }
 
-    private static int CountPageLabelPrefixes(PdfDocument document, IReadOnlyList<string>? terms)
+    private static int CountPageLabelPrefixes(PdfDocument document, IReadOnlyList<string>? terms, SeparatorMatching separators)
     {
         try
         {
             return PdfNumberTree.Enumerate(document, document.Catalog.GetOptional("PageLabels"))
                 .Count(pair => document.Resolve(pair.Value) is PdfDictionary label
                                && document.Resolve(label.GetOptional("P") ?? PdfNull.Instance) is PdfString prefix
-                               && !string.IsNullOrWhiteSpace(prefix.Value) && Matches(prefix.Value, terms));
+                               && !string.IsNullOrWhiteSpace(prefix.Value) && Matches(prefix.Value, terms, separators));
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
@@ -254,7 +266,7 @@ internal sealed record RedactionCarrierAudit(
     /// Keys are identifiers ("page.3", "section.2.1") more often than prose, so
     /// they are counted against a term only: with none there is nothing to find.
     /// </summary>
-    private static int CountNameTreeKeys(PdfDocument document, IReadOnlyList<string>? terms)
+    private static int CountNameTreeKeys(PdfDocument document, IReadOnlyList<string>? terms, SeparatorMatching separators)
     {
         if (terms == null) return 0;
         try
@@ -266,7 +278,7 @@ internal sealed record RedactionCarrierAudit(
                         .Select(pair => document.Resolve(pair.Key)).OfType<PdfString>().Select(key => key.Value));
             if (document.Resolve(document.Catalog.GetOptional("Dests") ?? PdfNull.Instance) is PdfDictionary legacy)
                 keys.AddRange(legacy.Keys.Select(key => key.Value));
-            return keys.Count(key => Matches(key, terms));
+            return keys.Count(key => Matches(key, terms, separators));
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
@@ -279,7 +291,7 @@ internal sealed record RedactionCarrierAudit(
     /// area redaction over a signature block is the common case); against a term,
     /// each signer string and certificate that still holds it.
     /// </summary>
-    private static int CountSignatures(PdfDocument document, IReadOnlyList<string>? terms)
+    private static int CountSignatures(PdfDocument document, IReadOnlyList<string>? terms, SeparatorMatching separators)
     {
         try
         {
@@ -287,10 +299,10 @@ internal sealed record RedactionCarrierAudit(
             if (terms == null) return signatures.Count + (document.Catalog.GetOptional("DSS") != null ? 1 : 0);
             return signatures.Sum(sig => RedactionFeatureStripper.SignerKeys.Count(
                        key => document.Resolve(sig.GetOptional(key) ?? PdfNull.Instance) is PdfString value
-                              && Matches(value.Value, terms)))
+                              && Matches(value.Value, terms, separators)))
                    + RedactionFeatureStripper.CertificateData(document, signatures).Count(
-                       bytes => Matches(System.Text.Encoding.UTF8.GetString(bytes), terms)
-                                || Matches(System.Text.Encoding.BigEndianUnicode.GetString(bytes), terms));
+                       bytes => Matches(System.Text.Encoding.UTF8.GetString(bytes), terms, separators)
+                                || Matches(System.Text.Encoding.BigEndianUnicode.GetString(bytes), terms, separators));
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
@@ -302,14 +314,14 @@ internal sealed record RedactionCarrierAudit(
     /// #1862: every layer name and label when there is no term, like outline
     /// titles; against a term, each optional-content string that still holds it.
     /// </summary>
-    private static int CountOptionalContentStrings(PdfDocument document, IReadOnlyList<string>? terms)
+    private static int CountOptionalContentStrings(PdfDocument document, IReadOnlyList<string>? terms, SeparatorMatching separators)
     {
         try
         {
             var strings = terms == null
                 ? PdfDocumentSanitizer.OptionalContentLabels(document)
                 : PdfDocumentSanitizer.OptionalContentStrings(document);
-            return strings.Count(s => !string.IsNullOrWhiteSpace(s.Text) && Matches(s.Text, terms));
+            return strings.Count(s => !string.IsNullOrWhiteSpace(s.Text) && Matches(s.Text, terms, separators));
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
@@ -319,11 +331,12 @@ internal sealed record RedactionCarrierAudit(
 
     private static int CountUnexaminedXfaPackets(
         PdfDocument document,
-        IReadOnlyList<string>? terms)
+        IReadOnlyList<string>? terms,
+        SeparatorMatching separators)
     {
         try
         {
-            return XfaXmlCarrier.CountUnexaminedPackets(document, terms);
+            return XfaXmlCarrier.CountUnexaminedPackets(document, terms, caseSensitive: false, separators);
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
@@ -331,6 +344,6 @@ internal sealed record RedactionCarrierAudit(
         }
     }
 
-    private static bool Matches(string value, IReadOnlyList<string>? terms) =>
-        terms == null || TermMatch.Holds(value, terms, caseSensitive: false, wholeWord: false);
+    private static bool Matches(string value, IReadOnlyList<string>? terms, SeparatorMatching separators) =>
+        terms == null || TermMatch.Holds(value, terms, caseSensitive: false, wholeWord: false, separators);
 }

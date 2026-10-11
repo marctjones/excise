@@ -224,7 +224,7 @@ internal static class TermMatch
     /// matches: it is not exact and the term has a separator between two other
     /// characters. Otherwise every path keeps its literal comparison.
     /// </summary>
-    private static bool IsFlexible(string term, SeparatorMatching separators)
+    internal static bool IsFlexible(string term, SeparatorMatching separators)
     {
         if (separators.IsExact) return false;
         var first = 0;
