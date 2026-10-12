@@ -50,6 +50,10 @@ finds "strasse". A match that covers part of a letter that folds to two ("ss" in
 character matches only itself. Regex keeps the regular-expression engine's own
 case-insensitive rule, which does not fold "ß" to "ss".
 
+A letter drawn several times on top of itself to look bold (copies a fraction of a point
+apart) reads once in search, page text and copied text, so "test" finds a "Test" stamped
+three times per letter; text redaction removes every copy.
+
 ## Typewriter text on flat PDFs
 
 1. Click **✎ Type** in the toolbar.

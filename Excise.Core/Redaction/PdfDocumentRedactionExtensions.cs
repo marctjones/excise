@@ -1459,77 +1459,6 @@ public static class PdfDocumentRedactionExtensions
     }
 
     /// <summary>
-    /// Collapse OVERPRINTED glyphs — runs of adjacent letters with the same
-    /// value stamped on top of one another — into a single representative,
-    /// returning the view plus, for each view index, the first and last
-    /// original letter indices it stands for (#1047).
-    /// </summary>
-    /// <remarks>
-    /// <para>Faux-bold and drop-shadow effects are produced by drawing the same
-    /// text several times at sub-point offsets. The letter model records every
-    /// stamp, correctly — but the matcher reads the letters in order, so a
-    /// 4x-stamped line reads <c>TTTTeeeesssstttt</c> and no search for
-    /// <c>test</c> can match it. The term survives and RedactText reports
-    /// success, which is the failure mode CLAUDE.md's Limitations #1 describes:
-    /// excise cannot redact what excise cannot read.</para>
-    ///
-    /// <para>The discriminator is geometric, not textual, because a genuine
-    /// double letter must NOT collapse. In <c>letter</c> the two <c>t</c>s sit a
-    /// full glyph-width apart; overprinted copies sit on top of each other. So
-    /// two same-valued neighbours merge only when their glyph rectangles are
-    /// nearly coincident — measured against glyph SIZE, so it holds at any
-    /// scale.</para>
-    ///
-    /// <para>Collapsing is only ever a MATCHING view. Every original letter is
-    /// restored before removal, so all stamps are deleted; keeping one would
-    /// leave the text drawn and extractable.</para>
-    /// </remarks>
-    internal static (List<Letter> View, List<int> SpanStart, List<int> SpanEnd)
-        CollapseOverprintedGlyphs(IReadOnlyList<Letter> letters)
-    {
-        var view = new List<Letter>(letters.Count);
-        var spanStart = new List<int>(letters.Count);
-        var spanEnd = new List<int>(letters.Count);
-
-        for (var i = 0; i < letters.Count; i++)
-        {
-            view.Add(letters[i]);
-            spanStart.Add(i);
-
-            var last = i;
-            while (last + 1 < letters.Count && IsOverprintOf(letters[last], letters[last + 1]))
-                last++;
-
-            spanEnd.Add(last);
-            i = last;
-        }
-
-        return (view, spanStart, spanEnd);
-    }
-
-    /// <summary>
-    /// Whether <paramref name="b"/> is the same glyph as <paramref name="a"/>
-    /// stamped essentially on top of it.
-    /// </summary>
-    private static bool IsOverprintOf(Letter a, Letter b)
-    {
-        if (!string.Equals(a.Value, b.Value, StringComparison.Ordinal)) return false;
-        if (a.Value.Length == 0 || char.IsWhiteSpace(a.Value[0])) return false;
-
-        // Tolerance from glyph size, so it scales with the type. A quarter of a
-        // glyph is far below the ~1 advance width separating real neighbours
-        // and far above the sub-point offsets faux-bold uses (observed: 0.2pt
-        // horizontal and 0.4pt vertical on a 10pt glyph).
-        var w = Math.Max(Math.Abs(a.Width), 0.01);
-        var h = Math.Max(Math.Abs(a.GlyphRectangle.Height), 0.01);
-        var tolX = w * 0.25;
-        var tolY = h * 0.25;
-
-        return Math.Abs(a.StartX - b.StartX) <= tolX
-            && Math.Abs(a.StartY - b.StartY) <= tolY;
-    }
-
-    /// <summary>
     /// The page's line model, which the matcher and the wrap net share: the
     /// letters with overprinted copies collapsed (#1047), the way each glyph's
     /// line runs (#1882), and the line each line wraps onto (#1791, #1883).
@@ -1599,7 +1528,9 @@ public static class PdfDocumentRedactionExtensions
 
         public PageLines(IReadOnlyList<Letter> letters)
         {
-            (View, SpanStart, SpanEnd) = CollapseOverprintedGlyphs(letters);
+            // #1047: the one overprint rule page text and words read too. A view
+            // only: every original stamp of a matched letter is removed.
+            (View, SpanStart, SpanEnd) = OverprintedGlyphs.Collapse(letters);
             StreamOrder = Enumerable.Range(0, View.Count).ToList();
             _dirAt = DirectionsOf(View);
             _rectAt = new PdfRectangle[View.Count];

@@ -696,6 +696,12 @@ public class TextExtractor
         if (letters.Count == 0)
             return Array.Empty<Word>();
 
+        // #1047: a stack of overprinted copies of one glyph (faux bold) is one
+        // letter of the word, so "Test" stamped three times per glyph reads
+        // "Test", as MuPDF reads it, and search finds it. The page's letters
+        // keep every stamp; only the words read the stack once.
+        letters = OverprintedGlyphs.Representatives(letters);
+
         var words = new List<Word>();
         var currentWordLetters = new List<Letter>();
 

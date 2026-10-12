@@ -308,7 +308,9 @@ public partial class PdfPage
     {
         var cropBox = CropBox.Normalize();
         var visible = new List<Excise.Core.Text.Letter>(letters.Count);
-        foreach (var letter in letters)
+        // #1047: collapse overprinted stacks in stream order, before any
+        // reading-order sort, so only true neighbours in the stream merge.
+        foreach (var letter in Excise.Core.Text.OverprintedGlyphs.Representatives(letters))
         {
             var glyphBox = letter.GlyphRectangle.Normalize();
             if (glyphBox.Top <= cropBox.Bottom || glyphBox.Bottom >= cropBox.Top)
