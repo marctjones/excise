@@ -330,17 +330,20 @@ public class RedactionCarrierPolicyPreferenceTests
         loaded.WholeWord.Should().BeTrue("fixture: the nested object was read");
         loaded.MatchHyphenAsSpace.Should().BeTrue("absent reads as the default, on");
         loaded.MatchClosedCompounds.Should().BeFalse("absent reads as the default, off");
+        loaded.IgnoreAccents.Should().BeTrue("absent reads as the default, on");
         loaded.ToOptions().MatchHyphenAsSpace.Should().BeTrue();
+        loaded.ToOptions().IgnoreAccents.Should().BeTrue();
 
         // The old flat format had no such keys either.
         File.WriteAllText(AppPaths.WindowSettingsPath, """{ "RedactionWholeWord": true }""");
         WindowSettings.Load().Redaction.MatchHyphenAsSpace.Should().BeTrue();
+        WindowSettings.Load().Redaction.IgnoreAccents.Should().BeTrue();
     }
 
     [Fact]
     public void TheSeparatorChoices_RoundTrip_AndReachTheEngineOptions()
     {
-        var chosen = new RedactionPreferences { MatchHyphenAsSpace = false, MatchClosedCompounds = true };
+        var chosen = new RedactionPreferences { MatchHyphenAsSpace = false, MatchClosedCompounds = true, IgnoreAccents = false };
         new WindowSettings { Redaction = chosen }.Save();
 
         var loaded = WindowSettings.Load().Redaction;
@@ -348,6 +351,8 @@ public class RedactionCarrierPolicyPreferenceTests
         var options = loaded.ToOptions();
         options.MatchHyphenAsSpace.Should().BeFalse();
         options.MatchClosedCompounds.Should().BeTrue();
+        options.IgnoreAccents.Should().BeFalse();
+        new RedactionPreferences().ToOptions().IgnoreAccents.Should().BeTrue("accents are ignored by default, as in search");
         new RedactionPreferences { Profile = RedactionProfile.Maximum, MatchClosedCompounds = true }
             .ToOptions().MatchClosedCompounds.Should().BeTrue("the profile does not reset the match rule");
     }

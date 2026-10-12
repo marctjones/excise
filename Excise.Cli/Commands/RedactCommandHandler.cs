@@ -27,6 +27,7 @@ internal static class RedactCommandHandler
             WholeWord = request.WholeWord,   // #1052
             MatchHyphenAsSpace = !request.ExactSeparators,
             MatchClosedCompounds = request.MatchClosedCompounds,
+            IgnoreAccents = !request.ExactAccents,
             DrawBox = request.DrawBox,
             // A width flag is an explicit opt-in to its own trade-off; with
             // none, the PROFILE's policy stands (Standard keeps the layout,
@@ -92,10 +93,10 @@ internal static class RedactCommandHandler
              request.CloseWidth || request.OvershootBox || request.FixedMarker || request.QuantizeGap ||
              request.PreserveLayout ||
              request.Strict || request.AllowLowConfidence || request.KeepAttachments ||
-             request.ExactSeparators || request.MatchClosedCompounds))
+             request.ExactSeparators || request.MatchClosedCompounds || request.ExactAccents))
         {
             throw new ArgumentException(
-                "--flatten-ocr cannot be combined with structural-redaction box, width, confidence, OCR-layer, attachment or separator-matching options.");
+                "--flatten-ocr cannot be combined with structural-redaction box, width, confidence, OCR-layer, attachment, separator-matching or accent-matching options.");
         }
     }
 }
@@ -130,4 +131,6 @@ internal readonly record struct RedactCommandRequest(
     // A hyphen and a space in the term match each other unless this is set.
     bool ExactSeparators = false,
     // A separator in the term also matches none ('open source' finds 'opensource').
-    bool MatchClosedCompounds = false);
+    bool MatchClosedCompounds = false,
+    // Accents are ignored in the term and the text unless this is set ('cafe' finds 'café').
+    bool ExactAccents = false);

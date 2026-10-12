@@ -41,7 +41,7 @@ internal static class TermMatch
         if (!IsKeyed(caseSensitive, separators))
             return LiteralIndexOf(value, term, wholeWord, startIndex, separators, out length);
 
-        // Compared in the matching key (MatchingKey: full case fold), each key
+        // Compared in the matching key (MatchingKey: full case fold, accents), each key
         // match mapped back to the value's own characters, so offsets, lengths
         // and the whole-word test stay in the caller's text.
         length = term.Length;
@@ -55,7 +55,7 @@ internal static class TermMatch
             var found = LiteralIndexOf(key, keyTerm, wholeWord: false, k, separators, out var keyLength);
             if (found < 0) return -1;
             var start = source[found];
-            var end = SourceEnd(value, source, found + Math.Max(keyLength, 1) - 1);
+            var end = SourceEnd(value, key, source, found + Math.Max(keyLength, 1) - 1);
             if (!wholeWord
                 || ((start == 0 || !IsWordChar(value[start - 1])) && (end >= value.Length || !IsWordChar(value[end]))))
             {
@@ -71,11 +71,12 @@ internal static class TermMatch
     /// True when <paramref name="caseSensitive"/> and <paramref name="separators"/>
     /// compare in a <see cref="MatchingKey"/> rather than the text itself.
     /// </summary>
-    internal static bool IsKeyed(bool caseSensitive, SeparatorMatching separators) => !caseSensitive;
+    internal static bool IsKeyed(bool caseSensitive, SeparatorMatching separators) =>
+        !caseSensitive || separators.IgnoreAccents;
 
     /// <summary>The <see cref="MatchingKey"/> of <paramref name="text"/> under this rule.</summary>
     internal static string KeyOf(string text, bool caseSensitive, SeparatorMatching separators) =>
-        MatchingKey.Of(text, foldCase: !caseSensitive);
+        MatchingKey.Of(text, foldCase: !caseSensitive, separators.IgnoreAccents);
 
     /// <summary>
     /// <paramref name="text"/> in the matching space, <see cref="MatchingNormalization.Fold(string)"/>
@@ -97,26 +98,32 @@ internal static class TermMatch
         public readonly (string Key, int[] Source)?[] ByRule = new (string, int[])?[RuleCount];
     }
 
-    private const int RuleCount = 2;
+    private const int RuleCount = 4;
 
     private static (string Key, int[] Source) KeyMap(string value, bool caseSensitive, SeparatorMatching separators)
     {
         var maps = KeyMaps_.GetValue(value, _ => new KeyMaps());
-        var rule = caseSensitive ? 0 : 1;
+        var rule = (caseSensitive ? 0 : 1) | (separators.IgnoreAccents ? 2 : 0);
         if (maps.ByRule[rule] is { } known) return known;
-        var built = MatchingKey.Map(value, foldCase: !caseSensitive);
+        var built = MatchingKey.Map(value, foldCase: !caseSensitive, separators.IgnoreAccents);
         maps.ByRule[rule] = built;
         return built;
     }
 
     /// <summary>
     /// The exclusive end in <paramref name="value"/> of a key match whose last key
-    /// character is <paramref name="lastKey"/>: past the whole code point it came from.
+    /// character is <paramref name="lastKey"/>: past the whole code point it came from,
+    /// and past the stripped accents that follow it (they have no key character), so
+    /// <c>cafe</c> over <c>cafe</c> + U+0301 takes the accent with its letter.
     /// </summary>
-    private static int SourceEnd(string value, int[] source, int lastKey)
+    private static int SourceEnd(string value, string key, int[] source, int lastKey)
     {
         var at = source[lastKey];
-        return at + UnicodeCaseFolding.CodePointWidth(value, at);
+        var end = at + UnicodeCaseFolding.CodePointWidth(value, at);
+        var nextKeyed = lastKey + 1 < key.Length ? source[lastKey + 1] : value.Length;
+        while (end < nextKeyed && MatchingKey.IsStrippedAccent(value[end]))
+            end++;
+        return end;
     }
 
     private static int LiteralIndexOf(
@@ -162,6 +169,9 @@ internal static class TermMatch
         string text, int start, string needle, bool caseSensitive, SeparatorMatching separators = default)
     {
         if (start >= text.Length || needle.Length == 0) return -1;
+        // A stripped accent belongs to the letter before it: a match never starts on
+        // one, or 'x' would take the accent of the letter before it ('é' + 'x').
+        if (separators.IgnoreAccents && start > 0 && MatchingKey.IsStrippedAccent(text[start])) return -1;
         var flexible = IsFlexible(needle, separators);
 
         // A window of 4× the needle is the safe upper bound on the raw text that

@@ -1402,6 +1402,14 @@
                           AutomationProperties.Name="Also Match With No Space"
                           AutomationProperties.HelpText="Also match with no space: 'open source' also finds opensource. Off by default because it can match across words, such as 'pen nest' in 'pennest'. Not applied to a regular expression."
                           ToolTip.Tip="Also match with no space (opensource): 'open source' and 'open-source' also find 'opensource'. Off by default: it can match across words ('pen nest' in 'pennest'). Not applied to Regex."/>
+
+                <!-- Accents ignored: the same rule term redaction uses by default. -->
+                <CheckBox IsChecked="{Binding SearchIgnoreAccents}"
+                          Content="Ignore accents"
+                          Margin="0,0,8,0"
+                          AutomationProperties.Name="Ignore Accents"
+                          AutomationProperties.HelpText="Ignore accents: 'cafe' also finds café and 'café' also finds cafe. Accents of Latin, Greek and Cyrillic letters only. Not applied to a regular expression."
+                          ToolTip.Tip="Ignore accents: 'cafe' also finds café and CAFÉ, 'café' also finds cafe. Latin, Greek and Cyrillic accents only; marks that are part of a letter in other scripts always match exactly. Not applied to Regex."/>
                 <!-- Regex Checkbox -->
                 <CheckBox IsChecked="{Binding SearchUseRegex}"
                           Content="Regex"

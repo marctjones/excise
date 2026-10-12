@@ -120,6 +120,50 @@ public class CaseAndAccentRedactionTests
         string.Concat(matches.Single().Select(l => l.Value)).Should().Be("ße", "a match inside the ß takes the ß");
     }
 
+    [Theory]
+    [InlineData("cafe")]
+    [InlineData("café")]
+    [InlineData("CAFE")]
+    public void RedactingCafe_RemovesCafeCaféAndCAFÉ_AndMovesNothing(string term)
+    {
+        SkipWithoutMutool();
+        var original = Fixture(["Line A café here", "Line B CAFÉ here", "Line C cafe here", "Line D cafeteria stays"],
+            title: "Le café du coin");
+
+        var (saved, report) = Redact(original, term,
+            RedactionOptions.Default with { WholeWord = true, StripDocumentMetadata = false });
+
+        report.VerifiedRemovals.Should().Be(3, "café, CAFÉ and cafe");
+        report.Survived.Should().Be(0);
+        report.ToString().Should().NotContain("exact accents", "the default goes unsaid");
+
+        foreach (var spelling in new[] { "café", "CAFÉ", "cafe here" })
+            SavedPdfLeakScanner.FindTerm(saved, spelling).Should().BeEmpty($"'{spelling}' must be gone from the file");
+        var mutool = MutoolText(saved);
+        mutool.Should().NotContain("café").And.NotContain("CAFÉ").And.NotContain("cafe here");
+        mutool.Should().Contain("cafeteria stays", "whole-word: a longer word is not the term");
+        SurvivorsUnmoved(original, saved, t => !t.StartsWith("caf", System.StringComparison.OrdinalIgnoreCase)
+            || t == "cafeteria");
+
+        using var doc = PdfDocument.Open(saved);
+        doc.Title.Should().NotContain("caf").And.Contain("coin", "the carrier scrub uses the same rule");
+    }
+
+    [Fact]
+    public void ExactAccents_LeaveTheAccentedSpellings_SoTheOracleCanSeeALeak()
+    {
+        SkipWithoutMutool();
+        var (saved, report) = Redact(Fixture(["Line A café here", "Line C cafe here"]), "cafe",
+            RedactionOptions.Default with { IgnoreAccents = false });
+
+        report.VerifiedRemovals.Should().Be(1);
+        report.ToString().Should().Contain("exact accents");
+        SavedPdfLeakScanner.FindTerm(saved, "café").Should().NotBeEmpty();
+        MutoolText(saved).Should().Contain("café");
+    }
+
+    private static string MutoolText(byte[] pdf) => MutoolTextOracle.ExtractAllPages(pdf);
+
     private static Letter L(string v, double x) =>
         new(v, new PdfRectangle(x, 700, x + 6, 712), 12, "F1", x, 700, 6, v.Length > 0 ? v[0] : ' ');
 }

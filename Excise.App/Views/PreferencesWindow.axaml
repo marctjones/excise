@@ -378,6 +378,27 @@
                     <StackPanel Spacing="4">
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
                             <StackPanel Spacing="2" VerticalAlignment="Center">
+                                <Label Content="Ignore accents" Target="{Binding #RedactionIgnoreAccentsCheckBox}" Classes="field-label"/>
+                                <TextBlock Text="On: redacting 'cafe' also removes 'café', and 'café' also removes 'cafe'." Classes="help"/>
+                            </StackPanel>
+                            <CheckBox x:Name="RedactionIgnoreAccentsCheckBox" Grid.Column="1"
+                                      VerticalAlignment="Center"
+                                      IsChecked="{Binding RedactionIgnoreAccents}"
+                                      AutomationProperties.Name="Ignore Accents In Redaction"
+                                      AutomationProperties.HelpText="Accented and unaccented spellings of the redacted term match each other."/>
+                        </Grid>
+                        <ToggleButton x:Name="DetailsToggle15" Content="Details" Classes="details-toggle"
+                                      AutomationProperties.Name="Details"
+                                      AutomationProperties.HelpText="Show or hide the full explanation of this setting."/>
+                        <TextBlock IsVisible="{Binding #DetailsToggle15.IsChecked}" Text="On (default): the accents of Latin, Greek and Cyrillic letters are ignored in the term and in the text, so 'cafe' removes café and CAFÉ, 'resume' removes résumé, and 'café' removes cafe. Search finds the same set with its own 'Ignore accents' option. Off: an accented letter matches only itself. Marks that are part of a letter in Indic scripts, Thai, Japanese and Korean always match exactly; letters such as ø, ł and æ are distinct letters, not accented ones. Applies to page text and to metadata, outlines and link targets alike."
+                                       Classes="help"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="settings-row">
+                    <StackPanel Spacing="4">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                            <StackPanel Spacing="2" VerticalAlignment="Center">
                                 <Label Content="Keep attachments in redacted copies" Target="{Binding #RedactionKeepAttachmentsCheckBox}" Classes="field-label"/>
                                 <TextBlock Text="Off: a redacted copy has no attached files. On: text and PDF attachments are redacted too." Classes="help"/>
                             </StackPanel>

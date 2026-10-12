@@ -2220,6 +2220,7 @@ namespace Excise.Core.Text.Segmentation
         public bool CaseSensitive { get; init; }
         public bool DrawBox { get; init; }
         public bool FlattenInteractiveContent { get; init; }
+        public bool IgnoreAccents { get; init; }
         public bool IncludeHiddenLayers { get; init; }
         public bool KeepAttachments { get; init; }
         public bool MatchClosedCompounds { get; init; }

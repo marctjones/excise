@@ -191,8 +191,28 @@ public sealed record RedactionOptions
     /// </summary>
     public bool MatchClosedCompounds { get; init; } = false;
 
-    /// <summary>The separator rule <see cref="MatchHyphenAsSpace"/> and <see cref="MatchClosedCompounds"/> describe.</summary>
-    internal Excise.Core.Text.SeparatorMatching Separators => new(MatchHyphenAsSpace, MatchClosedCompounds);
+    /// <summary>
+    /// Accents are ignored when matching the term: <c>cafe</c> also removes <c>café</c>
+    /// and <c>CAFÉ</c> (with case-insensitive matching), <c>resume</c> removes
+    /// <c>résumé</c>, and <c>café</c> also removes <c>cafe</c>: the term's own accents
+    /// are ignored too. Default true. Enforced by: Core.
+    /// </summary>
+    /// <remarks>
+    /// <para>Only the combining diacritical marks Latin, Greek and Cyrillic letters
+    /// carry (U+0300–U+036F and its Extended, Supplement and Half Marks blocks) are
+    /// ignored, whether stored precomposed or as a separate mark. The marks of Indic
+    /// scripts, Thai, Japanese and Korean are part of the letter and always match
+    /// exactly; Hebrew points and Arabic vowel marks are ignored whatever this says
+    /// (#725). The GUI search finds the same spellings by default with the same rule
+    /// (<see cref="Excise.Core.Text.MatchingKey"/>); what search shows, redaction must
+    /// remove, and matching more spellings only removes more, so on is the safe
+    /// default. Applies to page content and to every carrier scrubbed by term,
+    /// together (#896).</para>
+    /// </remarks>
+    public bool IgnoreAccents { get; init; } = true;
+
+    /// <summary>The matching rule <see cref="MatchHyphenAsSpace"/>, <see cref="MatchClosedCompounds"/> and <see cref="IgnoreAccents"/> describe.</summary>
+    internal Excise.Core.Text.SeparatorMatching Separators => new(MatchHyphenAsSpace, MatchClosedCompounds, IgnoreAccents);
 
     /// <summary>Which glyph/image overlap rule selects content for removal.
     /// Default <see cref="GlyphRemovalStrategy.AnyOverlap"/>. Enforced by: Core.</summary>

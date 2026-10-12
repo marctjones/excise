@@ -103,6 +103,7 @@ public static class PdfDocumentRedactionExtensions
                 WholeWord = options.WholeWord,
                 MatchHyphenAsSpace = options.MatchHyphenAsSpace,
                 MatchClosedCompounds = options.MatchClosedCompounds,
+                IgnoreAccents = options.IgnoreAccents,
                 Profile = options.Profile,
             };
 
@@ -601,6 +602,7 @@ public static class PdfDocumentRedactionExtensions
             WholeWord = options.WholeWord,
             MatchHyphenAsSpace = options.MatchHyphenAsSpace,
             MatchClosedCompounds = options.MatchClosedCompounds,
+            IgnoreAccents = options.IgnoreAccents,
             ImageRegionsRedacted = imageCounts.RegionEdited,
             ImagesDroppedWhole = imageCounts.RemovedWhole,
             HyphenatedCandidates = hyphenCandidates,

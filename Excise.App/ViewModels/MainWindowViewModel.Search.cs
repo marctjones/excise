@@ -27,6 +27,9 @@ internal partial class MainWindowViewModel
     // redaction removes. Not persisted, like the other search toggles.
     private bool _searchHyphenAsSpace = true;
     private bool _searchMatchClosedCompounds = false;
+    // Accents ignored: the same default as term redaction
+    // (RedactionOptions.IgnoreAccents). Not persisted, like the other toggles.
+    private bool _searchIgnoreAccents = true;
     private int _currentSearchMatchIndex = -1;
     private ObservableCollection<SearchMatch> _searchMatches = new();
     private bool _isSearchVisible = false;
@@ -131,6 +134,21 @@ internal partial class MainWindowViewModel
         set
         {
             this.RaiseAndSetIfChanged(ref _searchMatchClosedCompounds, value);
+            ScheduleSearchDebounced();
+        }
+    }
+
+    /// <summary>
+    /// "cafe" also finds "café" and "café" finds "cafe": the accents of Latin,
+    /// Greek and Cyrillic letters are ignored in the term and the text. Default
+    /// on, as term redaction's. Not applied to a regex.
+    /// </summary>
+    public bool SearchIgnoreAccents
+    {
+        get => _searchIgnoreAccents;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _searchIgnoreAccents, value);
             ScheduleSearchDebounced();
         }
     }
@@ -314,7 +332,8 @@ internal partial class MainWindowViewModel
             _searchWholeWords,
             _searchUseRegex,
             _searchHyphenAsSpace,
-            _searchMatchClosedCompounds));
+            _searchMatchClosedCompounds,
+            _searchIgnoreAccents));
         OperationStatus = "Searching…";
         _ = Task.Run(() => ExecuteSearchAsync(request, debounceDelay));
     }

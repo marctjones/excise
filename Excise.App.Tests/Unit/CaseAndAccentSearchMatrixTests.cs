@@ -40,6 +40,61 @@ public sealed class CaseAndAccentSearchMatrixTests
         }
     }
 
+    [Theory]
+    [InlineData("café", "cafe", true, 1)]
+    [InlineData("cafe", "café", true, 1)]
+    [InlineData("CAFÉ", "cafe", true, 1)]
+    [InlineData("résumé", "resume", true, 1)]
+    [InlineData("resume", "résumé", true, 1)]
+    [InlineData("naïve", "naive", true, 1)]
+    [InlineData("café", "cafe", false, 0)]
+    [InlineData("cafe", "café", false, 0)]
+    [InlineData("café", "café", false, 1)]
+    [InlineData("søster", "soster", true, 0)]
+    public void PageSearch_IgnoresAccents_UnlessExact(string spelling, string term, bool ignoreAccents, int expected)
+    {
+        using var doc = PdfDocument.Open(Fixture([$"un {spelling} noir"]));
+        var service = new PdfSearchService(NullLogger<PdfSearchService>.Instance);
+
+        var hits = service.SearchInPage(doc.GetPage(1), term, wholeWordsOnly: true,
+            separators: SeparatorMatching.Default with { IgnoreAccents = ignoreAccents });
+
+        hits.Should().HaveCount(expected, $"'{term}' over '{spelling}', ignore accents {ignoreAccents}");
+        foreach (var hit in hits)
+            hit.MatchedText.Should().Be(spelling, "the hit shows the page's own spelling");
+    }
+
+    [Fact]
+    public void TheDocumentOverload_IgnoresAccentsByDefault()
+    {
+        using var doc = PdfDocument.Open(Fixture(["un café noir"]));
+        var service = new PdfSearchService(NullLogger<PdfSearchService>.Instance);
+        service.Search(doc, "cafe").Should().ContainSingle();
+    }
+
+    [Theory]
+    [InlineData(true, 1)]
+    [InlineData(false, 0)]
+    public void AnnotationSearch_AppliesTheAccentRule(bool ignoreAccents, int expected)
+    {
+        using var doc = PdfDocument.Open(Fixture(["unrelated page text"], annotation: "un café noir"));
+        var service = new PdfSearchService(NullLogger<PdfSearchService>.Instance);
+        var hits = service.SearchInPage(doc.GetPage(1), "cafe",
+            separators: SeparatorMatching.Default with { IgnoreAccents = ignoreAccents });
+        hits.Count(h => h.Context.EndsWith("[in annotation]", StringComparison.Ordinal)).Should().Be(expected);
+        if (expected > 0) hits.Single().MatchedText.Should().Be("café");
+    }
+
+    [Fact]
+    public void RegexSearch_IsUnaffectedByTheAccentRule()
+    {
+        using var doc = PdfDocument.Open(Fixture(["un café noir"]));
+        var service = new PdfSearchService(NullLogger<PdfSearchService>.Instance);
+        service.SearchInPage(doc.GetPage(1), "cafe", useRegex: true).Should().BeEmpty(
+            "the pattern says what it means");
+        service.SearchInPage(doc.GetPage(1), "caf.", useRegex: true).Should().ContainSingle();
+    }
+
     [Fact]
     public void AnnotationSearch_FoldsCaseFully()
     {

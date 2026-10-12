@@ -319,6 +319,12 @@ internal class PreferencesViewModel : ViewModelBase
         set { if (_redactionPreferences.MatchClosedCompounds == value) return; _redactionPreferences.MatchClosedCompounds = value; this.RaisePropertyChanged(); }
     }
 
+    public bool RedactionIgnoreAccents
+    {
+        get => _redactionPreferences.IgnoreAccents;
+        set { if (_redactionPreferences.IgnoreAccents == value) return; _redactionPreferences.IgnoreAccents = value; this.RaisePropertyChanged(); }
+    }
+
     public bool RedactionKeepAttachments
     {
         get => _redactionPreferences.KeepAttachments;
@@ -349,6 +355,7 @@ internal class PreferencesViewModel : ViewModelBase
         this.RaisePropertyChanged(nameof(RedactionWholeWord));
         this.RaisePropertyChanged(nameof(RedactionMatchHyphenAsSpace));
         this.RaisePropertyChanged(nameof(RedactionMatchClosedCompounds));
+        this.RaisePropertyChanged(nameof(RedactionIgnoreAccents));
         this.RaisePropertyChanged(nameof(RedactionKeepAttachments));
         this.RaisePropertyChanged(nameof(RedactionWidth));
         this.RaisePropertyChanged(nameof(RedactionLinkUriPolicy));

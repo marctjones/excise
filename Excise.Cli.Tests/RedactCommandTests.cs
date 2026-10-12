@@ -1278,6 +1278,68 @@ public class RedactCommandTests : IDisposable
             .Should().Throw<ArgumentException>().WithMessage("*separator-matching*");
     }
 
+    private static byte[] AccentSpellingsPdf()
+    {
+        using var doc = PdfDocument.CreateNew();
+        var page = doc.Pages.AddBlank(612, 792);
+        using (var g = page.GetGraphics())
+        {
+            var font = Excise.Core.Graphics.PdfFont.Helvetica(12);
+            var y = 700.0;
+            foreach (var line in new[] { "Line A café here", "Line B CAFÉ here", "Line C cafe here", "Line D cafeteria stays" })
+            {
+                g.DrawString(line, font, Excise.Core.Graphics.PdfBrush.Black, 72, y);
+                y -= 30;
+            }
+            g.Flush();
+        }
+        return doc.SaveToBytes();
+    }
+
+    [Fact]
+    public async Task RunAsync_Redact_ByDefault_IgnoresAccents_AsSearchDoes()
+    {
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, AccentSpellingsPdf());
+
+        var (exit, stdout) = await RunCapturedAsync("redact", inputPath, outputPath, "cafe", "--whole-word");
+
+        exit.Should().Be(0);
+        stdout.Should().Contain("Redacted 3 occurrence(s)").And.NotContain("exact accents");
+        var saved = File.ReadAllBytes(outputPath);
+        foreach (var spelling in new[] { "café", "CAFÉ", "cafe " })
+            SavedPdfLeakScanner.FindTerm(saved, spelling).Should().BeEmpty();
+        if (MutoolReferenceRenderer.IsAvailable)
+        {
+            var mutool = MutoolTextExtractor.ExtractPage(outputPath, 1) ?? "";
+            mutool.Should().NotContain("café").And.NotContain("CAFÉ").And.Contain("cafeteria stays");
+        }
+    }
+
+    [Fact]
+    public async Task RunAsync_Redact_ExactAccents_KeepsTheAccentedSpellings_AndSaysSo()
+    {
+        var inputPath = TempPath(".pdf");
+        var outputPath = TempPath(".pdf");
+        File.WriteAllBytes(inputPath, AccentSpellingsPdf());
+
+        var (exit, stdout) = await RunCapturedAsync("redact", inputPath, outputPath, "cafe", "--whole-word", "--exact-accents");
+
+        exit.Should().Be(0);
+        stdout.Should().Contain("Redacted 1 occurrence(s)").And.Contain("(exact accents)");
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "café").Should().NotBeEmpty(
+            "the opt-out is real: the accented spelling is left");
+    }
+
+    [Fact]
+    public void Execute_RejectsExactAccents_WithFlattenOcr_WhoseMatcherDoesNotApplyIt()
+    {
+        var request = new RedactCommandRequest("in.pdf", "out.pdf", "cafe", FlattenOcr: true, ExactAccents: true);
+        FluentActions.Invoking(() => RedactCommandHandler.Execute(request))
+            .Should().Throw<ArgumentException>().WithMessage("*accent-matching*");
+    }
+
     [Fact]
     public void TryParseCarrierPolicy_LeavesUnnamedCarriersAtStrip()
     {

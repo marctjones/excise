@@ -190,6 +190,13 @@ public sealed class RedactionReport
     public bool MatchClosedCompounds { get; init; }
 
     /// <summary>
+    /// Whether accents were ignored when matching the term in this run
+    /// (<see cref="RedactionOptions.IgnoreAccents"/>). Default true, as the option's.
+    /// Internal: the summary states a departure from the default.
+    /// </summary>
+    internal bool IgnoreAccents { get; init; } = true;
+
+    /// <summary>
     /// The output profile this run was asked for (#1586). Recorded for the same
     /// reason as <see cref="WholeWord"/>: the policy that ran is part of the
     /// result.
@@ -283,6 +290,7 @@ public sealed class RedactionReport
         // The default rule (hyphen = space, no closed compounds) goes unsaid; a departure is stated.
         if (!MatchHyphenAsSpace) parts.Add("exact separators");
         if (MatchClosedCompounds) parts.Add("closed compounds matched");
+        if (!IgnoreAccents) parts.Add("exact accents");
         if (Survived > 0) parts.Add($"{Survived} STILL PRESENT");
         if (ImagesDroppedWhole > 0)
             parts.Add($"{ImagesDroppedWhole} whole image(s) removed (region redaction unavailable)");

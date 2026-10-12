@@ -192,7 +192,9 @@ public class CanonicalAccentRedactionTests
     {
         // Scope guard: canonical folding must NOT become accent-insensitive
         // matching. "cafe" (no accent) is NOT canonically equivalent to
-        // "café" and must not redact it. The stored form here is
+        // "café" and, with exact accents (RedactionOptions.IgnoreAccents off;
+        // on by default, see CaseAndAccentRedactionTests), must not redact it.
+        // The stored form here is
         // PRECOMPOSED: with decomposed storage the raw bytes physically
         // contain the letters c-a-f-e and the raw-substring operator
         // backstop legitimately (and fail-safely) removes them — that
@@ -200,10 +202,10 @@ public class CanonicalAccentRedactionTests
         var pdf = RtlPdfFixtures.SingleTj(PrecomposedScalars, visualOrder: false);
         using var doc = PdfDocument.Open(pdf);
 
-        var removed = doc.RedactText("cafe", RedactionOptions.Default).VerifiedRemovals;
+        var removed = doc.RedactText("cafe", RedactionOptions.Default with { IgnoreAccents = false }).VerifiedRemovals;
 
         removed.Should().Be(0,
-            "the accent is canonically meaningful; accent-INSENSITIVE matching is out of scope");
+            "the accent is canonically meaningful; accent-INSENSITIVE matching is the IgnoreAccents option, not the fold");
 
         using var reopened = PdfDocument.Open(doc.SaveToBytes());
         reopened.GetPage(1).Text.Should().Contain(PrecomposedWord,

@@ -257,6 +257,7 @@ public static class RedactedCopySafetyPolicy
             document,
             terms,
             options,
+            redaction.Separators,
             out var checkedTermCount,
             out var remainingTermCount,
             out var skippedShortTermCount,
@@ -364,6 +365,7 @@ public static class RedactedCopySafetyPolicy
         PdfDocument document,
         IReadOnlyList<string> terms,
         RedactedCopySafetyOptions options,
+        Excise.Core.Text.SeparatorMatching separators,
         out int checkedTermCount,
         out int remainingTermCount,
         out int skippedShortTermCount,
@@ -388,11 +390,13 @@ public static class RedactedCopySafetyPolicy
         try
         {
             // #1880: matched as the page matcher matches, so a typographic
-            // spelling it would have removed does not verify clean.
+            // spelling it would have removed does not verify clean; under the
+            // redaction's own separator and accent rule, so a spelling it
+            // should have removed ('café' for 'cafe') does not either.
             var documentText = ExtractDocumentText(document);
             checkedTermCount = checkedTerms.Length;
             remainingTermCount = checkedTerms.Count(term =>
-                TermMatch.Holds(documentText, [term], caseSensitive: false, wholeWord: false));
+                TermMatch.Holds(documentText, [term], caseSensitive: false, wholeWord: false, separators));
 
             if (remainingTermCount > 0)
             {
