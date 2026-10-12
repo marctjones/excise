@@ -28,10 +28,31 @@ Fixed-size marker; the rest of the line then moves.
   word hyphenated across a line break, and "open-source" finds the same set.
 - **No space too** (off by default): "open source" also finds "opensource". Off because
   it can match across words ("pen nest" inside "pennest").
+- **Ignore accents** (on by default): accents are ignored in the term and in the text, so
+  "cafe" finds "café" and "CAFÉ", "resume" finds "résumé", and "café" finds "cafe".
+  Only the accents of Latin, Greek and Cyrillic letters (the Unicode combining
+  diacritical marks, stored either as part of the letter or as a separate mark) are
+  ignored: "ά" finds "α", "ё" finds "е" and "й" finds "и". Marks that are part of a
+  letter in Indic scripts, Thai, Japanese and Korean always match exactly, and letters
+  such as "ø", "ł", "đ" and "æ" are their own letters. Hebrew points and Arabic vowel
+  marks are ignored whatever this option says, as before.
 
-The last two do not apply to Regex. Text redaction uses the same rule with the same
+The last three do not apply to Regex. Text redaction uses the same rules with the same
 defaults (Preferences ▸ Redaction ▸ Treat hyphens and spaces as the same / Also match
-with no space), so redacting a term removes every spelling search finds for it.
+with no space / Ignore accents), so redacting a term removes every spelling search finds
+for it.
+
+With **Case sensitive** off, search and text redaction compare under Unicode full case
+folding (Unicode 16.0): "strasse" finds "Straße", "STRASSE" and "STRAẞE", and "Straße"
+finds "strasse". A match that covers part of a letter that folds to two ("ss" inside
+"ß") takes the whole letter. There are no language-specific rules: the Turkish dotless
+"ı" is its own letter and does not match "i" or "I". With **Case sensitive** on, every
+character matches only itself. Regex keeps the regular-expression engine's own
+case-insensitive rule, which does not fold "ß" to "ss".
+
+A letter drawn several times on top of itself to look bold (copies a fraction of a point
+apart) reads once in search, page text and copied text, so "test" finds a "Test" stamped
+three times per letter; text redaction removes every copy.
 
 ## Typewriter text on flat PDFs
 

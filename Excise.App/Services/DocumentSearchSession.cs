@@ -148,10 +148,11 @@ internal readonly record struct DocumentSearchQuery(
     bool WholeWords,
     bool UseRegex,
     bool HyphenAsSpace = true,
-    bool MatchClosedCompounds = false)
+    bool MatchClosedCompounds = false,
+    bool IgnoreAccents = true)
 {
-    /// <summary>The separator rule the query's two toggles describe (not applied to a regex).</summary>
-    public Excise.Core.Text.SeparatorMatching Separators => new(HyphenAsSpace, MatchClosedCompounds);
+    /// <summary>The separator and accent rule the query's toggles describe (not applied to a regex).</summary>
+    public Excise.Core.Text.SeparatorMatching Separators => new(HyphenAsSpace, MatchClosedCompounds, IgnoreAccents);
 }
 
 internal sealed record DocumentSearchRequest(

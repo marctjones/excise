@@ -181,17 +181,23 @@ public class HarakatNiqqudRedactionTests
     [Fact]
     public void RedactText_LatinCombiningAccents_AreNotStripped()
     {
-        // Scope guard: the strip is Arabic/Hebrew marks ONLY. A Latin
-        // combining accent is canonically meaningful — "cafe" must still not
-        // match "café" stored decomposed-then-composed (see #724).
+        // Scope guard: the always-on strip is Arabic/Hebrew marks ONLY. A Latin
+        // combining accent is ignored only under RedactionOptions.IgnoreAccents
+        // (the default since the owner asked for it); with exact accents "cafe"
+        // must still not match "café" (see #724).
         var pdf = RtlPdfFixtures.SingleTj(
             new[] { 'c', 'a', 'f', 0x00E9 }, visualOrder: false);
-        using var doc = PdfDocument.Open(pdf);
+        using (var doc = PdfDocument.Open(pdf))
+        {
+            doc.RedactText("cafe", RedactionOptions.Default with { IgnoreAccents = false }).VerifiedRemovals
+                .Should().Be(0, "the semitic strip must not extend to Latin combining accents");
+        }
 
-        var removed = doc.RedactText("cafe", RedactionOptions.Default).VerifiedRemovals;
-
-        removed.Should().Be(0,
-            "stripping must not extend to Latin combining accents (accent-insensitivity is out of scope)");
+        using (var doc = PdfDocument.Open(pdf))
+        {
+            doc.RedactText("cafe", RedactionOptions.Default).VerifiedRemovals
+                .Should().Be(1, "by default accents are ignored, as search ignores them");
+        }
     }
 
     [Fact]

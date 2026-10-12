@@ -74,6 +74,7 @@ public class RedactionPreferenceControlTests
     [InlineData("RedactionKeepAttachmentsCheckBox")]
     [InlineData("RedactionHyphenAsSpaceCheckBox")]
     [InlineData("RedactionClosedCompoundsCheckBox")]
+    [InlineData("RedactionIgnoreAccentsCheckBox")]
     public async Task TheRedactionCheckBoxes_ToggleFromARealClick(string name)
     {
         var prefs = new PreferencesViewModel();

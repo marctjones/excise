@@ -98,6 +98,38 @@ public sealed class RedactedCopySafetyPolicyTests
         report.RemainingTermCount.Should().Be(1);
     }
 
+    /// <summary>
+    /// The verification reads the page under the redaction's own match rule: an accented
+    /// or ß spelling the redaction should have removed does not verify clean.
+    /// </summary>
+    [Theory]
+    [InlineData(@"caf\351", "cafe", true, 1)]
+    [InlineData(@"caf\351", "cafe", false, 0)]
+    [InlineData(@"Stra\337e", "STRASSE", true, 1)]
+    public void Evaluate_AnAccentOrFoldSpellingLeftOnThePage_IsNotVerified(string drawn, string term, bool ignoreAccents, int remaining)
+    {
+        var pdf = Excise.Core.Tests.Content.ContentStreamFixture.Build(
+            $"BT /F1 12 Tf 72 700 Td ({drawn}) Tj ET",
+            fontObject: "5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n");
+        using var document = PdfDocument.Open(pdf);
+
+        var report = RedactedCopySafetyPolicy.Evaluate(
+            document,
+            RedactedCopySafetyRequest.ForTerms(new[] { term }, RedactionOptions.Default with { IgnoreAccents = ignoreAccents },
+                new RedactedCopySafetyOptions
+                {
+                    ScrubMetadata = false,
+                    ScrubRequestedTerms = false,
+                    RunCarrierAudit = false,
+                    VerifyRequestedTerms = true,
+                    RunHiddenTextAudit = false,
+                    RunRasterRedactionAudit = false,
+                    InspectKeptAttachments = false,
+                }));
+
+        report.RemainingTermCount.Should().Be(remaining);
+    }
+
     [Fact]
     public void Evaluate_AttachmentOnlyPolicy_DoesNotImplicitlyScrubMetadata()
     {

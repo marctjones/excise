@@ -135,6 +135,14 @@ internal static class RedactCommand
                 "--exact-separators ('open source' then removes 'open source' and 'opensource' only).",
             DefaultValueFactory = _ => false,
         };
+        var exactAccentsOption = new Option<bool>("--exact-accents")
+        {
+            Description = "Match an accented letter only as itself. By default accents are " +
+                "ignored in the term and the text, so 'cafe' also removes 'café' (and 'café' " +
+                "removes 'cafe'), as the GUI search finds them. Only the accents of Latin, " +
+                "Greek and Cyrillic letters. Applies to page content AND the document-level carrier scrub.",
+            DefaultValueFactory = _ => false,
+        };
         var carrierPolicyOption = new Option<string[]>("--carrier-policy")
         {
             Description = "How a document-level carrier holding the term is handled: " +
@@ -210,6 +218,7 @@ internal static class RedactCommand
             wholeWordOption,
             exactSeparatorsOption,
             matchClosedCompoundsOption,
+            exactAccentsOption,
             carrierPolicyOption,
             keepAttachmentsOption,
             progressOption,
@@ -286,10 +295,11 @@ internal static class RedactCommand
             if (flattenOcr &&
                 (ocrImageText || noBox || boxColorSpec != null || closeWidth || overshootBox ||
                  fixedMarker || quantizeGap || preserveLayout || strict || allowLowConfidence || keepAttachments ||
-                 parseResult.GetValue(exactSeparatorsOption) || parseResult.GetValue(matchClosedCompoundsOption)))
+                 parseResult.GetValue(exactSeparatorsOption) || parseResult.GetValue(matchClosedCompoundsOption) ||
+                 parseResult.GetValue(exactAccentsOption)))
             {
                 Console.Error.WriteLine(
-                    "--flatten-ocr cannot be combined with structural-redaction box, width, confidence, OCR-layer, attachment or separator-matching options.");
+                    "--flatten-ocr cannot be combined with structural-redaction box, width, confidence, OCR-layer, attachment, separator-matching or accent-matching options.");
                 return 1;
             }
 
@@ -352,7 +362,8 @@ internal static class RedactCommand
                     quantizeGap,
                     preserveLayout,
                     ExactSeparators: parseResult.GetValue(exactSeparatorsOption),
-                    MatchClosedCompounds: parseResult.GetValue(matchClosedCompoundsOption)),
+                    MatchClosedCompounds: parseResult.GetValue(matchClosedCompoundsOption),
+                    ExactAccents: parseResult.GetValue(exactAccentsOption)),
                     progress);
 
                 foreach (var diagnostic in result.Diagnostics)
@@ -368,7 +379,8 @@ internal static class RedactCommand
                         $"Redacted {result.Count} occurrence(s) of '{result.Text}'" +
                         (result.WholeWord ? " (whole-word matching)" : "") +
                         (parseResult.GetValue(exactSeparatorsOption) ? " (exact separators)" : "") +
-                        (parseResult.GetValue(matchClosedCompoundsOption) ? " (closed compounds matched)" : ""));
+                        (parseResult.GetValue(matchClosedCompoundsOption) ? " (closed compounds matched)" : "") +
+                        (parseResult.GetValue(exactAccentsOption) ? " (exact accents)" : ""));
 
                 // #1586: a removal made WITHOUT a term match is destruction the
                 // user is entitled to know about. Printing it is the only thing

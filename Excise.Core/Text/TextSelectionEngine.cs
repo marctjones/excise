@@ -844,6 +844,9 @@ public static class TextSelectionEngine
     public static string JoinText(IReadOnlyList<Letter> letters, WhitespaceMode mode)
     {
         if (letters.Count == 0) return string.Empty;
+        // #1047: an overprinted stack (faux bold) reads once, in page text and in
+        // copied text alike (OverprintedGlyphs, the rule redaction matches by).
+        letters = OverprintedGlyphs.Representatives(letters);
         return mode == WhitespaceMode.Smart
             ? JoinSmart(letters)
             : JoinLineFaithful(letters);

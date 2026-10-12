@@ -42,6 +42,14 @@ internal sealed record RedactionPreferences
     public bool MatchClosedCompounds { get; set; }
 
     /// <summary>
+    /// Accents are ignored when matching the term
+    /// (<see cref="RedactionOptions.IgnoreAccents"/>). Default true, the engine's
+    /// default and the GUI search's. A window.json saved before this existed has
+    /// no value and reads as true.
+    /// </summary>
+    public bool IgnoreAccents { get; set; } = true;
+
+    /// <summary>
     /// Keep the document's attachments in a redacted copy (#1572). Default
     /// false: since 2026-09-17 every redacted copy is written without them.
     /// When on, kept text attachments have the redacted text cut out, nested
@@ -114,6 +122,7 @@ internal sealed record RedactionPreferences
             WholeWord = WholeWord,
             MatchHyphenAsSpace = MatchHyphenAsSpace,
             MatchClosedCompounds = MatchClosedCompounds,
+            IgnoreAccents = IgnoreAccents,
             KeepAttachments = KeepAttachments,
             // Same rule for the width: still at the Standard default means
             // follow the profile, so Maximum keeps closing the width

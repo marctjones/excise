@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Excise.Core.Text;
@@ -37,7 +38,98 @@ internal static class TermMatch
         string value, string term, bool caseSensitive, bool wholeWord, int startIndex,
         SeparatorMatching separators, out int length)
     {
-        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+        if (!IsKeyed(caseSensitive, separators))
+            return LiteralIndexOf(value, term, wholeWord, startIndex, separators, out length);
+
+        // Compared in the matching key (MatchingKey: full case fold, accents), each key
+        // match mapped back to the value's own characters, so offsets, lengths
+        // and the whole-word test stay in the caller's text.
+        length = term.Length;
+        var keyTerm = KeyOf(term, caseSensitive, separators);
+        if (keyTerm.Length == 0) return -1;
+        var (key, source) = KeyMap(value, caseSensitive, separators);
+        var k = 0;
+        while (k < source.Length && source[k] < startIndex) k++;
+        while (k < key.Length)
+        {
+            var found = LiteralIndexOf(key, keyTerm, wholeWord: false, k, separators, out var keyLength);
+            if (found < 0) return -1;
+            var start = source[found];
+            var end = SourceEnd(value, key, source, found + Math.Max(keyLength, 1) - 1);
+            if (!wholeWord
+                || ((start == 0 || !IsWordChar(value[start - 1])) && (end >= value.Length || !IsWordChar(value[end]))))
+            {
+                length = end - start;
+                return start;
+            }
+            k = found + 1;
+        }
+        return -1;
+    }
+
+    /// <summary>
+    /// True when <paramref name="caseSensitive"/> and <paramref name="separators"/>
+    /// compare in a <see cref="MatchingKey"/> rather than the text itself.
+    /// </summary>
+    internal static bool IsKeyed(bool caseSensitive, SeparatorMatching separators) =>
+        !caseSensitive || separators.IgnoreAccents;
+
+    /// <summary>The <see cref="MatchingKey"/> of <paramref name="text"/> under this rule.</summary>
+    internal static string KeyOf(string text, bool caseSensitive, SeparatorMatching separators) =>
+        MatchingKey.Of(text, foldCase: !caseSensitive, separators.IgnoreAccents);
+
+    /// <summary>
+    /// <paramref name="text"/> in the matching space, <see cref="MatchingNormalization.Fold(string)"/>
+    /// then <see cref="MatchingKey"/>: what the page matcher and every carrier compare.
+    /// </summary>
+    internal static string MatchSpace(string text, bool caseSensitive, SeparatorMatching separators) =>
+        KeyOf(MatchingNormalization.Fold(text), caseSensitive, separators);
+
+    /// <summary>A term as the matchers compare it: in the matching space and trimmed (#942).</summary>
+    internal static string Needle(string term, bool caseSensitive, SeparatorMatching separators) =>
+        MatchSpace(term, caseSensitive, separators).Trim();
+
+    // A page search calls IndexOf once per hit over the same text, so each text's
+    // key is kept for as long as the text itself lives, and no longer.
+    private static readonly ConditionalWeakTable<string, KeyMaps> KeyMaps_ = new();
+
+    private sealed class KeyMaps
+    {
+        public readonly (string Key, int[] Source)?[] ByRule = new (string, int[])?[RuleCount];
+    }
+
+    private const int RuleCount = 4;
+
+    private static (string Key, int[] Source) KeyMap(string value, bool caseSensitive, SeparatorMatching separators)
+    {
+        var maps = KeyMaps_.GetValue(value, _ => new KeyMaps());
+        var rule = (caseSensitive ? 0 : 1) | (separators.IgnoreAccents ? 2 : 0);
+        if (maps.ByRule[rule] is { } known) return known;
+        var built = MatchingKey.Map(value, foldCase: !caseSensitive, separators.IgnoreAccents);
+        maps.ByRule[rule] = built;
+        return built;
+    }
+
+    /// <summary>
+    /// The exclusive end in <paramref name="value"/> of a key match whose last key
+    /// character is <paramref name="lastKey"/>: past the whole code point it came from,
+    /// and past the stripped accents that follow it (they have no key character), so
+    /// <c>cafe</c> over <c>cafe</c> + U+0301 takes the accent with its letter.
+    /// </summary>
+    private static int SourceEnd(string value, string key, int[] source, int lastKey)
+    {
+        var at = source[lastKey];
+        var end = at + UnicodeCaseFolding.CodePointWidth(value, at);
+        var nextKeyed = lastKey + 1 < key.Length ? source[lastKey + 1] : value.Length;
+        while (end < nextKeyed && MatchingKey.IsStrippedAccent(value[end]))
+            end++;
+        return end;
+    }
+
+    private static int LiteralIndexOf(
+        string value, string term, bool wholeWord, int startIndex, SeparatorMatching separators, out int length)
+    {
+        const StringComparison comparison = StringComparison.Ordinal;
         length = term.Length;
         if (IsFlexible(term, separators))
             return FlexibleIndexOf(value, term, comparison, wholeWord, startIndex, separators, out length);
@@ -59,39 +151,59 @@ internal static class TermMatch
 
     /// <summary>
     /// The last index of the shortest span of <paramref name="text"/> from
-    /// <paramref name="start"/> whose <see cref="MatchingNormalization.Fold"/>
-    /// reaches <paramref name="needle"/> (folded and trimmed), with any combining
+    /// <paramref name="start"/> whose <see cref="MatchSpace"/> reaches
+    /// <paramref name="needle"/> (from <see cref="Needle"/>), with any combining
     /// marks that continue its last cluster; -1 when no span from there folds to
-    /// it. The fold changes length both ways (ﬃ 1→3; e + U+0301 → é and a
-    /// whitespace run → one space shrink), so the span grows one raw character
-    /// at a time until its fold is as long as the needle. The page matcher and
-    /// the carrier cut both map a folded match back to raw text this way (#1871).
+    /// it. The fold changes length both ways (ﬃ 1→3, ß → ss under case folding;
+    /// e + U+0301 → é and a whitespace run → one space shrink), so the span grows
+    /// one raw character at a time until its fold is as long as the needle. The
+    /// page matcher and the carrier cut both map a folded match back to raw text
+    /// this way (#1871).
     /// </summary>
+    /// <remarks>
+    /// A match may start inside the expansion of the first character (needle
+    /// <c>se</c> against <c>ße</c>, folded <c>sse</c>), as it may in the string
+    /// search over the same fold: the span then starts at that whole character.
+    /// </remarks>
     internal static int MatchEnd(
-        string text, int start, string needle, StringComparison comparison, SeparatorMatching separators = default)
+        string text, int start, string needle, bool caseSensitive, SeparatorMatching separators = default)
     {
-        if (IsFlexible(needle, separators))
-            return FlexibleMatchEnd(text, start, needle, comparison, separators);
+        if (start >= text.Length || needle.Length == 0) return -1;
+        // A stripped accent belongs to the letter before it: a match never starts on
+        // one, or 'x' would take the accent of the letter before it ('é' + 'x').
+        if (separators.IgnoreAccents && start > 0 && MatchingKey.IsStrippedAccent(text[start])) return -1;
+        var flexible = IsFlexible(needle, separators);
 
         // A window of 4× the needle is the safe upper bound on the raw text that
         // can fold down to it; a raw window SHORTER than the needle can still
         // match, since a lam-alef ligature is one raw char but two needle chars.
-        var window = Math.Min(needle.Length * 4, text.Length - start);
-        if (!MatchingNormalization.Fold(text.Substring(start, window)).StartsWith(needle, comparison))
-            return -1;
-
-        return GrowToFoldedLength(text, start, needle.Length);
+        // A flexible needle needs room for a separator run in the text longer
+        // than its own.
+        var window = Math.Min(needle.Length * 4 + (flexible ? 64 : 0), text.Length - start);
+        var folded = MatchSpace(text.Substring(start, window), caseSensitive, separators);
+        var first = MatchSpace(text.Substring(start, UnicodeCaseFolding.CodePointWidth(text, start)), caseSensitive, separators).Length;
+        for (var offset = 0; offset < Math.Max(first, 1) && offset < folded.Length; offset++)
+        {
+            var matched = flexible
+                ? FlexibleMatchLength(folded, offset, needle, StringComparison.Ordinal, separators)
+                : folded.AsSpan(offset).StartsWith(needle, StringComparison.Ordinal) ? needle.Length : -1;
+            if (matched > 0)
+                return GrowToFoldedLength(text, start, offset + matched, caseSensitive, separators);
+        }
+        return -1;
     }
 
     /// <summary>
     /// The last raw index of the shortest span of <paramref name="text"/> from
-    /// <paramref name="start"/> whose fold is <paramref name="foldedLength"/> long,
-    /// with any combining marks that continue its last cluster; -1 past the end.
+    /// <paramref name="start"/> whose <see cref="MatchSpace"/> is
+    /// <paramref name="foldedLength"/> long, with any combining marks that
+    /// continue its last cluster; -1 past the end.
     /// </summary>
-    private static int GrowToFoldedLength(string text, int start, int foldedLength)
+    private static int GrowToFoldedLength(
+        string text, int start, int foldedLength, bool caseSensitive, SeparatorMatching separators)
     {
         var end = start;
-        while (end < text.Length && MatchingNormalization.Fold(text.Substring(start, end - start + 1)).Length < foldedLength)
+        while (end < text.Length && MatchSpace(text.Substring(start, end - start + 1), caseSensitive, separators).Length < foldedLength)
             end++;
         if (end >= text.Length) return -1;
 
@@ -190,9 +302,9 @@ internal static class TermMatch
     private static Func<int, (int Start, int End)>? FoldedSpans(
         string value, string folded, string term, bool caseSensitive, bool wholeWord, SeparatorMatching separators)
     {
-        var needle = MatchingNormalization.Fold(term).Trim();
-        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-        if (needle.Length == 0 || (ReferenceEquals(folded, value) && ReferenceEquals(needle, term))
+        var foldedTerm = MatchingNormalization.Fold(term).Trim();
+        var needle = KeyOf(foldedTerm, caseSensitive, separators);
+        if (needle.Length == 0 || (ReferenceEquals(folded, value) && ReferenceEquals(foldedTerm, term))
             || IndexOf(folded, needle, caseSensitive, wholeWord: false, 0, separators) < 0)
             return null;
 
@@ -200,7 +312,7 @@ internal static class TermMatch
         {
             for (var at = from; at < value.Length; at++)
             {
-                var end = MatchEnd(value, at, needle, comparison, separators);
+                var end = MatchEnd(value, at, needle, caseSensitive, separators);
                 if (end >= 0 && (!wholeWord
                     || ((at == 0 || !IsWordChar(value[at - 1])) && (end + 1 >= value.Length || !IsWordChar(value[end + 1])))))
                     return (at, end);
@@ -310,20 +422,5 @@ internal static class TermMatch
         }
         length = term.Length;
         return -1;
-    }
-
-    /// <summary>
-    /// <see cref="MatchEnd"/> for a needle whose separators match flexibly: the fold
-    /// of the raw window from <paramref name="start"/> must open with a match, and the
-    /// raw span grows until its fold is as long as the folded text matched.
-    /// </summary>
-    private static int FlexibleMatchEnd(
-        string text, int start, string needle, StringComparison comparison, SeparatorMatching separators)
-    {
-        // Room for a separator run in the text longer than the needle's one.
-        var window = Math.Min(needle.Length * 4 + 64, text.Length - start);
-        var matched = FlexibleMatchLength(
-            MatchingNormalization.Fold(text.Substring(start, window)), 0, needle, comparison, separators);
-        return matched <= 0 ? -1 : GrowToFoldedLength(text, start, matched);
     }
 }

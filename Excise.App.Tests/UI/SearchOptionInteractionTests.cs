@@ -165,6 +165,33 @@ public class SearchOptionInteractionTests
         finally { window.Close(); }
     }
 
+    /// <summary>The accented and the plain spelling of "cafe", nothing else.</summary>
+    private const string AccentPageText = "un café et un cafe";
+
+    [FixedAvaloniaFact(Timeout = 60000)]
+    public async Task IgnoreAccents_DefaultsOn_AndAClickReRunsTheSearch_DroppingTheAccentedSpelling()
+    {
+        var (window, vm) = await OpenWithSearchBar("ignoreaccents", AccentPageText);
+        try
+        {
+            vm.SearchIgnoreAccents.Should().BeTrue("accents are ignored by default, as in redaction");
+            OptionCheckbox(window, "Ignore accents").IsChecked.Should().Be(true);
+
+            await RunSearch(window, vm, "cafe");
+            vm.SearchMatches.Select(m => m.MatchedText).Should().BeEquivalentTo(["café", "cafe"],
+                "by default 'cafe' finds both spellings, each shown as on the page");
+
+            await ClickOptionCheckbox(window, "Ignore accents");
+            vm.SearchIgnoreAccents.Should().BeFalse("a real click must toggle the bound option");
+            await WaitForResults(vm, count: 1);
+            vm.SearchMatches.Select(m => m.MatchedText).Should().BeEquivalentTo(["cafe"],
+                "with the option off an accented letter matches only itself");
+
+            AssertRecorded("Ignore accents");
+        }
+        finally { window.Close(); }
+    }
+
     [FixedAvaloniaTheory(Timeout = 60000)]
     [InlineData(1600)]
     [InlineData(1024)]
@@ -186,7 +213,7 @@ public class SearchOptionInteractionTests
             var bar = searchBox.GetLogicalAncestors().OfType<Border>().First();
             var controls = bar.GetLogicalDescendants().OfType<Control>()
                 .Where(c => c is CheckBox or Button or TextBox).ToList();
-            controls.Should().HaveCountGreaterThanOrEqualTo(10, "five options, the box and four buttons");
+            controls.Should().HaveCountGreaterThanOrEqualTo(11, "six options, the box and four buttons");
             bar.GetLogicalDescendants().OfType<ScrollViewer>().Should().BeEmpty("the search bar never scrolls");
 
             foreach (var control in controls)
@@ -200,7 +227,7 @@ public class SearchOptionInteractionTests
                 control.Bounds.Width.Should().BeGreaterThan(0, $"{Describe(control)} must not be squeezed to nothing");
             }
 
-            foreach (var option in new[] { "Case sensitive", "Whole words", "Hyphen = space", "No space too", "Regex" })
+            foreach (var option in new[] { "Case sensitive", "Whole words", "Hyphen = space", "No space too", "Ignore accents", "Regex" })
                 AutomationProperties.GetName(OptionCheckbox(window, option)).Should().NotBeNullOrWhiteSpace(
                     $"'{option}' needs an accessible name");
         }

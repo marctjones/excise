@@ -12,7 +12,8 @@ excise commands          [id]             [--json]
 excise batch             <workflow.json>  [--json] [--progress] [--output report.json]
 excise draw              <file>                                 # graphics-API demo
 excise redact            <input> <output> <text>  [--case-sensitive] [--whole-word]
-                                          [--exact-separators] [--match-closed-compounds] [--verbose]
+                                          [--exact-separators] [--match-closed-compounds]
+                                          [--exact-accents] [--verbose]
 excise optimize          <input> <output> [--preset lossless|high|standard|screen] [--password P] [--json]
 excise fill-form         <input> <output> --field Name=Value [...] [--flatten]
 excise add-field         <input> <output> --type T --name N --page P --rect "l,b,r,t" [--value v] [--option o]...
@@ -56,6 +57,10 @@ excise redact report.pdf report-redacted.pdf "ACCOUNT 9876" --fixed-marker
 # summarised in one line, after the notes about text that was not removed)
 excise redact report.pdf report-redacted.pdf "ACCOUNT 9876" --fixed-marker --verbose
 
+# Without --case-sensitive, matching uses Unicode full case folding: this removes
+# "Straße", "STRASSE" and "STRAẞE" (no language-specific rules: "ı" is not "i")
+excise redact report.pdf report-redacted.pdf "strasse"
+
 # A hyphen and a space inside the term match each other by default: this removes
 # "open source", "open-source", "open–source", "open—source" and "open-" / "source"
 # hyphenated across a line break. A term with no hyphen or space matches exactly.
@@ -67,6 +72,14 @@ excise redact report.pdf report-redacted.pdf "open source" --exact-separators
 # Also the closed compound "opensource" (off by default: "pen nest" would also
 # remove the middle of "pennest")
 excise redact report.pdf report-redacted.pdf "open source" --match-closed-compounds
+
+# Accents are ignored by default, in the term and in the text: this removes "café",
+# "CAFÉ" and "cafe" (Latin, Greek and Cyrillic accents only; marks that are part of
+# a letter in Indic scripts, Thai, Japanese and Korean always match exactly)
+excise redact report.pdf report-redacted.pdf "cafe"
+
+# Only the spelling typed: an accented letter matches only itself
+excise redact report.pdf report-redacted.pdf "cafe" --exact-accents
 
 # Write a smaller copy for email: downsample images above 188 dpi to 150 dpi
 excise optimize scan.pdf scan-small.pdf --preset standard

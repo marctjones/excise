@@ -72,13 +72,17 @@ public class OverprintedTextRedactionTests
     [Fact]
     public void Guard_TheStampsAreWhatMakeTheTextUnsearchable()
     {
-        // Documents the defect rather than the fix: excise's extracted text for
-        // an overprinted run really does interleave the stamps. If this ever
+        // Documents the defect rather than the fix: excise's LETTER model for an
+        // overprinted run really does hold every stamp, interleaved. If this ever
         // stops being true the collapse below is solving a problem that moved.
+        // Page text reads the stack once (OverprintedGlyphs), as MuPDF does.
         using var doc = PdfDocument.Open(OverprintedPdf());
-        doc.GetPage(1).Text.Should().Contain("SSSS",
+        string.Concat(doc.GetPage(1).Letters.Select(l => l.Value)).Should().StartWith("SSSSeeee",
             "four stamps of the same run interleave character-by-character in " +
-            "the letter sequence — which is precisely why a plain search fails");
+            "the letter sequence — which is precisely why a plain search failed");
+        // Spaces aside: the fixture sets each glyph at a fixed 7 pt pitch, so the
+        // narrow 'r' leaves a gap the word-space rule reads as a space.
+        doc.GetPage(1).Text.Replace(" ", "").Should().Be(Secret, "page text reads each stack of stamps once");
         // Independent structural reading of the input: 4 stamps per glyph.
         var tjCount = SavedPdfLeakScanner.StreamBodies(OverprintedPdf())
             .Sum(body => System.Text.RegularExpressions.Regex.Matches(body, @"\)\s*Tj").Count);
