@@ -56,6 +56,10 @@ excise redact report.pdf report-redacted.pdf "ACCOUNT 9876" --fixed-marker
 # summarised in one line, after the notes about text that was not removed)
 excise redact report.pdf report-redacted.pdf "ACCOUNT 9876" --fixed-marker --verbose
 
+# Without --case-sensitive, matching uses Unicode full case folding: this removes
+# "Straße", "STRASSE" and "STRAẞE" (no language-specific rules: "ı" is not "i")
+excise redact report.pdf report-redacted.pdf "strasse"
+
 # A hyphen and a space inside the term match each other by default: this removes
 # "open source", "open-source", "open–source", "open—source" and "open-" / "source"
 # hyphenated across a line break. A term with no hyphen or space matches exactly.

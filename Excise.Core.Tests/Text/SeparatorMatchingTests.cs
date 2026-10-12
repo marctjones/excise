@@ -171,12 +171,12 @@ public class SeparatorMatchingTests
     public void MatchEnd_MapsAFoldedVariantBackToTheRawSpan(string needle)
     {
         const string raw = "an open–source tool";
-        TermMatch.MatchEnd(raw, 3, needle, StringComparison.OrdinalIgnoreCase, SeparatorMatching.Default)
+        TermMatch.MatchEnd(raw, 3, needle, caseSensitive: false, SeparatorMatching.Default)
             .Should().Be(3 + "open–source".Length - 1);
-        TermMatch.MatchEnd(raw, 3, needle, StringComparison.OrdinalIgnoreCase, SeparatorMatching.Exact)
+        TermMatch.MatchEnd(raw, 3, needle, caseSensitive: false, SeparatorMatching.Exact)
             .Should().Be(needle == "open-source" ? 3 + "open-source".Length - 1 : -1,
                 "exact: the en dash folds to '-', so only the hyphenated term matches, as before");
-        TermMatch.MatchEnd("open  -  source", 0, needle, StringComparison.OrdinalIgnoreCase, SeparatorMatching.Default)
+        TermMatch.MatchEnd("open  -  source", 0, needle, caseSensitive: false, SeparatorMatching.Default)
             .Should().Be("open  -  source".Length - 1, "a raw separator run is matched whole");
     }
 }

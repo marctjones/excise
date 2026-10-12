@@ -33,6 +33,14 @@ The last two do not apply to Regex. Text redaction uses the same rule with the s
 defaults (Preferences ▸ Redaction ▸ Treat hyphens and spaces as the same / Also match
 with no space), so redacting a term removes every spelling search finds for it.
 
+With **Case sensitive** off, search and text redaction compare under Unicode full case
+folding (Unicode 16.0): "strasse" finds "Straße", "STRASSE" and "STRAẞE", and "Straße"
+finds "strasse". A match that covers part of a letter that folds to two ("ss" inside
+"ß") takes the whole letter. There are no language-specific rules: the Turkish dotless
+"ı" is its own letter and does not match "i" or "I". With **Case sensitive** on, every
+character matches only itself. Regex keeps the regular-expression engine's own
+case-insensitive rule, which does not fold "ß" to "ss".
+
 ## Typewriter text on flat PDFs
 
 1. Click **✎ Type** in the toolbar.

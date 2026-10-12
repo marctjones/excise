@@ -1221,14 +1221,15 @@ public static class PdfDocumentRedactionExtensions
         Func<List<Letter>, bool> accept, Excise.Core.Text.SeparatorMatching separators = default)
     {
         var matches = new List<(List<Letter> Letters, int From, int To)>();
-        var comparison = caseSensitive ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
         var (view, spanStart, spanEnd, fullText, characterToLetter, lines) = text;
 
         // Trim only the caller's needle. Trimming each candidate source window
         // lets matching start on an unrelated whitespace glyph, whose geometry
         // may be on another line or column. The resulting bounding box can span
         // most of a page and destroy remote text (#942).
-        var needle = MatchingNormalization.Fold(searchText).Trim();
+        // #1871 and the case and accent rules: the needle in the one matching
+        // space search uses (TermMatch.MatchSpace), so a ß reads as ss here too.
+        var needle = TermMatch.Needle(searchText, caseSensitive, separators);
         if (needle.Length == 0) return matches;
 
         // NOTE: not `i <= fullText.Length - needle.Length` — normalization can
@@ -1237,7 +1238,7 @@ public static class PdfDocumentRedactionExtensions
         int i = 0;
         while (i < fullText.Length)
         {
-            var endIndex = TermMatch.MatchEnd(fullText, i, needle, comparison, separators);
+            var endIndex = TermMatch.MatchEnd(fullText, i, needle, caseSensitive, separators);
             if (endIndex >= 0)
             {
                 // #1052: whole-word matching, when the user asked for it. #1000

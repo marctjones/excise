@@ -1376,7 +1376,8 @@
                 <CheckBox IsChecked="{Binding SearchCaseSensitive}"
                           Content="Case sensitive"
                           AutomationProperties.Name="Case Sensitive Search"
-                          AutomationProperties.HelpText="Match uppercase and lowercase letters exactly."
+                          AutomationProperties.HelpText="Match uppercase and lowercase letters exactly. When off, letters match under Unicode case folding, so 'strasse' also finds Straße."
+                          ToolTip.Tip="Match uppercase and lowercase letters exactly. When off, Unicode case folding applies: 'strasse' also finds Straße and STRASSE."
                           Margin="0,0,8,0"/>
 
                 <!-- Whole Words Checkbox -->
