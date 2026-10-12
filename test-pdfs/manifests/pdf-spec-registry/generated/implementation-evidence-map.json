@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "5ba7b1c4671bb33dc8052c76d8d73e9c983f1b940f0bdd779909ec81582404b3",
+  "sourceFingerprint": "c2585468510d1e7f800d251a3e46a5f49ff5a90043755c7f0b4ccec5ff4f92d1",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -6186,6 +6186,16 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Core/Text/MatchingKey.cs",
+      "path": "Excise.Core/Text/MatchingKey.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Core/Text/MatchingNormalization.cs",
       "path": "Excise.Core/Text/MatchingNormalization.cs",
       "kind": "source-file",
@@ -6193,6 +6203,28 @@
         "product-integration-general"
       ],
       "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Text/OverprintedGlyphs.cs",
+      "path": "Excise.Core/Text/OverprintedGlyphs.cs",
+      "kind": "source-file",
+      "facets": [
+        "fonts"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.fonts",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ],
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ]
+        }
+      ],
       "promotion": "review-required"
     },
     {
@@ -6302,6 +6334,16 @@
     {
       "id": "Excise.Core/Text/TextSelectionEngine.cs",
       "path": "Excise.Core/Text/TextSelectionEngine.cs",
+      "kind": "source-file",
+      "facets": [
+        "product-integration-general"
+      ],
+      "parentCapabilityModes": [],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Core/Text/UnicodeCaseFolding.cs",
+      "path": "Excise.Core/Text/UnicodeCaseFolding.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -12073,15 +12115,15 @@
     }
   ],
   "summary": {
-    "records": 608,
+    "records": 611,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 20,
       "document-structure": 36,
-      "fonts": 39,
+      "fonts": 40,
       "forms": 12,
       "images": 40,
-      "product-integration-general": 345,
+      "product-integration-general": 347,
       "redaction": 88,
       "safe-save-and-metadata": 21,
       "security-and-encryption": 25,
@@ -12102,9 +12144,9 @@
       "pdf.17.graphics.color:preserve": 1,
       "pdf.17.graphics.color:render": 1,
       "pdf.17.graphics.color:write": 1,
-      "pdf.17.graphics.fonts:extract": 39,
-      "pdf.17.graphics.fonts:parse": 39,
-      "pdf.17.graphics.fonts:render": 39,
+      "pdf.17.graphics.fonts:extract": 40,
+      "pdf.17.graphics.fonts:parse": 40,
+      "pdf.17.graphics.fonts:render": 40,
       "pdf.17.graphics.images:extract": 40,
       "pdf.17.graphics.images:parse": 40,
       "pdf.17.graphics.images:render": 40,
@@ -12160,7 +12202,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 25,
       "pdfe.product.security.signature-and-permission-warning:write": 25
     },
-    "fallbackRecords": 345,
+    "fallbackRecords": 347,
     "allRecordsMapped": true
   }
 }

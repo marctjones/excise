@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1676,
-  "indexedContentSha256": "92bc130f03bc9aae1906cc2a7ec0b732db49058380a7487ae8c115cc125d7dc7",
+  "indexedFileCount": 1685,
+  "indexedContentSha256": "9f024c6af3207285ab4443d64fd92865ce78c2079981b149ceb5294e03c62895",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -8250,7 +8250,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 784
+      "candidateReferenceCount": 786
     },
     {
       "id": "pdf.17.graphics.color",
@@ -53481,7 +53481,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 263
+      "candidateReferenceCount": 265
     },
     {
       "id": "pdf.20.annotation.subtype-012",
@@ -58223,6 +58223,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Text/MatchingKey.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "redact",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core/Text/MatchingNormalization.cs",
           "kind": "source",
           "matchedTerms": [
@@ -58538,19 +58548,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Content/ContentStreamParserMetadataModeTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "redact",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 222
+      "candidateReferenceCount": 225
     },
     {
       "id": "pdf.20.annotation.subtype-020",
@@ -63077,7 +63077,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 254
+      "candidateReferenceCount": 255
     },
     {
       "id": "pdf.17.interactive.redaction-annotations",
@@ -64069,7 +64069,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 121
+      "candidateReferenceCount": 122
     },
     {
       "id": "pdf.17.interactive.redaction-review-drafts",
@@ -65426,6 +65426,17 @@
           ]
         },
         {
+          "path": "Excise.Core/Text/MatchingKey.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "applied",
+            "redaction",
+            "action",
+            "annotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core/Text/TextExtractor.cs",
           "kind": "source",
           "matchedTerms": [
@@ -65979,19 +65990,9 @@
             "action",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/RedactionCompressedCanaryMutationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "applied",
-            "redaction",
-            "action",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 109
+      "candidateReferenceCount": 110
     },
     {
       "id": "pdf.17.interactive.forms",
@@ -69056,7 +69057,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 155
+      "candidateReferenceCount": 156
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -69825,7 +69826,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 103
+      "candidateReferenceCount": 104
     },
     {
       "id": "pdf.17.interchange.tagged-pdf",
@@ -70636,7 +70637,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 479
+      "candidateReferenceCount": 482
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -72946,7 +72947,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 861
+      "candidateReferenceCount": 865
     },
     {
       "id": "pdf.20.extension.developer",
@@ -73652,7 +73653,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 189
+      "candidateReferenceCount": 192
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -77865,7 +77866,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 182
+      "candidateReferenceCount": 181
     },
     {
       "id": "pdfe.product.security.external-links",
@@ -78995,15 +78996,6 @@
           ]
         },
         {
-          "path": "Excise.Core.Tests/Text/Segmentation/HarakatNiqqudRedactionTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "save",
-            "stripping",
-            "redaction"
-          ]
-        },
-        {
           "path": "Excise.Core.Tests/Text/Segmentation/NameTreeKeyCarrierLeakTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -79032,9 +79024,19 @@
             "save",
             "redaction"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Text/Segmentation/RedactionProfileTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "attachment",
+            "attachments",
+            "save",
+            "redaction"
+          ]
         }
       ],
-      "candidateReferenceCount": 162
+      "candidateReferenceCount": 161
     },
     {
       "id": "pdfe.product.security.signature-and-permission-warning",
