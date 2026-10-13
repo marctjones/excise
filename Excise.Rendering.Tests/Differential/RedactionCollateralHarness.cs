@@ -279,7 +279,7 @@ public class RedactionCollateralHarness
                 // Half one: the term must actually be gone. Already covered
                 // elsewhere, asserted here so a "0 collateral" result cannot be
                 // achieved by doing nothing at all.
-                if (after.Contains(term, StringComparison.OrdinalIgnoreCase))
+                if (ContainsFolded(after, term))
                     failures.Add($"'{term}': still present after redaction");
 
                 // #1094: the COUNT, refereed by mutool. This is the one number
@@ -573,8 +573,37 @@ public class RedactionCollateralHarness
 
     private static int Alnum(string s) => s.Count(char.IsLetterOrDigit);
 
+    /// <summary>
+    /// The oracle's own folding, deliberately NOT excise's matcher: decompose
+    /// (NFD), drop the combining-mark blocks (U+0300-036F, 1AB0-1AFF, 1DC0-1DFF,
+    /// FE20-FE2F), then compare ignoring case, with the German sharp s read as
+    /// "ss". Redaction ignores accents by default, so a count that does not
+    /// would call a correct removal of 'evaluations' (for the term 'évaluations')
+    /// a mismatch. Writing the fold here, from .NET's own normalization, keeps
+    /// this check independent of the code it referees (rule 4).
+    /// </summary>
+    private static string FoldForOracle(string s)
+    {
+        var sb = new StringBuilder(s.Length);
+        foreach (var ch in s.Normalize(NormalizationForm.FormD))
+        {
+            if (ch is >= '\u0300' and <= '\u036F' or >= '\u1AB0' and <= '\u1AFF'
+                or >= '\u1DC0' and <= '\u1DFF' or >= '\uFE20' and <= '\uFE2F')
+                continue;
+            if (ch is '\u00DF' or '\u1E9E') { sb.Append("ss"); continue; }
+            sb.Append(ch);
+        }
+        return sb.ToString();
+    }
+
+    private static bool ContainsFolded(string haystack, string needle) =>
+        FoldForOracle(haystack).Contains(FoldForOracle(needle), StringComparison.OrdinalIgnoreCase);
+
     private static int CountOccurrences(string haystack, string needle)
     {
+        haystack = FoldForOracle(haystack);
+        needle = FoldForOracle(needle);
+        if (needle.Length == 0) return 0;
         int n = 0, i = 0;
         while ((i = haystack.IndexOf(needle, i, StringComparison.OrdinalIgnoreCase)) >= 0) { n++; i += needle.Length; }
         return n;

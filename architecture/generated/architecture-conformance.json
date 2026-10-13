@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "090613bd921f9cc74f659d69ca3211e77b3ab1b5",
+  "sourceRevision": "a551721bb68f007bdc0600ebf161337298a9678e",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8921,
+    "retainedSymbols": 8948,
     "observedComponentDependencies": 85,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -192,7 +192,7 @@
     {
       "source": "cli",
       "target": "core-redaction",
-      "references": 228,
+      "references": 229,
       "typeDependencyCount": 51,
       "classification": "declared",
       "evidence": [
@@ -694,7 +694,7 @@
     {
       "source": "core-redaction",
       "target": "core-document",
-      "references": 1440,
+      "references": 1439,
       "typeDependencyCount": 165,
       "classification": "declared",
       "evidence": [
@@ -750,14 +750,14 @@
     {
       "source": "core-redaction",
       "target": "core-text",
-      "references": 331,
-      "typeDependencyCount": 52,
+      "references": 326,
+      "typeDependencyCount": 54,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.Core.Text.Segmentation.PdfDocumentRedactionExtensions",
           "target": "Excise.Core.Text.Letter",
-          "references": 42
+          "references": 35
         }
       ]
     },
@@ -848,8 +848,8 @@
     {
       "source": "core-text",
       "target": "core-document",
-      "references": 207,
-      "typeDependencyCount": 19,
+      "references": 208,
+      "typeDependencyCount": 20,
       "classification": "declared",
       "evidence": [
         {
@@ -1520,7 +1520,7 @@
   ],
   "registryMismatches": [],
   "observationBlindSpots": [
-    "XAML untyped binding paths: Converter.x.Static.conv.EnumDisplayConverter.Instance. Unresolved typed member segments: Excise.App.ViewModels.BatesNumberingDialogViewModel.DigitsBox, Excise.App.ViewModels.BatesNumberingDialogViewModel.FontSizeBox, Excise.App.ViewModels.BatesNumberingDialogViewModel.PositionBox, Excise.App.ViewModels.BatesNumberingDialogViewModel.PrefixBox, Excise.App.ViewModels.BatesNumberingDialogViewModel.StartNumberBox, Excise.App.ViewModels.BatesNumberingDialogViewModel.SuffixBox, Excise.App.ViewModels.LinuxPrintDialogViewModel.LinuxPrintCopiesBox, Excise.App.ViewModels.LinuxPrintDialogViewModel.LinuxPrintPageRangeBox, Excise.App.ViewModels.MakeSearchableDialogViewModel.LanguageTextBox, Excise.App.ViewModels.PreferencesViewModel.AppearanceComboBox, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle1, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle10, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle11, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle12, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle13, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle14, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle2, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle3, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle4, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle5, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle6, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle7, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle8, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle9, Excise.App.ViewModels.PreferencesViewModel.DocumentOpenModeComboBox, Excise.App.ViewModels.PreferencesViewModel.IdleTrimSecondsNumericUpDown, Excise.App.ViewModels.PreferencesViewModel.IsChecked, Excise.App.ViewModels.PreferencesViewModel.LinkUriCarrierPolicyComboBox, Excise.App.ViewModels.PreferencesViewModel.MetadataCarrierPolicyComboBox, Excise.App.ViewModels.PreferencesViewModel.PerformancePresetComboBox, Excise.App.ViewModels.PreferencesViewModel.PrintScalingComboBox, Excise.App.ViewModels.PreferencesViewModel.ReadingOrderStrategyComboBox, Excise.App.ViewModels.PreferencesViewModel.RedactionClosedCompoundsCheckBox, Excise.App.ViewModels.PreferencesViewModel.RedactionHyphenAsSpaceCheckBox, Excise.App.ViewModels.PreferencesViewModel.RedactionKeepAttachmentsCheckBox, Excise.App.ViewModels.PreferencesViewModel.RedactionProfileComboBox, Excise.App.ViewModels.PreferencesViewModel.RedactionWholeWordCheckBox, Excise.App.ViewModels.PreferencesViewModel.RedactionWidthPolicyComboBox, Excise.App.ViewModels.PreferencesViewModel.RenderThreadsNumericUpDown, Excise.App.ViewModels.PreferencesViewModel.RunFormCalcCheckBox, Excise.App.ViewModels.PreferencesViewModel.SinglePageCachedPagesNumericUpDown, Excise.App.ViewModels.PreferencesViewModel.SoftCacheTrimsCheckBox, Excise.App.ViewModels.PreferencesViewModel.ThumbnailKeepMarginNumericUpDown, Excise.App.ViewModels.PreferencesViewModel.ThumbnailPrewarmCheckBox, Excise.App.ViewModels.PreferencesViewModel.TileCacheBudgetNumericUpDown, Excise.App.ViewModels.PreferencesViewModel.WhitespaceModeComboBox, Excise.App.ViewModels.SecurityDialogViewModel.AlgorithmComboBox, Excise.App.ViewModels.SecurityDialogViewModel.ConfirmNewUserPasswordBox, Excise.App.ViewModels.SecurityDialogViewModel.CurrentPasswordBox, Excise.App.ViewModels.SecurityDialogViewModel.NewOwnerPasswordBox, Excise.App.ViewModels.SecurityDialogViewModel.NewUserPasswordBox. Both sets are explicit rather than hidden by whole-file token matching.",
+    "XAML untyped binding paths: Converter.x.Static.conv.EnumDisplayConverter.Instance. Unresolved typed member segments: Excise.App.ViewModels.BatesNumberingDialogViewModel.DigitsBox, Excise.App.ViewModels.BatesNumberingDialogViewModel.FontSizeBox, Excise.App.ViewModels.BatesNumberingDialogViewModel.PositionBox, Excise.App.ViewModels.BatesNumberingDialogViewModel.PrefixBox, Excise.App.ViewModels.BatesNumberingDialogViewModel.StartNumberBox, Excise.App.ViewModels.BatesNumberingDialogViewModel.SuffixBox, Excise.App.ViewModels.LinuxPrintDialogViewModel.LinuxPrintCopiesBox, Excise.App.ViewModels.LinuxPrintDialogViewModel.LinuxPrintPageRangeBox, Excise.App.ViewModels.MakeSearchableDialogViewModel.LanguageTextBox, Excise.App.ViewModels.PreferencesViewModel.AppearanceComboBox, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle1, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle10, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle11, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle12, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle13, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle14, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle15, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle2, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle3, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle4, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle5, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle6, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle7, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle8, Excise.App.ViewModels.PreferencesViewModel.DetailsToggle9, Excise.App.ViewModels.PreferencesViewModel.DocumentOpenModeComboBox, Excise.App.ViewModels.PreferencesViewModel.IdleTrimSecondsNumericUpDown, Excise.App.ViewModels.PreferencesViewModel.IsChecked, Excise.App.ViewModels.PreferencesViewModel.LinkUriCarrierPolicyComboBox, Excise.App.ViewModels.PreferencesViewModel.MetadataCarrierPolicyComboBox, Excise.App.ViewModels.PreferencesViewModel.PerformancePresetComboBox, Excise.App.ViewModels.PreferencesViewModel.PrintScalingComboBox, Excise.App.ViewModels.PreferencesViewModel.ReadingOrderStrategyComboBox, Excise.App.ViewModels.PreferencesViewModel.RedactionClosedCompoundsCheckBox, Excise.App.ViewModels.PreferencesViewModel.RedactionHyphenAsSpaceCheckBox, Excise.App.ViewModels.PreferencesViewModel.RedactionIgnoreAccentsCheckBox, Excise.App.ViewModels.PreferencesViewModel.RedactionKeepAttachmentsCheckBox, Excise.App.ViewModels.PreferencesViewModel.RedactionProfileComboBox, Excise.App.ViewModels.PreferencesViewModel.RedactionWholeWordCheckBox, Excise.App.ViewModels.PreferencesViewModel.RedactionWidthPolicyComboBox, Excise.App.ViewModels.PreferencesViewModel.RenderThreadsNumericUpDown, Excise.App.ViewModels.PreferencesViewModel.RunFormCalcCheckBox, Excise.App.ViewModels.PreferencesViewModel.SinglePageCachedPagesNumericUpDown, Excise.App.ViewModels.PreferencesViewModel.SoftCacheTrimsCheckBox, Excise.App.ViewModels.PreferencesViewModel.ThumbnailKeepMarginNumericUpDown, Excise.App.ViewModels.PreferencesViewModel.ThumbnailPrewarmCheckBox, Excise.App.ViewModels.PreferencesViewModel.TileCacheBudgetNumericUpDown, Excise.App.ViewModels.PreferencesViewModel.WhitespaceModeComboBox, Excise.App.ViewModels.SecurityDialogViewModel.AlgorithmComboBox, Excise.App.ViewModels.SecurityDialogViewModel.ConfirmNewUserPasswordBox, Excise.App.ViewModels.SecurityDialogViewModel.CurrentPasswordBox, Excise.App.ViewModels.SecurityDialogViewModel.NewOwnerPasswordBox, Excise.App.ViewModels.SecurityDialogViewModel.NewUserPasswordBox. Both sets are explicit rather than hidden by whole-file token matching.",
     "Dynamic mechanism summaries describe how each observed mechanism is modeled; zero observations are explicit.",
     "Interface-to-implementation dispatch edges are retained for reachability but omitted from component dependencies; implementation declarations provide the compile-time dependency on their interfaces.",
     "Test-project evidence starts from semantic cross-compilation references and follows explicit production edges without treating every member of a reachable type as reachable.",

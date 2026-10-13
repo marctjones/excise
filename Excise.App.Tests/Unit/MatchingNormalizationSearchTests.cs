@@ -1,4 +1,5 @@
 using System;
+using Excise.Core.Text;
 using System.Linq;
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -197,18 +198,32 @@ public class MatchingNormalizationSearchTests
     // ── Scope guards: every fold is bounded, and these prove the bound ──
 
     [Fact]
-    public void SearchInPage_UnaccentedNeedle_DoesNotFindPrecomposedWord()
+    public void SearchInPage_UnaccentedNeedle_FindsPrecomposedWord_ByDefault()
     {
-        // Canonical folding must not become accent-insensitive matching —
-        // "cafe" is not canonically equivalent to "café".
+        // Owner decision (2026-10-11): accents are ignored by default, so "cafe"
+        // finds "café". The opt-out (exact accents) is pinned just below.
         using var doc = PdfDocument.Open(
             ToUnicodePdfFixture.Build(new[] { 'c', 'a', 'f', 0x00E9 }));
         var page = doc.GetPage(1);
 
         var matches = NewService().SearchInPage(page, "cafe", pageIndex: 0);
 
-        matches.Should().BeEmpty(
-            "the accent is canonically meaningful; accent-INSENSITIVE search is out of scope");
+        matches.Should().ContainSingle(
+            "accent-insensitive matching is on by default: 'cafe' finds 'café'");
+    }
+
+    [Fact]
+    public void SearchInPage_UnaccentedNeedle_DoesNotFindPrecomposedWord_WhenAccentsAreExact()
+    {
+        // The opt-out keeps the old strict reading: the accent is meaningful.
+        using var doc = PdfDocument.Open(
+            ToUnicodePdfFixture.Build(new[] { 'c', 'a', 'f', 0x00E9 }));
+        var page = doc.GetPage(1);
+
+        var matches = NewService().SearchInPage(page, "cafe", pageIndex: 0,
+            separators: SeparatorMatching.Default with { IgnoreAccents = false });
+
+        matches.Should().BeEmpty("with exact accents 'cafe' does not find 'café'");
     }
 
     [Fact]
@@ -225,17 +240,19 @@ public class MatchingNormalizationSearchTests
     }
 
     [Fact]
-    public void SearchInPage_LatinAccents_AreNotStrippedByTheMarkFold()
+    public void SearchInPage_LatinAccents_AreKeptDistinct_WhenAccentsAreExact()
     {
-        // The Arabic/Hebrew mark strip must not also eat Latin combining accents.
+        // The Arabic/Hebrew mark strip is a separate rule from the Latin accent
+        // option: with exact accents, Latin combining accents are not stripped.
         using var doc = PdfDocument.Open(
             ToUnicodePdfFixture.Build(new[] { 'c', 'a', 'f', 0x00E9 }));
         var page = doc.GetPage(1);
 
-        var matches = NewService().SearchInPage(page, "cafe", pageIndex: 0);
+        var matches = NewService().SearchInPage(page, "cafe", pageIndex: 0,
+            separators: SeparatorMatching.Default with { IgnoreAccents = false });
 
         matches.Should().BeEmpty(
-            "Latin combining accents are canonically meaningful and must not be stripped");
+            "with exact accents, Latin combining accents are canonically meaningful and are not stripped");
     }
 
     [Fact]
