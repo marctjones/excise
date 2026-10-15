@@ -546,16 +546,8 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, IViewer
 
     #endregion
 
-    // #2069: keeps the render loop ticking briefly after input so the next turn is not
-    // delayed by a display-link restart.
-    private readonly RenderLoopWarmth _renderLoopWarmth;
-
-    /// <summary>The post-input render-loop hold (tests).</summary>
-    internal RenderLoopWarmth RenderLoopWarmthForTests => _renderLoopWarmth;
-
     public PdfViewerControl()
     {
-        _renderLoopWarmth = new RenderLoopWarmth(this);
         _pageCaches = new ViewerPageCaches(() => Document);
         InitializeComponent();
         ApplyViewTemplates();
@@ -681,7 +673,6 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, IViewer
         _viewportSubscription?.Dispose();
         _viewportSubscription = null;
         ContinuousPart.Detach();
-        _renderLoopWarmth.Detach();
     }
 
     /// <summary>
@@ -1009,7 +1000,6 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, IViewer
 
     private void OnViewerKeyDown(object? sender, KeyEventArgs e)
     {
-        _renderLoopWarmth.Touch();
         if (IsKeyboardEditingSource(e.Source))
             return;
 
@@ -1299,7 +1289,6 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, IViewer
 
     private async void OnCurrentPageChanged()
     {
-        _renderLoopWarmth.Touch();
         if (Document != null && CurrentPage >= 1 && CurrentPage <= Document.PageCount)
         {
             if (ViewMode == PdfViewMode.Continuous)
