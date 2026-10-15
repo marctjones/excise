@@ -24,6 +24,7 @@ public partial class PdfViewerControl
     /// </summary>
     private void OnViewerPointerWheelChanged(object? sender, PointerWheelEventArgs e)
     {
+        _renderLoopWarmth.Touch();
         bool zoomModifier = e.KeyModifiers.HasFlag(KeyModifiers.Control) ||
                             e.KeyModifiers.HasFlag(KeyModifiers.Meta);
         if (!zoomModifier)
