@@ -227,6 +227,22 @@ internal sealed partial class ContinuousPageView
     internal IReadOnlyList<(ContinuousTileKey Key, WriteableBitmap Bitmap)> ContinuousCacheEntriesForTests() =>
         new List<(ContinuousTileKey, WriteableBitmap)>(_continuousCache);
 
+    /// <summary>
+    /// The pages of the current bands with at least one required tile not in
+    /// the cache: a band render of each is still to come (#2071). A page whose
+    /// band tiles are all cached is not in the set. Does not touch the LRU order.
+    /// </summary>
+    internal HashSet<int> ContinuousBandPagesAwaitingTiles()
+    {
+        var pages = new HashSet<int>();
+        foreach (var key in _continuousRequiredKeys)
+        {
+            if (!pages.Contains(key.Page) && PeekContinuousCached(key) == null)
+                pages.Add(key.Page);
+        }
+        return pages;
+    }
+
     /// <summary>The band keys the last continuous render pass required (tests only).</summary>
     internal IReadOnlySet<ContinuousTileKey> ContinuousRequiredKeysForTests => _continuousRequiredKeys;
 

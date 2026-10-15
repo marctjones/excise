@@ -214,9 +214,22 @@ public partial class PdfViewerControl
         // REALIZED page: a realized page scrolled out of its band keeps its
         // samples there, but a trim lets them go (a later band render of that
         // page decodes again). Pages with a render in flight are always kept.
-        var bandPages = new HashSet<int>();
-        foreach (var key in ContinuousPart.ContinuousRequiredKeysForTests)
-            bandPages.Add(key.Page);
+        //
+        // #2071: a band page keeps its samples only while one of its band
+        // tiles is still missing, i.e. while a band render is still to come
+        // and would decode them again. Measured after the tile trim above, so
+        // Critical (which drops every band tile) keeps every band page, as
+        // before. A band page whose tiles are all cached has finished drawing,
+        // and Background and Warn keep those tiles, so nothing reads its
+        // samples until the zoom or the bands change. Keeping them anyway held
+        // ~120 MB of Altona's page-1 samples after soft-trim-cycle's idle
+        // reclaim (211 MB live heap, against 93 MB for the same scroll-back
+        // without trims, where page 1 was a tile hit and never re-decoded).
+        // The cost: the next zoom or resize of that same band decodes again
+        // (Altona page 1: band renders 34/51 -> 132/157 ms, ~190 ms CPU). The
+        // App also sends Background on window deactivate and minimize, so that
+        // cost follows a window switch as well as the idle trim.
+        var bandPages = ContinuousPart.ContinuousBandPagesAwaitingTiles();
         var (sampleStreams, sampleBytes) = ContinuousPart.ReleaseContinuousImageSamples(
             bandPages, ViewerMetrics.DecodedSampleReleaseTrim);
 
