@@ -493,6 +493,357 @@
       ]
     },
     {
+      "id": "business-open",
+      "why": "Open to settled for the long-document regime: a 455-page, 7 MB book (page index, thumbnail placeholders, text index), which the 126-page irs scenarios do not reach. The open step's wall ms is document load, idle-after-open is time until the viewer is quiescent (first page and the render-ahead band drawn); then 30 page heights of scrolling.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "pre-open"
+        },
+        {
+          "op": "open",
+          "label": "open-business",
+          "document": "test-pdfs/local-real-world/business-success-with-open-source_P1.0.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-open"
+        },
+        {
+          "op": "scrollPages",
+          "label": "scroll-30",
+          "count": 30
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-scroll"
+        },
+        {
+          "op": "idle",
+          "label": "idle-10s",
+          "seconds": 10
+        }
+      ]
+    },
+    {
+      "id": "business-search",
+      "why": "Search latency and its memory on the 455-page book: the search step's wall ms is the time to settle on a common term (many hits) and then on a rare one (a whole-document scan with few), after the text index is built. The matching rules changed in 2026-10 (case folding, accents, hyphen/space); nothing in the GUI timed them.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "pre-open"
+        },
+        {
+          "op": "open",
+          "label": "open-business",
+          "document": "test-pdfs/local-real-world/business-success-with-open-source_P1.0.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-open"
+        },
+        {
+          "op": "search",
+          "label": "search-common",
+          "text": "software"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-common"
+        },
+        {
+          "op": "search",
+          "label": "search-rare",
+          "text": "kaleidoscope"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-rare"
+        },
+        {
+          "op": "idle",
+          "label": "idle-10s",
+          "seconds": 10
+        }
+      ]
+    },
+    {
+      "id": "plans-open",
+      "why": "Open to settled for a vector-heavy drawing (20 copies of a dense CAD page: thousands of paths per page), the axis where the path rasteriser, not image decode, is the cost; then scroll and a 3x zoom into the dense linework. Caveat: the 20 pages share ONE content stream, so a cache keyed by object may render pages 2-20 cheaper than a real 20-page drawing.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "pre-open"
+        },
+        {
+          "op": "open",
+          "label": "open-plans",
+          "document": "test-pdfs/reader-bench/plans-x20.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-open"
+        },
+        {
+          "op": "scrollPages",
+          "label": "scroll-10",
+          "count": 10
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-scroll"
+        },
+        {
+          "op": "zoom",
+          "label": "zoom-300",
+          "value": 3.0
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-zoom-300"
+        },
+        {
+          "op": "idle",
+          "label": "idle-10s",
+          "seconds": 10
+        }
+      ]
+    },
+    {
+      "id": "ds11-open",
+      "why": "Open to settled for a real AcroForm (the state DS-11 passport application, 6 pages): widget and appearance-stream rendering, which the text and image scenarios never exercise.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "pre-open"
+        },
+        {
+          "op": "open",
+          "label": "open-ds11",
+          "document": "test-pdfs/smoke/state-ds11-passport.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-open"
+        },
+        {
+          "op": "scrollPages",
+          "label": "scroll-5",
+          "count": 5
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-scroll"
+        },
+        {
+          "op": "idle",
+          "label": "idle-10s",
+          "seconds": 10
+        }
+      ]
+    },
+    {
+      "id": "scan-scroll-close",
+      "why": "The common real-world scanned document (20 pages, one 200 dpi JPEG each, no text): open, scroll it all, wait through the app's 30 s idle trim, close, wait again. Written for #2072, where the NativeAOT build kept ~425 MB after the idle trim and after close while ReadyToRun returned to ~250 MB; compare idle-after-trim and idle-after-close between build shapes.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "pre-open"
+        },
+        {
+          "op": "open",
+          "label": "open-scan",
+          "document": "test-pdfs/reader-bench/scan-irs-20p-200dpi.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-open"
+        },
+        {
+          "op": "scrollPages",
+          "label": "scroll-20",
+          "count": 20
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-scroll"
+        },
+        {
+          "op": "idle",
+          "label": "idle-after-trim-45s",
+          "seconds": 45
+        },
+        {
+          "op": "close",
+          "label": "close-scan"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-close"
+        },
+        {
+          "op": "idle",
+          "label": "idle-after-close-45s",
+          "seconds": 45
+        }
+      ]
+    },
+    {
+      "id": "altona-zoom",
+      "why": "Zoom on an image-heavy document: 25/100/300% on the 17-page, 122 MB Altona file, where zoom multiplies decode and tile cost (irs-zoom is a text document). Each waitIdle's wall ms is the time until the page is sharp again; the ui stall column shows whether the window froze meanwhile.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "pre-open"
+        },
+        {
+          "op": "open",
+          "label": "open-altona",
+          "document": "test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-open"
+        },
+        {
+          "op": "zoom",
+          "label": "zoom-25",
+          "value": 0.25
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-zoom-25"
+        },
+        {
+          "op": "zoom",
+          "label": "zoom-100",
+          "value": 1.0
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-zoom-100"
+        },
+        {
+          "op": "zoom",
+          "label": "zoom-300",
+          "value": 3.0
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-zoom-300"
+        },
+        {
+          "op": "idle",
+          "label": "idle-10s",
+          "seconds": 10
+        }
+      ]
+    },
+    {
+      "id": "altona-zoom-after-trim",
+      "why": "What #2071 costs: a trim now releases a settled band page's decoded samples, so the first zoom after a Background trim decodes the images again (the investigator saw Altona page 1 band renders go from 34/51 to 132/157 ms, ~190 ms CPU). The same 2.0x zoom is taken first with the cache warm and then after a Background trim, back to back; compare the wall ms of idle-zoom-warm and idle-zoom-after-trim.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "pre-open"
+        },
+        {
+          "op": "open",
+          "label": "open-altona",
+          "document": "test-pdfs/altona/eci_altona-test-suite-v2_technical2_one-patch-per-page_x4.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-open"
+        },
+        {
+          "op": "scrollPages",
+          "label": "scroll-17",
+          "count": 17
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-scroll"
+        },
+        {
+          "op": "zoom",
+          "label": "zoom-200-warm",
+          "value": 2.0
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-zoom-warm"
+        },
+        {
+          "op": "zoom",
+          "label": "zoom-100",
+          "value": 1.0
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-zoom-100"
+        },
+        {
+          "op": "trim",
+          "label": "trim-background",
+          "level": "background"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-trim"
+        },
+        {
+          "op": "zoom",
+          "label": "zoom-200-after-trim",
+          "value": 2.0
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-zoom-after-trim"
+        },
+        {
+          "op": "idle",
+          "label": "idle-10s",
+          "seconds": 10
+        }
+      ]
+    },
+    {
       "id": "multi-windows-open3",
       "set": "multi-document",
       "settings": {
