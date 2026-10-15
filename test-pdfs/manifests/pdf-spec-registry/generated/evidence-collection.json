@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1689,
-  "indexedContentSha256": "736c2da5d0e5ae7dd0d46447a41556cf3d5ed62e8cc78321f0b76f428088a2cf",
+  "indexedFileCount": 1691,
+  "indexedContentSha256": "557fc9e77a554fa6883128219a40c3c32a87587ac1d031a798155aea5848f28f",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -64444,6 +64444,16 @@
           ]
         },
         {
+          "path": "Excise.App/Automation/AppPerfScenarioTarget.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "redaction",
+            "review",
+            "action",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.App/Automation/IPerfScenarioTarget.cs",
           "kind": "source",
           "matchedTerms": [
@@ -64999,19 +65009,9 @@
             "action",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Visual/CombinedRedactionRenderTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "redaction",
-            "review",
-            "action",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 127
+      "candidateReferenceCount": 129
     },
     {
       "id": "pdf.17.security.redaction-content-removal",
@@ -67850,11 +67850,31 @@
           ]
         },
         {
+          "path": "Excise.App/Automation/AppPerfScenarioTarget.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "actions",
+            "launch",
+            "action",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.App/Automation/IPerfScenarioTarget.cs",
           "kind": "source",
           "matchedTerms": [
             "actions",
             "including",
+            "action",
+            "redact"
+          ]
+        },
+        {
+          "path": "Excise.App/Automation/PerfScenario.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "actions",
+            "launch",
             "action",
             "redact"
           ]
@@ -67955,31 +67975,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Performance.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "launch",
-            "uri",
-            "action",
-            "annotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.App/ViewModels/MainWindowViewModel.Permissions.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "actions",
-            "uri",
-            "action",
-            "annotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 217
+      "candidateReferenceCount": 220
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -76643,6 +76641,15 @@
           ]
         },
         {
+          "path": "Excise.App/Automation/AppPerfScenarioTarget.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "redaction",
+            "review",
+            "redaction"
+          ]
+        },
+        {
           "path": "Excise.App/Automation/IPerfScenarioTarget.cs",
           "kind": "source",
           "matchedTerms": [
@@ -77057,18 +77064,9 @@
             "review",
             "redaction"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/RedactedCopySafetyPolicyTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "redaction",
-            "review",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 176
+      "candidateReferenceCount": 178
     },
     {
       "id": "pdfe.product.security.privacy-clean-copy",
@@ -80556,7 +80554,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 98
+      "candidateReferenceCount": 99
     },
     {
       "id": "pdfe.product.security.audit-log",
@@ -81302,7 +81300,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 189
+      "candidateReferenceCount": 190
     },
     {
       "id": "pdfe.product.platform.printing",
