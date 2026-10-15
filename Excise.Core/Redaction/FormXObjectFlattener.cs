@@ -143,8 +143,13 @@ internal static class FormXObjectFlattener
     /// guards against any blind spot in the reachability walk. Returns the
     /// objects that are still reachable, and so were kept.
     /// </summary>
+    /// <remarks>#1626: nothing to free needs no graph walk; the hidden-layer
+    /// prune calls this on every redaction, almost always with nothing.</remarks>
     internal static List<int> FreeUnreachable(PdfDocument doc, IEnumerable<int> objects)
     {
+        var candidates = objects as ICollection<int> ?? objects.ToList();
+        if (candidates.Count == 0) return new List<int>();
+        objects = candidates;
         var reachable = doc.ComputeReachableObjects();
         var kept = new List<int>();
         foreach (var objNum in objects)

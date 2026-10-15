@@ -87,6 +87,10 @@ public partial class PdfDocument : IDisposable
             RememberEmbeddedFontObject(fontProgramIdentity, reference!);
     }
 
+    // #1626: the static-XFA multi-line field names, memoized against the packet
+    // arrays they were read from (XfaMultilineFieldNames.Read owns the key).
+    internal volatile Xfa.XfaMultilineFieldNames.Memo? XfaMultilineNamesMemo;
+
     // #1918: image XObjects PdfGraphics.DrawImage built in this document, keyed by
     // PdfImage.Identity: a logo drawn on N pages is stored once, not N times.
     private readonly Dictionary<string, AuthoringResourceCacheEntry> _drawnImages = new();

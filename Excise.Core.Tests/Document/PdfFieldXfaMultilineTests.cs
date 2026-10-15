@@ -43,6 +43,29 @@ public class PdfFieldXfaMultilineTests
             "a sibling field whose template textEdit has no multiLine attribute must stay single-line");
     }
 
+    /// <summary>
+    /// #1626: the template's names are memoized per document, so a later
+    /// write to the template packet must be read, not answered from the memo.
+    /// A stale "multi-line" decides how a field value's letters are laid out
+    /// for extraction and therefore for redaction matching.
+    /// </summary>
+    [Fact]
+    public void IsMultiline_FollowsATemplateRewrite_AfterTheFirstRead()
+    {
+        var pdf = XfaTestForms.BuildStaticMultilineFieldPdf();
+        using var doc = PdfDocument.Open(new MemoryStream(pdf));
+        doc.GetAcroForm()!.FindField("Notes")!.IsMultiline.Should().BeTrue();
+        doc.GetAcroForm()!.FindField("Notes")!.IsMultiline.Should().BeTrue("a second read answers the same");
+
+        var xfa = (Excise.Core.Primitives.PdfStream)doc.Resolve(
+            ((Excise.Core.Primitives.PdfDictionary)doc.Resolve(doc.Catalog.GetOptional("AcroForm")!)).GetOptional("XFA")!);
+        var rewritten = Encoding.UTF8.GetString(xfa.DecodedData).Replace("multiLine=\"1\"", "");
+        xfa.DecodedData = Encoding.UTF8.GetBytes(rewritten);
+
+        doc.GetAcroForm()!.FindField("Notes")!.IsMultiline.Should().BeFalse(
+            "the template no longer marks the field multi-line, and a memo of the old packet must not say it does");
+    }
+
     [Fact]
     public void IsMultiline_AcroFormFlagAlone_StillWorks_WhenNoXfaTemplate()
     {

@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using Excise.Core.Document;
+using Excise.Core.Primitives;
 
 namespace Excise.Core.Xfa;
 
@@ -38,11 +39,75 @@ internal static class XfaMultilineFieldNames
     /// fails to parse or resolve — a signal this can't read is simply
     /// absent, never a document-open failure.
     /// </summary>
+    /// <remarks>
+    /// Memoized per document (#1626): every <see cref="PdfDocument.GetAcroForm"/>
+    /// asks, and text extraction parses the form once per page, so an XFA form
+    /// re-parsed and re-resolved its whole template for every page it read
+    /// (irs-w4: 13.5 to 62.7 MB of text extraction over 5 pages). The memo is
+    /// keyed by the packet streams and the very byte arrays they hold now: any
+    /// write to a packet replaces its array (or the stream, or the /XFA entry),
+    /// so a changed template is never answered from the memo. An identical
+    /// re-read under a new array is only a miss.
+    /// </remarks>
     public static IReadOnlySet<string> Read(PdfDocument document)
     {
         ArgumentNullException.ThrowIfNull(document);
 
-        if (!XfaPackets.TryRead(document, out var packets, out _) || packets == null)
+        var streams = XfaPackets.ReadPacketStreams(document);
+        if (streams == null)
+            return Empty;
+
+        var sources = new (PdfStream Stream, byte[] Encoded, byte[] Decoded)[streams.Count];
+        try
+        {
+            // The same running-total refusal XfaPackets.TryRead applies, at the
+            // same packet, so the key never decodes past the packet budget.
+            long total = 0;
+            for (var i = 0; i < streams.Count; i++)
+            {
+                sources[i] = (streams[i], streams[i].EncodedData, streams[i].DecodedData);
+                total += sources[i].Decoded.LongLength;
+                if (total > XfaBudget.MaxPacketBytes)
+                    return Empty;
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // A packet that cannot be decoded: no memo, read it as before.
+            return ReadUncached(streams);
+        }
+
+        if (document.XfaMultilineNamesMemo is { } memo && memo.Matches(sources))
+            return memo.Names;
+
+        var names = ReadUncached(streams);
+        document.XfaMultilineNamesMemo = new Memo(sources, names);
+        return names;
+    }
+
+    /// <summary>
+    /// The names <see cref="Read"/> returned for exactly these packet streams
+    /// and byte arrays (compared by reference).
+    /// </summary>
+    internal sealed class Memo((PdfStream Stream, byte[] Encoded, byte[] Decoded)[] sources, IReadOnlySet<string> names)
+    {
+        public IReadOnlySet<string> Names { get; } = names;
+
+        public bool Matches((PdfStream Stream, byte[] Encoded, byte[] Decoded)[] current)
+        {
+            if (current.Length != sources.Length) return false;
+            for (var i = 0; i < current.Length; i++)
+                if (!ReferenceEquals(current[i].Stream, sources[i].Stream)
+                    || !ReferenceEquals(current[i].Encoded, sources[i].Encoded)
+                    || !ReferenceEquals(current[i].Decoded, sources[i].Decoded))
+                    return false;
+            return true;
+        }
+    }
+
+    private static IReadOnlySet<string> ReadUncached(List<PdfStream> streams)
+    {
+        if (!XfaPackets.TryRead(streams, out var packets, out _) || packets == null)
             return Empty;
 
         try

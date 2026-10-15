@@ -53,25 +53,44 @@ internal sealed class XfaPackets
     /// </summary>
     public XElement? DataRoot { get; }
 
-    /// <summary>Read and parse the packets, or say why not.</summary>
-    public static bool TryRead(PdfDocument document, out XfaPackets? packets, out string reason)
+    /// <summary>
+    /// The packet streams <c>/AcroForm /XFA</c> holds, in order: one for a
+    /// single-stream entry, the resolved streams of a packet array. Null when
+    /// the document has no <c>/AcroForm /XFA</c> entry.
+    /// </summary>
+    internal static List<PdfStream>? ReadPacketStreams(PdfDocument document)
     {
-        packets = null;
-        reason = string.Empty;
-
         if (document.Resolve(document.Catalog.GetOptional("AcroForm") ?? PdfNull.Instance) is not PdfDictionary acroForm
             || acroForm.GetOptional("XFA") is not { } xfa)
-        {
-            reason = "The document has no /AcroForm /XFA entry.";
-            return false;
-        }
+            return null;
 
-        var streams = document.Resolve(xfa) switch
+        return document.Resolve(xfa) switch
         {
             PdfStream single => new List<PdfStream> { single },
             PdfArray array => XfaXmlCarrier.ResolvePacketStreams(document, array),
             _ => new List<PdfStream>(),
         };
+    }
+
+    /// <summary>Read and parse the packets, or say why not.</summary>
+    public static bool TryRead(PdfDocument document, out XfaPackets? packets, out string reason)
+    {
+        var streams = ReadPacketStreams(document);
+        if (streams == null)
+        {
+            packets = null;
+            reason = "The document has no /AcroForm /XFA entry.";
+            return false;
+        }
+        return TryRead(streams, out packets, out reason);
+    }
+
+    /// <summary>Parse <paramref name="streams"/> (from <see cref="ReadPacketStreams"/>), or say why not.</summary>
+    internal static bool TryRead(List<PdfStream> streams, out XfaPackets? packets, out string reason)
+    {
+        packets = null;
+        reason = string.Empty;
+
         if (streams.Count == 0)
         {
             reason = "The /XFA entry holds no packet streams.";
