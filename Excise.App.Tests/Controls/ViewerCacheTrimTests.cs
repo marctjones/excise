@@ -434,6 +434,56 @@ public class ViewerCacheTrimTests
         return required.Count * PdfViewerControl.ContinuousTileByteSize(cellPx, cellPx);
     }
 
+    /// <summary>
+    /// #2071's contract from the user's side: a Background trim releases a settled band page's decoded
+    /// samples, so the next zoom decodes the images again. Whatever it costs (the scenarios altona-zoom
+    /// and altona-zoom-after-trim time it), it must draw EXACTLY what a zoom with no trim draws: a
+    /// released sample that was not decoded again would show as a blank or stale page. Two fresh viewers
+    /// on the same document, one trimmed first, zoomed to the same level, compared pixel for pixel.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task ZoomAfterABackgroundTrim_DrawsTheSamePixelsAsZoomWithoutOne()
+    {
+        var withoutTrim = await ZoomedPageOnePixelsAsync(trimFirst: false);
+        var afterTrim = await ZoomedPageOnePixelsAsync(trimFirst: true);
+
+        afterTrim.Width.Should().Be(withoutTrim.Width);
+        afterTrim.Height.Should().Be(withoutTrim.Height);
+        afterTrim.InkFraction().Should().BeGreaterThan(0.01, "the zoomed page is not blank");
+        afterTrim.Bgra.Should().Equal(withoutTrim.Bgra,
+            "a zoom after a trim must draw exactly what a zoom without one draws");
+    }
+
+    private static async Task<PixelCopy> ZoomedPageOnePixelsAsync(bool trimFirst)
+    {
+        var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewerWithoutSinglePageRender(
+            ContinuousImageSampleReleaseTests.ImageDocument(pageCount: 4));
+        try
+        {
+            var settled = await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(
+                window, viewer, items, pageNumber: 1);
+
+            if (trimFirst)
+            {
+                viewer.TrimCaches(PdfViewerCacheTrimLevel.Background);
+                // Not vacuous: the trim must really have given decoded samples back, or this compares
+                // two identical no-trim runs and proves nothing.
+                viewer.LastCacheTrim.DecodedSampleStreams.Should().BeGreaterThan(0,
+                    "the trim released nothing, so the comparison below would not test the trim");
+            }
+
+            viewer.ZoomLevel = 1.5;
+            var zoomed = await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(
+                window, viewer, items, pageNumber: 1, notThis: settled);
+            return PixelCopy.Of(zoomed);
+        }
+        finally
+        {
+            window.Close();
+            viewer.Document?.Dispose();
+        }
+    }
+
     private static async Task WaitUntilAsync(Window window, Func<bool> condition, string what)
     {
         var sw = Stopwatch.StartNew();
