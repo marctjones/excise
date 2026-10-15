@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "a551721bb68f007bdc0600ebf161337298a9678e",
+  "sourceRevision": "f6c3441c1d6b406de1811460fc57aaaf5459f002",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8948,
+    "retainedSymbols": 8969,
     "observedComponentDependencies": 85,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -276,7 +276,7 @@
     {
       "source": "core",
       "target": "core-document",
-      "references": 368,
+      "references": 370,
       "typeDependencyCount": 67,
       "classification": "declared",
       "evidence": [
@@ -318,8 +318,8 @@
     {
       "source": "core",
       "target": "core-primitives",
-      "references": 540,
-      "typeDependencyCount": 115,
+      "references": 547,
+      "typeDependencyCount": 117,
       "classification": "declared",
       "evidence": [
         {
@@ -332,7 +332,7 @@
     {
       "source": "core",
       "target": "core-redaction",
-      "references": 18,
+      "references": 19,
       "typeDependencyCount": 3,
       "classification": "declared",
       "evidence": [
@@ -680,8 +680,8 @@
     {
       "source": "core-redaction",
       "target": "core-content",
-      "references": 482,
-      "typeDependencyCount": 70,
+      "references": 481,
+      "typeDependencyCount": 73,
       "classification": "declared",
       "evidence": [
         {
@@ -736,8 +736,8 @@
     {
       "source": "core-redaction",
       "target": "core-primitives",
-      "references": 1316,
-      "typeDependencyCount": 188,
+      "references": 1320,
+      "typeDependencyCount": 191,
       "classification": "declared",
       "evidence": [
         {
@@ -1157,8 +1157,8 @@
     {
       "source": "rendering",
       "target": "core",
-      "references": 163,
-      "typeDependencyCount": 16,
+      "references": 164,
+      "typeDependencyCount": 17,
       "classification": "declared",
       "evidence": [
         {

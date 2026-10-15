@@ -3,7 +3,7 @@
   "generatedBy": "scripts/build-renderer-test-evidence-map.py",
   "policy": "This map inventories every xUnit Fact/Theory method in Excise.Rendering.Tests. Facets and parent capability links are deterministic review candidates, not a declaration that the parent mode is implemented. An unmapped test is assigned to renderer-integration-general so it cannot silently disappear.",
   "testRoot": "Excise.Rendering.Tests",
-  "sourceFingerprint": "8c222fa4f9bdddb6d4f63f66781dffbc726a18db20fec14db4d22ede7bf7542b",
+  "sourceFingerprint": "982e8cdeb14de6262be94ae0a40928768500d51656c6668136146b4ff744b8f1",
   "tests": [
     {
       "id": "Excise.Rendering.Tests/AcroFormAppearanceDefaultsTests.cs::AcroFormAppearanceDefaultsTests.Defaults_ResolveDocumentAppearanceAndResourcesOnce",
@@ -42614,11 +42614,65 @@
       "promotion": "review-required"
     },
     {
+      "id": "Excise.Rendering.Tests/RawSampleImageDecoderIccAndParallelTests.cs::RawSampleImageDecoderIccAndParallelTests.CmykRepeatedAndCollidingColours_EqualTheConverterPerPixel",
+      "path": "Excise.Rendering.Tests/RawSampleImageDecoderIccAndParallelTests.cs",
+      "class": "RawSampleImageDecoderIccAndParallelTests",
+      "method": "CmykRepeatedAndCollidingColours_EqualTheConverterPerPixel",
+      "line": 99,
+      "xunitKind": "theory",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
+      "id": "Excise.Rendering.Tests/RawSampleImageDecoderIccAndParallelTests.cs::RawSampleImageDecoderIccAndParallelTests.GeneralPath_RepeatedColoursUnderAColourKeyMask_KeepTheMaskPerPixel",
+      "path": "Excise.Rendering.Tests/RawSampleImageDecoderIccAndParallelTests.cs",
+      "class": "RawSampleImageDecoderIccAndParallelTests",
+      "method": "GeneralPath_RepeatedColoursUnderAColourKeyMask_KeepTheMaskPerPixel",
+      "line": 160,
+      "xunitKind": "fact",
+      "evidenceKind": "unit-candidate",
+      "facets": [
+        "content-streams",
+        "images"
+      ],
+      "parentCapabilityModes": [
+        {
+          "capability": "pdf.17.content.streams",
+          "modes": [
+            "parse",
+            "render"
+          ]
+        },
+        {
+          "capability": "pdf.17.graphics.images",
+          "modes": [
+            "extract",
+            "parse",
+            "render"
+          ]
+        }
+      ],
+      "promotion": "review-required"
+    },
+    {
       "id": "Excise.Rendering.Tests/RawSampleImageDecoderIccAndParallelTests.cs::RawSampleImageDecoderIccAndParallelTests.RepeatedRenders_ReuseTheParsedIccColorSpaceAndItsConverter",
       "path": "Excise.Rendering.Tests/RawSampleImageDecoderIccAndParallelTests.cs",
       "class": "RawSampleImageDecoderIccAndParallelTests",
       "method": "RepeatedRenders_ReuseTheParsedIccColorSpaceAndItsConverter",
-      "line": 97,
+      "line": 207,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -42641,7 +42695,7 @@
       "path": "Excise.Rendering.Tests/RawSampleImageDecoderIccAndParallelTests.cs",
       "class": "RawSampleImageDecoderIccAndParallelTests",
       "method": "ParallelCmykFastPath_MatchesSerialSingleRowDecodes",
-      "line": 152,
+      "line": 262,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -42672,7 +42726,7 @@
       "path": "Excise.Rendering.Tests/RawSampleImageDecoderIccAndParallelTests.cs",
       "class": "RawSampleImageDecoderIccAndParallelTests",
       "method": "ParallelGeneralPath_WithColorKeyMask_MatchesSerialSingleRowDecodes",
-      "line": 178,
+      "line": 288,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -42703,7 +42757,7 @@
       "path": "Excise.Rendering.Tests/RawSampleImageDecoderIccAndParallelTests.cs",
       "class": "RawSampleImageDecoderIccAndParallelTests",
       "method": "ParallelSubsampledGeneralPath_MatchesSerialSingleRowDecodes",
-      "line": 207,
+      "line": 317,
       "xunitKind": "fact",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -42734,7 +42788,7 @@
       "path": "Excise.Rendering.Tests/RawSampleImageDecoderIccAndParallelTests.cs",
       "class": "RawSampleImageDecoderIccAndParallelTests",
       "method": "ParallelConversion_CancelledMidDecode_ThrowsOperationCanceledNeverNullOrAggregate",
-      "line": 248,
+      "line": 358,
       "xunitKind": "theory",
       "evidenceKind": "unit-candidate",
       "facets": [
@@ -57184,15 +57238,15 @@
     }
   ],
   "summary": {
-    "testMethods": 1567,
+    "testMethods": 1569,
     "facets": {
-      "content-streams": 452,
+      "content-streams": 453,
       "content-strings-and-text": 9,
       "differential-rendering": 953,
       "fonts": 281,
       "functions-and-shadings": 53,
       "graphics-state-and-paths": 318,
-      "images": 250,
+      "images": 252,
       "page-group-backdrop": 3,
       "renderer-integration-general": 45,
       "renderer-performance-and-lifetime": 12,
@@ -57200,8 +57254,8 @@
     },
     "parentCapabilityModes": {
       "pdf.17.content.streams:extract": 9,
-      "pdf.17.content.streams:parse": 459,
-      "pdf.17.content.streams:render": 1109,
+      "pdf.17.content.streams:parse": 460,
+      "pdf.17.content.streams:render": 1110,
       "pdf.17.content.text-state:extract": 9,
       "pdf.17.content.text-state:parse": 9,
       "pdf.17.content.text-state:render": 9,
@@ -57210,9 +57264,9 @@
       "pdf.17.graphics.fonts:extract": 281,
       "pdf.17.graphics.fonts:parse": 281,
       "pdf.17.graphics.fonts:render": 1102,
-      "pdf.17.graphics.images:extract": 250,
-      "pdf.17.graphics.images:parse": 250,
-      "pdf.17.graphics.images:render": 1115,
+      "pdf.17.graphics.images:extract": 252,
+      "pdf.17.graphics.images:parse": 252,
+      "pdf.17.graphics.images:render": 1117,
       "pdf.17.graphics.paths-painting:parse": 318,
       "pdf.17.graphics.paths-painting:render": 318,
       "pdf.17.graphics.patterns-shadings:parse": 53,

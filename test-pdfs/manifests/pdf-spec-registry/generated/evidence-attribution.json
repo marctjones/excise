@@ -94544,6 +94544,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Redaction/DoOperandNamesParityTests.cs::DoOperandNamesParityTests.ReadsTheSameNamesAsTheOperatorParse",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.CarrierScrubber_RemovesExactlyTheCarriersWhoseSpanEnclosesTheArea",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -94678,13 +94685,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.BoxInsideAFormXObject_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AFormXObjectWithNoDarkFill_ProducesNoMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -95880,6 +95880,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Redaction/DoOperandNamesParityTests.cs::DoOperandNamesParityTests.ReadsTheSameNamesAsTheOperatorParse",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.CarrierScrubber_RemovesExactlyTheCarriersWhoseSpanEnclosesTheArea",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -96014,13 +96021,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.BoxInsideAFormXObject_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AFormXObjectWithNoDarkFill_ProducesNoMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -97230,6 +97230,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Redaction/DoOperandNamesParityTests.cs::DoOperandNamesParityTests.ReadsTheSameNamesAsTheOperatorParse",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.CarrierScrubber_RemovesExactlyTheCarriersWhoseSpanEnclosesTheArea",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -97364,13 +97371,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.BoxInsideAFormXObject_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AFormXObjectWithNoDarkFill_ProducesNoMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -98606,6 +98606,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Redaction/DoOperandNamesParityTests.cs::DoOperandNamesParityTests.ReadsTheSameNamesAsTheOperatorParse",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Redaction/MarkedContentSpanConsumerTests.cs::MarkedContentSpanConsumerTests.CarrierScrubber_RemovesExactlyTheCarriersWhoseSpanEnclosesTheArea",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -98740,13 +98747,6 @@
         },
         {
           "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.BoxInsideAFormXObject_IsAMarkAndItsTextIsRecovered",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Redaction/Recovery/FailureModeChannelTests.cs::FailureModeChannelTests.AFormXObjectWithNoDarkFill_ProducesNoMark",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112558,8 +112558,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 8850,
-    "testMethodsWithCapabilityCandidate": 5737,
+    "testMethods": 8893,
+    "testMethodsWithCapabilityCandidate": 5756,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1685,
-  "indexedContentSha256": "4c94df551bb775db761dfc7f4b975857d3fb16b7ba4a0dda2210707a0d5de64e",
+  "indexedFileCount": 1689,
+  "indexedContentSha256": "8d43a9a6e482c7126c7ef46ffbaffb64a2ba1244b0e86ad60f8e15093575263f",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -2368,7 +2368,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 134
+      "candidateReferenceCount": 135
     },
     {
       "id": "pdf.17.syntax.encryption",
@@ -8250,7 +8250,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 786
+      "candidateReferenceCount": 787
     },
     {
       "id": "pdf.17.graphics.color",
@@ -9057,7 +9057,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 369
+      "candidateReferenceCount": 370
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -12863,6 +12863,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Xfa/XfaMultilineFieldNames.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "form",
+            "streams"
+          ]
+        },
+        {
           "path": "Excise.Core/Xfa/XfaPackets.cs",
           "kind": "source",
           "matchedTerms": [
@@ -13043,18 +13051,9 @@
             "form",
             "streams"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Document/DecodedImageReleaseTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "streams",
-            "xobjects",
-            "contentstream"
-          ]
         }
       ],
-      "candidateReferenceCount": 214
+      "candidateReferenceCount": 215
     },
     {
       "id": "pdf.20.content.operators",
@@ -41950,6 +41949,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering/ImageColorConverter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "devicergb",
+            "image",
+            "image"
+          ]
+        },
+        {
           "path": "Excise.Rendering/JpxImageDecoder.cs",
           "kind": "source",
           "matchedTerms": [
@@ -42517,7 +42525,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 71
+      "candidateReferenceCount": 72
     },
     {
       "id": "pdf.20.image.requirement-028",
@@ -42625,6 +42633,15 @@
             "image",
             "image",
             "jpx"
+          ]
+        },
+        {
+          "path": "Excise.Rendering/ImageColorConverter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "devicecmyk",
+            "image",
+            "image"
           ]
         },
         {
@@ -42952,7 +42969,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 39
+      "candidateReferenceCount": 40
     },
     {
       "id": "pdf.20.image.requirement-029",
@@ -61216,7 +61233,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 262
+      "candidateReferenceCount": 263
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -66939,7 +66956,8 @@
             "fields",
             "forms",
             "xfa",
-            "acroform"
+            "acroform",
+            "action"
           ]
         },
         {
@@ -67961,7 +67979,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 216
+      "candidateReferenceCount": 217
     },
     {
       "id": "pdf.17.interactive.optional-content",
@@ -70637,7 +70655,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 482
+      "candidateReferenceCount": 484
     },
     {
       "id": "pdf.17.interchange.measurement-geospatial",
@@ -72947,7 +72965,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 865
+      "candidateReferenceCount": 871
     },
     {
       "id": "pdf.20.extension.developer",
@@ -73653,7 +73671,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 192
+      "candidateReferenceCount": 194
     },
     {
       "id": "pdf.20.profile.pdfa",
