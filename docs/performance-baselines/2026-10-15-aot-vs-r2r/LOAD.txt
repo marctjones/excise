@@ -1,0 +1,21 @@
+speed r2r r1 Thu Oct 15 21:09:10 GMT 2026 load1=1.92 godot=0 freeGiB=163 tag=quiet
+speed aot r1 Thu Oct 15 21:12:21 GMT 2026 load1=1.81 godot=0 freeGiB=162 tag=quiet
+speed aot r2 Thu Oct 15 21:15:26 GMT 2026 load1=1.68 godot=0 freeGiB=162 tag=quiet
+speed r2r r2 Thu Oct 15 21:18:30 GMT 2026 load1=1.54 godot=0 freeGiB=162 tag=quiet
+speed r2r r3 Thu Oct 15 21:22:18 GMT 2026 load1=1.90 godot=0 freeGiB=162 tag=quiet
+speed aot r3 Thu Oct 15 21:25:26 GMT 2026 load1=1.81 godot=0 freeGiB=162 tag=quiet
+speed aot r4 Thu Oct 15 21:28:29 GMT 2026 load1=1.54 godot=0 freeGiB=162 tag=quiet
+speed r2r r4 Thu Oct 15 21:31:33 GMT 2026 load1=1.93 godot=0 freeGiB=162 tag=quiet
+speed r2r r5 Thu Oct 15 21:34:42 GMT 2026 load1=1.76 godot=0 freeGiB=162 tag=quiet
+speed aot r5 Thu Oct 15 21:37:50 GMT 2026 load1=1.54 godot=0 freeGiB=162 tag=quiet
+mem r2r r1 Thu Oct 15 21:41:12 GMT 2026 load1=1.91 godot=0 freeGiB=162 tag=quiet
+mem aot r1 Thu Oct 15 21:51:08 GMT 2026 load1=1.38 godot=0 freeGiB=162 tag=quiet
+mem aot r2 Thu Oct 15 21:53:00 GMT 2026 load1=1.67 godot=0 freeGiB=161 tag=quiet
+mem r2r r2 Thu Oct 15 21:54:52 GMT 2026 load1=1.89 godot=0 freeGiB=161 tag=quiet
+mem r2r r3 Thu Oct 15 22:04:48 GMT 2026 load1=1.57 godot=0 freeGiB=161 tag=quiet
+mem aot r3 Thu Oct 15 22:14:45 GMT 2026 load1=1.57 godot=0 freeGiB=161 tag=quiet
+scenarios r2r Thu Oct 15 22:17:18 GMT 2026 load1=1.93 godot=0 freeGiB=161 tag=quiet
+scenarios aot Thu Oct 15 22:33:03 GMT 2026 load1=1.72 godot=0 freeGiB=161 tag=quiet
+mem2 aot-b r1 Thu Oct 15 22:48:02 GMT 2026 load1=1.66 godot=0 tag=quiet
+mem2 aot-b r2 Thu Oct 15 22:57:04 GMT 2026 load1=1.73 godot=0 tag=quiet
+mem2 aot-b r3 Thu Oct 15 23:06:03 GMT 2026 load1=1.79 godot=0 tag=quiet

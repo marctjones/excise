@@ -1,6 +1,7 @@
 # After the #2069, #2070 and #1626 merges, 2026-10-15
 
 Build: develop @ 415ae97 (three perf branches merged, t0 30/30, t1 107/107), Release R2R `.app` bundle.
+**Build shape: ReadyToRun, NOT NativeAOT.** Every GUI figure here is the default `.app` bundle (ReadyToRun, tiered compilation); the command-line figures are a plain Release `dotnet build` (JIT); test tiers run Debug. On the same commit NativeAOT rests about 80 MB lower and uses 55-70% less CPU than ReadyToRun (`docs/performance-baselines/2026-10-15-aot-vs-r2r/`), so none of these numbers can be compared with NativeAOT numbers.
 Before: `docs/performance-baselines/2026-10-14-reader-comparison/` (develop @ dcd0a2e9, same harnesses, same
 documents and repeats). Only excise and Preview (drift control) were rerun; Preview is unchanged code, so its
 movement is the measurement drift. #2071 (trim releases band-page samples) is NOT in this build.

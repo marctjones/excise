@@ -1,6 +1,7 @@
 # Reader comparison and engine baseline, 2026-10-14
 
 Candidate: `dcd0a2e9` (develop), Release R2R `.app` bundle built from it (`scripts/build-macos-app.sh`).
+**Build shape: ReadyToRun, NOT NativeAOT.** Every GUI figure here is the default `.app` bundle (ReadyToRun, tiered compilation); the command-line figures are a plain Release `dotnet build` (JIT); test tiers run Debug. On the same commit NativeAOT rests about 80 MB lower and uses 55-70% less CPU than ReadyToRun (`docs/performance-baselines/2026-10-15-aot-vs-r2r/`), so none of these numbers can be compared with NativeAOT numbers.
 Machine: Apple M5, 24 GB, macOS 26.6.2. Readers: Preview 11.0, Acrobat 26.002.22008, Firefox 157.0 (pdf.js).
 Chrome is not in these tables: the user's own Chrome was open and the harness refuses to run beside it.
 Harnesses: `scripts/reader_bench.py` (memory/CPU), `scripts/reader_speed_bench.py` (responsiveness),
