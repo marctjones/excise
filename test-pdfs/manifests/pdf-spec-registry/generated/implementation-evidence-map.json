@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "5ed15a0cf360ee3f7e4695bfcb42a56b2940381233b157058da3f1af0812a854",
+  "sourceFingerprint": "7c3ffd3661c1eb195290fc77dc9e7958fb949f3e8eb7550f3951aa2a2a994838",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -11936,16 +11936,6 @@
       "promotion": "review-required"
     },
     {
-      "id": "Excise.Avalonia/Controls/Viewer/RenderLoopWarmth.cs",
-      "path": "Excise.Avalonia/Controls/Viewer/RenderLoopWarmth.cs",
-      "kind": "source-file",
-      "facets": [
-        "product-integration-general"
-      ],
-      "parentCapabilityModes": [],
-      "promotion": "review-required"
-    },
-    {
       "id": "Excise.Avalonia/Controls/Viewer/SinglePageView.LookAhead.cs",
       "path": "Excise.Avalonia/Controls/Viewer/SinglePageView.LookAhead.cs",
       "kind": "source-file",
@@ -12125,7 +12115,7 @@
     }
   ],
   "summary": {
-    "records": 612,
+    "records": 611,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 20,
@@ -12133,7 +12123,7 @@
       "fonts": 40,
       "forms": 12,
       "images": 40,
-      "product-integration-general": 348,
+      "product-integration-general": 347,
       "redaction": 88,
       "safe-save-and-metadata": 21,
       "security-and-encryption": 25,
@@ -12212,7 +12202,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 25,
       "pdfe.product.security.signature-and-permission-warning:write": 25
     },
-    "fallbackRecords": 348,
+    "fallbackRecords": 347,
     "allRecordsMapped": true
   }
 }
