@@ -1,0 +1,16 @@
+part1 speed base r1 Thu Oct 15 08:34:34 GMT 2026 load1=1.96 godot=0 tag=quiet
+part1 speed after r1 Thu Oct 15 08:36:43 GMT 2026 load1=1.97 godot=0 tag=quiet
+part1 speed after r2 Thu Oct 15 08:42:53 GMT 2026 load1=1.95 godot=0 tag=quiet
+part1 speed base r2 Thu Oct 15 08:45:22 GMT 2026 load1=1.90 godot=0 tag=quiet
+part1 speed base r3 Thu Oct 15 08:48:11 GMT 2026 load1=1.86 godot=0 tag=quiet
+part1 speed after r3 Thu Oct 15 08:50:20 GMT 2026 load1=1.81 godot=0 tag=quiet
+part1 speed after r4 Thu Oct 15 08:52:29 GMT 2026 load1=1.73 godot=0 tag=quiet
+part1 speed base r4 Thu Oct 15 08:54:38 GMT 2026 load1=1.89 godot=0 tag=quiet
+part1 speed base r5 Thu Oct 15 08:59:27 GMT 2026 load1=1.70 godot=0 tag=quiet
+part1 speed after r5 Thu Oct 15 09:01:36 GMT 2026 load1=1.33 godot=0 tag=quiet
+part2 mem after r1 Thu Oct 15 09:03:45 GMT 2026 load1=1.79 godot=0 tag=quiet
+part2 mem final r1 Thu Oct 15 09:13:37 GMT 2026 load1=1.92 godot=0 tag=quiet
+part2 mem final r2 Thu Oct 15 09:21:14 GMT 2026 load1=1.87 godot=0 tag=quiet
+part2 mem after r2 Thu Oct 15 09:28:25 GMT 2026 load1=1.93 godot=0 tag=quiet
+part2 mem after r3 Thu Oct 15 09:37:38 GMT 2026 load1=1.97 godot=0 tag=quiet
+part2 mem final r3 Thu Oct 15 09:45:31 GMT 2026 load1=1.82 godot=0 tag=quiet

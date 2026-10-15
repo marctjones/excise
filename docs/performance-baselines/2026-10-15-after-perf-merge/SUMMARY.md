@@ -13,7 +13,8 @@ so CLI times are judged against mutool in the same run, not against the earlier 
 |---|---|---|
 | #2070 decode CPU | **confirmed** | Altona scroll 24 -> 49 fps (Preview control 47 -> 42); band render p50 213 -> 101 ms; scenario CPU -20..-24% against noise of +-0.06-0.2 s; CLI `acc-compensation-cover` wall 3.5x -> 2.4x mutool and CPU 13.7x -> 4.9x. Text-only scenarios (irs) unchanged, as expected. Band p99 unchanged (623 -> 601 ms), as the investigator predicted. |
 | #1626 allocations | **confirmed** | exact allocation, quiet machine: save-roundtrip 942 -> 768 MB (budget PASS), text-extract 352 -> 276, search 250 -> 185, redaction-save 3138 -> 2666 (still over its 1213 budget). |
-| #2069 page-turn latency | **not confirmed by the bench** | first-change p50 with real keys: irs 56 -> 65 ms, altona 56 -> 40, scan 56 -> 63. The Preview control moved +16 ms (irs), +9 (altona), +3 (scan), as large as the claimed 10-14 ms gain. See below. |
+| #2069 page-turn latency | **small real gain** (interleaved A/B, see the A/B section; the first comparison here crossed two sessions and was not conclusive) | first-change p50 with real keys: scan 61 -> 54 ms (5 of 5 paired repeats lower), irs 59 -> 54 ms (3 of 5). The turn is still ~54 ms. |
+| #2071 trim memory | **confirmed** (A/B section) | Altona idle-30s footprint 493 -> 335 MB (spread 4 and 1); unchanged after close; irs unchanged; CPU unchanged. |
 
 ## Responsiveness (screen-probe, real key events; ms from input)
 
@@ -75,8 +76,32 @@ verdict table above; `cli/perf-budgets.log`.
 
 ## Left open
 
-- #2069: interleaved A/B (above) before deciding whether to keep, change or drop the render-loop hold.
-- #2071: lands separately; expected final footprint 50-175 MB smaller after the idle reclaim (investigator's numbers).
+- #2069: the render-loop hold is a small real gain; why the turn is still ~54 ms (Preview 25, Firefox 22-31) is under investigation (real-key latency budget).
+- #2071: merged and pushed (d48ec362); measured in the A/B section. Not measured: the first-zoom re-decode cost after a background trim (the bench does not zoom).
 - #1626: re-baseline the budgets (text-extract's 219 MB does not reproduce at its own commit); redaction-save is
   still 2.2x its budget for causes the investigator attributed to later, legitimate changes.
 - Not rerun: Chrome (the user's own Chrome was open), Firefox, Acrobat.
+
+## Interleaved A/B, same session (2026-10-15; every run quiet: load1 1.3-2.0, no Godot; `ab/LOAD.txt`)
+
+Bundles: base = dcd0a2e9 (before), after = 415ae97 (#2069, #2070, #1626), final = d48ec362 (adds #2071). excise only,
+real keys, runs alternated ABBA so drift and ordering cancel. Raw per-run summaries are in `ab/`.
+
+**#2069, base vs after (5 repeats per arm, speed bench, first-change p50 per run):**
+scan base 69 66 59 60 61 -> after 55 54 54 56 51 ms (paired -14 -12 -5 -4 -10; median 61 -> 54); irs base 57 61 59 53 62 ->
+after 60 57 54 53 52 (paired +3 -4 -5 0 -10; median 59 -> 54, ranges overlap). End jump, Home and scroll fps unchanged (48-49 fps).
+The hold is a real but small gain (5-10 ms) and the turn still takes ~54 ms.
+
+**#2071, after vs final (3 repeats per arm, reader bench, footprint MB):**
+
+| doc | column | without #2071 | with #2071 | change |
+|---|---|---|---|---|
+| altona | idle-30s | 493 (492 493 496) | 335 (335 336 335) | **-158** |
+| altona | closed-45s | 319 | 320 | +1 |
+| altona | paged-30 / peak | 782 / 905 (spread 76 / 39) | 757 / 863 (spread 148 / 63) | -25 / -42, within spread, not credited |
+| scan | paged-30 / peak | 541 / 627 (spread 2 / 2) | 526 / 612 (spread 1 / 5) | -15 / -15 |
+| scan | idle-30s | 352 | 351 | -1 |
+| irs | every column | | | within spread (idle-30s 599 -> 595; closed-45s is bimodal 351/480 in both arms) |
+
+CPU seconds (altona 7.4 -> 7.3, irs 7.4 -> 7.3, scan 3.7 -> 3.8) and idle CPU (0.1-0.2%) are unchanged. The bench does not
+zoom, so the first-zoom re-decode cost after a background trim (about one band render, ~190 ms CPU) is not measured here.
