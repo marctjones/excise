@@ -18,6 +18,11 @@ internal static class RawSampleImageDecoder
     private const long MinimumParallelPixels = 1_000_000;
     private const int BandsPerProcessor = 4;
 
+    // #2070: per-band colour cache for ConvertCmykRows (4096 entries, 32 KiB).
+    private const int CmykCacheBits = 12;
+    private const int CmykCacheSize = 1 << CmykCacheBits;
+    private const ulong CmykCacheValid = 1UL << 24;
+
     public static SKBitmap? Decode(RawSampleImageDecodeRequest request)
     {
         request.CancellationToken.ThrowIfCancellationRequested();
@@ -259,6 +264,10 @@ internal static class RawSampleImageDecoder
         var rawSamples = request.ColorKeyMask != null
             ? new int[componentsPerPixel]
             : null;
+        var memoize = imageColorConverter != null && componentsPerPixel <= 4;
+        var haveMemo = false;
+        uint memoKey = 0;
+        byte memoRed = 0, memoGreen = 0, memoBlue = 0;
 
         for (var ty = startRow; ty < endRow; ty++)
         {
@@ -284,27 +293,60 @@ internal static class RawSampleImageDecoder
                         if (byteOffset + componentsPerPixel <= request.Samples.LongLength)
                         {
                             var baseOffset = (int)byteOffset;
-                            for (var component = 0; component < componentsPerPixel; component++)
+                            // #2070: a pixel whose sample bytes equal the
+                            // previous converted pixel's gets that pixel's
+                            // colour. Only with the cached converter, which
+                            // is a pure function of the samples (DecodeArray
+                            // and colour space are fixed for the request).
+                            uint key = 0;
+                            if (memoize)
                             {
-                                var sample = request.Samples[baseOffset + component];
-                                if (rawSamples != null)
-                                    rawSamples[component] = sample;
-                                pixelValues[component] = DecodeImageSample(
-                                    request.DecodeArray,
+                                for (var component = 0; component < componentsPerPixel; component++)
+                                    key |= (uint)request.Samples[baseOffset + component] << (8 * component);
+                            }
+
+                            if (memoize && haveMemo && key == memoKey)
+                            {
+                                // rawSamples already holds these same bytes:
+                                // every pixel either hits here (equal bytes)
+                                // or is read and converted below.
+                                red = memoRed;
+                                green = memoGreen;
+                                blue = memoBlue;
+                            }
+                            else
+                            {
+                                for (var component = 0; component < componentsPerPixel; component++)
+                                {
+                                    var sample = request.Samples[baseOffset + component];
+                                    if (rawSamples != null)
+                                        rawSamples[component] = sample;
+                                    pixelValues[component] = DecodeImageSample(
+                                        request.DecodeArray,
+                                        colorSpace,
+                                        component,
+                                        sample,
+                                        maxSample);
+                                }
+
+                                ConvertPixel(
                                     colorSpace,
-                                    component,
-                                    sample,
-                                    maxSample);
+                                    imageColorConverter,
+                                    pixelValues,
+                                    out red,
+                                    out green,
+                                    out blue);
+                                if (memoize)
+                                {
+                                    memoKey = key;
+                                    memoRed = red;
+                                    memoGreen = green;
+                                    memoBlue = blue;
+                                    haveMemo = true;
+                                }
                             }
 
                             samplesRead = true;
-                            ConvertPixel(
-                                colorSpace,
-                                imageColorConverter,
-                                pixelValues,
-                                out red,
-                                out green,
-                                out blue);
                         }
                     }
                     else
@@ -764,16 +806,50 @@ internal static class RawSampleImageDecoder
     {
         var src = startRow * width * 4;
         var dst = startRow * width * 4;
+        // #2070: the converter is a pure function of the four sample bytes, so
+        // a pixel equal to its left neighbour reuses that neighbour's colour,
+        // and any other pixel first looks in a small direct-mapped cache of
+        // colours this band already converted. Each entry packs the 32-bit
+        // sample key (high half), a valid bit and the RGB bytes, so the most
+        // common CMYK value, 0x00000000, cannot read as an empty slot.
+        var cache = new ulong[CmykCacheSize];
+        var havePrevious = false;
+        uint previousKey = 0;
+        byte r = 0, g = 0, b = 0;
         for (var row = startRow; row < endRow; row++)
         {
             cancellationToken.ThrowIfCancellationRequested();
             for (var column = 0; column < width; column++)
             {
-                var (r, g, b) = converter.ToRgb(
-                    data[src],
-                    data[src + 1],
-                    data[src + 2],
-                    data[src + 3]);
+                var key = (uint)data[src] |
+                    ((uint)data[src + 1] << 8) |
+                    ((uint)data[src + 2] << 16) |
+                    ((uint)data[src + 3] << 24);
+                if (!havePrevious || key != previousKey)
+                {
+                    var slot = (int)((key * 2654435761u) >> (32 - CmykCacheBits));
+                    var entry = cache[slot];
+                    if ((entry & CmykCacheValid) != 0 && (uint)(entry >> 32) == key)
+                    {
+                        r = (byte)entry;
+                        g = (byte)(entry >> 8);
+                        b = (byte)(entry >> 16);
+                    }
+                    else
+                    {
+                        (r, g, b) = converter.ToRgb(
+                            data[src],
+                            data[src + 1],
+                            data[src + 2],
+                            data[src + 3]);
+                        cache[slot] = ((ulong)key << 32) | CmykCacheValid |
+                            ((ulong)b << 16) | ((ulong)g << 8) | r;
+                    }
+
+                    previousKey = key;
+                    havePrevious = true;
+                }
+
                 src += 4;
                 pixels[dst++] = r;
                 pixels[dst++] = g;
