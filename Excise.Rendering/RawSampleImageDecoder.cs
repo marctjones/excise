@@ -18,6 +18,11 @@ internal static class RawSampleImageDecoder
     private const long MinimumParallelPixels = 1_000_000;
     private const int BandsPerProcessor = 4;
 
+    // #2070: per-band colour cache for ConvertCmykRows (4096 entries, 32 KiB).
+    private const int CmykCacheBits = 12;
+    private const int CmykCacheSize = 1 << CmykCacheBits;
+    private const ulong CmykCacheValid = 1UL << 24;
+
     public static SKBitmap? Decode(RawSampleImageDecodeRequest request)
     {
         request.CancellationToken.ThrowIfCancellationRequested();
@@ -764,16 +769,50 @@ internal static class RawSampleImageDecoder
     {
         var src = startRow * width * 4;
         var dst = startRow * width * 4;
+        // #2070: the converter is a pure function of the four sample bytes, so
+        // a pixel equal to its left neighbour reuses that neighbour's colour,
+        // and any other pixel first looks in a small direct-mapped cache of
+        // colours this band already converted. Each entry packs the 32-bit
+        // sample key (high half), a valid bit and the RGB bytes, so the most
+        // common CMYK value, 0x00000000, cannot read as an empty slot.
+        var cache = new ulong[CmykCacheSize];
+        var havePrevious = false;
+        uint previousKey = 0;
+        byte r = 0, g = 0, b = 0;
         for (var row = startRow; row < endRow; row++)
         {
             cancellationToken.ThrowIfCancellationRequested();
             for (var column = 0; column < width; column++)
             {
-                var (r, g, b) = converter.ToRgb(
-                    data[src],
-                    data[src + 1],
-                    data[src + 2],
-                    data[src + 3]);
+                var key = (uint)data[src] |
+                    ((uint)data[src + 1] << 8) |
+                    ((uint)data[src + 2] << 16) |
+                    ((uint)data[src + 3] << 24);
+                if (!havePrevious || key != previousKey)
+                {
+                    var slot = (int)((key * 2654435761u) >> (32 - CmykCacheBits));
+                    var entry = cache[slot];
+                    if ((entry & CmykCacheValid) != 0 && (uint)(entry >> 32) == key)
+                    {
+                        r = (byte)entry;
+                        g = (byte)(entry >> 8);
+                        b = (byte)(entry >> 16);
+                    }
+                    else
+                    {
+                        (r, g, b) = converter.ToRgb(
+                            data[src],
+                            data[src + 1],
+                            data[src + 2],
+                            data[src + 3]);
+                        cache[slot] = ((ulong)key << 32) | CmykCacheValid |
+                            ((ulong)b << 16) | ((ulong)g << 8) | r;
+                    }
+
+                    previousKey = key;
+                    havePrevious = true;
+                }
+
                 src += 4;
                 pixels[dst++] = r;
                 pixels[dst++] = g;

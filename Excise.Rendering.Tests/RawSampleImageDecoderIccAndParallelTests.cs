@@ -94,6 +94,65 @@ public sealed class RawSampleImageDecoderIccAndParallelTests
     }
 
     [Fact]
+    public void CmykFastPath_RepeatedAndCollidingColours_EqualTheConverterPerPixel()
+    {
+        // #2070: ConvertCmykRows reuses the left neighbour's colour and keeps a
+        // per-band direct-mapped colour cache. Random samples almost never
+        // repeat, so they cannot exercise either. Here pixels are drawn in runs
+        // from a palette larger than the cache (forcing slot collisions and
+        // evictions) that includes 0x00000000, the value an empty slot would
+        // hold, and the image is large enough to split into parallel bands.
+        // DeviceCMYK, not the synthetic lut16 profile: that profile maps every
+        // input to one colour, so a wrong cache hit could not show.
+        var colorSpace = PdfColorSpace.DeviceCMYK;
+        var random = new Random(2070);
+        var palette = new byte[6000 * 4];
+        random.NextBytes(palette);
+        Array.Clear(palette, 0, 4);
+        var samples = new byte[LargeWidth * LargeHeight * 4];
+        for (var pixel = 0; pixel < LargeWidth * LargeHeight;)
+        {
+            var entry = random.Next(10) == 0 ? 0 : random.Next(palette.Length / 4);
+            var run = random.Next(1, 9);
+            for (var i = 0; i < run && pixel < LargeWidth * LargeHeight; i++, pixel++)
+                Array.Copy(palette, entry * 4, samples, pixel * 4, 4);
+        }
+
+        using var bitmap = RawSampleImageDecoder.Decode(new RawSampleImageDecodeRequest(
+            Samples: samples,
+            Width: LargeWidth,
+            Height: LargeHeight,
+            BitsPerComponent: 8,
+            ColorSpace: colorSpace,
+            ComponentsPerPixel: 4,
+            DecodeArray: null,
+            ColorKeyMask: null));
+
+        bitmap.Should().NotBeNull();
+        var converter = ImageColorConverter.For(colorSpace)!;
+        Enumerable.Range(0, palette.Length / 4)
+            .Select(i => converter.ToRgb(palette[i * 4], palette[(i * 4) + 1], palette[(i * 4) + 2], palette[(i * 4) + 3]))
+            .Distinct()
+            .Count()
+            .Should().BeGreaterThan(1000, "a cache returning another key's colour must be visible");
+        var actual = PixelBytes(bitmap!);
+        for (var pixel = 0; pixel < LargeWidth * LargeHeight; pixel++)
+        {
+            var (r, g, b) = converter.ToRgb(
+                samples[pixel * 4],
+                samples[(pixel * 4) + 1],
+                samples[(pixel * 4) + 2],
+                samples[(pixel * 4) + 3]);
+            var offset = pixel * 4;
+            if (actual[offset] != r || actual[offset + 1] != g || actual[offset + 2] != b || actual[offset + 3] != 255)
+            {
+                (actual[offset], actual[offset + 1], actual[offset + 2], actual[offset + 3])
+                    .Should().Be((r, g, b, (byte)255), $"pixel {pixel}");
+            }
+        }
+    }
+
+    [Fact]
     public void RepeatedRenders_ReuseTheParsedIccColorSpaceAndItsConverter()
     {
         const int width = 23;
