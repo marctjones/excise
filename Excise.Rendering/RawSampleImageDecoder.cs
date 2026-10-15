@@ -264,6 +264,10 @@ internal static class RawSampleImageDecoder
         var rawSamples = request.ColorKeyMask != null
             ? new int[componentsPerPixel]
             : null;
+        var memoize = imageColorConverter != null && componentsPerPixel <= 4;
+        var haveMemo = false;
+        uint memoKey = 0;
+        byte memoRed = 0, memoGreen = 0, memoBlue = 0;
 
         for (var ty = startRow; ty < endRow; ty++)
         {
@@ -289,27 +293,60 @@ internal static class RawSampleImageDecoder
                         if (byteOffset + componentsPerPixel <= request.Samples.LongLength)
                         {
                             var baseOffset = (int)byteOffset;
-                            for (var component = 0; component < componentsPerPixel; component++)
+                            // #2070: a pixel whose sample bytes equal the
+                            // previous converted pixel's gets that pixel's
+                            // colour. Only with the cached converter, which
+                            // is a pure function of the samples (DecodeArray
+                            // and colour space are fixed for the request).
+                            uint key = 0;
+                            if (memoize)
                             {
-                                var sample = request.Samples[baseOffset + component];
-                                if (rawSamples != null)
-                                    rawSamples[component] = sample;
-                                pixelValues[component] = DecodeImageSample(
-                                    request.DecodeArray,
+                                for (var component = 0; component < componentsPerPixel; component++)
+                                    key |= (uint)request.Samples[baseOffset + component] << (8 * component);
+                            }
+
+                            if (memoize && haveMemo && key == memoKey)
+                            {
+                                // rawSamples already holds these same bytes:
+                                // every pixel either hits here (equal bytes)
+                                // or is read and converted below.
+                                red = memoRed;
+                                green = memoGreen;
+                                blue = memoBlue;
+                            }
+                            else
+                            {
+                                for (var component = 0; component < componentsPerPixel; component++)
+                                {
+                                    var sample = request.Samples[baseOffset + component];
+                                    if (rawSamples != null)
+                                        rawSamples[component] = sample;
+                                    pixelValues[component] = DecodeImageSample(
+                                        request.DecodeArray,
+                                        colorSpace,
+                                        component,
+                                        sample,
+                                        maxSample);
+                                }
+
+                                ConvertPixel(
                                     colorSpace,
-                                    component,
-                                    sample,
-                                    maxSample);
+                                    imageColorConverter,
+                                    pixelValues,
+                                    out red,
+                                    out green,
+                                    out blue);
+                                if (memoize)
+                                {
+                                    memoKey = key;
+                                    memoRed = red;
+                                    memoGreen = green;
+                                    memoBlue = blue;
+                                    haveMemo = true;
+                                }
                             }
 
                             samplesRead = true;
-                            ConvertPixel(
-                                colorSpace,
-                                imageColorConverter,
-                                pixelValues,
-                                out red,
-                                out green,
-                                out blue);
                         }
                     }
                     else

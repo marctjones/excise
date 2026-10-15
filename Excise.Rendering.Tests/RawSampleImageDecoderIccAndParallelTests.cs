@@ -93,11 +93,15 @@ public sealed class RawSampleImageDecoderIccAndParallelTests
         }
     }
 
-    [Fact]
-    public void CmykFastPath_RepeatedAndCollidingColours_EqualTheConverterPerPixel()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CmykRepeatedAndCollidingColours_EqualTheConverterPerPixel(bool generalPath)
     {
-        // #2070: ConvertCmykRows reuses the left neighbour's colour and keeps a
-        // per-band direct-mapped colour cache. Random samples almost never
+        // #2070: ConvertCmykRows (fast path) reuses the left neighbour's colour
+        // and keeps a per-band direct-mapped colour cache; DecodeGeneralRows
+        // (forced here by a colour-key mask that hides nothing) reuses the
+        // previous converted pixel's colour. Random samples almost never
         // repeat, so they cannot exercise either. Here pixels are drawn in runs
         // from a palette larger than the cache (forcing slot collisions and
         // evictions) that includes 0x00000000, the value an empty slot would
@@ -126,7 +130,7 @@ public sealed class RawSampleImageDecoderIccAndParallelTests
             ColorSpace: colorSpace,
             ComponentsPerPixel: 4,
             DecodeArray: null,
-            ColorKeyMask: null));
+            ColorKeyMask: generalPath ? ImpossibleColorKeyMask(4) : null));
 
         bitmap.Should().NotBeNull();
         var converter = ImageColorConverter.For(colorSpace)!;
@@ -150,6 +154,53 @@ public sealed class RawSampleImageDecoderIccAndParallelTests
                     .Should().Be((r, g, b, (byte)255), $"pixel {pixel}");
             }
         }
+    }
+
+    [Fact]
+    public void GeneralPath_RepeatedColoursUnderAColourKeyMask_KeepTheMaskPerPixel()
+    {
+        // #2070: a memo hit in DecodeGeneralRows must still record the pixel's
+        // raw samples, or the colour-key test would read a stale pixel's.
+        var random = new Random(20701);
+        var palette = new byte[40 * 3];
+        random.NextBytes(palette);
+        int[] mask = [0, 120, 0, 255, 0, 255];
+        var samples = new byte[LargeWidth * LargeHeight * 3];
+        for (var pixel = 0; pixel < LargeWidth * LargeHeight;)
+        {
+            var entry = random.Next(palette.Length / 3);
+            var run = random.Next(1, 9);
+            for (var i = 0; i < run && pixel < LargeWidth * LargeHeight; i++, pixel++)
+                Array.Copy(palette, entry * 3, samples, pixel * 3, 3);
+        }
+
+        using var bitmap = RawSampleImageDecoder.Decode(new RawSampleImageDecodeRequest(
+            Samples: samples,
+            Width: LargeWidth,
+            Height: LargeHeight,
+            BitsPerComponent: 8,
+            ColorSpace: PdfColorSpace.DeviceRGB,
+            ComponentsPerPixel: 3,
+            DecodeArray: null,
+            ColorKeyMask: mask));
+
+        bitmap.Should().NotBeNull();
+        var converter = ImageColorConverter.For(PdfColorSpace.DeviceRGB)!;
+        var actual = PixelBytes(bitmap!);
+        var maskedPixels = 0;
+        for (var pixel = 0; pixel < LargeWidth * LargeHeight; pixel++)
+        {
+            var s = pixel * 3;
+            var (r, g, b) = converter.ToRgb([samples[s] / 255.0, samples[s + 1] / 255.0, samples[s + 2] / 255.0]);
+            var masked = samples[s] <= 120;
+            maskedPixels += masked ? 1 : 0;
+            var expected = (r, g, b, masked ? (byte)0 : (byte)255);
+            var offset = pixel * 4;
+            if ((actual[offset], actual[offset + 1], actual[offset + 2], actual[offset + 3]) != expected)
+                (actual[offset], actual[offset + 1], actual[offset + 2], actual[offset + 3]).Should().Be(expected, $"pixel {pixel}");
+        }
+
+        maskedPixels.Should().BeInRange(1, (LargeWidth * LargeHeight) - 1, "the mask must hide some pixels and not all");
     }
 
     [Fact]

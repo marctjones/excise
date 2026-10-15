@@ -34,10 +34,17 @@ internal sealed class ImageColorConverter
 
     internal string Strategy { get; }
 
+    // #2070: ConditionalWeakTable.GetValue runs the factory OUTSIDE its lock,
+    // so every thread that misses builds its own lattice and all but one are
+    // thrown away. Opening Altona in the viewer had five render threads each
+    // building the same 17^4 OutputIntent lattice at once, serialised on the
+    // ICC profile's per-call lock: ~1 s of CPU for one ~200 ms build. The box
+    // is cheap and races harmlessly; the Lazy inside it builds exactly once
+    // and makes the other callers wait for that one result.
     internal static ImageColorConverter? For(PdfColorSpace colorSpace)
         => Converters.GetValue(
             colorSpace,
-            static cs => new ConverterBox(Create(cs))).Converter;
+            static cs => new ConverterBox(cs)).Converter;
 
     internal (byte R, byte G, byte B) ToRgb(ReadOnlySpan<double> values)
     {
@@ -348,8 +355,13 @@ internal sealed class ImageColorConverter
 
     private sealed class ConverterBox
     {
-        internal ConverterBox(ImageColorConverter? converter) => Converter = converter;
+        private readonly Lazy<ImageColorConverter?> _converter;
 
-        internal ImageColorConverter? Converter { get; }
+        internal ConverterBox(PdfColorSpace colorSpace)
+            => _converter = new Lazy<ImageColorConverter?>(
+                () => Create(colorSpace),
+                LazyThreadSafetyMode.ExecutionAndPublication);
+
+        internal ImageColorConverter? Converter => _converter.Value;
     }
 }
