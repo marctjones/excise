@@ -247,6 +247,10 @@ def collect_run(directory):
             "cpuTotalMs": step.get("cpuTotalMs") if step.get("cpuTotalMs") is not None
                 else (outer["cpuSec"] * 1000.0 if outer.get("cpuSec") is not None else None),
             "gen2Collections": step.get("gen2Collections"),
+            # The worst UI-thread stall since the previous boundary (in-app heartbeat). Absent in journals written
+            # before it existed, which is None (not measured), never 0.
+            "uiStallMaxMs": step.get("uiStallMaxMs"),
+            "uiStallsOver100": step.get("uiStallsOver100"),
             "continuousResidentMB": mb(step, "continuousResidentBytes"),
             "continuousEntries": step.get("continuousEntries"),
             "singlePageEntries": step.get("singlePageEntries"),
@@ -908,19 +912,35 @@ def main():
         # their shape.
         multi = any((s.get("openDocuments") or 0) > 1 for s in representative["steps"])
         docs_head, docs_rule = (" docs/windows |", "---|") if multi else ("", "")
+        # A column only when a journal recorded stalls, so older runs keep their table shape.
+        stalls = any(s.get("uiStallMaxMs") is not None for s in representative["steps"])
+        stall_head, stall_rule = (" ui stall ms |", "---:|") if stalls else ("", "")
         lines += ["| step | op | wall ms | footprint MB | rss MB | committed MB | "
-                  "live MB | frag MB | tiles MB | sp cache MB | gen2 |" + docs_head + " ok |",
-                  "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|" + docs_rule + "---|"]
+                  "live MB | frag MB | tiles MB | sp cache MB | gen2 |" + stall_head + docs_head + " ok |",
+                  "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|" + stall_rule + docs_rule + "---|"]
         for step in representative["steps"]:
             docs_cell = (f" {step.get('openDocuments')}/{step.get('documentWindows')} |" if multi else "")
+            stall_cell = (f" {fmt(step.get('uiStallMaxMs'), 0)} |" if stalls else "")
             lines.append(
                 f"| {step['step']} | {step['op']} | {fmt(step['wallMs'])} | "
                 f"{fmt(step['footprintMB'])} | {fmt(step['rssMB'])} | "
                 f"{fmt(step['committedMB'])} | {fmt(step['liveHeapMB'])} | "
                 f"{fmt(step['fragmentedMB'])} | {fmt(step['continuousResidentMB'])} | "
                 f"{fmt(step['singlePageCacheResidentMB'])} | "
-                f"{step['gen2Collections']} |{docs_cell} {'yes' if step['ok'] else 'NO'} |")
+                f"{step['gen2Collections']} |{stall_cell}{docs_cell} {'yes' if step['ok'] else 'NO'} |")
         lines.append("")
+
+        if stalls:
+            # Per run: the worst stall at any boundary and the count of boundaries that saw one of 100 ms or more.
+            # Reported as the median over the runs of this scenario, with the worst step of the first run named.
+            worst = [max((s.get("uiStallMaxMs") or 0) for s in run["steps"]) for run in group]
+            hitched = [sum(1 for s in run["steps"] if (s.get("uiStallsOver100") or 0) > 0) for run in group]
+            at = max(representative["steps"], key=lambda s: s.get("uiStallMaxMs") or 0)
+            lines += [f"UI stall (the in-app heartbeat's worst gap past its 50 ms interval, per boundary): worst per run, "
+                      f"median over {len(group)} run(s) {fmt(median(worst), 0)} ms (min {fmt(min(worst), 0)}, max "
+                      f"{fmt(max(worst), 0)}); boundaries with a stall of 100 ms or more, median {fmt(median(hitched), 0)} "
+                      f"of {len(representative['steps'])}; the first run's worst is at `{at['step']}`. "
+                      "No floor is known for this metric yet (FLOOR-UNKNOWN), so a difference is a lead, not a verdict.", ""]
 
         for result in checks.get(scenario, []):
             check = result["check"]

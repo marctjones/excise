@@ -73,14 +73,17 @@ internal sealed class AppPerfScenarioTarget : IPerfScenarioTarget
     // Weak keys: holding a closed document's view model here would keep its
     // memory alive and falsify the close-one measurement.
     private readonly ConditionalWeakTable<MainWindowViewModel, StrongBox<(int Page, double OffsetY, double Range)>> _leftAt = new();
+    private readonly UiStallTracker? _uiStall;
 
     internal AppPerfScenarioTarget(
         MainWindowViewModel viewModel,
         PdfViewerControl? viewer,
         ViewerCacheTrimCoordinator? cacheTrim,
         DocumentWorkspace? workspace = null,
-        Func<MainWindow, ViewerCacheTrimCoordinator?>? cacheTrimFor = null)
+        Func<MainWindow, ViewerCacheTrimCoordinator?>? cacheTrimFor = null,
+        UiStallTracker? uiStall = null)
     {
+        _uiStall = uiStall;
         _initialViewModel = viewModel;
         _initialViewer = viewer;
         _initialCacheTrim = cacheTrim;
@@ -555,6 +558,13 @@ internal sealed class AppPerfScenarioTarget : IPerfScenarioTarget
     public PerfSample Sample()
     {
         var sample = PerfSample.FromRuntime();
+        if (_uiStall != null)
+        {
+            // The worst UI-thread stall since the previous boundary: a step that froze the window shows in its own row.
+            var stall = _uiStall.TakeAndReset();
+            sample = sample with { UiStallMaxMs = stall.MaxMs, UiStallsOver100 = stall.Over100Ms };
+        }
+
         if (_workspace != null)
         {
             sample = sample with

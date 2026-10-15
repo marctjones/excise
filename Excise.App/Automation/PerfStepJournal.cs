@@ -231,7 +231,9 @@ internal sealed record PerfStepRecord(
         Num(builder, "currentPageIndex", Sample.CurrentPageIndex).Append(',');
         Num(builder, "totalPages", Sample.TotalPages).Append(',');
         Num(builder, "openDocuments", Sample.OpenDocuments).Append(',');
-        Num(builder, "documentWindows", Sample.DocumentWindows);
+        Num(builder, "documentWindows", Sample.DocumentWindows).Append(',');
+        Dbl(builder, "uiStallMaxMs", Sample.UiStallMaxMs).Append(',');
+        Num(builder, "uiStallsOver100", Sample.UiStallsOver100);
         builder.Append('}');
         return builder.ToString();
     }
