@@ -19,8 +19,8 @@ namespace Excise.Avalonia.Controls;
 /// no longer kept.</para>
 ///
 /// <para><b>What is never released.</b> A stream any kept page has read — a
-/// kept page is realized, has a render in flight, or (for a cache trim) is in
-/// the current bands; that set is the caller's. Releasing a shared image
+/// kept page is realized, has a render in flight, or (for a cache trim) is a
+/// band page with a band tile still to draw (#2071); that set is the caller's. Releasing a shared image
 /// anyway would still be byte-safe, only a wasted re-decode. And the stream
 /// itself refuses to release bytes that anything but its decoder wrote (a
 /// redacted image, an edited or decrypted stream).</para>

@@ -119,11 +119,14 @@ public class ViewerCacheTrimTests
     }
 
     /// <summary>
-    /// #1492: every level also releases the decoded image samples of pages
+    /// #1492: a trim also releases the decoded image samples of pages
     /// outside the current bands — stricter than the render pass, which keeps
     /// any REALIZED page's samples. A stream a band page also reads stays. The
     /// record for the out-of-band page is placed directly, so the trim is
     /// measured before any render pass could release it for being unrealized.
+    /// Pinned at Critical, which drops the band's tiles so the band page is
+    /// still to be drawn; what Background and Warn do with a band page whose
+    /// tiles are all cached is a separate rule (#2071), pinned in its own test.
     ///
     /// Opens via <see cref="ContinuousTileEvictionCompositeTests.ShowContinuousViewerWithoutSinglePageRender"/>,
     /// not plain <c>ShowContinuousViewer</c> (#1776, #1934): this test's
@@ -133,7 +136,7 @@ public class ViewerCacheTrimTests
     /// still removes the competing render as a source of nondeterminism.
     /// </summary>
     [FixedAvaloniaFact]
-    public async Task EveryLevel_ReleasesTheDecodedSamplesOfPagesOutsideTheBands_AndKeepsTheBandPagesAndSharedOnes()
+    public async Task Critical_ReleasesTheDecodedSamplesOfPagesOutsideTheBands_AndKeepsTheBandPagesAndSharedOnes()
     {
         var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewerWithoutSinglePageRender(
             ContinuousImageSampleReleaseTests.ImageDocument(pageCount: 4));
@@ -156,7 +159,7 @@ public class ViewerCacheTrimTests
             own1.IsDecoded.Should().BeTrue("precondition: page 1 rendered");
             logo.IsDecoded.Should().BeTrue("precondition: page 1 rendered the shared logo");
 
-            foreach (var level in new[] { PdfViewerCacheTrimLevel.Background, PdfViewerCacheTrimLevel.Warn, PdfViewerCacheTrimLevel.Critical })
+            foreach (var level in new[] { PdfViewerCacheTrimLevel.Critical })
             {
                 _ = ownOutOfBand.DecodedData;
                 ownOutOfBand.IsDecoded.Should().BeTrue("fixture");
@@ -175,6 +178,103 @@ public class ViewerCacheTrimTests
                 // Critical dropped the band's tiles; let page 1 settle again before the next level.
                 await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
             }
+        }
+        finally
+        {
+            window.Close();
+            viewer.Document?.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// #1492: every level also releases the decoded image samples of pages
+    /// outside the current bands — stricter than the render pass, which keeps
+    /// any REALIZED page's samples. A stream a band page still to be drawn also
+    /// reads stays. A band page whose tiles are all cached is not still to be
+    /// drawn (#2071): at Background and Warn, which keep those tiles, it gives
+    /// its samples back too. The record for the out-of-band page is placed
+    /// directly, so the trim is measured before any render pass could release
+    /// it for being unrealized.
+    ///
+    /// Opens via <see cref="ContinuousTileEvictionCompositeTests.ShowContinuousViewerWithoutSinglePageRender"/>,
+    /// not plain <c>ShowContinuousViewer</c> (#1776, #1934): this test's
+    /// own1.IsDecoded precondition is the same assertion #1776 saw fail once
+    /// alongside a competing single-page render of page 1 — an unconfirmed
+    /// candidate cause, not a proven one (see that helper's doc comment). This
+    /// still removes the competing render as a source of nondeterminism.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task EveryLevel_ReleasesOutOfBandSamples_CriticalKeepsTheBandPage_BackgroundAndWarnReleaseASettledBand()
+    {
+        var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewerWithoutSinglePageRender(
+            ContinuousImageSampleReleaseTests.ImageDocument(pageCount: 4));
+        // Render-ahead (#1564) would pin page 2's samples too, and the trim
+        // would release them as well; RenderAheadTests covers that. This test
+        // counts the streams of one planted out-of-band page exactly.
+        viewer.RenderAheadEnabled = false;
+        try
+        {
+            await ContinuousTileEvictionCompositeTests.WaitForSettledCompositeAsync(window, viewer, items, pageNumber: 1);
+            viewer.SinglePagePart.SinglePagePublishCount.Should().Be(0,
+                "fixture: no single-page render competes with the continuous one (#1776)");
+            var doc = viewer.Document!;
+            var own1 = ContinuousImageSampleReleaseTests.XObject(doc, 1, "Own");
+            var logo = ContinuousImageSampleReleaseTests.XObject(doc, 1, "Logo");
+            const int outOfBand = 4;
+            var ownOutOfBand = ContinuousImageSampleReleaseTests.XObject(doc, outOfBand, "Own");
+            viewer.ContinuousPart.ContinuousRequiredKeysForTests.Select(k => k.Page).Should().Contain(1)
+                .And.NotContain(outOfBand, "fixture: only the first page's band is required");
+            own1.IsDecoded.Should().BeTrue("precondition: page 1 rendered");
+            logo.IsDecoded.Should().BeTrue("precondition: page 1 rendered the shared logo");
+
+            // #2071: Background and Warn keep the band's tiles. Once every band
+            // tile is cached, nothing reads the band page's samples until the
+            // zoom or the bands change, so they go too, the shared logo with them.
+            // The composite publishes once the visible cells are cached; the band
+            // can still have cells to draw, so wait for all of them.
+            await WaitUntilAsync(window,
+                () => viewer.ContinuousPart.ContinuousInFlightCount == 0
+                      && viewer.ContinuousPart.ContinuousBandPagesAwaitingTiles().Count == 0,
+                "page 1's band has finished drawing");
+            foreach (var level in new[] { PdfViewerCacheTrimLevel.Background, PdfViewerCacheTrimLevel.Warn })
+            {
+                _ = own1.DecodedData;
+                _ = logo.DecodedData;
+                _ = ownOutOfBand.DecodedData;
+                viewer.ContinuousPart.ContinuousImageSamplesForTests.Record(1, [own1, logo]);
+                viewer.ContinuousPart.ContinuousImageSamplesForTests.Record(outOfBand, [ownOutOfBand, logo]);
+
+                viewer.TrimCaches(level);
+
+                ownOutOfBand.IsDecoded.Should().BeFalse($"{level}: a page outside the bands gives back its samples");
+                own1.IsDecoded.Should().BeFalse($"{level}: a band page that has finished drawing gives back its samples");
+                logo.IsDecoded.Should().BeFalse($"{level}: no page still to draw reads the shared logo");
+                viewer.LastCacheTrim.DecodedSampleStreams.Should().BeGreaterThanOrEqualTo(3);
+                viewer.ContinuousPart.ContinuousImageSamplesForTests.IsEmpty.Should().BeTrue();
+                viewer.ContinuousPart.ContinuousBandPagesAwaitingTiles().Should().BeEmpty(
+                    $"{level}: the band's tiles stay, so releasing the samples causes no re-render");
+                _out.WriteLine($"{level}: {viewer.LastCacheTrim}");
+            }
+
+            // Critical drops every band tile, so page 1's band render is still to
+            // come and the band page keeps what it reads (#1492). A trim never
+            // starts that render itself (#1478); the next pass does.
+            _ = own1.DecodedData;
+            _ = logo.DecodedData;
+            _ = ownOutOfBand.DecodedData;
+            viewer.ContinuousPart.ContinuousImageSamplesForTests.Record(1, [own1, logo]);
+            viewer.ContinuousPart.ContinuousImageSamplesForTests.Record(outOfBand, [ownOutOfBand, logo]);
+
+            viewer.TrimCaches(PdfViewerCacheTrimLevel.Critical);
+
+            ownOutOfBand.IsDecoded.Should().BeFalse("Critical: a page outside the bands gives back the samples only it read");
+            logo.IsDecoded.Should().BeTrue("Critical: the band page, still to be drawn, reads the shared logo");
+            own1.IsDecoded.Should().BeTrue("Critical: the band page, still to be drawn, keeps its own samples");
+            viewer.ContinuousPart.ContinuousBandPagesAwaitingTiles().Should().Contain(1);
+            viewer.LastCacheTrim.DecodedSampleStreams.Should().Be(1);
+            viewer.LastCacheTrim.DecodedSampleBytes.Should().Be(16 * 16 * 3, "one 16x16 RGB image's decoded samples");
+            viewer.ContinuousPart.ContinuousImageSamplesForTests.StreamsOf(outOfBand).Should().BeEmpty();
+            _out.WriteLine($"Critical: {viewer.LastCacheTrim}");
         }
         finally
         {
