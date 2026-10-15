@@ -50,6 +50,21 @@
       "clickToFocus": {"xFraction": 0.3, "yFraction": 0.55},
       "why": "Chrome's built-in PDF viewer (PDFium). Launched with a FRESH --user-data-dir (Chrome restores tabs and PDF state from its profile: the same leak that made #1497's first calibration measure nothing) plus --no-first-run --no-default-browser-check. It opens at its own defaults, thumbnail sidebar shown, as Preview and Acrobat are measured at theirs. Quit through the menu: Cmd+Q shows a 'hold to quit' warning instead of quitting. clickToFocus: on open Chrome's keyboard focus is NOT in the page pane (Right/Left then step THUMBNAILS and Home/End/Up/PageUp do nothing: the first n=1 round of 2026-09-21 ran in that state). ONE click in the page pane, as a user makes, fixes it. Verified on irs after the click: Right = +1 page per press (10 presses -> 11), Left = -1, End -> 126, Home -> 1. Its page label names the page dominating the viewport, so at the end of a document whose last page is much larger than the rest (Altona) it reads pages-1: tolerated at end-of-document only (tolerated_end)."
     },
+    "firefox": {
+      "name": "Firefox",
+      "launch": "open",
+      "bundlePath": "/Applications/Firefox.app",
+      "processPath": "/Firefox.app/Contents/MacOS/firefox",
+      "nextPage": {
+        "keyCode": 45,
+        "modifiers": []
+      },
+      "clickToFocus": {
+        "xFraction": 0.5,
+        "yFraction": 0.55
+      },
+      "why": "Firefox's built-in PDF viewer (pdf.js: open source, JavaScript, neither PDFium nor MuPDF). Launched with a FRESH -profile directory seeded with a user.js (no default-browser prompt, no welcome page, no quit warning, no updater) and -no-remote so it never joins the user's running Firefox. 'n' is pdf.js's unconditional next-page key (Right only pages in some zoom modes; Page Down scrolls one screen). It opens at pdf.js defaults. The page number is the toolbar's pageNumber input, read by OCR like Chrome's. Its content runs in separate plugin-container processes, descendants of the main process, so the responsible-process sum counts them."
+    },
     "acrobat": {
       "name": "Adobe Acrobat",
       "launch": "open",

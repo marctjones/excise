@@ -1,0 +1,42 @@
+== [cli LOADED(load1=3.69 godot=3)] Wed Oct 14 11:29:08 GMT 2026 load1=3.69 godot=3 freeGiB=170
+ %CPU    RSS COMM
+152.3 296944 /Applications/Godot_mono.app/Contents/MacOS/Godot
+ 12.2 1214096 /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/
+ 10.8 163520 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+  2.5  97520 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude He
+  0.8 703664 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacO
+== [speed quiet] Wed Oct 14 11:58:54 GMT 2026 load1=1.66 godot=0 freeGiB=170
+ %CPU    RSS COMM
+ 12.8   4448 /usr/libexec/sysmond
+  5.4 1356240 /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/
+  1.4 428544 /Users/marc/Library/Application Support/Claude/claude-code/2.1.295/9d6405864fdc/claude.
+  1.4 603344 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacO
+  0.9  86016 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude He
+== [scenarios LOADED(load1=4.64 godot=2)] Wed Oct 14 12:57:30 GMT 2026 load1=4.64 godot=2 freeGiB=169
+ %CPU    RSS COMM
+102.7 357008 /Applications/Godot_mono.app/Contents/MacOS/Godot
+ 19.1 135616 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+  8.9  66736 /usr/sbin/coreaudiod
+  6.2 1961376 /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/
+  6.0  22960 /sbin/launchd
+== [memory LOADED(load1=7.06 godot=2)] Wed Oct 14 13:43:21 GMT 2026 load1=7.06 godot=2 freeGiB=169
+ %CPU    RSS COMM
+101.0 353344 /Applications/Godot_mono.app/Contents/MacOS/Godot
+ 17.7 135872 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+  8.7   4544 /usr/libexec/sysmond
+  6.0 2559232 /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/
+  2.0  79216 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude He
+== [scenarios quiet] Wed Oct 14 17:11:47 GMT 2026 load1=1.92 godot=0 freeGiB=165
+ %CPU    RSS COMM
+ 28.7 105424 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 28.2 747808 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacO
+ 14.3 115392 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude He
+  9.3 532752 /Users/marc/Library/Application Support/Claude/claude-code/2.1.295/9d6405864fdc/claude.
+  4.5   3360 /usr/libexec/sysmond
+== [memory quiet] Wed Oct 14 17:27:38 GMT 2026 load1=1.15 godot=0 freeGiB=166
+ %CPU    RSS COMM
+ 18.7 112224 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+  5.6  14272 /System/Library/PrivateFrameworks/BiomeStreams.framework/Support/BiomeAgent
+  5.3  15552 /System/Library/PrivateFrameworks/TextInputUIMacHelper.framework/Versions/A/XPCServices
+  5.2 102368 /System/Library/CoreServices/Spotlight.app/Contents/MacOS/Spotlight
+  5.1 758496 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacO

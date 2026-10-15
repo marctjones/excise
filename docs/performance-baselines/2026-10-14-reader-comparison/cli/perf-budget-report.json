@@ -1,0 +1,333 @@
+{
+  "schemaVersion": 1,
+  "issues": [
+    "#596",
+    "#602"
+  ],
+  "kind": "performance-budget",
+  "note": "Performance signal only - reported separately from correctness/quality gates.",
+  "mode": "fail",
+  "timeGate": "warn",
+  "runsCompleted": 3,
+  "runsPlanned": 3,
+  "partial": false,
+  "corpus": "test-pdfs/smoke",
+  "budgetsFile": "tests/perf-budgets/workflow-budgets.json",
+  "budgetsCommit": "f694d9a",
+  "budgetsMachine": "arm64 / macOS-26.5.2-arm64-arm-64bit-Mach-O / .NET SDK 10.0.300",
+  "workflows": [
+    {
+      "workflow": "save-roundtrip",
+      "gate": "hard",
+      "pdfsCompared": 10,
+      "pdfsMissing": [],
+      "status": "WARN",
+      "checks": [
+        {
+          "metric": "allocation",
+          "baseline": 804.0,
+          "measured": 941.9,
+          "ratio": 1.172,
+          "warnRatio": 1.15,
+          "failRatio": 1.3,
+          "unit": "MB",
+          "verdict": "warn"
+        },
+        {
+          "metric": "time",
+          "baseline": 801.0,
+          "measured": 900.8,
+          "ratio": 1.125,
+          "warnRatio": 1.5,
+          "failRatio": 2.0,
+          "unit": "ms",
+          "verdict": "ok"
+        }
+      ]
+    },
+    {
+      "workflow": "redaction-save",
+      "gate": "hard",
+      "pdfsCompared": 10,
+      "pdfsMissing": [],
+      "status": "FAIL",
+      "checks": [
+        {
+          "metric": "allocation",
+          "baseline": 1212.8,
+          "measured": 3138.4,
+          "ratio": 2.588,
+          "warnRatio": 1.15,
+          "failRatio": 1.3,
+          "unit": "MB",
+          "verdict": "fail"
+        },
+        {
+          "metric": "time",
+          "baseline": 1126.6,
+          "measured": 3155.2,
+          "ratio": 2.801,
+          "warnRatio": 1.5,
+          "failRatio": 2.0,
+          "unit": "ms",
+          "verdict": "warn"
+        }
+      ]
+    },
+    {
+      "workflow": "all-page-render",
+      "gate": "hard",
+      "pdfsCompared": 10,
+      "pdfsMissing": [],
+      "status": "PASS",
+      "checks": [
+        {
+          "metric": "allocation",
+          "baseline": 954.2,
+          "measured": 785.8,
+          "ratio": 0.824,
+          "warnRatio": 1.15,
+          "failRatio": 1.3,
+          "unit": "MB",
+          "verdict": "ok"
+        },
+        {
+          "metric": "time",
+          "baseline": 1265.9,
+          "measured": 1289.1,
+          "ratio": 1.018,
+          "warnRatio": 1.5,
+          "failRatio": 2.0,
+          "unit": "ms",
+          "verdict": "ok"
+        }
+      ]
+    },
+    {
+      "workflow": "text-extract",
+      "gate": "hard",
+      "pdfsCompared": 10,
+      "pdfsMissing": [],
+      "status": "FAIL",
+      "checks": [
+        {
+          "metric": "allocation",
+          "baseline": 219.4,
+          "measured": 351.6,
+          "ratio": 1.603,
+          "warnRatio": 1.15,
+          "failRatio": 1.3,
+          "unit": "MB",
+          "verdict": "fail"
+        },
+        {
+          "metric": "time",
+          "baseline": 532.4,
+          "measured": 654.1,
+          "ratio": 1.229,
+          "warnRatio": 1.5,
+          "failRatio": 2.0,
+          "unit": "ms",
+          "verdict": "ok"
+        }
+      ]
+    },
+    {
+      "workflow": "first-page-render",
+      "gate": "advisory",
+      "pdfsCompared": 10,
+      "pdfsMissing": [],
+      "status": "PASS",
+      "checks": [
+        {
+          "metric": "allocation",
+          "baseline": 179.2,
+          "measured": 182.1,
+          "ratio": 1.016,
+          "warnRatio": 1.15,
+          "failRatio": 1.3,
+          "unit": "MB",
+          "verdict": "ok"
+        },
+        {
+          "metric": "time",
+          "baseline": 321.0,
+          "measured": 358.8,
+          "ratio": 1.117,
+          "warnRatio": 1.5,
+          "failRatio": 2.0,
+          "unit": "ms",
+          "verdict": "ok"
+        }
+      ]
+    },
+    {
+      "workflow": "navigation-rerender",
+      "gate": "advisory",
+      "pdfsCompared": 10,
+      "pdfsMissing": [],
+      "status": "PASS",
+      "checks": [
+        {
+          "metric": "allocation",
+          "baseline": 293.5,
+          "measured": 270.9,
+          "ratio": 0.923,
+          "warnRatio": 1.15,
+          "failRatio": 1.3,
+          "unit": "MB",
+          "verdict": "ok"
+        },
+        {
+          "metric": "time",
+          "baseline": 385.9,
+          "measured": 418.3,
+          "ratio": 1.084,
+          "warnRatio": 1.5,
+          "failRatio": 2.0,
+          "unit": "ms",
+          "verdict": "ok"
+        }
+      ]
+    },
+    {
+      "workflow": "zoom-rerender",
+      "gate": "advisory",
+      "pdfsCompared": 10,
+      "pdfsMissing": [],
+      "status": "PASS",
+      "checks": [
+        {
+          "metric": "allocation",
+          "baseline": 164.8,
+          "measured": 154.2,
+          "ratio": 0.936,
+          "warnRatio": 1.15,
+          "failRatio": 1.3,
+          "unit": "MB",
+          "verdict": "ok"
+        },
+        {
+          "metric": "time",
+          "baseline": 231.0,
+          "measured": 255.4,
+          "ratio": 1.106,
+          "warnRatio": 1.5,
+          "failRatio": 2.0,
+          "unit": "ms",
+          "verdict": "ok"
+        }
+      ]
+    },
+    {
+      "workflow": "open",
+      "gate": "advisory",
+      "pdfsCompared": 10,
+      "pdfsMissing": [],
+      "status": "PASS",
+      "checks": [
+        {
+          "metric": "allocation",
+          "baseline": 36.1,
+          "measured": 35.9,
+          "ratio": 0.995,
+          "warnRatio": 1.15,
+          "failRatio": 1.3,
+          "unit": "MB",
+          "verdict": "ok"
+        },
+        {
+          "metric": "time",
+          "baseline": 36.3,
+          "measured": 40.9,
+          "ratio": 1.126,
+          "warnRatio": 1.5,
+          "failRatio": 2.0,
+          "unit": "ms",
+          "verdict": "ok"
+        }
+      ]
+    },
+    {
+      "workflow": "search",
+      "gate": "advisory",
+      "pdfsCompared": 10,
+      "pdfsMissing": [],
+      "status": "WARN",
+      "checks": [
+        {
+          "metric": "allocation",
+          "baseline": 22.1,
+          "measured": 249.6,
+          "ratio": 11.28,
+          "warnRatio": 1.15,
+          "failRatio": 1.3,
+          "unit": "MB",
+          "verdict": "warn"
+        },
+        {
+          "metric": "time",
+          "baseline": 32.1,
+          "measured": 274.4,
+          "ratio": 8.537,
+          "warnRatio": 1.5,
+          "failRatio": 2.0,
+          "unit": "ms",
+          "verdict": "warn"
+        }
+      ]
+    }
+  ],
+  "failures": [
+    {
+      "workflow": "redaction-save",
+      "metric": "allocation",
+      "ratio": 2.588,
+      "worstPdf": "state-ds82-passport-renewal.pdf",
+      "message": "redaction-save [hard] allocation: 3138.4MB vs budget 1212.8MB x1.3 (ratio 2.59); worst contributor: state-ds82-passport-renewal.pdf; allocation regression - machine-stable signal; look for per-call/per-object churn on the hot path",
+      "hotPath": "Excise.Core redaction pipeline + writer: RedactArea + StructureTreeRedactionScrubber tree walk + SaveToBytes (#743; #597 report s3.4). SECURITY-CRITICAL: never win this budget by short-cutting the glyph-removal pipeline - see CLAUDE.md redaction rules."
+    },
+    {
+      "workflow": "text-extract",
+      "metric": "allocation",
+      "ratio": 1.603,
+      "worstPdf": "irs-1040.pdf",
+      "message": "text-extract [hard] allocation: 351.6MB vs budget 219.4MB x1.3 (ratio 1.60); worst contributor: irs-1040.pdf; allocation regression - machine-stable signal; look for per-call/per-object churn on the hot path",
+      "hotPath": "Excise.Core TextExtractor: content parse + letter accumulators + font/XObject resource materialization (#600; #597 report s3.3)"
+    }
+  ],
+  "warnings": [
+    {
+      "workflow": "save-roundtrip",
+      "metric": "allocation",
+      "ratio": 1.172,
+      "worstPdf": "cdc-vis-covid-19.pdf",
+      "message": "save-roundtrip [hard] allocation: 941.9MB vs budget 804.0MB x1.15 (ratio 1.17); worst contributor: cdc-vis-covid-19.pdf; allocation regression - machine-stable signal; look for per-call/per-object churn on the hot path",
+      "hotPath": "Excise.Core writer/object store: PdfDocument.SaveToBytes -> WriteObjects -> GetObject/GetObjectFromStream object-stream materialization (#743; #597 report s3.1)"
+    },
+    {
+      "workflow": "redaction-save",
+      "metric": "time",
+      "ratio": 2.801,
+      "worstPdf": "state-ds82-passport-renewal.pdf",
+      "message": "redaction-save [hard] time: 3155.2ms vs budget 1126.6ms x2.0 (ratio 2.80); worst contributor: state-ds82-passport-renewal.pdf; wall-time regression - re-run to rule out machine noise; if it reproduces, profile with dotnet-trace (see #597 baseline README)",
+      "hotPath": "Excise.Core redaction pipeline + writer: RedactArea + StructureTreeRedactionScrubber tree walk + SaveToBytes (#743; #597 report s3.4). SECURITY-CRITICAL: never win this budget by short-cutting the glyph-removal pipeline - see CLAUDE.md redaction rules."
+    },
+    {
+      "workflow": "search",
+      "metric": "allocation",
+      "ratio": 11.28,
+      "worstPdf": "state-ds11-passport.pdf",
+      "message": "search [advisory] allocation: 249.6MB vs budget 22.1MB x1.3 (ratio 11.28); worst contributor: state-ds11-passport.pdf; allocation regression - machine-stable signal; look for per-call/per-object churn on the hot path",
+      "hotPath": "Excise.Core word segmentation + term scan over cached letters (#600)"
+    },
+    {
+      "workflow": "search",
+      "metric": "time",
+      "ratio": 8.537,
+      "worstPdf": "state-ds11-passport.pdf",
+      "message": "search [advisory] time: 274.4ms vs budget 32.1ms x2.0 (ratio 8.54); worst contributor: state-ds11-passport.pdf; wall-time regression - re-run to rule out machine noise; if it reproduces, profile with dotnet-trace (see #597 baseline README)",
+      "hotPath": "Excise.Core word segmentation + term scan over cached letters (#600)"
+    }
+  ]
+}

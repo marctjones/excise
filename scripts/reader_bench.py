@@ -568,6 +568,92 @@ def ocr_chrome_page_box(png):
     return page, f"{page} ({votes}/{len(reads)} readings agree; all: {reads})"
 
 
+# Firefox profile prefs: nothing that shows a dialog, opens a second tab or
+# starts a background update, so the run measures the PDF viewer and nothing else.
+FIREFOX_USER_JS = """\
+user_pref("browser.shell.checkDefaultBrowser", false);
+user_pref("browser.shell.didSkipDefaultBrowserCheckOnFirstRun", true);
+user_pref("browser.aboutwelcome.enabled", false);
+user_pref("browser.startup.homepage_override.mstone", "ignore");
+user_pref("startup.homepage_welcome_url", "");
+user_pref("startup.homepage_welcome_url.additional", "");
+user_pref("trailhead.firstrun.didSeeAboutWelcome", true);
+user_pref("browser.tabs.warnOnClose", false);
+user_pref("browser.warnOnQuit", false);
+user_pref("browser.warnOnQuitShortcut", false);
+user_pref("browser.disableResetPrompt", true);
+user_pref("browser.uitour.enabled", false);
+user_pref("app.update.auto", false);
+user_pref("app.update.enabled", false);
+user_pref("datareporting.policy.dataSubmissionEnabled", false);
+user_pref("datareporting.healthreport.uploadEnabled", false);
+user_pref("toolkit.telemetry.reportingpolicy.firstRun", false);
+user_pref("browser.newtabpage.enabled", false);
+user_pref("browser.preonboarding.enabled", false);
+user_pref("browser.startup.upgradeDialog.enabled", false);
+user_pref("termsofuse.bypassNotification", true);
+user_pref("termsofuse.acceptedVersion", 99);
+user_pref("termsofuse.acceptedDate", "1760000000000");
+user_pref("browser.privacySegmentation.preferences.show", false);
+user_pref("datareporting.policy.firstRunURL", "");
+user_pref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
+user_pref("datareporting.policy.dataSubmissionPolicyAccepted", true);
+user_pref("datareporting.policy.dataSubmissionPolicyNotifiedTime", "1760000000000");
+user_pref("datareporting.policy.currentPolicyVersion", 99);
+user_pref("datareporting.policy.minimumPolicyVersion", 1);
+user_pref("datareporting.policy.dataSubmissionPolicyAcceptedVersion", 99);
+user_pref("browser.messaging-system.whatsNewPanel.enabled", false);
+user_pref("messaging-system.rsexperimentloader.enabled", false);
+user_pref("browser.search.serpEventTelemetry.enabled", false);
+"""
+
+# Firefox's toolbar page-number box, in retina pixels of the 1200x800 window
+# screenshot (x0, y0, x1, y1). CALIBRATED in the probe below; see DRIVING NOTES.
+FIREFOX_PAGE_BOX = (378, 198, 460, 226)
+FIREFOX_INFOBAR_PX = 78
+FIREFOX_INFOBAR_PROBE = (1500, 212)
+
+
+def ocr_firefox_page_box(png):
+    """pdf.js's current-page input. Read at several thresholds, both polarities
+    (the toolbar follows the system theme) and sizes, majority wins, as Chrome's."""
+    from PIL import Image, ImageOps
+    from collections import Counter
+    gray = Image.open(png).convert("L")
+    # A first-run "Privacy Notice updated" infobar sits above the PDF toolbar in a
+    # fresh profile and could not be switched off by any pref tried (three
+    # attempts, 2026-10-13). It is 78 px (retina) tall and lighter than the
+    # toolbar (luminance 38 against 15 at the sampled point), and it may go away
+    # mid-run, so each read checks for it and moves the crop.
+    x0, y0, x1, y1 = FIREFOX_PAGE_BOX
+    dy = FIREFOX_INFOBAR_PX if gray.getpixel(FIREFOX_INFOBAR_PROBE) > 26 else 0
+    base = gray.crop((x0, y0 + dy, x1, y1 + dy))
+    reads = []
+    # Light digits on a dark field is the system dark theme this bench runs in;
+    # the other polarity only adds misreads (3, 4, 8 for a 1, 1, 6), so it is
+    # tried only when the first reads nothing at all (a light theme).
+    for invert in (True, False):
+        if reads:
+            break
+        src = ImageOps.invert(base) if invert else base
+        for thr in (70, 90, 110, 130, 150):
+            for scale in (4, 6, 8):
+                im = src.resize((src.width * scale, src.height * scale), Image.LANCZOS)
+                im = im.point(lambda v, t=thr: 0 if v < t else 255)
+                im = ImageOps.expand(im, border=40, fill=255)
+                out = png.with_suffix(f".pagebox.{int(invert)}.{thr}.{scale}.png")
+                im.save(out)
+                text = sh(["tesseract", str(out), "-", "--psm", "7",
+                           "-c", "tessedit_char_whitelist=0123456789"]).stdout.strip()
+                out.unlink(missing_ok=True)
+                if text.isdigit():
+                    reads.append(int(text))
+    if not reads:
+        return None, ""
+    (page, votes), = Counter(reads).most_common(1)
+    return page, f"{page} ({votes}/{len(reads)} readings agree; all: {reads})"
+
+
 def collect_app_area(run_dir):
     """Copy the app's log back next to the results, then delete its area."""
     area = app_area(run_dir)
@@ -710,11 +796,21 @@ def launch(app_id, app, doc_copy, run_dir, cfg, excise_app, extra_env=None, sett
         args += ["-a", app["bundlePath"], "--args", f"--user-data-dir={profile}",
                  "--no-first-run", "--no-default-browser-check"]
         match = None
+    elif app_id == "firefox":
+        # Same rule as Chrome: a fresh profile inside the deleted-after-run app
+        # area, so nothing carries between runs or from the user's Firefox, and
+        # -no-remote so the new instance never hands the file to a running one.
+        profile = app_area(run_dir) / "firefox-profile"
+        profile.mkdir(parents=True, exist_ok=True)
+        (profile / "user.js").write_text(FIREFOX_USER_JS)
+        args += ["-a", app["bundlePath"], "--args", "-no-remote", "-profile", str(profile)]
+        match = None
     else:
         args += ["-a", app["bundlePath"]]
         match = None
     if doc_copy:
-        args += (["--args"] if app["launch"] == "exec" else []) + [str(doc_copy)]
+        target = doc_copy.as_uri() if app_id == "firefox" else str(doc_copy)
+        args += (["--args"] if app["launch"] == "exec" else []) + [target]
     sh(args, check=True)
     pid = None
     for _ in range(60):
@@ -777,6 +873,8 @@ def read_page(app_id, pid, run_dir, label, win_cfg):
         region = (int((win_cfg["width"] - 350) * scale), int((win_cfg["height"] - 45) * scale), 350 * scale, 45 * scale)
     elif app_id == "chrome":
         return ocr_chrome_page_box(png)
+    elif app_id == "firefox":
+        return ocr_firefox_page_box(png)
     else:
         return ocr_acrobat_page_box(png, win_cfg)
     return ocr_page(png, region)
@@ -849,12 +947,13 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, extra_env=None):
                 str(png), "--out", str(crop)])
             evidence = sh(["tesseract", str(crop), "-", "--psm", "7"]).stdout.strip()
             ok = "No document" not in evidence and stem.split("-")[0] in evidence
-        elif app_id == "chrome":
+        elif app_id in ("chrome", "firefox"):
             # The tab is titled with the PDF's /Title (or the file name); a failed
             # load or a blank tab reads "New Tab" / "Untitled" or shows the URL.
+            # Firefox names a window with no page "Mozilla Firefox" alone.
             title = window_title(pid)
-            ok = bool(title) and not title.startswith(("New Tab", "Untitled")) and stem not in ("",) \
-                and "chrome://" not in title
+            ok = bool(title) and not title.startswith(("New Tab", "Untitled", "Mozilla Firefox", "Welcome")) \
+                and stem not in ("",) and "chrome://" not in title and "about:" not in title
             evidence = title
         else:
             # Acrobat titles the window with the PDF's /Title, not the file name,
@@ -1268,7 +1367,7 @@ def summarize(out):
         lines += [f"## {doc}", "",
                   "| app | runs ok | procs | " + " | ".join(labels) + " | peak (all) | peak (main) | CPU s | idle CPU % |",
                   "|---|---|---:|" + "---:|" * len(labels) + "---:|---:|---:|---:|"]
-        for app in ["excise", "preview", "chrome", "acrobat"]:
+        for app in ["excise", "preview", "chrome", "firefox", "acrobat"]:
             row = rows.get((app, doc))
             if not row:
                 continue
@@ -1441,6 +1540,7 @@ def run_meta(cfg, **extra):
             "preview": sh(["defaults", "read", "/System/Applications/Preview.app/Contents/Info", "CFBundleShortVersionString"]).stdout.strip(),
             "acrobat": sh(["defaults", "read", "/Applications/Adobe Acrobat DC/Adobe Acrobat.app/Contents/Info", "CFBundleShortVersionString"]).stdout.strip(),
             "chrome": sh(["defaults", "read", "/Applications/Google Chrome.app/Contents/Info", "CFBundleShortVersionString"]).stdout.strip(),
+            "firefox": sh(["defaults", "read", "/Applications/Firefox.app/Contents/Info", "CFBundleShortVersionString"]).stdout.strip(),
             "config": cfg, "started": time.strftime("%Y-%m-%dT%H:%M:%S"), **extra}
 
 

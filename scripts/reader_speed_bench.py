@@ -79,6 +79,11 @@ PAGE_REGION = {
     # divider (300 pt), inside the window. Measured 2026-09-21 by drawing the box on a
     # saved 1200x800 window screenshot (a red rectangle framed exactly the page pane).
     "chrome":  (305, 150, 1185, 795),
+    # Firefox: below the PDF toolbar AND the first-run "Privacy Notice updated"
+    # infobar that a fresh profile shows for the whole run (toolbar ends ~164 pt
+    # with it; ~126 pt without), sidebar closed. Measured 2026-10-13 from window
+    # screenshots (page top at 330 px = 165 pt).
+    "firefox": (10, 170, 1190, 795),
 }
 
 # excise-tabs only: the tab strip (#1554) sits above the viewer once a window
@@ -640,7 +645,7 @@ def summarize(out):
     # extra --docs entry (plans-x20's runs were recorded and never summarized).
     present = list(dict.fromkeys(k[0] for k in keyed))
     for doc in [d for d in SPEED_DOCS if d in present] + [d for d in present if d not in SPEED_DOCS]:
-        present = [a for a in ("excise", "preview", "chrome", "acrobat") if (doc, a) in keyed]
+        present = [a for a in ("excise", "preview", "chrome", "firefox", "acrobat") if (doc, a) in keyed]
         if not present:
             continue
         lines += [f"## {doc}", "",
