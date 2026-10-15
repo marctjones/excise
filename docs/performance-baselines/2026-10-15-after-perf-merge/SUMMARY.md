@@ -105,3 +105,22 @@ The hold is a real but small gain (5-10 ms) and the turn still takes ~54 ms.
 
 CPU seconds (altona 7.4 -> 7.3, irs 7.4 -> 7.3, scan 3.7 -> 3.8) and idle CPU (0.1-0.2%) are unchanged. The bench does not
 zoom, so the first-zoom re-decode cost after a background trim (about one band render, ~190 ms CPU) is not measured here.
+
+## Decisions after the page-turn investigation (2026-10-15)
+
+Page turns are 54 ms warm and 95 ms on the first turn of a process: under the ~100 ms threshold for feeling instant, so
+everything below is a nice-to-have and was judged on complexity and upkeep against a gain most people cannot feel.
+
+- **Render-loop hold (#2069): removed.** 5-7 ms for a 107-line custom composition visual that depends on how Avalonia
+  12.1.2 stops its display link, plus 60 Hz ticking for 3 s after every input.
+- **OpenGL backend instead of Metal: not merged** (branch `perf/2069-latency`, d8735ad6). -11 to -15 ms on every turn, but
+  OpenGL is deprecated on macOS, scroll ran 1-3 fps slower in single runs, about 1% of pixels differ by 1-8 levels, and window
+  resize, multi-document windows and the Windows and Linux builds were not measured.
+- **JIT warm-up of the ReactiveCommand pipeline: not merged** (branch `perf/2069-slowest-turn`, 97e929ae). First turn 98 -> 80 ms
+  once per launch, for a startup hook that does nothing under a Native AOT build and ~12 ms of JIT at startup otherwise.
+- **Where the 54 ms goes (real key, warm, irs):** OS delivery 4, window-sees-it to commit 6, wait for the display tick 9.5,
+  render and present call 5, rendered to first screen change 34 (Metal present plus WindowServer; ~25 of it is the floor every
+  reader pays). First turn of a process adds ~17 ms of key delivery (WindowServer, outside the app), ~15 ms of first-run JIT, and
+  ~10 ms of render-loop restart. Turns after more than 3 s idle pay the restart (+10-12 ms); the idle trim causes no re-render.
+- **Not pursued:** deferring non-visual bindings (~1-2 ms), avoiding a relayout on page turn (a redesign), rendering at commit
+  (private Avalonia API).
