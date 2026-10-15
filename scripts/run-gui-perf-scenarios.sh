@@ -68,6 +68,9 @@
 #   --out DIR           output dir (default logs/gui-perf_<stamp>)
 #   --app PATH          use an existing .app bundle instead of building
 #   --no-build          reuse the bundle under --out/bundle
+#   --r2r               build the ReadyToRun bundle instead of the default NativeAOT one. The build
+#                       shape of the measured bundle is printed and written to run-meta.txt
+#                       (buildShape=); numbers from different shapes are not comparable.
 #   --keep-bundle       do not delete the bundle afterwards
 #   --list              print the plan and exit
 set -uo pipefail
@@ -113,6 +116,7 @@ while [ "$#" -gt 0 ]; do
     --app) APP="$2"; BUILD=0; shift 2 ;;
     --no-build) BUILD=0; shift ;;
     --keep-bundle) KEEP_BUNDLE=1; shift ;;
+    --r2r) BUILD_SHAPE_FLAG=""; shift ;;
     --scenarios-file) SCENARIO_FILE="$2"; shift 2 ;;
     --list) LIST_ONLY=1; shift ;;
     -h|--help) sed -n '2,60p' "$0"; exit 0 ;;
@@ -125,6 +129,7 @@ case "$SAMPLE_MODE" in
   *) echo "--sample must be boundary|1s|5s|none" >&2; exit 2 ;;
 esac
 
+BUILD_SHAPE_FLAG="${BUILD_SHAPE_FLAG---aot}"   # NativeAOT unless --r2r
 BUNDLE_DIR="$OUT/bundle"
 EXE="$BUNDLE_DIR/excise.app/Contents/MacOS/Excise.App"
 [ -n "$APP" ] && EXE="$APP/Contents/MacOS/Excise.App"
@@ -286,9 +291,9 @@ echo "==> load1 at start: $LOAD1"
 # ------------------------------------------------------------------------- build
 
 if [ "$BUILD" = "1" ]; then
-  echo "==> building Release bundle from $(git rev-parse --short HEAD)"
+  echo "==> building Release bundle ($([ -n "$BUILD_SHAPE_FLAG" ] && echo NativeAOT || echo ReadyToRun)) from $(git rev-parse --short HEAD)"
   rm -rf "$BUNDLE_DIR"
-  "$ROOT/scripts/build-macos-app.sh" --version "0.0.0-guiperf" --output "$BUNDLE_DIR" \
+  "$ROOT/scripts/build-macos-app.sh" $BUILD_SHAPE_FLAG --version "0.0.0-guiperf" --output "$BUNDLE_DIR" \
     || { echo "build failed" >&2; exit 1; }
 fi
 
@@ -297,6 +302,9 @@ if [ ! -x "$EXE" ]; then
   exit 1
 fi
 
+APP_DIR="${EXE%/Contents/MacOS/Excise.App}"
+BUILD_SHAPE="$(python3 "$ROOT/scripts/bench_build_shape.py" --shape "$APP_DIR" || true)"
+python3 "$ROOT/scripts/bench_build_shape.py" "$APP_DIR" || true   # the banner, with a warning when it is not NativeAOT
 GIT_SHA="$(git rev-parse --short HEAD)"
 GIT_DIRTY="clean"
 git diff --quiet || GIT_DIRTY="dirty"
@@ -544,6 +552,7 @@ echo "==> output: $OUT"
   echo "systemTabbing=$(defaults read -g AppleWindowTabbingMode 2>/dev/null || echo fullscreen)"
   echo "appHome=$APP_HOME_ROOT"
   echo "exe=$EXE"
+  echo "buildShape=$BUILD_SHAPE"
   echo "started=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 } > "$OUT/run-meta.txt"
 

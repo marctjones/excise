@@ -135,6 +135,7 @@ import argparse, json, os, pathlib, re, shutil, signal, statistics, subprocess, 
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CONFIG = ROOT / "tests/reader-bench/bench.json"
+import bench_build_shape  # noqa: E402  (scripts/ is on sys.path: run directly, or inserted by reader_speed_bench)
 MB = 1024 * 1024
 
 
@@ -943,7 +944,12 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, extra_env=None):
             if wid:
                 sh(["screencapture", "-x", "-o", "-l", str(wid), str(png)])
             crop = png.with_suffix(".title.png")
-            sh(["sips", "-c", "70", str(cfg["window"]["width"] * 2 - 600), "--cropOffset", "0", "300",
+            # The title bar right of the traffic-light buttons (which end near x=135
+            # px and confuse OCR). The ReadyToRun build centers the title (x~1000)
+            # but the NativeAOT build left-aligns it (x~168), so a crop that started
+            # 300 px in cut "w9-excise" off the NativeAOT title and every document
+            # run failed document-open (2026-10-15).
+            sh(["sips", "-c", "70", str(cfg["window"]["width"] * 2 - 600), "--cropOffset", "0", "150",
                 str(png), "--out", str(crop)])
             evidence = sh(["tesseract", str(crop), "-", "--psm", "7"]).stdout.strip()
             ok = "No document" not in evidence and stem.split("-")[0] in evidence
@@ -1351,8 +1357,17 @@ def summarize(out):
         return (max(xs) - min(xs)) if len(xs) > 1 else None
 
     summary = {"generated": time.strftime("%Y-%m-%dT%H:%M:%S"), "rows": []}
+    shape_line = None
+    meta_path = out / "run-meta.json"
+    if meta_path.exists():
+        eb = json.loads(meta_path.read_text()).get("exciseBuild")
+        if eb:
+            shape_line = (f"**Excise build shape: {eb['shape']}** ({eb['evidence']}"
+                          f"{', bundle %s MB' % eb['bundleMB'] if eb.get('bundleMB') else ''}); bundle `{eb.get('app', '?')}`. "
+                          "Numbers from different build shapes are not comparable.")
     lines = ["# Reader benchmark: excise vs Preview vs Chrome vs Adobe Acrobat (#1543)", "",
              f"Run: `{out}`", "",
+             *([shape_line, ""] if shape_line else []),
              "Footprint = macOS physical footprint, summed over every process the app owns "
              "(main + children + per-app helper services that exit with it). Medians over "
              "successful repeats; ± is the min–max spread. MB.", ""]
@@ -1478,7 +1493,9 @@ def main():
     ap.add_argument("--apps", default="excise,preview,acrobat")
     ap.add_argument("--docs", default="empty,w9,irs,altona,scan")
     ap.add_argument("--repeats", type=int)
-    ap.add_argument("--excise-app", default=str(ROOT / "logs/reader-bench-bundle/excise.app"))
+    ap.add_argument("--excise-app", default=str(ROOT / "logs/reader-bench-bundle-aot/excise.app"),
+                    help="the excise bundle to measure; default is the NativeAOT bundle. Its build shape is printed and "
+                         "recorded in run-meta.json and the summary (scripts/bench_build_shape.py).")
     ap.add_argument("--out")
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--summarize")
@@ -1514,7 +1531,12 @@ def main():
             print(f"r{r} {app:8} {d['id'] if d else 'empty'}")
         print(f"{len(runs)} runs (~{len(runs) * 2.2:.0f} min)"); return
     if "excise" in apps and not (pathlib.Path(a.excise_app) / "Contents/MacOS/Excise.App").exists():
-        sys.exit(f"no excise bundle at {a.excise_app}; build it with scripts/build-macos-app.sh --output logs/reader-bench-bundle")
+        sys.exit(f"no excise bundle at {a.excise_app}; build the NativeAOT one with "
+                 "scripts/build-macos-app.sh --aot --output logs/reader-bench-bundle-aot")
+    exc_build = None
+    if "excise" in apps:
+        exc_build = {**bench_build_shape.detect(a.excise_app), "app": str(pathlib.Path(a.excise_app).resolve())}
+        print(bench_build_shape.banner(a.excise_app), flush=True)
 
     preflight(apps)
     # ABSOLUTE: `open` starts the app from "/", so a relative HOME, log or
@@ -1522,7 +1544,7 @@ def main():
     # document at all and still read "Page 1" from the empty window).
     out = pathlib.Path(a.out or ROOT / f"logs/reader-bench_{time.strftime('%Y%m%d_%H%M%S')}").resolve()
     out.mkdir(parents=True, exist_ok=True)
-    (out / "run-meta.json").write_text(json.dumps(run_meta(cfg), indent=1))
+    (out / "run-meta.json").write_text(json.dumps(run_meta(cfg, exciseBuild=exc_build), indent=1))
     print(f"==> {len(runs)} runs -> {out}", flush=True)
     for r, d, app in runs:
         if a.resume and (out / app / (d["id"] if d else "empty") / f"r{r}" / "result.json").exists():

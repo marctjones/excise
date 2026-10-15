@@ -14,6 +14,7 @@ scripts/assert-trx-green.sh   # the trx verdict for the two ADVISORY GitHub runn
 scripts/audit-image-feature-coverage.py   # registry audit helper
 scripts/audit-pdf20-renderer-coverage.py   # registry audit helper
 scripts/bench-width-policy.py   # measures what a redaction WIDTH POLICY does to the page (drift vs the original) and what layout still restates the width (#1715/#1725). A survey, not a gate: numbers vary with the dictionary and corpus
+scripts/bench_build_shape.py   # which build shape (NativeAOT / ReadyToRun / IL-JIT) an excise bundle is, read from the files alone; the benchmark harnesses print it and record it in run-meta and the summary header, because the shape moves a number more than most fixes do. NOT a gate
 scripts/build-arlington-inventory.py   # derives arlington-inventory.json from the pinned Arlington model (#1709); needs the downloaded model, so not a t0 gate
 scripts/build-bench-tiers.py   # regenerates tests/bench-tiers/*.tsv from corpora
 scripts/build-deb.sh   # Linux packaging; no Linux PACKAGING runner (#1596) — the advisory linux.yml builds and publishes but packages nothing

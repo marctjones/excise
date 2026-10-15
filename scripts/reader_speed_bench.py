@@ -620,8 +620,17 @@ def summarize(out):
             r = analyze_run(run_dir, cfg)
             runs.append(r)
             (run_dir / "analysis.json").write_text(json.dumps(r, indent=1))
+    shape_line = None
+    meta_path = out / "run-meta.json"
+    if meta_path.exists():
+        eb = json.loads(meta_path.read_text()).get("exciseBuild")
+        if eb:
+            shape_line = (f"**Excise build shape: {eb['shape']}** ({eb['evidence']}"
+                          f"{', bundle %s MB' % eb['bundleMB'] if eb.get('bundleMB') else ''}); bundle `{eb.get('app', '?')}`. "
+                          "Numbers from different build shapes are not comparable.")
     lines = ["# Reader speed benchmark: excise vs Preview vs Adobe Acrobat (#1544)", "",
              f"Run: `{out}`", "",
+             *([shape_line, ""] if shape_line else []),
              "Times in ms from the input event, over the app's page area. Median across repeats "
              "(page turns: median and p95 across all turns). `drawn` = the first frame from which the "
              "page area stays final; speed index = area under (1 - visual completeness). "
@@ -787,7 +796,8 @@ def main():
     ap.add_argument("--apps", default="excise,preview,chrome,acrobat")
     ap.add_argument("--docs", default=",".join(SPEED_DOCS))
     ap.add_argument("--repeats", type=int, default=3)
-    ap.add_argument("--excise-app", default=str(ROOT / "logs/reader-bench-bundle/excise.app"))
+    ap.add_argument("--excise-app", default=str(ROOT / "logs/reader-bench-bundle-aot/excise.app"),
+                    help="the excise bundle to measure; default is the NativeAOT bundle (build shape is printed and recorded)")
     ap.add_argument("--out")
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--calibrate", action="store_true")
@@ -818,10 +828,15 @@ def main():
         print(f"{len(runs)} runs (~{len(runs) * 1.9:.0f} min)"); return
 
     rb.preflight(apps)
+    exc_build = None
+    if "excise" in apps:
+        exc_build = {**rb.bench_build_shape.detect(a.excise_app), "app": str(pathlib.Path(a.excise_app).resolve())}
+        print(rb.bench_build_shape.banner(a.excise_app), flush=True)
     out = pathlib.Path(a.out or ROOT / f"logs/reader-speed_{time.strftime('%Y%m%d_%H%M%S')}").resolve()
     out.mkdir(parents=True, exist_ok=True)
     (out / "run-meta.json").write_text(json.dumps({
         "sha": rb.sh(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"]).stdout.strip(),
+        "exciseBuild": exc_build,
         "started": time.strftime("%Y-%m-%dT%H:%M:%S"), "calibrate": a.calibrate,
         "pageRegion": PAGE_REGION, "pageTurns": PAGE_TURNS, "turnGapS": TURN_GAP_S}, indent=1))
     if a.calibrate:
