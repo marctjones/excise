@@ -119,11 +119,14 @@ public class ViewerCacheTrimTests
     }
 
     /// <summary>
-    /// #1492: every level also releases the decoded image samples of pages
+    /// #1492: a trim also releases the decoded image samples of pages
     /// outside the current bands — stricter than the render pass, which keeps
     /// any REALIZED page's samples. A stream a band page also reads stays. The
     /// record for the out-of-band page is placed directly, so the trim is
     /// measured before any render pass could release it for being unrealized.
+    /// Pinned at Critical, which drops the band's tiles so the band page is
+    /// still to be drawn; what Background and Warn do with a band page whose
+    /// tiles are all cached is a separate rule (#2071), pinned in its own test.
     ///
     /// Opens via <see cref="ContinuousTileEvictionCompositeTests.ShowContinuousViewerWithoutSinglePageRender"/>,
     /// not plain <c>ShowContinuousViewer</c> (#1776, #1934): this test's
@@ -133,7 +136,7 @@ public class ViewerCacheTrimTests
     /// still removes the competing render as a source of nondeterminism.
     /// </summary>
     [FixedAvaloniaFact]
-    public async Task EveryLevel_ReleasesTheDecodedSamplesOfPagesOutsideTheBands_AndKeepsTheBandPagesAndSharedOnes()
+    public async Task Critical_ReleasesTheDecodedSamplesOfPagesOutsideTheBands_AndKeepsTheBandPagesAndSharedOnes()
     {
         var (window, viewer, items) = ContinuousTileEvictionCompositeTests.ShowContinuousViewerWithoutSinglePageRender(
             ContinuousImageSampleReleaseTests.ImageDocument(pageCount: 4));
@@ -156,7 +159,7 @@ public class ViewerCacheTrimTests
             own1.IsDecoded.Should().BeTrue("precondition: page 1 rendered");
             logo.IsDecoded.Should().BeTrue("precondition: page 1 rendered the shared logo");
 
-            foreach (var level in new[] { PdfViewerCacheTrimLevel.Background, PdfViewerCacheTrimLevel.Warn, PdfViewerCacheTrimLevel.Critical })
+            foreach (var level in new[] { PdfViewerCacheTrimLevel.Critical })
             {
                 _ = ownOutOfBand.DecodedData;
                 ownOutOfBand.IsDecoded.Should().BeTrue("fixture");
