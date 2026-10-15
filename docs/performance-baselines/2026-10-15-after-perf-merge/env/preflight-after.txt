@@ -1,0 +1,35 @@
+== [cli quiet] Thu Oct 15 04:05:52 GMT 2026 load1=1.96 godot=0 freeGiB=165
+ %CPU    RSS COMM
+ 98.2  60560 /usr/libexec/duetexpertd
+ 30.8  51536 /System/Library/PrivateFrameworks/XprotectFramework.framework/Versions/A/XPCServices/Xp
+  7.9 135840 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+  7.5  14544 /usr/libexec/trustd
+  7.0  28608 /System/Library/ExtensionKit/Extensions/WallpaperAerialsExtension.appex/Contents/MacOS/
+== [cli quiet] Thu Oct 15 04:07:55 GMT 2026 load1=1.90 godot=0 freeGiB=165
+ %CPU    RSS COMM
+  7.4  28640 /System/Library/ExtensionKit/Extensions/WallpaperAerialsExtension.appex/Contents/MacOS/
+  5.9 135840 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+  5.5  24384 /usr/libexec/dasd
+  4.8 766752 /Users/marc/Library/Application Support/Claude/claude-code/2.1.295/9d6405864fdc/claude.
+  2.0 123904 /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTDecoderXPCSe
+== [speed quiet] Thu Oct 15 04:40:17 GMT 2026 load1=1.52 godot=0 freeGiB=165
+ %CPU    RSS COMM
+  6.9 135840 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+  6.0  28208 /System/Library/ExtensionKit/Extensions/WallpaperAerialsExtension.appex/Contents/MacOS/
+  5.1   3376 /usr/libexec/sysmond
+  2.2 130352 /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTDecoderXPCSe
+  1.0 766720 /Users/marc/Library/Application Support/Claude/claude-code/2.1.295/9d6405864fdc/claude.
+== [scenarios quiet] Thu Oct 15 04:52:27 GMT 2026 load1=1.59 godot=0 freeGiB=165
+ %CPU    RSS COMM
+  2.5   3328 /usr/libexec/sysmond
+  1.6 140896 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+  1.1 910992 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacO
+  0.7  18064 /usr/libexec/replayd
+  0.4 120784 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude He
+== [memory quiet] Thu Oct 15 05:08:12 GMT 2026 load1=1.34 godot=0 freeGiB=165
+ %CPU    RSS COMM
+  5.2 140208 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+  1.6 910848 /Applications/Claude.app/Contents/Frameworks/Claude Helper (Renderer).app/Contents/MacO
+  1.0 125104 /Applications/Claude.app/Contents/Frameworks/Claude Helper.app/Contents/MacOS/Claude He
+  1.0  12912 /System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/FSEvents.framew
+  1.0 481600 /Applications/Claude.app/Contents/MacOS/Claude
