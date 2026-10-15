@@ -51,6 +51,15 @@ internal enum PerfStepOp
     RedactText,
 
     /// <summary>
+    /// Apply the pending text redactions and write the redacted copy to a scratch file
+    /// (<c>SaveDocumentCommand</c>: the same engine as <c>excise redact</c>, no dialog), then delete it.
+    /// The step's wall time is the apply-and-save time and the boundary sample after it carries the
+    /// memory and the UI stall of doing so. It leaves the document clean, so a scenario may close it
+    /// afterwards.
+    /// </summary>
+    SaveAs,
+
+    /// <summary>
     /// Request a viewer cache trim at Background | Warn | Critical, in process.
     /// This is what replaces <c>sudo memory_pressure</c> in the runbook: the
     /// macOS pressure-signal delivery itself was verified live once on

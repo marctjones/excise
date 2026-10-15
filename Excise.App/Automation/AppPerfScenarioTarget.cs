@@ -301,6 +301,15 @@ internal sealed class AppPerfScenarioTarget : IPerfScenarioTarget
         cancellationToken.ThrowIfCancellationRequested();
     }
 
+    public async Task<long> SaveAsAsync(string path, CancellationToken cancellationToken)
+    {
+        // The scripting save applies the pending text redactions through the same engine as `excise redact`
+        // and writes the file with no dialog; the document is clean afterwards.
+        await ViewModel.SaveDocumentCommand(path).ConfigureAwait(true);
+        cancellationToken.ThrowIfCancellationRequested();
+        return File.Exists(path) ? new FileInfo(path).Length : 0;
+    }
+
     public Task<bool> TrimAsync(string level, CancellationToken cancellationToken)
     {
         var cacheTrim = CacheTrim;

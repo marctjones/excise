@@ -253,6 +253,23 @@ internal static class PerfScenarioRunner
                 await target.RedactTextAsync(step.Text!, cancellationToken).ConfigureAwait(true);
                 return null;
 
+            case PerfStepOp.SaveAs:
+            {
+                // A scratch file beside the run's other output, deleted whatever happens: the step's wall
+                // time, and the next sample's memory and UI stall, are the measurement, not the file.
+                var scratch = Path.Combine(options.OutputDirectory, $"saveas-{Guid.NewGuid():N}.pdf");
+                try
+                {
+                    await target.SaveAsAsync(scratch, cancellationToken).ConfigureAwait(true);
+                }
+                finally
+                {
+                    try { File.Delete(scratch); } catch (IOException) { } catch (UnauthorizedAccessException) { }
+                }
+
+                return null;
+            }
+
             case PerfStepOp.Trim:
                 return await target.TrimAsync(step.Level!, cancellationToken).ConfigureAwait(true)
                     ? null

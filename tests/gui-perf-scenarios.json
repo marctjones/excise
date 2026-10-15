@@ -434,6 +434,65 @@
       ]
     },
     {
+      "id": "irs-redact-save",
+      "why": "The redaction workflow end to end in the GUI process: the apply-and-save time (the saveAs step's wall ms), the memory it peaks at, and whether the UI thread froze while it ran (the ui stall column). irs-search-redact stops at marking because closing a dirty document would wait on a dialog; saveAs applies the pending redactions through the same engine as `excise redact`, writes a scratch copy (deleted afterwards) and leaves the document clean, so this scenario can close it and show what a redacted document gives back.",
+      "steps": [
+        {
+          "op": "mark",
+          "label": "pre-open"
+        },
+        {
+          "op": "open",
+          "label": "open-irs",
+          "document": "test-pdfs/smoke/irs-1040-instructions.pdf"
+        },
+        {
+          "op": "viewMode",
+          "label": "view-continuous",
+          "level": "continuous"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-open"
+        },
+        {
+          "op": "search",
+          "label": "search-income",
+          "text": "income"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-search"
+        },
+        {
+          "op": "redactText",
+          "label": "redact-income",
+          "text": "income"
+        },
+        {
+          "op": "saveAs",
+          "label": "save-redacted"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-save"
+        },
+        {
+          "op": "close",
+          "label": "close-saved"
+        },
+        {
+          "op": "waitIdle",
+          "label": "idle-after-close"
+        },
+        {
+          "op": "idle",
+          "label": "idle-20s",
+          "seconds": 20
+        }
+      ]
+    },
+    {
       "id": "multi-windows-open3",
       "set": "multi-document",
       "settings": {

@@ -74,23 +74,68 @@ public class PerfScenarioTests
 
         var scenarios = PerfScenarioFile.Parse(File.ReadAllText(path!));
 
-        // The close path calls ConfirmDiscardUnsavedChangesAsync, which shows a
-        // modal dialog on a dirty document. An unattended run would sit on it
-        // until the step timeout — measuring the timeout, not the close.
+        ClosesOfUnsavedDocuments(scenarios).Should().BeEmpty(
+            "a close after an unsaved redaction would block on the unsaved-changes dialog");
+    }
+
+    /// <summary>
+    /// The scenarios that close a document with unsaved redactions. The close path calls
+    /// ConfirmDiscardUnsavedChangesAsync, which shows a modal dialog on a dirty document; an unattended
+    /// run would sit on it until the step timeout, measuring the timeout, not the close. A
+    /// <c>saveAs</c> applies the redactions and leaves the document clean, so a close after it is fine.
+    /// </summary>
+    private static IReadOnlyList<string> ClosesOfUnsavedDocuments(IReadOnlyList<PerfScenario> scenarios)
+    {
+        var offenders = new List<string>();
         foreach (var scenario in scenarios)
         {
             var mutated = false;
             foreach (var step in scenario.Steps)
             {
                 if (step.Op == PerfStepOp.RedactText) mutated = true;
-                if (step.Op == PerfStepOp.Close)
-                {
-                    mutated.Should().BeFalse(
-                        $"scenario '{scenario.Id}' closes a document it mutated; the close would " +
-                        "block on the unsaved-changes dialog");
-                }
+                if (step.Op == PerfStepOp.SaveAs) mutated = false;
+                if (step.Op == PerfStepOp.Close && mutated) offenders.Add(scenario.Id);
             }
         }
+
+        return offenders;
+    }
+
+    [Fact]
+    public void TheCloseGuard_StillFlagsACloseAfterAnUnsavedRedaction()
+    {
+        var scenarios = PerfScenarioFile.Parse(
+            """
+            {"schemaVersion":1,"scenarios":[
+              {"id":"unsaved","why":"w","steps":[{"op":"open","document":"a.pdf"},{"op":"redactText","text":"x"},{"op":"close"}]},
+              {"id":"saved","why":"w","steps":[{"op":"open","document":"a.pdf"},{"op":"redactText","text":"x"},{"op":"saveAs"},{"op":"close"}]},
+              {"id":"redact-after-save","why":"w","steps":[{"op":"open","document":"a.pdf"},{"op":"redactText","text":"x"},{"op":"saveAs"},{"op":"redactText","text":"y"},{"op":"close"}]}]}
+            """);
+
+        ClosesOfUnsavedDocuments(scenarios).Should().Equal("unsaved", "redact-after-save");
+    }
+
+    [Fact]
+    public async Task SaveAs_HandsTheRunnerAScratchPathInsideTheOutputDirectory_AndDeletesIt()
+    {
+        var target = new FakeTarget();
+        var scenario = PerfScenarioFile.Parse(
+            """
+            {"schemaVersion":1,"scenarios":[{"id":"s","why":"w","steps":[
+              {"op":"open","document":"x.pdf"},
+              {"op":"redactText","text":"income"},
+              {"op":"saveAs","label":"save-redacted"},
+              {"op":"close"}]}]}
+            """)[0];
+
+        var (result, records) = await RunAsync(target, scenario);
+
+        target.Calls.Should().Equal("open:x.pdf", "redact:income", "saveAs", "close");
+        result.Failures.Should().Be(0);
+        target.SavedPaths.Should().ContainSingle().Which.Should().EndWith(".pdf");
+        File.Exists(target.SavedPaths[0]).Should().BeFalse("the runner deletes the scratch copy after the step");
+        records.Should().Contain(r => r.GetProperty("step").GetString() == "save-redacted"
+                                      && r.GetProperty("op").GetString() == "saveas");
     }
 
     [Fact]
@@ -674,6 +719,17 @@ public class PerfScenarioTests
         {
             Calls.Add("redact:" + term);
             return Task.CompletedTask;
+        }
+
+        /// <summary>The scratch path the runner handed to <see cref="SaveAsAsync"/>.</summary>
+        internal List<string> SavedPaths { get; } = new();
+
+        public Task<long> SaveAsAsync(string path, CancellationToken cancellationToken)
+        {
+            SavedPaths.Add(path);
+            Calls.Add("saveAs");
+            File.WriteAllBytes(path, new byte[16]);   // a real file, so the test can see the runner delete it
+            return Task.FromResult(16L);
         }
 
         public Task<bool> TrimAsync(string level, CancellationToken cancellationToken)

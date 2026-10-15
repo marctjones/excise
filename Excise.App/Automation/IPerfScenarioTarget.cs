@@ -54,6 +54,12 @@ internal interface IPerfScenarioTarget
     Task RedactTextAsync(string term, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Apply the pending redactions and write the redacted copy to <paramref name="path"/>, with no
+    /// dialog. Returns the size of the file written.
+    /// </summary>
+    Task<long> SaveAsAsync(string path, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Request a viewer cache trim in process at <paramref name="level"/>
     /// (<c>background</c> | <c>warn</c> | <c>critical</c>).
     /// </summary>
