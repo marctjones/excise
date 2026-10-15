@@ -1055,8 +1055,7 @@ internal static class RedactionFeatureStripper
                 var bytes = read();
                 names = bytes == null ? null
                     : bytes.AsSpan().IndexOf("Do"u8) < 0 ? new List<string>()
-                    : new ContentStreamParser(bytes) { ComputeOperatorMetadata = false }.Parse().Operators
-                        .Where(op => op.Name == "Do").Select(op => op.GetName(0)).ToList();
+                    : DoOperandNames(bytes);
             }
             catch (Exception ex) when (ex is not OutOfMemoryException) { names = null; }
             var entries = xobjects == null ? xobjectDicts.SelectMany(d => d) : xobjects;
@@ -1132,6 +1131,43 @@ internal static class RedactionFeatureStripper
                 "elsewhere, so it was left in place"));
         undrawn.ExceptWith(stillReached);
         return (undrawn, cut);
+    }
+
+    /// <summary>
+    /// The first operand name of every <c>Do</c> in <paramref name="bytes"/>
+    /// (<c>""</c> when it is not a name), as
+    /// <c>new ContentStreamParser(bytes) { ComputeOperatorMetadata = false }.Parse()</c>
+    /// reads them: the same walk and tokenizer, without state, through a sink
+    /// that keeps only the <c>Do</c> names. #1626: the parse built a
+    /// <see cref="ContentOperator"/> and an operand copy for every operator of
+    /// every content stream in the document on every redaction, to read one
+    /// name per <c>Do</c> (130 MB on state-ds11-passport.pdf).
+    /// </summary>
+    internal static List<string> DoOperandNames(byte[] bytes)
+    {
+        var walker = new ContentStreamWalker(bytes, page: null) { TrackState = false };
+        var sink = new DoNameSink(new List<string>());
+        walker.Walk(ref sink);
+        return sink.Names;
+    }
+
+    private readonly struct DoNameSink(List<string> names) : IContentStreamSink
+    {
+        public List<string> Names => names;
+
+        public void OnOperator(string name, List<PdfObject> operands)
+        {
+            if (name == "Do")
+                names.Add(operands.Count > 0 && operands[0] is PdfName n ? n.Value : "");
+        }
+
+        public void OnInlineImage(PdfDictionary imageParams, byte[] imageData) { }
+        public void OnTextShowBegin() { }
+        public void OnStringBegin() { }
+        public void OnGlyph(in WalkedGlyph glyph) { }
+        public void OnStringEnd(int byteCount) { }
+        public void OnTextShowEnd() { }
+        public void OnTjAdjustment(double adjustment) { }
     }
 
     /// <summary>

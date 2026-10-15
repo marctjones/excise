@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.IO.Compression;
 using Excise.Core.Parsing;
 
@@ -174,10 +175,18 @@ internal sealed class FlateFilterDecoder : AliasedFilterDecoder
     /// Each new chunk is clamped to the remaining ceiling plus one byte, so a
     /// pre-allocated chunk can never outrun the #1408 guard: the read that
     /// crosses the ceiling is the next one, not an allocation past it.
+    /// <para>#1626: without a hint the first chunk is only ever scratch (its
+    /// bytes are always copied into the exact-size result), so it is rented
+    /// from the shared pool, as <c>Stream.CopyTo</c>'s buffer was before
+    /// #1408, and cleared on return. A fresh 80 KB array per decode cost every
+    /// small stream (a font dictionary's stream, a short content stream) 80 KB
+    /// of garbage: +193 MB on save-roundtrip over the smoke corpus. Only the
+    /// first <c>capacity</c> bytes of the rented array are ever written or
+    /// read, so the bytes and the guard are exactly as before.</para>
     /// </remarks>
     private static byte[] CopyToArray(Stream stream, long maxDecodedBytes, long expected = 0)
     {
-        List<byte[]>? full = null;
+        List<byte[]>? full = null;   // every entry is full to its own Length
         long total = 0;
         // F1 (#1207): with a hint the FIRST chunk is the whole expected output,
         // so a correct hint never grows and never copies. ⚠️ The naive shape —
@@ -188,56 +197,78 @@ internal sealed class FlateFilterDecoder : AliasedFilterDecoder
         // take the copy path anyway with hint + chunk + result live. Hence the
         // one-byte EOF probe below, taken only on the hinted first chunk.
         var hintedFirst = expected > 0;
-        var current = new byte[NextChunkSize(hintedFirst ? expected : InitialChunkBytes, total, maxDecodedBytes)];
+        var capacity = NextChunkSize(hintedFirst ? expected : InitialChunkBytes, total, maxDecodedBytes);
+        var rented = hintedFirst ? null : ArrayPool<byte>.Shared.Rent(capacity);
+        var current = rented ?? new byte[capacity];
         var used = 0;
+        var rentedUsed = 0;   // how much of the rented chunk holds output, once it is full or final
 
-        while (true)
+        try
         {
-            if (used == current.Length)
+            while (true)
             {
-                if (hintedFirst && full is null)
+                if (used == capacity)
                 {
-                    hintedFirst = false;
-                    var probe = stream.ReadByte();
-                    if (probe < 0)
-                        return current; // the hint was exact: the chunk IS the result, no copy
+                    if (hintedFirst && full is null)
+                    {
+                        hintedFirst = false;
+                        var probe = stream.ReadByte();
+                        if (probe < 0)
+                            return current; // the hint was exact: the chunk IS the result, no copy
 
-                    full = new List<byte[]> { current };
-                    current = new byte[NextChunkSize(Math.Min((long)current.Length * 2, MaxChunkBytes), total, maxDecodedBytes)];
-                    current[0] = (byte)probe;
-                    used = 1;
-                    total += 1;
-                    StreamDecodeLimits.ThrowIfExceeded(total, maxDecodedBytes);
-                    continue;
+                        full = new List<byte[]> { current };
+                        capacity = NextChunkSize(Math.Min((long)capacity * 2, MaxChunkBytes), total, maxDecodedBytes);
+                        current = new byte[capacity];
+                        current[0] = (byte)probe;
+                        used = 1;
+                        total += 1;
+                        StreamDecodeLimits.ThrowIfExceeded(total, maxDecodedBytes);
+                        continue;
+                    }
+
+                    if (ReferenceEquals(current, rented))
+                        rentedUsed = used;   // the rented chunk is copied from rentedUsed, not its Length
+                    else
+                        (full ??= new List<byte[]>()).Add(current);
+                    capacity = NextChunkSize(Math.Min((long)capacity * 2, MaxChunkBytes), total, maxDecodedBytes);
+                    current = new byte[capacity];
+                    used = 0;
                 }
 
-                (full ??= new List<byte[]>()).Add(current);
-                current = new byte[NextChunkSize(Math.Min((long)current.Length * 2, MaxChunkBytes), total, maxDecodedBytes)];
-                used = 0;
+                var read = stream.Read(current, used, capacity - used);
+                if (read <= 0)
+                    break;
+
+                total += read;
+                StreamDecodeLimits.ThrowIfExceeded(total, maxDecodedBytes);
+                used += read;
             }
 
-            var read = stream.Read(current, used, current.Length - used);
-            if (read <= 0)
-                break;
-
-            total += read;
-            StreamDecodeLimits.ThrowIfExceeded(total, maxDecodedBytes);
-            used += read;
-        }
-
-        var result = GC.AllocateUninitializedArray<byte>(checked((int)total));
-        var offset = 0;
-        if (full is not null)
-        {
-            foreach (var chunk in full)
+            var result = GC.AllocateUninitializedArray<byte>(checked((int)total));
+            var offset = 0;
+            if (rented is not null && !ReferenceEquals(current, rented))
             {
-                Buffer.BlockCopy(chunk, 0, result, offset, chunk.Length);
-                offset += chunk.Length;
+                // The rented chunk filled and was followed by fresh ones.
+                Buffer.BlockCopy(rented, 0, result, offset, rentedUsed);
+                offset += rentedUsed;
             }
-        }
+            if (full is not null)
+            {
+                foreach (var chunk in full)
+                {
+                    Buffer.BlockCopy(chunk, 0, result, offset, chunk.Length);
+                    offset += chunk.Length;
+                }
+            }
 
-        Buffer.BlockCopy(current, 0, result, offset, used);
-        return result;
+            Buffer.BlockCopy(current, 0, result, offset, used);
+            return result;
+        }
+        finally
+        {
+            if (rented is not null)
+                ArrayPool<byte>.Shared.Return(rented, clearArray: true);
+        }
     }
 
     private static int NextChunkSize(long preferred, long decodedSoFar, long maxDecodedBytes)
