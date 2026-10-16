@@ -138,6 +138,46 @@ esac
 
 BUILD_SHAPE_FLAG="${BUILD_SHAPE_FLAG---aot}"   # NativeAOT unless --r2r
 LAUNCH_MODE="${LAUNCH_MODE:-background}"          # never take keyboard focus unless --foreground
+
+# A background launch goes through LaunchServices, which makes the app its OWN responsible process, so macOS asks
+# (a system dialog that takes focus) the first time a freshly built, ad-hoc-signed bundle touches ~/Documents.
+# Stage everything the app reads or writes under /private/tmp so it never does: the scenario file, the documents it
+# opens (same relative layout, so the runner's root resolution is unchanged) and the run's output directory, which
+# is copied back to where --out asked for it when the script exits.
+FINAL_OUT=""
+if [ "$LAUNCH_MODE" = "background" ]; then
+  case "$OUT" in
+    "$HOME/Documents/"*)
+      FINAL_OUT="$OUT"
+      OUT="/private/tmp/excise-gui-perf-out/$(basename "$FINAL_OUT")"
+      rm -rf "$OUT"; mkdir -p "$OUT" ;;
+  esac
+  STAGE="/private/tmp/excise-gui-perf-stage"
+  mkdir -p "$STAGE/tests"
+  python3 - "$SCENARIO_FILE" "$ROOT" "$STAGE" <<'PYEOF2'
+import json, os, shutil, subprocess, sys
+scenario_file, root, stage = sys.argv[1:4]
+docs = {st["document"] for sc in json.load(open(scenario_file))["scenarios"] for st in sc["steps"] if st.get("document")}
+for doc in sorted(docs):
+    if os.path.isabs(doc):
+        continue                                   # an absolute path is left alone
+    src, dst = os.path.join(root, doc), os.path.join(stage, doc)
+    if not os.path.exists(src):
+        continue                                   # the runner reports a missing document itself
+    if os.path.exists(dst) and os.path.getsize(dst) == os.path.getsize(src) and os.path.getmtime(dst) >= os.path.getmtime(src):
+        continue
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    if subprocess.run(["cp", "-c", src, dst], capture_output=True).returncode != 0:   # APFS clone, else a copy
+        shutil.copyfile(src, dst)
+shutil.copyfile(scenario_file, os.path.join(stage, "tests", "gui-perf-scenarios.json"))
+PYEOF2
+  SCENARIO_FILE="$STAGE/tests/gui-perf-scenarios.json"
+fi
+finish_out() {
+  if [ -n "$FINAL_OUT" ] && [ -d "$OUT" ]; then
+    mkdir -p "$FINAL_OUT" && cp -R "$OUT"/. "$FINAL_OUT"/ && echo "results copied to $FINAL_OUT"
+  fi
+}
 BUNDLE_DIR="$OUT/bundle"
 EXE="$BUNDLE_DIR/excise.app/Contents/MacOS/Excise.App"
 [ -n "$APP" ] && EXE="$APP/Contents/MacOS/Excise.App"
@@ -325,7 +365,7 @@ cleanup_bundle() {
   fi
   rm -rf "$APP_HOME_ROOT"
 }
-trap cleanup_bundle EXIT
+trap 'cleanup_bundle; finish_out' EXIT
 
 # --------------------------------------------------------------------- sampling
 
