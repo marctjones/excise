@@ -22,3 +22,9 @@ the result, since the shapes alternate within every cell. Full table: `table.md`
 
 Managed allocation per workflow (the `workflow-budgets.json` rows run in `Excise.RenderTools`, which is JIT-only), the CLI against
 mutool/pdftocairo on the NativeAOT binary (`reference-performance` accepts `EXCISE_BENCHMARK_CLI_COMMAND`), Linux and Windows.
+
+## Added later the same day (NativeAOT CLI, headless)
+
+- **OCR under NativeAOT works.** `excise ocr irs-w9.pdf --page 1`: byte-identical text (same md5) and the same time (4.06 s JIT, 3.98 s NativeAOT), 222 MB peak in both. It uses the system tesseract.
+- **Against mutool** (`reference-performance-nativeaot-vs-mutool.md`, NativeAOT CLI via `EXCISE_BENCHMARK_CLI_COMMAND`, 2 runs, mutool only, 14 fixtures): excise renders heavy pages faster and in less memory (altona p1 2.6 s vs 3.9 s, 138 vs 450 MiB; a 33-megapixel indexed image 157 vs 395 ms, 48 vs 141 MiB), and is 1.0-1.5x slower with 2-3x the RSS on small pages (W-9 153 vs 112 ms, 46 vs 20 MiB; mesh shading, 50 transparency groups). The gate printed FAIL only because its committed baseline was recorded with the JIT CLI ("MODE MISMATCH"); the ratios inside this run are valid.
+- **Redaction profile of ds11** is posted on #2075 (repeated per-rectangle parse, serialise-and-hash `Fingerprint`, marked-content scrub).
