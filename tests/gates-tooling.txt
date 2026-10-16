@@ -172,3 +172,4 @@ scripts/ab-render-bench.sh   # per-commit A/B of the CLI render phase (renderMs,
 scripts/corpus_coverage.py   # #1972 body of the corpus-coverage footer and the strict post-scan page check; exercised by row corpus-coverage-selftest
 scripts/cli-shape-bench.py   # CLI workloads (info/text/render/redact/optimize) per build shape: wall, CPU, peak RSS, output bytes; no window, run niced
 scripts/aot-perf-harness.py   # headless CLI performance by build shape incl. managed allocation/GC via EXCISE_PERF_REPORT, sample-based profile, run comparison; no window, run niced
+scripts/redaction-golden.py   # record a CLI's redaction outputs once (sha256, exit code) and check a changed engine against them without re-running the old one; uses the local smoke corpus

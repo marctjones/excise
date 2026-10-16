@@ -59,19 +59,20 @@ internal class ContentStreamWriter
         ArgumentNullException.ThrowIfNull(source);
 
         var ops = content.Operators;
+        var verbatimChecks = new VerbatimChecks(ops, source);
 
         // The whole-stream case: every operator verbatim, in order, tiling the
         // source from offset 0. Then the answer IS the source — including the
         // tail after the last operator, which no per-operator copy can know
         // about.
-        if (IsUnmodifiedWholeStream(ops, source))
+        if (IsUnmodifiedWholeStream(ops, source, verbatimChecks))
             return (byte[])source.Clone();
 
         _sb.Clear();
         for (int i = 0; i < ops.Count; i++)
         {
             var op = ops[i];
-            if (!CanCopyVerbatim(op, source))
+            if (!verbatimChecks.Can(i))
             {
                 WriteOperator(op);
                 continue;
@@ -86,7 +87,7 @@ internal class ContentStreamWriter
             // re-serialized "1 0 0 1 5 5 cm" would fuse into "Tj1 0 0 …".
             var next = i + 1 < ops.Count ? ops[i + 1] : null;
             bool followsContiguously = next != null
-                && CanCopyVerbatim(next, source)
+                && verbatimChecks.Can(i + 1)
                 && next.SourceStart == op.SourceEnd;
             if (!followsContiguously)
                 _sb.Append('\n');
@@ -129,8 +130,9 @@ internal class ContentStreamWriter
         }
 
         var ops = content.Operators;
+        var verbatimChecks = new VerbatimChecks(ops, source);
 
-        if (IsUnmodifiedWholeStream(ops, source))
+        if (IsUnmodifiedWholeStream(ops, source, verbatimChecks))
         {
             // Output IS the source, so every original offset maps to itself.
             outputBoundaries = boundaries.ToArray();
@@ -144,7 +146,7 @@ internal class ContentStreamWriter
         for (int i = 0; i < ops.Count; i++)
         {
             var op = ops[i];
-            var verbatim = CanCopyVerbatim(op, source);
+            var verbatim = verbatimChecks.Can(i);
             var outputStart = _sb.Length;
 
             // Resolve any boundaries that fall inside THIS operator's
@@ -170,7 +172,7 @@ internal class ContentStreamWriter
 
             var next = i + 1 < ops.Count ? ops[i + 1] : null;
             bool followsContiguously = next != null
-                && CanCopyVerbatim(next, source)
+                && verbatimChecks.Can(i + 1)
                 && next.SourceStart == op.SourceEnd;
             if (!followsContiguously)
                 _sb.Append('\n');
@@ -192,14 +194,15 @@ internal class ContentStreamWriter
     /// gaps, starting at offset 0 — i.e. nothing was removed, added, reordered
     /// or modified.
     /// </summary>
-    private static bool IsUnmodifiedWholeStream(IReadOnlyList<ContentOperator> ops, byte[] source)
+    private static bool IsUnmodifiedWholeStream(IReadOnlyList<ContentOperator> ops, byte[] source, VerbatimChecks checks)
     {
         if (ops.Count == 0) return false;
 
         int expected = 0;
-        foreach (var op in ops)
+        for (int i = 0; i < ops.Count; i++)
         {
-            if (!CanCopyVerbatim(op, source) || op.SourceStart != expected) return false;
+            var op = ops[i];
+            if (!checks.Can(i) || op.SourceStart != expected) return false;
             expected = op.SourceEnd;
         }
 
@@ -224,6 +227,36 @@ internal class ContentStreamWriter
             }
         }
         return true;
+    }
+
+    /// <summary>
+    /// <see cref="CanCopyVerbatim"/> for each operator of one <c>Write</c> call, computed at most once each.
+    /// The check serialises and SHA-256 hashes the operator, and the whole-stream test, the copy loop and the
+    /// look-ahead for the next operator each asked it for the same operator (up to three times). The result
+    /// of a call cannot change while that call runs (nothing mutates the operators during a write), so
+    /// remembering it is exact; it only removes the repeats.
+    /// </summary>
+    private readonly struct VerbatimChecks
+    {
+        private readonly IReadOnlyList<ContentOperator> _ops;
+        private readonly byte[] _source;
+        private readonly sbyte[] _known;   // 0 unknown, 1 yes, -1 no
+
+        internal VerbatimChecks(IReadOnlyList<ContentOperator> ops, byte[] source)
+        {
+            _ops = ops;
+            _source = source;
+            _known = new sbyte[ops.Count];
+        }
+
+        internal bool Can(int index)
+        {
+            var known = _known[index];
+            if (known != 0) return known > 0;
+            var result = CanCopyVerbatim(_ops[index], _source);
+            _known[index] = result ? (sbyte)1 : (sbyte)-1;
+            return result;
+        }
     }
 
     private static bool CanCopyVerbatim(ContentOperator op, byte[] source) =>
@@ -256,9 +289,19 @@ internal class ContentStreamWriter
         writer._sb.Clear();
         writer.WriteOperator(op);
 
+        // The serialised text as Latin-1 bytes, without the intermediate string and byte[] (two allocations
+        // per operator, hashed millions of times on a large page). Same bytes as
+        // Encoding.Latin1.GetBytes(text), so the hash is the same value.
+        int length = writer._sb.Length;
+        byte[]? rented = null;
+        Span<byte> buffer = length <= 512 ? stackalloc byte[512] : (rented = System.Buffers.ArrayPool<byte>.Shared.Rent(length));
+        int written = 0;
+        foreach (var chunk in writer._sb.GetChunks())
+            written += Encoding.Latin1.GetBytes(chunk.Span, buffer[written..]);
+
         Span<byte> digest = stackalloc byte[32];
-        System.Security.Cryptography.SHA256.HashData(
-            Encoding.Latin1.GetBytes(writer._sb.ToString()), digest);
+        System.Security.Cryptography.SHA256.HashData(buffer[..written], digest);
+        if (rented != null) System.Buffers.ArrayPool<byte>.Shared.Return(rented);
 
         return new UInt128(BitConverter.ToUInt64(digest[8..]), BitConverter.ToUInt64(digest));
     }

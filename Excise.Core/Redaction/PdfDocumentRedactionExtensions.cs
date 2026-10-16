@@ -356,7 +356,7 @@ public static class PdfDocumentRedactionExtensions
                     // draws unconditionally, answering both #1715 and #1725
                     // instead of trading one for the other (#1755).
                     if (options.DrawBox && (options.FixedMarker || !options.CloseWidth))
-                        foreach (var bbox in markerAreas) AppendBlackRectangle(page, bbox, options.BoxColor);
+                        AppendBlackRectangles(page, markerAreas, options.BoxColor);
 
                     // #1101: count what this page's window shows, not the full
                     // shared canvas. Removal above already took every match.
@@ -918,8 +918,17 @@ public static class PdfDocumentRedactionExtensions
     /// overlay on top of structural glyph removal.
     /// The area overloads of <see cref="PdfPageRedactionExtensions"/> draw with it too (#1834).
     /// </summary>
-    internal static void AppendBlackRectangle(PdfPage page, PdfRectangle rect, (double R, double G, double B)? boxColor = null)
+    internal static void AppendBlackRectangle(PdfPage page, PdfRectangle rect, (double R, double G, double B)? boxColor = null) =>
+        AppendBlackRectangles(page, new[] { rect }, boxColor);
+
+    /// <summary>
+    /// <see cref="AppendBlackRectangle"/> for several rectangles of one page with one parse and one write of
+    /// its content stream instead of one of each per rectangle. The operators appended are exactly the ones
+    /// the per-rectangle calls would append, in the same order.
+    /// </summary>
+    internal static void AppendBlackRectangles(PdfPage page, IReadOnlyCollection<PdfRectangle> rects, (double R, double G, double B)? boxColor = null)
     {
+        if (rects.Count == 0) return;
         var (r, g, b) = boxColor ?? (0.0, 0.0, 0.0);
         // Tracked spans: this appends five operators, so re-serializing the
         // whole page to do it is exactly the round-trip risk #1093 removes.
@@ -937,17 +946,20 @@ public static class PdfDocumentRedactionExtensions
         // Emitted unconditionally, not only for tagged documents: marked
         // content in an untagged page is inert, and a conditional would mean
         // the box is accessible only where somebody remembered to check.
-        ops.Add(new ContentOperator("BMC", new Excise.Core.Primitives.PdfObject[]
+        foreach (var rect in rects)
         {
-            new Excise.Core.Primitives.PdfName("Artifact"),
-        }));
-        ops.Add(ContentOperator.SaveState());
-        ops.Add(ContentOperator.SetFillRgb(r, g, b));
-        ops.Add(ContentOperator.Rectangle(
-            rect.Left, rect.Bottom, rect.Right - rect.Left, rect.Top - rect.Bottom));
-        ops.Add(ContentOperator.Fill());
-        ops.Add(ContentOperator.RestoreState());
-        ops.Add(new ContentOperator("EMC"));
+            ops.Add(new ContentOperator("BMC", new Excise.Core.Primitives.PdfObject[]
+            {
+                new Excise.Core.Primitives.PdfName("Artifact"),
+            }));
+            ops.Add(ContentOperator.SaveState());
+            ops.Add(ContentOperator.SetFillRgb(r, g, b));
+            ops.Add(ContentOperator.Rectangle(
+                rect.Left, rect.Bottom, rect.Right - rect.Left, rect.Top - rect.Bottom));
+            ops.Add(ContentOperator.Fill());
+            ops.Add(ContentOperator.RestoreState());
+            ops.Add(new ContentOperator("EMC"));
+        }
         page.SetContentStream(new ContentStream(ops) { SourceBytes = content.SourceBytes, SourceArrayBoundaries = content.SourceArrayBoundaries });
     }
 

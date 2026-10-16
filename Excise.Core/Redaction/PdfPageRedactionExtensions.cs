@@ -405,8 +405,7 @@ public static class PdfPageRedactionExtensions
         // #1834: RedactText's box rule. A closed gap reflows the rest of the
         // line into the area, so only FixedMarker still draws there.
         if (options.DrawBox && (options.FixedMarker || !options.CloseWidth))
-            foreach (var area in list)
-                PdfDocumentRedactionExtensions.AppendBlackRectangle(page, area, options.BoxColor);
+            PdfDocumentRedactionExtensions.AppendBlackRectangles(page, list, options.BoxColor);
         // #1863, from the walk before the profile pass: not a form that pass freed (#1868).
         var reachable = page.UndecodableForms.Count == 0 ? null : page.Document.ComputeReachableObjects();
         carriers.AddRange(PdfDocumentRedactionExtensions.UndecodableFormResults(page.UndecodableForms
