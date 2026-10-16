@@ -71,6 +71,12 @@ FRAME_S = 1 / 60
 # Acrobat's "long document" banner and page box, and excise's status bar are
 # all outside it, so their changes cannot read as page rendering. Measured from
 # window screenshots on 2026-09-16.
+# Zoom steps per direction (0 disables), and the default keys: Cmd+= / Cmd+- are accepted by Preview, Acrobat,
+# Chrome's PDF viewer and Firefox's pdf.js; an app that needs other keys sets zoomIn / zoomOut in bench.json.
+ZOOM_STEPS = int(os.environ.get("READER_SPEED_ZOOM_STEPS", "3"))
+DEFAULT_ZOOM_IN = {"keyCode": 24, "modifiers": ["command"]}
+DEFAULT_ZOOM_OUT = {"keyCode": 27, "modifiers": ["command"]}
+
 PAGE_REGION = {
     "excise":  (219, 90, 951, 753),
     "preview": (215, 52, 1195, 795),
@@ -327,6 +333,19 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, probe_on=True, extra
         gap(3.0, "after-end")
         log["events"].append({"kind": "revisit", "tick": post_key(115)})
         gap(3.0, "after-revisit")
+
+        # Zoom: three steps in, three steps out, each a separate event so first-change and drawn (sharp) are
+        # measured per step. Keys are per app (`zoomIn` / `zoomOut` in bench.json); every app gets the same
+        # number of steps. The zoom level is not read back: the screen probe measures what a user sees.
+        if ZOOM_STEPS:
+            zi = app.get("zoomIn", DEFAULT_ZOOM_IN)
+            zo = app.get("zoomOut", DEFAULT_ZOOM_OUT)
+            for i in range(ZOOM_STEPS):
+                log["events"].append({"kind": "zoomIn", "i": i, "tick": post_key(zi["keyCode"], zi["modifiers"])})
+                gap(2.5, "after-zoom-in")
+            for i in range(ZOOM_STEPS):
+                log["events"].append({"kind": "zoomOut", "i": i, "tick": post_key(zo["keyCode"], zo["modifiers"])})
+                gap(2.5, "after-zoom-out")
 
         # Steady scroll over the middle of the page area.
         wx, wy = cfg["window"]["x"], cfg["window"]["y"]
@@ -612,6 +631,11 @@ def p95(xs):
     return xs[min(len(xs) - 1, int(len(xs) * 0.95))] if xs else None
 
 
+def zoom(rs, kind, metric):
+    """Median of a metric over every responding zoom step of every run (older runs have no zoom events)."""
+    return median([t.get(metric) for r in rs for t in (r.get("events", {}).get(kind) or []) if t.get("responded")])
+
+
 def summarize(out):
     cfg = json.loads(rb.CONFIG.read_text())
     runs = []
@@ -628,7 +652,7 @@ def summarize(out):
             shape_line = (f"**Excise build shape: {eb['shape']}** ({eb['evidence']}"
                           f"{', bundle %s MB' % eb['bundleMB'] if eb.get('bundleMB') else ''}); bundle `{eb.get('app', '?')}`. "
                           "Numbers from different build shapes are not comparable.")
-    lines = ["# Reader speed benchmark: excise vs Preview vs Adobe Acrobat (#1544)", "",
+    lines = ["# Reader speed benchmark: excise vs Preview, Chrome, Firefox (pdf.js) and Adobe Acrobat (#1544)", "",
              f"Run: `{out}`", "",
              *([shape_line, ""] if shape_line else []),
              "Times in ms from the input event, over the app's page area. Median across repeats "
@@ -659,8 +683,9 @@ def summarize(out):
             continue
         lines += [f"## {doc}", "",
                   "| app | runs | launch→window / drawn | turn first change p50 / p95 | turn drawn p50 / p95 | turn speed index p50 | "
-                  "no-response turns | burst drawn | far jump (End) drawn | revisit (Home) drawn | scroll fps | scroll gap p95 | hitches | scroll settle |",
-                  "|---|---:|---:|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
+                  "no-response turns | burst drawn | far jump (End) drawn | revisit (Home) drawn | zoom in first change / drawn | zoom out first change / drawn | "
+                  "scroll fps | scroll gap p95 | hitches | scroll settle |",
+                  "|---|---:|---:|---|---|---:|---:|---:|---:|---:|---|---|---:|---:|---:|---:|"]
         for app in present:
             rs = keyed[(doc, app)]
             turns = [t for r in rs for t in r.get("events", {}).get("turn", [])]
@@ -674,6 +699,8 @@ def summarize(out):
                 f"{f(median([t['drawnMs'] for t in ok_turns]))} / {f(p95([t['drawnMs'] for t in ok_turns]))} | "
                 f"{f(median([t['speedIndexMs'] for t in ok_turns]))} | {len(turns) - len(ok_turns)}/{len(turns)} | "
                 f"{f(ev('burst', 'drawnMs'))} | {f(ev('end', 'drawnMs'))} | {f(ev('revisit', 'drawnMs'))} | "
+                f"{f(zoom(rs, 'zoomIn', 'firstChangeMs'))} / {f(zoom(rs, 'zoomIn', 'drawnMs'))} | "
+                f"{f(zoom(rs, 'zoomOut', 'firstChangeMs'))} / {f(zoom(rs, 'zoomOut', 'drawnMs'))} | "
                 f"{f(ev('scroll', 'fps'))} | {f(ev('scroll', 'gapP95Ms'))} | {f(ev('scroll', 'hitches'))} | {f(ev('scroll', 'settleTailMs'))} |")
         lines.append("")
     multi_keys = sorted(k for k in keyed if k[0] == MULTI_DOC_KEY)

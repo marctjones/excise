@@ -170,3 +170,4 @@ scripts/run-cold-launch-double-open.sh   # #1629/#1819 - bundle-level cold-launc
 scripts/cold-launch-classify-run.py   # body of run-cold-launch-double-open.sh; re-scores a stored run's evidence
 scripts/ab-render-bench.sh   # per-commit A/B of the CLI render phase (renderMs, peak RSS, PNG bytes) with interleaved runs and a noise floor. NOT a gate: absolute times move with load, so it only ever says which commit moved the number, never pass/fail; reference-performance owns the gated ratio against the oracles
 scripts/corpus_coverage.py   # #1972 body of the corpus-coverage footer and the strict post-scan page check; exercised by row corpus-coverage-selftest
+scripts/cli-shape-bench.py   # CLI workloads (info/text/render/redact/optimize) per build shape: wall, CPU, peak RSS, output bytes; no window, run niced

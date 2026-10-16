@@ -4,6 +4,7 @@
   "why": "Like-for-like memory and CPU comparison of excise, Preview, Chrome and Acrobat. Every app is driven by the SAME real keystrokes (the only driver all of them accept; Chrome additionally gets ONE click in its page pane, see clickToFocus) and measured from OUTSIDE the process, summed over every process the app owns. excise's in-app runner (#1497) cannot drive the other two; its driving-fidelity check showed keystrokes do the same render work.",
   "window": { "x": 0, "y": 33, "width": 1200, "height": 800 },
   "repeats": 5,
+  "zoomNote": "reader_speed_bench.py presses zoomIn / zoomOut (default Cmd+= / Cmd+-) 3 times each per run and measures first change and drawn per step (READER_SPEED_ZOOM_STEPS=0 disables). NOT YET RUN on any app: the first run must confirm per app, by screenshot, that the shortcut zooms the PDF and not the browser page (Chrome, Firefox) and that excise accepts Cmd+=; override with zoomIn/zoomOut on the app entry if not.",
   "pageStepSeconds": 0.25,
   "settle": { "cpuPercentBelow": 3.0, "quietSeconds": 2, "timeoutSeconds": 60 },
   "documents": [
