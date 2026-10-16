@@ -20,6 +20,9 @@ WORKLOADS = {
     "redact":   lambda b, pdf, out: [b, "redact", pdf, f"{out}.pdf", "Social"],
     "optimize": lambda b, pdf, out: [b, "optimize", pdf, f"{out}.pdf"],
 }
+# excise redact exits 3 when the redaction is not clean (a term split across a line break, an unscrubbable font): the
+# work was done and timed, so 3 is a result, not a failure.
+OK_RC = {"redact": (0, 3)}
 TIME_RE = {
     "wall": re.compile(r"^\s*([\d.]+) real", re.M), "user": re.compile(r"([\d.]+) user"),
     "sys": re.compile(r"([\d.]+) sys"), "rss": re.compile(r"^\s*(\d+)\s+maximum resident set size", re.M),
@@ -59,7 +62,7 @@ def main():
                     out = f"{scratch}/{s}-{wl}"
                     rc, m, size = run_once(mk(os.path.abspath(b), pdf, out), out)
                     rcs[s] = rc; sizes[s] = size
-                    if i and rc == 0 and m: samples[s].append(m)
+                    if i and rc in OK_RC.get(wl, (0,)) and m: samples[s].append(m)
             for s in shapes:
                 ms = samples[s]
                 if not ms: rows.append({"doc": doc, "workload": wl, "shape": s, "failed": True, "rc": rcs[s]}); continue

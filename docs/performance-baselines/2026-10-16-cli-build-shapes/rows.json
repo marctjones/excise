@@ -1,0 +1,752 @@
+[
+ {
+  "doc": "irs-w9.pdf",
+  "workload": "info",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 0.12,
+  "cpuS": 0.12,
+  "rssMB": 68.1,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-w9.pdf",
+  "workload": "info",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.11,
+  "cpuS": 0.09,
+  "rssMB": 144.5,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-w9.pdf",
+  "workload": "info",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.02,
+  "cpuS": 0.01,
+  "rssMB": 26.9,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-w9.pdf",
+  "workload": "text",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 0.34,
+  "cpuS": 0.33,
+  "rssMB": 79.4,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-w9.pdf",
+  "workload": "text",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.19,
+  "cpuS": 0.18,
+  "rssMB": 144.5,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-w9.pdf",
+  "workload": "text",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.07,
+  "cpuS": 0.06,
+  "rssMB": 41.3,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-w9.pdf",
+  "workload": "render",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 0.28,
+  "cpuS": 0.26,
+  "rssMB": 78.8,
+  "outBytes": 341663
+ },
+ {
+  "doc": "irs-w9.pdf",
+  "workload": "render",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.22,
+  "cpuS": 0.2,
+  "rssMB": 144.5,
+  "outBytes": 341663
+ },
+ {
+  "doc": "irs-w9.pdf",
+  "workload": "render",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.13,
+  "cpuS": 0.11,
+  "rssMB": 47.1,
+  "outBytes": 341663
+ },
+ {
+  "doc": "irs-w9.pdf",
+  "workload": "redact",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 1.41,
+  "cpuS": 1.43,
+  "rssMB": 111.7,
+  "outBytes": 90435
+ },
+ {
+  "doc": "irs-w9.pdf",
+  "workload": "redact",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.79,
+  "cpuS": 0.78,
+  "rssMB": 157.0,
+  "outBytes": 90435
+ },
+ {
+  "doc": "irs-w9.pdf",
+  "workload": "redact",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.44,
+  "cpuS": 0.43,
+  "rssMB": 52.7,
+  "outBytes": 90435
+ },
+ {
+  "doc": "irs-w9.pdf",
+  "workload": "optimize",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 0.21,
+  "cpuS": 0.2,
+  "rssMB": 69.7,
+  "outBytes": 123520
+ },
+ {
+  "doc": "irs-w9.pdf",
+  "workload": "optimize",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.15,
+  "cpuS": 0.14,
+  "rssMB": 144.5,
+  "outBytes": 123520
+ },
+ {
+  "doc": "irs-w9.pdf",
+  "workload": "optimize",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.05,
+  "cpuS": 0.03,
+  "rssMB": 34.0,
+  "outBytes": 123520
+ },
+ {
+  "doc": "irs-1040.pdf",
+  "workload": "info",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 0.16,
+  "cpuS": 0.15,
+  "rssMB": 73.1,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-1040.pdf",
+  "workload": "info",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.13,
+  "cpuS": 0.12,
+  "rssMB": 144.6,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-1040.pdf",
+  "workload": "info",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.03,
+  "cpuS": 0.02,
+  "rssMB": 31.6,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-1040.pdf",
+  "workload": "text",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 0.27,
+  "cpuS": 0.26,
+  "rssMB": 79.6,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-1040.pdf",
+  "workload": "text",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.16,
+  "cpuS": 0.14,
+  "rssMB": 144.6,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-1040.pdf",
+  "workload": "text",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.05,
+  "cpuS": 0.04,
+  "rssMB": 35.9,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-1040.pdf",
+  "workload": "render",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 0.3,
+  "cpuS": 0.28,
+  "rssMB": 84.4,
+  "outBytes": 362231
+ },
+ {
+  "doc": "irs-1040.pdf",
+  "workload": "render",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.23,
+  "cpuS": 0.2,
+  "rssMB": 144.9,
+  "outBytes": 362231
+ },
+ {
+  "doc": "irs-1040.pdf",
+  "workload": "render",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.13,
+  "cpuS": 0.11,
+  "rssMB": 52.5,
+  "outBytes": 362231
+ },
+ {
+  "doc": "irs-1040.pdf",
+  "workload": "redact",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 1.28,
+  "cpuS": 1.29,
+  "rssMB": 110.9,
+  "outBytes": 210896
+ },
+ {
+  "doc": "irs-1040.pdf",
+  "workload": "redact",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.78,
+  "cpuS": 0.79,
+  "rssMB": 160.8,
+  "outBytes": 210896
+ },
+ {
+  "doc": "irs-1040.pdf",
+  "workload": "redact",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.42,
+  "cpuS": 0.42,
+  "rssMB": 53.6,
+  "outBytes": 210896
+ },
+ {
+  "doc": "irs-1040.pdf",
+  "workload": "optimize",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 0.29,
+  "cpuS": 0.28,
+  "rssMB": 75.5,
+  "outBytes": 190241
+ },
+ {
+  "doc": "irs-1040.pdf",
+  "workload": "optimize",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.21,
+  "cpuS": 0.2,
+  "rssMB": 144.6,
+  "outBytes": 190241
+ },
+ {
+  "doc": "irs-1040.pdf",
+  "workload": "optimize",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.09,
+  "cpuS": 0.08,
+  "rssMB": 38.4,
+  "outBytes": 190241
+ },
+ {
+  "doc": "state-ds11-passport.pdf",
+  "workload": "info",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 0.12,
+  "cpuS": 0.11,
+  "rssMB": 58.8,
+  "outBytes": 0
+ },
+ {
+  "doc": "state-ds11-passport.pdf",
+  "workload": "info",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.11,
+  "cpuS": 0.09,
+  "rssMB": 144.5,
+  "outBytes": 0
+ },
+ {
+  "doc": "state-ds11-passport.pdf",
+  "workload": "info",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.03,
+  "cpuS": 0.02,
+  "rssMB": 29.1,
+  "outBytes": 0
+ },
+ {
+  "doc": "state-ds11-passport.pdf",
+  "workload": "text",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 0.52,
+  "cpuS": 0.51,
+  "rssMB": 84.1,
+  "outBytes": 0
+ },
+ {
+  "doc": "state-ds11-passport.pdf",
+  "workload": "text",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.33,
+  "cpuS": 0.32,
+  "rssMB": 144.5,
+  "outBytes": 0
+ },
+ {
+  "doc": "state-ds11-passport.pdf",
+  "workload": "text",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.17,
+  "cpuS": 0.17,
+  "rssMB": 52.5,
+  "outBytes": 0
+ },
+ {
+  "doc": "state-ds11-passport.pdf",
+  "workload": "render",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 0.5,
+  "cpuS": 0.5,
+  "rssMB": 138.0,
+  "outBytes": 499808
+ },
+ {
+  "doc": "state-ds11-passport.pdf",
+  "workload": "render",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.41,
+  "cpuS": 0.4,
+  "rssMB": 196.4,
+  "outBytes": 499808
+ },
+ {
+  "doc": "state-ds11-passport.pdf",
+  "workload": "render",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.25,
+  "cpuS": 0.25,
+  "rssMB": 103.3,
+  "outBytes": 499808
+ },
+ {
+  "doc": "state-ds11-passport.pdf",
+  "workload": "redact",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 6.94,
+  "cpuS": 8.01,
+  "rssMB": 410.4,
+  "outBytes": 2528505
+ },
+ {
+  "doc": "state-ds11-passport.pdf",
+  "workload": "redact",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 6.25,
+  "cpuS": 7.4,
+  "rssMB": 444.1,
+  "outBytes": 2528505
+ },
+ {
+  "doc": "state-ds11-passport.pdf",
+  "workload": "redact",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 5.88,
+  "cpuS": 5.99,
+  "rssMB": 365.9,
+  "outBytes": 2528505
+ },
+ {
+  "doc": "state-ds11-passport.pdf",
+  "workload": "optimize",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 0.57,
+  "cpuS": 0.6,
+  "rssMB": 100.8,
+  "outBytes": 2223367
+ },
+ {
+  "doc": "state-ds11-passport.pdf",
+  "workload": "optimize",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.48,
+  "cpuS": 0.49,
+  "rssMB": 147.7,
+  "outBytes": 2223367
+ },
+ {
+  "doc": "state-ds11-passport.pdf",
+  "workload": "optimize",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.37,
+  "cpuS": 0.38,
+  "rssMB": 54.8,
+  "outBytes": 2223367
+ },
+ {
+  "doc": "irs-1040-instructions.pdf",
+  "workload": "info",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 0.12,
+  "cpuS": 0.12,
+  "rssMB": 71.5,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-1040-instructions.pdf",
+  "workload": "info",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.1,
+  "cpuS": 0.09,
+  "rssMB": 144.5,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-1040-instructions.pdf",
+  "workload": "info",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.03,
+  "cpuS": 0.03,
+  "rssMB": 41.8,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-1040-instructions.pdf",
+  "workload": "text",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 2.24,
+  "cpuS": 2.53,
+  "rssMB": 118.0,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-1040-instructions.pdf",
+  "workload": "text",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 1.93,
+  "cpuS": 2.33,
+  "rssMB": 174.0,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-1040-instructions.pdf",
+  "workload": "text",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.93,
+  "cpuS": 0.95,
+  "rssMB": 80.2,
+  "outBytes": 0
+ },
+ {
+  "doc": "irs-1040-instructions.pdf",
+  "workload": "render",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 0.46,
+  "cpuS": 0.45,
+  "rssMB": 125.0,
+  "outBytes": 874538
+ },
+ {
+  "doc": "irs-1040-instructions.pdf",
+  "workload": "render",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.36,
+  "cpuS": 0.33,
+  "rssMB": 184.9,
+  "outBytes": 874538
+ },
+ {
+  "doc": "irs-1040-instructions.pdf",
+  "workload": "render",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.24,
+  "cpuS": 0.22,
+  "rssMB": 90.2,
+  "outBytes": 874538
+ },
+ {
+  "doc": "irs-1040-instructions.pdf",
+  "workload": "optimize",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 2.68,
+  "cpuS": 3.02,
+  "rssMB": 365.2,
+  "outBytes": 4383765
+ },
+ {
+  "doc": "irs-1040-instructions.pdf",
+  "workload": "optimize",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 2.57,
+  "cpuS": 2.94,
+  "rssMB": 304.8,
+  "outBytes": 4383765
+ },
+ {
+  "doc": "irs-1040-instructions.pdf",
+  "workload": "optimize",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 1.83,
+  "cpuS": 1.87,
+  "rssMB": 203.7,
+  "outBytes": 4383765
+ },
+ {
+  "doc": "scotus-trump-v-us.pdf",
+  "workload": "info",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 0.1,
+  "cpuS": 0.08,
+  "rssMB": 53.1,
+  "outBytes": 0
+ },
+ {
+  "doc": "scotus-trump-v-us.pdf",
+  "workload": "info",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.09,
+  "cpuS": 0.08,
+  "rssMB": 144.6,
+  "outBytes": 0
+ },
+ {
+  "doc": "scotus-trump-v-us.pdf",
+  "workload": "info",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.02,
+  "cpuS": 0.01,
+  "rssMB": 23.2,
+  "outBytes": 0
+ },
+ {
+  "doc": "scotus-trump-v-us.pdf",
+  "workload": "text",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 1.11,
+  "cpuS": 1.18,
+  "rssMB": 74.9,
+  "outBytes": 0
+ },
+ {
+  "doc": "scotus-trump-v-us.pdf",
+  "workload": "text",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.66,
+  "cpuS": 0.7,
+  "rssMB": 144.6,
+  "outBytes": 0
+ },
+ {
+  "doc": "scotus-trump-v-us.pdf",
+  "workload": "text",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.29,
+  "cpuS": 0.29,
+  "rssMB": 39.6,
+  "outBytes": 0
+ },
+ {
+  "doc": "scotus-trump-v-us.pdf",
+  "workload": "render",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 0.24,
+  "cpuS": 0.22,
+  "rssMB": 78.4,
+  "outBytes": 201908
+ },
+ {
+  "doc": "scotus-trump-v-us.pdf",
+  "workload": "render",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.2,
+  "cpuS": 0.17,
+  "rssMB": 144.5,
+  "outBytes": 201908
+ },
+ {
+  "doc": "scotus-trump-v-us.pdf",
+  "workload": "render",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.11,
+  "cpuS": 0.09,
+  "rssMB": 47.4,
+  "outBytes": 201908
+ },
+ {
+  "doc": "scotus-trump-v-us.pdf",
+  "workload": "redact",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 3.53,
+  "cpuS": 4.2,
+  "rssMB": 120.6,
+  "outBytes": 556253
+ },
+ {
+  "doc": "scotus-trump-v-us.pdf",
+  "workload": "redact",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 2.51,
+  "cpuS": 2.86,
+  "rssMB": 159.0,
+  "outBytes": 556253
+ },
+ {
+  "doc": "scotus-trump-v-us.pdf",
+  "workload": "redact",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 1.28,
+  "cpuS": 1.28,
+  "rssMB": 56.8,
+  "outBytes": 556253
+ },
+ {
+  "doc": "scotus-trump-v-us.pdf",
+  "workload": "optimize",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 0.39,
+  "cpuS": 0.38,
+  "rssMB": 91.2,
+  "outBytes": 499629
+ },
+ {
+  "doc": "scotus-trump-v-us.pdf",
+  "workload": "optimize",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 0.28,
+  "cpuS": 0.27,
+  "rssMB": 144.6,
+  "outBytes": 499629
+ },
+ {
+  "doc": "scotus-trump-v-us.pdf",
+  "workload": "optimize",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 0.15,
+  "cpuS": 0.14,
+  "rssMB": 56.1,
+  "outBytes": 499629
+ },
+ {
+  "doc": "irs-1040-instructions.pdf",
+  "workload": "redact",
+  "shape": "jit",
+  "runs": 5,
+  "wallS": 12.5,
+  "cpuS": 14.49,
+  "rssMB": 374.7,
+  "outBytes": 4993463
+ },
+ {
+  "doc": "irs-1040-instructions.pdf",
+  "workload": "redact",
+  "shape": "r2r",
+  "runs": 5,
+  "wallS": 11.97,
+  "cpuS": 14.33,
+  "rssMB": 427.5,
+  "outBytes": 4993463
+ },
+ {
+  "doc": "irs-1040-instructions.pdf",
+  "workload": "redact",
+  "shape": "aot",
+  "runs": 5,
+  "wallS": 11.73,
+  "cpuS": 12.13,
+  "rssMB": 312.4,
+  "outBytes": 4993463
+ }
+]
