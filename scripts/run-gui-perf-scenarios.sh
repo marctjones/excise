@@ -68,6 +68,12 @@
 #   --out DIR           output dir (default logs/gui-perf_<stamp>)
 #   --app PATH          use an existing .app bundle instead of building
 #   --no-build          reuse the bundle under --out/bundle
+#   --foreground        launch the app directly, as before (it may take keyboard focus). The default launches
+#                       it through LaunchServices with `open -g`, which does not bring it to the foreground, and
+#                       a focus guard watches the frontmost app during every launch: if the app ever becomes
+#                       frontmost the run stops (exit 67) and says so, so a person typing in another window
+#                       never loses focus to a benchmark. The in-app runner needs no focus; a background window
+#                       can be occluded or napped, so compare a first background run with a foreground one.
 #   --r2r               build the ReadyToRun bundle instead of the default NativeAOT one. The build
 #                       shape of the measured bundle is printed and written to run-meta.txt
 #                       (buildShape=); numbers from different shapes are not comparable.
@@ -117,6 +123,7 @@ while [ "$#" -gt 0 ]; do
     --no-build) BUILD=0; shift ;;
     --keep-bundle) KEEP_BUNDLE=1; shift ;;
     --r2r) BUILD_SHAPE_FLAG=""; shift ;;
+    --foreground) LAUNCH_MODE=foreground; shift ;;
     --scenarios-file) SCENARIO_FILE="$2"; shift 2 ;;
     --list) LIST_ONLY=1; shift ;;
     -h|--help) sed -n '2,60p' "$0"; exit 0 ;;
@@ -130,6 +137,7 @@ case "$SAMPLE_MODE" in
 esac
 
 BUILD_SHAPE_FLAG="${BUILD_SHAPE_FLAG---aot}"   # NativeAOT unless --r2r
+LAUNCH_MODE="${LAUNCH_MODE:-background}"          # never take keyboard focus unless --foreground
 BUNDLE_DIR="$OUT/bundle"
 EXE="$BUNDLE_DIR/excise.app/Contents/MacOS/Excise.App"
 [ -n "$APP" ] && EXE="$APP/Contents/MacOS/Excise.App"
@@ -302,6 +310,8 @@ if [ ! -x "$EXE" ]; then
   exit 1
 fi
 
+# Absolute: `open -a` starts the app from "/", and pgrep matches the executable by its full path.
+case "$EXE" in /*) ;; *) EXE="$PWD/$EXE" ;; esac
 APP_DIR="${EXE%/Contents/MacOS/Excise.App}"
 BUILD_SHAPE="$(python3 "$ROOT/scripts/bench_build_shape.py" --shape "$APP_DIR" || true)"
 python3 "$ROOT/scripts/bench_build_shape.py" "$APP_DIR" || true   # the banner, with a warning when it is not NativeAOT
@@ -401,6 +411,32 @@ except FileNotFoundError: print("?")
 # Returns 0 on a clean scenario run. $1 scenario id, $2 repeat, $3 run dir,
 # $4 = "norunner" to launch WITHOUT the scenario runner (the runner-overhead
 # control), in which case $5 is how many seconds to hold the app open.
+# The bundle id of the frontmost app (empty if it cannot be read). Read-only: asks LaunchServices, touches nothing.
+front_bundle() {
+  local asn
+  asn="$(lsappinfo front 2>/dev/null)"
+  [ -n "$asn" ] || return 0
+  lsappinfo info -only bundleid "$asn" 2>/dev/null | sed -n 's/.*="\(.*\)"/\1/p'
+}
+
+# Watches the frontmost app for the life of one launch. Writes every change to focus.log and, if the app under
+# test ever becomes frontmost, writes focus-stolen: the caller then stops the whole run.
+focus_guard() {
+  local dir="$1" pid="$2" last="" now
+  while ps -p "$pid" >/dev/null 2>&1; do
+    now="$(front_bundle)"
+    if [ "$now" != "$last" ]; then
+      echo "$(date +%H:%M:%S) front=$now" >> "$dir/focus.log"
+      last="$now"
+    fi
+    if [ "$now" = "cl.skpt.excise" ]; then
+      echo "$(date +%H:%M:%S) FOCUS-STOLEN by cl.skpt.excise" >> "$dir/focus.log"
+      touch "$dir/focus-stolen"
+    fi
+    sleep 0.5
+  done
+}
+
 launch_one() {
   local scenario="$1" repeat="$2" dir="$3" mode="${4:-runner}" hold="${5:-30}"
   mkdir -p "$dir"
@@ -471,11 +507,35 @@ PYEOF
     [ "$SAMPLE_MODE" = "none" ] && env_args+=("EXCISE_PERF_SCENARIO_SAMPLE_MS=250")
   fi
 
-  echo "==> launch $scenario rep=$repeat mode=$mode"
-  env "${env_args[@]}" nohup "$EXE" > "$dir/app.log" 2>&1 &
-  local pid=$!
+  echo "==> launch $scenario rep=$repeat mode=$mode ($LAUNCH_MODE)"
+  local pid guard=""
+  if [ "$LAUNCH_MODE" = "background" ]; then
+    # LaunchServices, `-g`: the app starts without being brought to the foreground. The new instance is found
+    # by diffing the pids that run this executable before and after.
+    local before open_env=() e
+    before="$(pgrep -f "$EXE" | sort -n | tr '\n' ' ')"
+    for e in "${env_args[@]}"; do open_env+=(--env "$e"); done
+    echo "front before launch: $(front_bundle)" > "$dir/focus.log"
+    open -g -n -F -a "$APP_DIR" "${open_env[@]}" --stdout "$dir/app.log" --stderr "$dir/app.log" \
+      || { echo "open failed" >&2; return 1; }
+    pid=""
+    local tries=0 p
+    while [ -z "$pid" ] && [ "$tries" -lt 60 ]; do
+      for p in $(pgrep -f "$EXE"); do
+        case " $before " in *" $p "*) ;; *) pid="$p"; break ;; esac
+      done
+      [ -n "$pid" ] || sleep 0.5
+      tries=$((tries + 1))
+    done
+    [ -n "$pid" ] || { echo "the app process never appeared" >&2; return 1; }
+    focus_guard "$dir" "$pid" &
+    guard=$!
+  else
+    env "${env_args[@]}" nohup "$EXE" > "$dir/app.log" 2>&1 &
+    pid=$!
+    disown 2>/dev/null || true
+  fi
   echo "$pid" > "$dir/pid"
-  disown 2>/dev/null || true
 
   sample_row "$dir" "$pid" 0 launch boundary
 
@@ -497,6 +557,14 @@ PYEOF
     osascript -e 'tell application id "cl.skpt.excise" to quit' >/dev/null 2>&1
     local q=$(( SECONDS + 20 ))
     while ps -p "$pid" >/dev/null 2>&1 && [ "$SECONDS" -lt "$q" ]; do sleep 1; done
+  fi
+
+  if [ -n "$guard" ]; then
+    wait "$guard" 2>/dev/null
+    if [ -e "$dir/focus-stolen" ]; then
+      echo "ABORTING: the app under test took keyboard focus (see $dir/focus.log). Not launching again." >&2
+      return 67
+    fi
   fi
 
   if ps -p "$pid" >/dev/null 2>&1; then
@@ -569,7 +637,7 @@ run_matrix() {
       dir="$OUT/$subdir/${scenario}_r${rep}"
       launch_one "$scenario" "$rep" "$dir"
       rc=$?
-      if [ "$rc" = "66" ]; then ABORT=1; return 66; fi
+      if [ "$rc" = "66" ] || [ "$rc" = "67" ]; then ABORT=1; return "$rc"; fi
       [ "$rc" != "0" ] && FAILED=$(( FAILED + 1 ))
     done
   done
@@ -597,7 +665,7 @@ if [ "$DO_CALIBRATE" = "1" ]; then
   echo "    other three."
   for rep in 1 2 3 4 5; do
     launch_one null "$rep" "$OUT/calib/runner-on_r$rep" runner
-    if [ $? = 66 ]; then ABORT=1; break; fi
+    rcl=$?; if [ "$rcl" = 66 ] || [ "$rcl" = 67 ]; then ABORT=1; break; fi
   done
   if [ "$ABORT" = "0" ]; then
     # The control MUST be held for the same wall time as the runner-on runs.
@@ -618,7 +686,7 @@ PYEOF
     echo "    holding the control for ${HOLD}s to match the runner-on median"
     for rep in 1 2 3 4 5; do
       launch_one null "$rep" "$OUT/calib/runner-off_r$rep" norunner "$HOLD"
-      if [ $? = 66 ]; then ABORT=1; break; fi
+      rcl=$?; if [ "$rcl" = 66 ] || [ "$rcl" = 67 ]; then ABORT=1; break; fi
     done
   fi
 
@@ -629,7 +697,7 @@ PYEOF
       SAMPLE_MODE="$mode"
       for rep in 1 2 3; do
         launch_one w9-launch-idle "$rep" "$OUT/calib/sampler-${mode}_r$rep" runner
-        if [ $? = 66 ]; then ABORT=1; break; fi
+        rcl=$?; if [ "$rcl" = 66 ] || [ "$rcl" = 67 ]; then ABORT=1; break; fi
       done
       if [ "$ABORT" = "1" ]; then break; fi
     done
