@@ -28,3 +28,10 @@ mutool/pdftocairo on the NativeAOT binary (`reference-performance` accepts `EXCI
 - **OCR under NativeAOT works.** `excise ocr irs-w9.pdf --page 1`: byte-identical text (same md5) and the same time (4.06 s JIT, 3.98 s NativeAOT), 222 MB peak in both. It uses the system tesseract.
 - **Against mutool** (`reference-performance-nativeaot-vs-mutool.md`, NativeAOT CLI via `EXCISE_BENCHMARK_CLI_COMMAND`, 2 runs, mutool only, 14 fixtures): excise renders heavy pages faster and in less memory (altona p1 2.6 s vs 3.9 s, 138 vs 450 MiB; a 33-megapixel indexed image 157 vs 395 ms, 48 vs 141 MiB), and is 1.0-1.5x slower with 2-3x the RSS on small pages (W-9 153 vs 112 ms, 46 vs 20 MiB; mesh shading, 50 transparency groups). The gate printed FAIL only because its committed baseline was recorded with the JIT CLI ("MODE MISMATCH"); the ratios inside this run are valid.
 - **Redaction profile of ds11** is posted on #2075 (repeated per-rectangle parse, serialise-and-hash `Fingerprint`, marked-content scrub).
+
+## Harness
+
+`scripts/aot-perf-harness.py` (build / run / profile / compare) is the headless NativeAOT performance harness. Its new input is
+`EXCISE_PERF_REPORT=<file>` on the CLI (`Excise.Cli/ProcessPerfReport.cs`): managed allocation, GC counts, GC pause. First run:
+`aot-perf-harness-first-run.md` (3 documents x 6 workloads x 3 shapes). Allocation is the same in every shape (within 5%); redaction of the
+ds11 form allocates 2.46 GB and spends 1.0-1.3 s in GC pauses (#2075).

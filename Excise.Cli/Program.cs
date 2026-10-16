@@ -7,7 +7,18 @@ namespace Excise.Cli;
 
 partial class Program
 {
-    static Task<int> Main(string[] args) => RunAsync(args);
+    static async Task<int> Main(string[] args)
+    {
+        // EXCISE_PERF_REPORT=<file>: write what this process cost (ProcessPerfReport). Unset, this is just RunAsync.
+        var report = Environment.GetEnvironmentVariable(ProcessPerfReport.EnvironmentVariable);
+        if (string.IsNullOrEmpty(report))
+            return await RunAsync(args);
+
+        var started = System.Diagnostics.Stopwatch.StartNew();
+        var exitCode = await RunAsync(args);
+        ProcessPerfReport.TryWrite(report, args, exitCode, started.Elapsed);
+        return exitCode;
+    }
 
     /// <summary>
     /// Build and invoke the root command. Exposed for tests so they can

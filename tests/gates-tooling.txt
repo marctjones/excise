@@ -171,3 +171,4 @@ scripts/cold-launch-classify-run.py   # body of run-cold-launch-double-open.sh; 
 scripts/ab-render-bench.sh   # per-commit A/B of the CLI render phase (renderMs, peak RSS, PNG bytes) with interleaved runs and a noise floor. NOT a gate: absolute times move with load, so it only ever says which commit moved the number, never pass/fail; reference-performance owns the gated ratio against the oracles
 scripts/corpus_coverage.py   # #1972 body of the corpus-coverage footer and the strict post-scan page check; exercised by row corpus-coverage-selftest
 scripts/cli-shape-bench.py   # CLI workloads (info/text/render/redact/optimize) per build shape: wall, CPU, peak RSS, output bytes; no window, run niced
+scripts/aot-perf-harness.py   # headless CLI performance by build shape incl. managed allocation/GC via EXCISE_PERF_REPORT, sample-based profile, run comparison; no window, run niced
