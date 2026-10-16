@@ -641,7 +641,7 @@ def main():
                 key0 = run["scenario"]
             runs_by_key[(key0, name)] = run
 
-    measured_runs = [r for key, r in runs_by_key.items() if not key[0].startswith("calib-")]
+    measured_runs = [r for key, r in runs_by_key.items() if not (key[0] or "").startswith("calib-")]
 
     # Noise: per scenario, spread of each metric's peak across repeats.
     noise = {}
@@ -672,7 +672,7 @@ def main():
             "meta": (root / "run-meta.txt").read_text() if (root / "run-meta.txt").exists() else "",
         },
         "runs": measured_runs,
-        "calibrationRuns": [r for key, r in runs_by_key.items() if key[0].startswith("calib-")],
+        "calibrationRuns": [r for key, r in runs_by_key.items() if (key[0] or "").startswith("calib-")],
         "noise": noise,
         "floor": floor,
     }
