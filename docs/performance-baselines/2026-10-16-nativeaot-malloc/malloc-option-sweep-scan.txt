@@ -1,0 +1,6 @@
+MallocAggressiveMadvise close-scan	504.0 idle-after-close	504.0 idle-after-close-45s	425.0 
+MallocSpaceEfficient close-scan	213.0 idle-after-close	213.0 idle-after-close-45s	135.0 
+MallocRecircRetainedRegions close-scan	504.0 idle-after-close	504.0 idle-after-close-45s	426.0 
+MallocLargeCache close-scan	221.0 idle-after-close	221.0 idle-after-close-45s	142.0 
+MallocDeferredReclaim close-scan	506.0 idle-after-close	506.0 idle-after-close-45s	426.0 
+MallocNanoZone close-scan	507.0 idle-after-close	507.0 idle-after-close-45s	427.0 

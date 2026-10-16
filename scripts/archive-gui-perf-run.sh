@@ -89,10 +89,19 @@ for sc in sorted({r["scenario"] for r in runs}):
         "load1": med([x["load1"] for r in rs for x in r["steps"] if "load1" in x]),
     }
 
+# Which build produced the numbers (NativeAOT / ReadyToRun / IL): a figure with no shape beside it cannot be compared.
+shape = None
+meta = pathlib.Path(run_dir, "run-meta.txt")
+if meta.exists():
+    for ln in meta.read_text().splitlines():
+        if ln.startswith("buildShape="):
+            shape = ln.split("=", 1)[1].strip()
+
 line = {
     "timestamp": datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
     "runDir": pathlib.Path(run_dir).name,
     "label": label or None,
+    "buildShape": shape,
     "excise": {
         "commit": git("rev-parse", "HEAD"),
         "describe": git("describe", "--tags", "--always", "--dirty"),

@@ -191,6 +191,16 @@ cat > "$BUNDLE/Contents/Info.plist" <<PLIST
 ${ICON_PLIST}
     <key>LSMinimumSystemVersion</key>
     <string>11.0</string>
+    <!-- libmalloc reads this at process start (not settable from inside the app). Measured on the NativeAOT
+         build, scan-scroll-close: footprint 45 s after closing a scanned PDF 427 MB without it, 135 MB with it
+         (ReadyToRun 235 MB); altona-scroll final 251 -> 215 MB, irs-zoom final 406 -> 239 MB; CPU and
+         scroll/zoom wall time unchanged. Without it libmalloc keeps freed Skia pixel buffers dirty in idle
+         "empty" regions because an idle NativeAOT process makes no further malloc calls to trigger eviction. -->
+    <key>LSEnvironment</key>
+    <dict>
+        <key>MallocSpaceEfficient</key>
+        <string>1</string>
+    </dict>
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>LSApplicationCategoryType</key>

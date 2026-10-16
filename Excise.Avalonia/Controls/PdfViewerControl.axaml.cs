@@ -92,13 +92,14 @@ public partial class PdfViewerControl : UserControl, IFormFieldEditSink, IViewer
     }
 
     /// <summary>
-    /// View mode: <see cref="PdfViewMode.SinglePage"/> (the default — one page at
+    /// View mode: <see cref="PdfViewMode.SinglePage"/> (this control's own default — one page at
     /// a time, with all editing/redaction/selection interactions) or
     /// <see cref="PdfViewMode.Continuous"/> (a scrollable reading view of all
     /// pages, render-virtualized, with NO editing). Entering an editing
     /// interaction mode auto-switches back to SinglePage so the editing overlays
     /// (which are single-page by design, incl. security-critical redaction) are
-    /// never driven against a continuous layout.
+    /// never driven against a continuous layout. The application does not rely on the control's
+    /// default: <c>DocumentViewportSession</c> starts every document in Continuous.
     /// </summary>
     public static readonly StyledProperty<PdfViewMode> ViewModeProperty =
         AvaloniaProperty.Register<PdfViewerControl, PdfViewMode>(nameof(ViewMode), defaultValue: PdfViewMode.SinglePage);

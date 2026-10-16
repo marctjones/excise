@@ -547,6 +547,10 @@ PYEOF
     [ "$SAMPLE_MODE" = "none" ] && env_args+=("EXCISE_PERF_SCENARIO_SAMPLE_MS=250")
   fi
 
+  # PERF_EXTRA_ENV="KEY=VAL KEY2=VAL2": experiments with runtime/allocator knobs (e.g. MallocMaxMagazines=1).
+  # shellcheck disable=SC2206
+  [ -n "${PERF_EXTRA_ENV:-}" ] && env_args+=($PERF_EXTRA_ENV)
+
   echo "==> launch $scenario rep=$repeat mode=$mode ($LAUNCH_MODE)"
   local pid guard=""
   if [ "$LAUNCH_MODE" = "background" ]; then
