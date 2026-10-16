@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1692,
-  "indexedContentSha256": "fa64e0d53b4db19bf429e71bca0a93eaf4800bba7f690b49d3af2279b49e7f31",
+  "indexedFileCount": 1693,
+  "indexedContentSha256": "cbd84fa74e9a792d4b30570646d0183b1264df5207e9e0fd38f1db65b5cefaf2",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -68356,6 +68356,16 @@
           ]
         },
         {
+          "path": "Excise.Core/Content/ContentStreamWriter.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "media",
+            "sound",
+            "media",
+            "sound"
+          ]
+        },
+        {
           "path": "Excise.Core/Document/AcroFormAuthoring.cs",
           "kind": "source",
           "matchedTerms": [
@@ -69059,21 +69069,9 @@
             "screen",
             "media"
           ]
-        },
-        {
-          "path": "Excise.Rendering.Tests/Differential/AnnotationSubtypeVerificationDifferentialTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotations",
-            "media",
-            "movie",
-            "screen",
-            "media",
-            "movie"
-          ]
         }
       ],
-      "candidateReferenceCount": 156
+      "candidateReferenceCount": 157
     },
     {
       "id": "pdf.17.multimedia.richmedia-3d",
@@ -73669,7 +73667,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 194
+      "candidateReferenceCount": 195
     },
     {
       "id": "pdf.20.profile.pdfa",
