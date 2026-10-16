@@ -59,8 +59,8 @@ internal static class PerfScenarioHost
             // document into whichever window shows it.
             // The UI-stall heartbeat lives exactly as long as this run (never a static: a window that got
             // an event must not stay reachable because a monitor still holds it).
-            var uiStall = new UiStallTracker(UiStallMonitor.DefaultInterval);
-            using var uiStallMonitor = new UiStallMonitor(uiStall, UiStallMonitor.DefaultInterval);
+            var (uiStall, uiStallClock) = UiStallMonitor.CreateTracker(UiStallMonitor.DefaultInterval);
+            using var uiStallMonitor = new UiStallMonitor(uiStall, uiStallClock, UiStallMonitor.DefaultInterval);
             var target = new AppPerfScenarioTarget(viewModel, viewer, cacheTrim, workspace, cacheTrimFor, uiStall);
             using var journal = new PerfStepJournal(options.OutputDirectory)
             {

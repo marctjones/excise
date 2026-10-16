@@ -27,16 +27,24 @@ internal sealed class UiStallTracker
     internal const double JankMs = 100;
 
     private readonly double _intervalMs;
+    private readonly Func<double>? _clock;
     private readonly object _gate = new();
     private double? _lastTickMs;
     private double _maxMs;
     private int _over100;
     private int _ticks;
 
-    internal UiStallTracker(TimeSpan interval)
+    /// <param name="interval">How often the heartbeat asks to fire.</param>
+    /// <param name="clock">
+    /// Milliseconds now, on the same clock as <see cref="Tick"/>. With it, <see cref="TakeAndReset"/>
+    /// counts a stall that is still going on when it is read; without it a stall is only known once
+    /// the late tick arrives, and a 20 s freeze would be reported by the row after the one that froze.
+    /// </param>
+    internal UiStallTracker(TimeSpan interval, Func<double>? clock = null)
     {
         if (interval <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(interval));
         _intervalMs = interval.TotalMilliseconds;
+        _clock = clock;
     }
 
     /// <summary>Mark the moment the heartbeat starts; the first gap is measured from here.</summary>
@@ -67,6 +75,17 @@ internal sealed class UiStallTracker
     {
         lock (_gate)
         {
+            if (_clock is { } now && _lastTickMs is { } last)
+            {
+                // The heartbeat is overdue right now: that lateness belongs to this window. Moving the
+                // baseline to now means the late tick, when it comes, adds only the remainder.
+                var t = now();
+                var open = Math.Max(0, t - last - _intervalMs);
+                if (open > _maxMs) _maxMs = open;
+                if (open >= JankMs) _over100++;
+                if (t > last) _lastTickMs = t;
+            }
+
             var reading = new UiStallReading(_maxMs, _over100, _ticks);
             _maxMs = 0;
             _over100 = 0;
@@ -91,11 +110,19 @@ internal sealed class UiStallMonitor : IDisposable
 
     private readonly DispatcherTimer _timer;
     private readonly UiStallTracker _tracker;
-    private readonly Stopwatch _clock = Stopwatch.StartNew();
+    private readonly Stopwatch _clock;
 
-    internal UiStallMonitor(UiStallTracker tracker, TimeSpan interval)
+    /// <summary>The tracker's clock: read by the monitor's ticks and by the sampler's open-gap check.</summary>
+    internal static (UiStallTracker Tracker, Stopwatch Clock) CreateTracker(TimeSpan interval)
+    {
+        var clock = Stopwatch.StartNew();
+        return (new UiStallTracker(interval, () => clock.Elapsed.TotalMilliseconds), clock);
+    }
+
+    internal UiStallMonitor(UiStallTracker tracker, Stopwatch clock, TimeSpan interval)
     {
         _tracker = tracker;
+        _clock = clock;
         _timer = new DispatcherTimer(DispatcherPriority.Input) { Interval = interval };
         _timer.Tick += (_, _) => _tracker.Tick(_clock.Elapsed.TotalMilliseconds);
         _tracker.Start(_clock.Elapsed.TotalMilliseconds);

@@ -76,6 +76,38 @@ public class UiStallTrackerTests
     }
 
     [Fact]
+    public void AStallStillGoingOn_IsCountedByTheReadThatSeesIt_AndOnlyTheRemainderLater()
+    {
+        double now = 0;
+        var tracker = new UiStallTracker(Interval, () => now);
+        tracker.Start(0);
+        tracker.Tick(50);
+
+        now = 20_050;   // blocked since the 50 ms tick; no further tick has arrived
+        var during = tracker.TakeAndReset();
+        during.MaxMs.Should().BeApproximately(19_950, 0.001);
+        during.Over100Ms.Should().Be(1);
+
+        tracker.Tick(20_150);   // the thread is back: only 100 - 50 = 50 ms more is late
+        now = 20_150;
+        var after = tracker.TakeAndReset();
+        after.MaxMs.Should().BeApproximately(50, 0.001);
+        after.Over100Ms.Should().Be(0);
+    }
+
+    [Fact]
+    public void AReadBetweenOnTimeTicks_ReportsNoStall()
+    {
+        double now = 0;
+        var tracker = new UiStallTracker(Interval, () => now);
+        tracker.Start(0);
+        tracker.Tick(50);
+        now = 80;   // 30 ms since the last tick, 20 ms before the next is due
+
+        tracker.TakeAndReset().MaxMs.Should().Be(0);
+    }
+
+    [Fact]
     public void TheFirstGap_IsMeasuredFromStart()
     {
         var tracker = new UiStallTracker(Interval);
