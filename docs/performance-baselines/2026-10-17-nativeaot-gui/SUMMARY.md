@@ -39,6 +39,23 @@ excise is now the lowest or near-lowest after the idle trim and after close on a
 147 MB now), and uses the least CPU. Preview and excise are close while a document is open; Chrome and Acrobat are several times larger. Acrobat's
 "closed" columns are blank: it does not quit in the harness (killed after the idle samples).
 
-## Excise page-turn latency moved during the night
-The same bundle measured 41 ms (phase B, probes) and 68-75 ms (phase C, two rechecks). `mediaanalysisd` was at 217% CPU and WindowServer at 40% when the
-slow figures were taken; that background load is the likely cause, not the code, but the effect was not isolated.
+## Excise page-turn latency moved during the night: investigated (irs, first change p50, 3 repeats, NativeAOT)
+The same bundle gave 41 ms early in the night and 72-75 ms later, on the same macOS release, so the macOS 27 upgrade cannot be the cause of this
+shift (it can only explain the difference from the 2026-10-15 table, which was macOS 26.6.2).
+
+| test | result |
+|---|---|
+| old bundles (before the allocator setting, before #2077, with it) on the slow machine | 72, 74, 75 ms: not the code |
+| `mediaanalysisd` (217% CPU earlier) gone | 75 ms: not that daemon |
+| display | built-in, fixed 60 Hz, not mirrored; AC power, no thermal warning, 75% memory free, no swap |
+| every other window hidden | 73 ms: not window clutter |
+| `EXCISE_LATENCY_ACTIVITY` (an NSActivityLatencyCritical assertion, experiment since removed) | 75 vs 73 ms: no effect |
+| 0 / 2 / 4 / 8 background CPU spinners (`nice -n 19 yes`) | **75 / 52 / 45 / 40 ms** |
+
+So page-turn latency is set by how awake the CPU is, not by anything excise does: the early 41 ms runs happened while other work (my own runs and a
+system indexing daemon) kept the cores busy, and an idle laptop gives 75 ms. In-app render time barely moves (continuous lookahead render mean 28.4 ms
+idle vs 24.7 ms with spinners), so the ~35 ms (two frames at 60 Hz) is outside the render work: waking cores and clock ramp along the input -> main thread ->
+compositor -> present path. A `sample` of excise during the turns shows every thread waiting nearly all of the time (no hot spot; the main thread is idle).
+The other apps move much less (Chrome 61-62, Acrobat 35-39, Preview 42 in both states), so on an idle machine excise is the slowest reader here (75 ms) and
+the realistic figure to quote; the 41 ms figure is the busy-machine one. Untested: raising the QoS of the viewer's worker and compositor threads
+(thread-pool threads run at the default QoS, which macOS may keep on efficiency cores at low clocks); that is the next experiment if this matters.
