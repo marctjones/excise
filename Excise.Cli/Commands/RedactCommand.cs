@@ -406,7 +406,15 @@ internal static class RedactCommand
                 // remove (a hyphen- or line-wrapped occurrence) is still fully
                 // readable in the saved output. The notes above say so, but a
                 // caller that only checks the exit code must not see success.
-                return result.HasUnremovedWrappedOccurrence ? 3 : 0;
+                // The same holds for every other reason the report is not clean (a font or other carrier
+                // excise could not scrub, an unclean attachment, a survivor): the closing "NOT clean" note
+                // above is added exactly when the report's IsCleanSuccess is false, and the C API returns
+                // EXCISE_ERR_REDACTION_INCOMPLETE for it, so the exit code says the same (#2078 follow-up
+                // found by the full tier: `redact irs-w9.pdf Taxpayer` printed NOT clean and exited 0).
+                var notClean = result.HasUnremovedWrappedOccurrence
+                    || result.CarrierNotes.Any(n => n.StartsWith(
+                        Excise.Core.Redaction.RedactionNoteSummary.NotCleanClosingPrefix, StringComparison.Ordinal));
+                return notClean ? 3 : 0;
             }
             catch (Exception ex)
             {

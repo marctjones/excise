@@ -370,6 +370,41 @@ public class RedactCommandTests : IDisposable
     }
 
     /// <summary>
+    /// The exit code follows the printed verdict, not only the wrapped-occurrence case: IRS W-9 uses embedded
+    /// Type1C fonts that the font scrub cannot edit (#1920), so the report names a NOT SCRUBBED carrier, closes
+    /// with "This redaction was NOT clean", and the exit code must then be 3, as it is for the C API's
+    /// EXCISE_ERR_REDACTION_INCOMPLETE. It used to be 0 (found by the 2026-10-17 full tier).
+    /// </summary>
+    [Fact]
+    public async Task RunAsync_RedactWithAnUnscrubbableFont_PrintsNotClean_AndExitsThree()
+    {
+        const string rel = "test-pdfs/smoke/irs-w9.pdf";
+        var source = Excise.TestSupport.TestRepoLayout.FindFile(rel);
+        Assert.SkipWhen(source == null, Excise.TestSupport.TestRepoLayout.AbsenceReason("smoke corpus fixture", rel));
+        var outputPath = TempPath(".pdf");
+
+        var previousOut = Console.Out;
+        var captured = new StringWriter();
+        Console.SetOut(captured);
+        int exitCode;
+        try
+        {
+            exitCode = await Program.RunAsync(new[] { "redact", source!, outputPath, "Taxpayer" });
+        }
+        finally
+        {
+            Console.SetOut(previousOut);
+        }
+
+        var stdout = captured.ToString();
+        stdout.Should().Contain("NOT SCRUBBED: font");
+        stdout.Should().Contain("This redaction was NOT clean");
+        exitCode.Should().Be(3, "an unclean redaction must not look like success to a caller that reads only the exit code");
+        // The text itself is gone from the saved bytes (independent scan); the unclean part is the font program.
+        SavedPdfLeakScanner.FindTerm(File.ReadAllBytes(outputPath), "Taxpayer").Should().BeEmpty();
+    }
+
+    /// <summary>
     /// #1372's hyphen-wrap case shares the SAME exit-code path as #1750's
     /// plain-wrap case (<c>HasUnremovedWrappedOccurrence</c> is true for
     /// either candidate list) — verified directly rather than left as an
@@ -1100,6 +1135,15 @@ public class RedactCommandTests : IDisposable
             .And.NotContain("The default. Close the width gap");
     }
 
+    /// <summary>
+    /// The exit code a run that printed this output must have: 3 when it closed with "NOT clean", else 0. The
+    /// matching tests below are about WHICH spellings are removed; their synthetic fixtures keep the font as a
+    /// direct object, which the font scrub refuses (#1920), so their verdict is "not clean" and the exit code
+    /// follows it. Asserting the pairing keeps both facts: the code tracks the verdict, and nothing else broke.
+    /// </summary>
+    private static int ExitFor(string stdout) =>
+        stdout.Contains("This redaction was NOT clean", StringComparison.Ordinal) ? 3 : 0;
+
     private static async Task<(int Exit, string Stdout)> RunCapturedAsync(params string[] args)
     {
         var prevOut = Console.Out;
@@ -1225,7 +1269,7 @@ public class RedactCommandTests : IDisposable
 
         var (exit, stdout) = await RunCapturedAsync("redact", inputPath, outputPath, "open source");
 
-        exit.Should().Be(0);
+        exit.Should().Be(ExitFor(stdout));
         stdout.Should().Contain("Redacted 3 occurrence(s)").And.NotContain("exact separators");
         var saved = File.ReadAllBytes(outputPath);
         SavedPdfLeakScanner.FindTerm(saved, "open-source").Should().BeEmpty();
@@ -1263,7 +1307,7 @@ public class RedactCommandTests : IDisposable
         var (exit, stdout) = await RunCapturedAsync(
             "redact", inputPath, outputPath, "open-source", "--match-closed-compounds");
 
-        exit.Should().Be(0);
+        exit.Should().Be(ExitFor(stdout));
         stdout.Should().Contain("Redacted 4 occurrence(s)").And.Contain("(closed compounds matched)");
         var saved = File.ReadAllBytes(outputPath);
         SavedPdfLeakScanner.FindTerm(saved, "opensource").Should().BeEmpty();
@@ -1305,7 +1349,7 @@ public class RedactCommandTests : IDisposable
 
         var (exit, stdout) = await RunCapturedAsync("redact", inputPath, outputPath, "cafe", "--whole-word");
 
-        exit.Should().Be(0);
+        exit.Should().Be(ExitFor(stdout));
         stdout.Should().Contain("Redacted 3 occurrence(s)").And.NotContain("exact accents");
         var saved = File.ReadAllBytes(outputPath);
         foreach (var spelling in new[] { "café", "CAFÉ", "cafe " })
