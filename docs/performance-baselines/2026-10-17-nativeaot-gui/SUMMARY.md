@@ -57,5 +57,8 @@ system indexing daemon) kept the cores busy, and an idle laptop gives 75 ms. In-
 idle vs 24.7 ms with spinners), so the ~35 ms (two frames at 60 Hz) is outside the render work: waking cores and clock ramp along the input -> main thread ->
 compositor -> present path. A `sample` of excise during the turns shows every thread waiting nearly all of the time (no hot spot; the main thread is idle).
 The other apps move much less (Chrome 61-62, Acrobat 35-39, Preview 42 in both states), so on an idle machine excise is the slowest reader here (75 ms) and
-the realistic figure to quote; the 41 ms figure is the busy-machine one. Untested: raising the QoS of the viewer's worker and compositor threads
-(thread-pool threads run at the default QoS, which macOS may keep on efficiency cores at low clocks); that is the next experiment if this matters.
+the realistic figure to quote; the 41 ms figure is the busy-machine one. Thread QoS was then tested and ruled out: an env-gated experiment raised the .NET thread-pool workers (the band renders), Avalonia's compositor timer
+thread (`RenderTimerLoop`) and the `CVDisplayLink` threads to user-interactive with `pthread_override_qos_class_start_np` (every thread reported the
+override as applied), idle page turn p50, 3 repeats: none 72 ms, compositor only 75, pool only 74, all 71 (69 in a one-repeat verification run with
+logging). So the cost is not those threads' priority; what remains is the system's input-to-present path on an idle machine (WindowServer and the display
+pipeline waking), which an app cannot reach from its own threads. The experiment code was removed.
