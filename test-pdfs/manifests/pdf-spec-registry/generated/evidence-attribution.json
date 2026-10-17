@@ -81591,6 +81591,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/LazyNamedDestinationTests.cs::LazyNamedDestinationTests.AnnotationsWithNoNamedLink_ParseWithoutTheMap",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.PdfAnnotationParser_ParseDate_NoTimezone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -82970,13 +82977,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAReplyPointsAt_IsNotInTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -83029,6 +83029,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/LazyNamedDestinationTests.cs::LazyNamedDestinationTests.AnnotationsWithNoNamedLink_ParseWithoutTheMap",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.PdfAnnotationParser_ParseDate_NoTimezone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -84408,13 +84415,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAReplyPointsAt_IsNotInTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -84467,6 +84467,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/LazyNamedDestinationTests.cs::LazyNamedDestinationTests.AnnotationsWithNoNamedLink_ParseWithoutTheMap",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.PdfAnnotationParser_ParseDate_NoTimezone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -85846,13 +85853,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAReplyPointsAt_IsNotInTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -85921,6 +85921,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/LazyNamedDestinationTests.cs::LazyNamedDestinationTests.AnnotationsWithNoNamedLink_ParseWithoutTheMap",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.PdfAnnotationParser_ParseDate_NoTimezone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -87300,13 +87307,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAReplyPointsAt_IsNotInTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -87494,6 +87494,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/LazyNamedDestinationTests.cs::LazyNamedDestinationTests.AnnotationsWithNoNamedLink_ParseWithoutTheMap",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.PdfAnnotationParser_ParseDate_NoTimezone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -88873,13 +88880,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAReplyPointsAt_IsNotInTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -88925,6 +88925,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/LazyNamedDestinationTests.cs::LazyNamedDestinationTests.AnnotationsWithNoNamedLink_ParseWithoutTheMap",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.PdfAnnotationParser_ParseDate_NoTimezone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -90304,13 +90311,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAReplyPointsAt_IsNotInTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -90349,6 +90349,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/LazyNamedDestinationTests.cs::LazyNamedDestinationTests.AnnotationsWithNoNamedLink_ParseWithoutTheMap",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.PdfAnnotationParser_ParseDate_NoTimezone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -91728,13 +91735,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAReplyPointsAt_IsNotInTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [
@@ -91773,6 +91773,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/LazyNamedDestinationTests.cs::LazyNamedDestinationTests.AnnotationsWithNoNamedLink_ParseWithoutTheMap",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/MidTierCoverageTests.cs::MidTierCoverageTests.PdfAnnotationParser_ParseDate_NoTimezone",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -93152,13 +93159,6 @@
           "recordedOutcomes": [
             "Passed"
           ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteAnnotation_ThatAReplyPointsAt_IsNotInTheFile",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
         }
       ],
       "explicitContracts": [],
@@ -112558,8 +112558,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 8913,
-    "testMethodsWithCapabilityCandidate": 5759,
+    "testMethods": 8915,
+    "testMethodsWithCapabilityCandidate": 5760,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
