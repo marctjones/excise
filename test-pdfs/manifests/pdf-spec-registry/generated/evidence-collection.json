@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1695,
-  "indexedContentSha256": "3a4e53df9828ddab78274f35916918293a85cd28475e52f0f604922a33a7af6c",
+  "indexedFileCount": 1697,
+  "indexedContentSha256": "a5f57254449e40c166508ad803e56da52421d16e7107b8fd276129ed2470656e",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -10941,7 +10941,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 227
+      "candidateReferenceCount": 228
     },
     {
       "id": "pdf.17.rendering.colour-conversion",
@@ -11935,6 +11935,15 @@
           ]
         },
         {
+          "path": "Excise.Rendering.Tests/Differential/RedactionBenchmarkRunner.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "version",
+            "versions",
+            "renderpage"
+          ]
+        },
+        {
           "path": "Excise.Rendering.Tests/SkiaRendererTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -12117,7 +12126,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 44
+      "candidateReferenceCount": 45
     },
     {
       "id": "pdf.20.compatibility.deprecated",
@@ -13899,7 +13908,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 162
+      "candidateReferenceCount": 163
     },
     {
       "id": "pdf.17.content.text-state",
@@ -61245,7 +61254,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 263
+      "candidateReferenceCount": 264
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -73678,7 +73687,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 195
+      "candidateReferenceCount": 196
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -76280,7 +76289,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 180
+      "candidateReferenceCount": 179
     },
     {
       "id": "pdfe.product.redaction.review-panel",
@@ -80521,6 +80530,14 @@
           ]
         },
         {
+          "path": "Excise.Cli.Tests/CorpusScanOrderTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "documents",
+            "scanned"
+          ]
+        },
+        {
           "path": "Excise.Cli.Tests/MakeSearchableCommandHandlerTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -80551,19 +80568,9 @@
             "ocr",
             "redaction"
           ]
-        },
-        {
-          "path": "Excise.Cli.Tests/UnredactOcrChannelTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "ocr",
-            "scanned",
-            "ocr",
-            "redaction"
-          ]
         }
       ],
-      "candidateReferenceCount": 99
+      "candidateReferenceCount": 100
     },
     {
       "id": "pdfe.product.security.audit-log",
