@@ -571,6 +571,10 @@ def ocr_chrome_page_box(png):
 
 # Firefox profile prefs: nothing that shows a dialog, opens a second tab or
 # starts a background update, so the run measures the PDF viewer and nothing else.
+# NOTE (2026-10-17): the "Update available" doorhanger that grabs keyboard focus after ~10 s comes from the INSTALLED
+# Firefox's own pending-update state, not the profile, so no profile pref turns it off (tried app.update.*, and
+# clicking Dismiss). What works: run Firefox in its own bench invocation (`--apps firefox`), where keys land.
+# A system-wide fix (policies.json DisableAppUpdate, or installing the update) changes the user's Firefox: ask first.
 FIREFOX_USER_JS = """\
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.shell.didSkipDefaultBrowserCheckOnFirstRun", true);
@@ -586,6 +590,43 @@ user_pref("browser.disableResetPrompt", true);
 user_pref("browser.uitour.enabled", false);
 user_pref("app.update.auto", false);
 user_pref("app.update.enabled", false);
+user_pref("app.update.disabledForTesting", true);
+user_pref("browser.startup.page", 0);
+user_pref("browser.startup.homepage", "about:blank");
+user_pref("browser.newtabpage.activity-stream.feeds.section.topstories", false);
+user_pref("browser.newtabpage.activity-stream.feeds.topsites", false);
+user_pref("browser.newtabpage.activity-stream.feeds.weatherfeed", false);
+user_pref("browser.newtabpage.activity-stream.showSponsored", false);
+user_pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);
+user_pref("browser.newtabpage.activity-stream.showWeather", false);
+user_pref("browser.newtabpage.activity-stream.discoverystream.enabled", false);
+user_pref("browser.newtabpage.activity-stream.system.showSponsored", false);
+user_pref("browser.urlbar.suggest.searches", false);
+user_pref("browser.urlbar.suggest.quicksuggest.sponsored", false);
+user_pref("browser.urlbar.suggest.quicksuggest.nonsponsored", false);
+user_pref("browser.search.suggest.enabled", false);
+user_pref("network.captive-portal-service.enabled", false);
+user_pref("network.connectivity-service.enabled", false);
+user_pref("network.prefetch-next", false);
+user_pref("extensions.update.enabled", false);
+user_pref("extensions.getAddons.cache.enabled", false);
+user_pref("browser.safebrowsing.malware.enabled", false);
+user_pref("browser.safebrowsing.phishing.enabled", false);
+user_pref("browser.search.update", false);
+user_pref("toolkit.telemetry.enabled", false);
+user_pref("toolkit.telemetry.unified", false);
+user_pref("browser.discovery.enabled", false);
+user_pref("browser.vpn_promo.enabled", false);
+user_pref("browser.promo.focus.enabled", false);
+user_pref("browser.promo.pin.enabled", false);
+user_pref("browser.toolbars.bookmarks.visibility", "never");
+user_pref("app.update.doorhanger", false);
+user_pref("app.update.suppressPrompts", true);
+user_pref("app.update.checkInstallTime", false);
+user_pref("app.update.background.enabled", false);
+user_pref("app.update.staging.enabled", false);
+user_pref("browser.messaging-system.whatsNewPanel.enabled", false);
+user_pref("browser.bookmarks.addedImportButton", false);
 user_pref("datareporting.policy.dataSubmissionEnabled", false);
 user_pref("datareporting.healthreport.uploadEnabled", false);
 user_pref("toolkit.telemetry.reportingpolicy.firstRun", false);
@@ -1330,10 +1371,16 @@ def summarize(out):
         tolerated = {st["step"] for st in r["steps"]
                      if not st["ok"] and tolerated_start(r["app"], st["step"], st.get("page"))}
         r["failures"] = [f for f in r["failures"] if f not in tolerated]
+        # An app that would not quit (Acrobat) was killed AFTER its open/paged/idle samples were taken: those
+        # stay valid. Only the "closed" samples (taken after the quit) are meaningless, so they are skipped.
+        killed = "did not quit within 20 s; killed" in r["failures"]
+        r["failures"] = [f for f in r["failures"] if f != "did not quit within 20 s; killed"]
         if r["failures"]:
             row["failed"] += 1
             continue
         for s in r["samples"]:
+            if killed and str(s.get("label", "")).startswith("closed"):
+                continue
             if s.get("label"):
                 fp, rss = totals(s, owned)
                 mfp = (s["procs"].get(main) or {}).get("fp") or 0

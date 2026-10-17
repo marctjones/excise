@@ -20,3 +20,25 @@ Within the full run, irs page turn first change p50: Acrobat 35, Preview 42, Chr
 Preview 60/232, Chrome 76/76, Acrobat 148/150. The excise page-turn figure in this run (68-72 ms) did not reproduce the 41 ms measured earlier the same
 night on the same bundle (a recheck alone gave 68 ms again), so the machine's state changed between them; treat cross-app ratios within one run as
 valid and the absolute excise figure as machine-state dependent.
+
+## C, redone: Firefox and Acrobat (`phaseC-firefox.md`, `phaseC-acrobat.md`)
+Causes of the first-pass failures, found by reproducing them: Firefox's "Update available" doorhanger (it comes from the installed Firefox's own
+pending-update state, so no profile pref removes it) takes keyboard focus about ten seconds after start when Firefox is run after another app in
+the same bench process; run on its own (`--apps firefox`) the keys land. Acrobat raises a modal "Updater is unable to check for updates" that blocks
+keys; the speed bench now clicks "Remind me later" where it appears. Acrobat had also been killed at the end ("did not quit"), which excluded its rows;
+that is now soft. With these: page-turn first change p50 (irs / altona / scan) Firefox pdf.js 33 / 28 / 34 ms, Acrobat 39 / 41 / 37; zoom-in first
+change / drawn (irs) Firefox 55 / 516 ms, Acrobat 64 / 457 ms, Preview 60 / 232, Chrome 76 / 76, excise 67 / 100.
+
+## D. Memory and CPU, footprint MB, median of 2 (`phaseD-memory-cpu.md`; excise NativeAOT with the allocator setting)
+| doc | | opened | paged-30 | idle 30 s | closed 45 s | CPU s |
+|---|---|---:|---:|---:|---:|---:|
+| irs | excise / Preview / Chrome / Acrobat | 245 / 295 / 853 / 1237 | 311 / 320 / 872 / 1298 | 200 / 267 / 617 / 1410 | 180 / 171 / 205 / - | 3.8 / 24.1 / 7.3 / 9.7 |
+| altona | excise / Preview / Chrome / Acrobat | 447 / 243 / 1236 / 1922 | 493 / 313 / 1128 / 1955 | 186 / 241 / 831 / 1522 | 165 / 179 / 209 / - | 3.8 / 14.7 / 13.0 / 14.9 |
+| scan | excise / Preview / Chrome / Acrobat | 202 / 210 / 833 / 1621 | 371 / 310 / 876 / 1596 | 159 / 244 / 572 / 1487 | 147 / 210 / 208 / - | 2.0 / 13.6 / 8.7 / 8.9 |
+excise is now the lowest or near-lowest after the idle trim and after close on all three documents (scan closed 252 MB before the allocator setting,
+147 MB now), and uses the least CPU. Preview and excise are close while a document is open; Chrome and Acrobat are several times larger. Acrobat's
+"closed" columns are blank: it does not quit in the harness (killed after the idle samples).
+
+## Excise page-turn latency moved during the night
+The same bundle measured 41 ms (phase B, probes) and 68-75 ms (phase C, two rechecks). `mediaanalysisd` was at 217% CPU and WindowServer at 40% when the
+slow figures were taken; that background load is the likely cause, not the code, but the effect was not isolated.

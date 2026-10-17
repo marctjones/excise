@@ -285,6 +285,14 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, probe_on=True, extra
 
         rb.set_window(pid, cfg["window"])
         rb.wait_settled(tracker, cfg["settle"])
+        if app_id == "acrobat":
+            # Acrobat raises a modal "Adobe Acrobat Reader Updater is unable to check for the latest updates" some
+            # seconds after start that takes keyboard focus (it was seen blocking keys mid-run on 2026-10-17). Wait,
+            # then click "Remind me later" where it appears; with no dialog the click lands on empty page area.
+            rb.front(pid)
+            time.sleep(12)
+            rb.click_in_window(cfg["window"], 0.6125, 0.5724)
+            time.sleep(1.0)
         if app.get("clickToFocus"):
             # Chrome opens with keyboard focus outside the page pane (see the DRIVING
             # NOTES in reader_bench.py); one click in the page margin, before any
@@ -352,6 +360,9 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, probe_on=True, extra
         # measured per step. Keys are per app (`zoomIn` / `zoomOut` in bench.json); every app gets the same
         # number of steps. The zoom level is not read back: the screen probe measures what a user sees.
         if ZOOM_STEPS:
+            if app_id == "acrobat":
+                rb.click_in_window(cfg["window"], 0.6125, 0.5724)   # the updater dialog again, if it came back
+                time.sleep(0.5)
             zi = app.get("zoomIn", DEFAULT_ZOOM_IN)
             zo = app.get("zoomOut", DEFAULT_ZOOM_OUT)
             for i in range(ZOOM_STEPS):
