@@ -68,6 +68,8 @@ internal partial class MainWindowViewModel
     {
         if (_pdfCoreDocument == null)
             return;
+        if (RejectEditWhileApplyingRedactions())
+            return;
 
         // Defence in depth for callers that bypass the mode toggle (#642).
         if (!EnsureDocumentPermission(DocumentAction.ModifyContents, "Adding text (typewriter)"))

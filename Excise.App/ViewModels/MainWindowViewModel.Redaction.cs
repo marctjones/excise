@@ -43,6 +43,9 @@ internal partial class MainWindowViewModel
     /// </summary>
     private void MarkRedactionPageArea(PdfPageRect pageArea, bool fromTextSelection = false)
     {
+        // A mark added while Apply is working on its snapshot would be moved to "applied" without ever having
+        // been applied (#2074): refuse it and say why.
+        if (RejectEditWhileApplyingRedactions()) return;
         var mark = _redactionWorkflowService.CaptureMark(
             new RedactionMarkRequest(_currentFilePath, pageArea));
         // #1205: extracted page text echoed into a log line.
@@ -95,8 +98,24 @@ internal partial class MainWindowViewModel
     /// <summary>
     /// Apply all pending redactions to create a redacted version of the PDF
     /// </summary>
+    private bool _isApplyingRedactions;
+
+    /// <summary>True (after telling the user) while Apply All is running on its private copy.</summary>
+    private bool RejectEditWhileApplyingRedactions()
+    {
+        if (!_isApplyingRedactions) return false;
+        OperationStatus = "Redactions are being applied; wait for them to finish before marking more.";
+        return true;
+    }
+
     private async Task ApplyAllRedactionsAsync()
     {
+        if (_isApplyingRedactions)
+        {
+            _logger.LogWarning("ApplyAllRedactionsAsync ignored: one is already running");
+            return;
+        }
+
         _logger.LogInformation("ApplyAllRedactionsAsync START. Pending count: {Count}", RedactionWorkflow.PendingCount);
 
         if (RedactionWorkflow.PendingCount == 0)
@@ -134,14 +153,32 @@ internal partial class MainWindowViewModel
             }
 
             SyncPendingRedactionPages();
+            // #2074: the engine rewrites the document it is given, and the viewer, thumbnails, text index and
+            // renderers are reading the live one, so it works on a PRIVATE copy of the current state (a snapshot
+            // taken here, on the UI thread, so it is consistent) on a worker. The UI stays responsive, the live
+            // document is never half-redacted, and a failure leaves it untouched. The copy is reloaded from the
+            // saved output afterwards exactly as before.
+            var snapshot = document.SaveToBytes();
             var request = RedactedCopyRequest.Capture(
-                document,
+                Excise.Core.Document.PdfDocument.Open(snapshot),
                 RedactionWorkflow.PendingRedactions,
                 TypewriterTextOperations,
                 saveFilePath,
                 _documentService.GetReEncryptionOptions(),
                 RedactionPreferences.ToOptions());
-            var result = _redactionWorkflowService.CreateRedactedCopy(request);
+            OperationStatus = "Applying redactions…";
+            RedactedCopyResult result;
+            _isApplyingRedactions = true;
+            try
+            {
+                result = await Task.Run(() => _redactionWorkflowService.CreateRedactedCopy(request));
+            }
+            finally
+            {
+                _isApplyingRedactions = false;
+                if (OperationStatus == "Applying redactions…")
+                    OperationStatus = string.Empty;
+            }
             await PublishRedactedCopySuccessAsync(result);
         }
         catch (Exception ex)

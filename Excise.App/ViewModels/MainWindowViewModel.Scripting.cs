@@ -319,12 +319,14 @@ internal partial class MainWindowViewModel
             throw new InvalidOperationException("No document loaded. Call LoadDocumentCommand first.");
 
         // #1501: the CLI's workflow, with the document's own password.
-        var result = TermRedactionRunner.Execute(new TermRedactionRequest(
+        // File to file, so it touches nothing the UI is showing: off the UI thread (#2074).
+        var flattenRequest = new TermRedactionRequest(
             _currentFilePath, outputPath, text, RedactionPreferences.ToOptions() with { CaseSensitive = false })
         {
             Password = _documentService.CurrentUserPassword,
             FlattenOcr = true,
-        });
+        };
+        var result = await Task.Run(() => TermRedactionRunner.Execute(flattenRequest));
         LastTextRedactionResults = [result];
 
         _logger.LogInformation("[SCRIPT] FlattenOcrRedactCommand wrote image-only copy with {Count} redactions", result.Count);
@@ -460,12 +462,14 @@ internal partial class MainWindowViewModel
                         // #1501: the same workflow `excise redact` runs, so the
                         // result carries the same survivors, wrapped-term
                         // candidates and NOT SCRUBBED carriers.
-                        var result = TermRedactionRunner.Execute(new TermRedactionRequest(
+                        // File to file, so it touches nothing the UI is showing: off the UI thread (#2074).
+                        var termRequest = new TermRedactionRequest(
                             currentInput, currentOutput, text,
                             RedactionPreferences.ToOptions() with { CaseSensitive = false })
                         {
                             Password = _documentService.CurrentUserPassword,
-                        });
+                        };
+                        var result = await Task.Run(() => TermRedactionRunner.Execute(termRequest));
                         results.Add(result);
 
                         // #1052: log WHICH RULE RAN, not just the count.
