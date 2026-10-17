@@ -15,7 +15,9 @@
 #   t0    ~5 min    "did I break it"        pre-push, no excuse not to run it
 #                   (2–4 min measured over eight warm runs; ~5 with a cold build)
 #   t1    ~20–25m   merge gate              before anything lands on develop
-#   full  ≈3 h      everything, chunked and resumable — scripts/run-full-suite.sh
+#   full  ≈3.5 h    everything, chunked and resumable — scripts/run-full-suite.sh
+#                   (`full --suite verdict` = every gate without the grading/sweep rows, ~90 min less;
+#                    `full --suite grade` = only those rows; see LOCAL_GATES.md)
 #   t2    ~30 min   release candidate       scripts/release-smoke.sh --release-tests
 #   t3    —         t2, then the macOS-only note (LOCAL_GATES.md)
 #
@@ -76,7 +78,7 @@ while [ "$#" -gt 0 ]; do
         --no-gh) REPORT_GH="--no-gh" ;;
         # run-full-suite.sh options pass through untouched.
         --fresh|--everything|--allow-missing-corpora|--skip-chunking|--status) PASS_ARGS+=("$1") ;;
-        --only) PASS_ARGS+=("$1" "${2:-}"); shift ;;
+        --only|--skip|--suite) PASS_ARGS+=("$1" "${2:-}"); shift ;;
         -h|--help) TIER=""; break ;;
         -*) echo "unknown option: $1" >&2; TIER=""; break ;;
         *) REPORT_DIR="$1" ;;

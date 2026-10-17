@@ -1453,7 +1453,7 @@ partial class Program
         int largePdfShardPages = 0)
     {
         var pdfs = DiscoverCorpusPdfs(corpusDir, chunkIndex, chunkTotal, pageManifest?.Keys);
-        var workItems = ExpandCorpusWorkItems(pdfs, pageManifest, largePdfShardPages);
+        var workItems = OrderLargestFirst(ExpandCorpusWorkItems(pdfs, pageManifest, largePdfShardPages));
         var oracleCache = CreateOracleRenderCache(oracleCacheDir);
         var exciseRenderCache = CreateExciseRenderCache(exciseRenderCacheDir);
         var shardedPdfCount = workItems.Count - pdfs.Count;
@@ -1508,7 +1508,11 @@ partial class Program
         var po = new ParallelOptions { MaxDegreeOfParallelism = parallel };
         try
         {
-            Parallel.ForEach(workItems, po, corpusPdf =>
+            // NoBuffering: a worker takes the next item when it is free, so the largest files, ordered first,
+            // start first and the run does not end with one huge document working alone.
+            Parallel.ForEach(
+                System.Collections.Concurrent.Partitioner.Create(workItems, System.Collections.Concurrent.EnumerablePartitionerOptions.NoBuffering),
+                po, corpusPdf =>
             {
                 var pdf = corpusPdf.FullPath;
                 var rel = corpusPdf.RelativePath;
@@ -1685,6 +1689,17 @@ partial class Program
         Console.Out.WriteLine($"  wrote {outputPath}");
         return true;
     }
+
+    /// <summary>
+    /// Largest file first (then by path, so the order is the same on every run). The scan is dynamically
+    /// scheduled and its results are sorted on write, so the order changes only WHEN each document is scanned:
+    /// the 2026-10-17 full tier spent its last 5 minutes at 3,709 of 3,712 work items on one 160-page book
+    /// working alone, because the alphabetically last file was the biggest.
+    /// </summary>
+    internal static IReadOnlyList<CorpusPdf> OrderLargestFirst(IReadOnlyList<CorpusPdf> items) =>
+        items.OrderByDescending(i => { try { return new FileInfo(i.FullPath).Length; } catch (IOException) { return 0L; } })
+             .ThenBy(i => i.WorkItemKey ?? i.RelativePath, StringComparer.Ordinal)
+             .ToList();
 
     private static IReadOnlyList<CorpusPdf> ExpandCorpusWorkItems(
         IReadOnlyList<CorpusPdf> pdfs,

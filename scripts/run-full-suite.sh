@@ -74,18 +74,36 @@ say() { echo -e "$1"; }
 CONFIG="Debug"
 MODE="run"
 ONLY=""
+SKIP=""     # --skip <pattern>: drop the steps whose name matches this grep -E pattern (applied after --only)
 
 # --suite <name>: a name for a slice of tier full, expanded to an --only pattern
 # over manifest row names. Deliberately patterns, not step lists: a row added to
 # tests/gates.tsv as redaction-<something> joins the redaction suite with nothing
 # to update here, which is the property the manifest exists to protect. Keep the
 # patterns anchored on the naming convention, never on individual row names.
+# The rows that GRADE or sweep and cannot decide a correctness verdict: the four corpus conformance scans, the
+# render-quality scan, image-conformance, the annotation and redaction benches (graded against peer tools), and the
+# two registry refreshes that follow the benches. They are 90+ minutes of a 3.5-hour full run (2026-10-17: 28 min of
+# corpus scans and image-conformance, 40 min render-quality-scan, 55 min redaction-bench). Everything else, the
+# redaction suites and oracles included, is the verdict.
+GRADE_ROWS='corpus-scan-|render-quality-scan|image-conformance|annotation-bench|redaction-bench|pdf-registry-outcomes|pdf-registry-evidence'
+
+# A suite is an --only pattern, plus for `verdict` a --skip pattern (a suite that is "everything except").
+suite_skip_pattern() {
+    case "$1" in
+        verdict) echo "$GRADE_ROWS" ;;
+        *)       echo '' ;;
+    esac
+}
+
 suite_pattern() {
     case "$1" in
         redaction)  echo 'redaction-|extraction-parity' ;;
         rendering)  echo 'rendering-|Excise\.Rendering\.Tests|render-quality|image-conformance|annotation-bench|reference-performance|corpus-scan-' ;;
         benches)    echo 'redaction-bench|reference-performance|annotation-bench|image-conformance|bench-design-coverage' ;;
         suites)     echo 'redaction-suites|rendering-oracles|Excise\..*\.Tests|app-tests-unchunked-evidence' ;;
+        grade)      echo "$GRADE_ROWS" ;;
+        verdict)    echo '' ;;   # everything except the GRADE_ROWS (see suite_skip_pattern)
         gates)      echo '' ;;   # everything: tier full unfiltered
         *)          return 1 ;;
     esac
@@ -100,6 +118,11 @@ list_suites() {
   rendering   every rendering suite, corpus scan, quality scan and rendering bench
   benches     the GRADE rows only — the numbers vs the reference tools, no gates
   suites      the test projects and oracle suites only — no benches, no scans
+  verdict     everything except the grading and sweep rows (corpus scans, render-quality-scan, image-conformance,
+              the annotation and redaction benches, the registry refreshes): every gate that decides pass or
+              fail, the redaction suites and oracles included. About 90 minutes shorter than the full run.
+              Reported as a PARTIAL run (planned < of), never as the full tier.
+  grade       only those grading and sweep rows
   gates       everything; identical to tier full with no filter
 
   scripts/run-full-suite.sh --suite redaction
@@ -124,6 +147,7 @@ Usage: scripts/run-full-suite.sh [options]
   --status           Print per-step done/pending state and exit.
   --release          Build and test in Release (default: Debug).
   --only <pattern>   Only steps whose name matches this grep -E pattern.
+  --skip <pattern>   Drop the steps whose name matches this grep -E pattern (after --only).
   --everything       Accepted as a no-op: full IS everything. The release-smoke
                      rows, the four-corpus rendering scan (#862) and the GRADE
                      benches are in tier "full" of tests/gates.tsv. The scans
@@ -153,17 +177,20 @@ while [ $# -gt 0 ]; do
         --status) MODE="status"; shift ;;
         --release) CONFIG="Release"; shift ;;
         --only) ONLY="${2:-}"; shift 2 ;;
+        --skip) SKIP="${2:-}"; shift 2 ;;
         --suite)
             SUITE="${2:-}"
             if ! ONLY="$(suite_pattern "$SUITE")"; then
                 echo "unknown --suite '$SUITE'" >&2; list_suites >&2; exit 2
             fi
+            SKIP="$(suite_skip_pattern "$SUITE")"
             shift 2 ;;
         --suite=*)
             SUITE="${1#*=}"
             if ! ONLY="$(suite_pattern "$SUITE")"; then
                 echo "unknown --suite '$SUITE'" >&2; list_suites >&2; exit 2
             fi
+            SKIP="$(suite_skip_pattern "$SUITE")"
             shift ;;
         --list-suites) list_suites; exit 0 ;;
         --everything) EVERYTHING=1; shift ;;
@@ -263,8 +290,12 @@ if [ -n "$ONLY" ]; then
     grep -E "^[^	]*$ONLY" "$PLAN_FILE.rows" > "$PLAN_FILE.only" || true
     mv "$PLAN_FILE.only" "$PLAN_FILE.rows"
 fi
+if [ -n "$SKIP" ]; then
+    grep -Ev "^[^	]*($SKIP)" "$PLAN_FILE.rows" > "$PLAN_FILE.skip" || true
+    mv "$PLAN_FILE.skip" "$PLAN_FILE.rows"
+fi
 PLANNED="$(grep -c . "$PLAN_FILE.rows")"
-runner_plan_write "$PLAN_FILE" full "$PLAN_FILE.rows" "$PLANNED" "$OF" "${ONLY:--}"
+runner_plan_write "$PLAN_FILE" full "$PLAN_FILE.rows" "$PLANNED" "$OF" "${ONLY:--}${SKIP:+ !skip:$SKIP}"
 rm -f "$PLAN_FILE.rows" "$PLAN_FILE.manifest"
 # LAST: after --only and chunking, so {TRXARGS?:x} can see that x was filtered out.
 runner_plan_expand_trx "$PLAN_FILE" "$LOG_DIR" || exit 2

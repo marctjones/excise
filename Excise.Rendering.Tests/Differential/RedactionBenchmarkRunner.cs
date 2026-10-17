@@ -108,6 +108,12 @@ public sealed class RedactionBenchmarkRunner
         public string Difficulty { get; init; } = "";
         /// <summary>#1185 hard-case category (actualtext, cid-type0, freetext-annotation, …).</summary>
         public string HardCategory { get; init; } = "";
+        /// <summary>Wall time of this tool's measurement of this case (of the original run when <see cref="FromCache"/>).</summary>
+        public long ElapsedMs { get; init; }
+        /// <summary>The row came from the peer-result cache, not from a measurement in this run.</summary>
+        public bool FromCache { get; init; }
+        /// <summary>UTC time the cached row was measured; empty for a fresh row.</summary>
+        public string CachedAtUtc { get; init; } = "";
         public string Term { get; init; } = "";
         public int Pages { get; init; }
 
@@ -466,7 +472,7 @@ public sealed class RedactionBenchmarkRunner
             {
                 docsSeen++;
                 foreach (var row in MeasureToolsInParallel(
-                    tool => MeasureDocument(file, corpus, tool).ToArray()))
+                    CaseKey(corpus, file), tool => MeasureDocument(file, corpus, tool).ToArray()))
                     Record(row);
             }
         }
@@ -487,6 +493,7 @@ public sealed class RedactionBenchmarkRunner
                 File.WriteAllBytes(file, trap.Build(true));
                 docsSeen++;
                 foreach (var row in MeasureToolsInParallel(
+                    CaseKey(CarrierTrapCorpus, file, trap.Id),
                     tool => MeasureDocument(file, CarrierTrapCorpus, tool).Select(r => r with { CarrierTrap = trap.Id }).ToArray()))
                     Record(row);
             }
@@ -509,7 +516,7 @@ public sealed class RedactionBenchmarkRunner
                 var path = TestRepoLayout.FindFile(hc.Path);
                 if (path == null) { _out.WriteLine($"hard-case absent: {hc.Path}"); continue; }
                 docsSeen++;
-                foreach (var row in MeasureToolsInParallel(tool =>
+                foreach (var row in MeasureToolsInParallel(CaseKey("redaction-hard", path, hc.Term, hc.Difficulty, hc.Category), tool =>
                 {
                     var measured = MeasureKnownTerm(path, "redaction-hard", tool, hc.Term, hc.Difficulty);
                     return measured == null
@@ -537,7 +544,7 @@ public sealed class RedactionBenchmarkRunner
     /// into an unbounded pile of Java, Python, and renderer subprocesses; set
     /// <c>REDACTION_BENCH_PARALLELISM</c> to tune a local run (default: 4).
     /// </summary>
-    private static IEnumerable<Row> MeasureToolsInParallel(Func<string, Row[]> measure)
+    private static IEnumerable<Row> MeasureToolsInParallel(string caseKey, Func<string, Row[]> measure)
     {
         var tools = Tools().ToArray();
         var results = new Dictionary<string, Row[]>(StringComparer.Ordinal);
@@ -547,13 +554,210 @@ public sealed class RedactionBenchmarkRunner
 
         Parallel.ForEach(tools, new ParallelOptions { MaxDegreeOfParallelism = parallelism }, tool =>
         {
-            var rows = measure(tool);
+            var rows = MeasureOneTool(caseKey, tool, measure);
             lock (results) results[tool] = rows;
         });
 
         foreach (var tool in tools)
             foreach (var row in results[tool])
                 yield return row;
+    }
+
+    // ---- Peer-result cache ---------------------------------------------------------------------------------
+    // The three peer tools (pymupdf, raster, itext) are external programs, so their rows depend only on the
+    // input, the tool, and the oracles that judge their output: they are measured once and reused for
+    // PeerCacheMaxAge, and again whenever a tool or oracle version, or one of the adapter scripts, changes.
+    // excise and excise-flatten-ocr are NEVER cached: they are what this repository changes. The cache holds
+    // the ROW (verdict and metrics), not the output file. Bump PeerCacheSchema when the SCORING code changes
+    // (a verdict, a metric, an oracle's logic in this class or the harnesses it calls): that code is ours, not
+    // an external version, so the fingerprint cannot see it. REDACTION_BENCH_PEER_CACHE=0 turns the cache off,
+    // =refresh ignores the stored rows and rewrites them.
+
+    private const int PeerCacheSchema = 1;
+    private static readonly TimeSpan PeerCacheMaxAge = TimeSpan.FromDays(14);
+    private static readonly HashSet<string> CachedTools = new(StringComparer.Ordinal) { "pymupdf", "raster", "itext" };
+    private static readonly object PeerCacheGate = new();
+    private static Dictionary<string, PeerCacheEntry>? s_peerCache;
+    private static string? s_peerCachePath;
+    private static int s_peerHits, s_peerMisses;
+    private static readonly Dictionary<string, string> s_fingerprints = new(StringComparer.Ordinal);
+    private static readonly JsonSerializerOptions PeerCacheJson = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+    private sealed record PeerCacheEntry
+    {
+        public string Key { get; init; } = "";
+        public string Tool { get; init; } = "";
+        public DateTime CreatedUtc { get; init; }
+        public Row[] Rows { get; init; } = Array.Empty<Row>();
+    }
+
+    private static string PeerCacheMode() =>
+        (Environment.GetEnvironmentVariable("REDACTION_BENCH_PEER_CACHE") ?? "on").Trim().ToLowerInvariant();
+
+    private static Row[] MeasureOneTool(string caseKey, string tool, Func<string, Row[]> measure)
+    {
+        var mode = PeerCacheMode();
+        var cacheable = mode != "0" && mode != "off" && CachedTools.Contains(tool);
+        string? key = null;
+        if (cacheable)
+        {
+            key = PeerKey(caseKey, tool);
+            if (mode != "refresh" && PeerCacheTryGet(key, out var hit))
+            {
+                lock (PeerCacheGate) s_peerHits++;
+                return hit.Rows.Select(r => r with { FromCache = true, CachedAtUtc = hit.CreatedUtc.ToString("o") }).ToArray();
+            }
+        }
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var rows = measure(tool);
+        watch.Stop();
+        rows = rows.Select(r => r with { ElapsedMs = watch.ElapsedMilliseconds }).ToArray();
+
+        if (cacheable && key != null)
+        {
+            lock (PeerCacheGate) s_peerMisses++;
+            // A failed measurement is not a result worth keeping: it is the next run's chance to succeed.
+            if (rows.Length > 0 && rows.All(r => r.Error == null))
+                PeerCachePut(key, tool, rows);
+        }
+        return rows;
+    }
+
+    private static string CaseKey(string corpus, string file, params string?[] extra)
+    {
+        using var sha = System.Security.Cryptography.SHA256.Create();
+        using var stream = File.OpenRead(file);
+        var fileHash = Convert.ToHexString(sha.ComputeHash(stream));
+        return corpus + "|" + fileHash + "|" + string.Join("|", extra.Select(e => e ?? ""));
+    }
+
+    private static string PeerKey(string caseKey, string tool)
+    {
+        var material = $"{PeerCacheSchema}|{caseKey}|{tool}|{ToolFingerprint(tool)}|{OracleFingerprint()}";
+        return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(material)));
+    }
+
+    private static string Memo(string name, Func<string> compute)
+    {
+        lock (s_fingerprints)
+        {
+            if (!s_fingerprints.TryGetValue(name, out var value))
+                s_fingerprints[name] = value = compute();
+            return value;
+        }
+    }
+
+    private static string FileHash(string? path)
+    {
+        if (path == null || !File.Exists(path)) return "absent";
+        return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(path)))[..16];
+    }
+
+    /// <summary>What a peer tool is: its own version plus the adapter script this repository wrote for it.</summary>
+    private static string ToolFingerprint(string tool) => Memo("tool:" + tool, () =>
+    {
+        if (tool == "itext")
+        {
+            var java = Environment.GetEnvironmentVariable("EXCISE_JAVA_COMMAND")
+                       ?? (File.Exists("/opt/homebrew/opt/openjdk/bin/java") ? "/opt/homebrew/opt/openjdk/bin/java" : "java");
+            var jars = (ItextClasspath() ?? "").Split(Path.PathSeparator)
+                .Select(j => Path.GetFileName(j) + ":" + (File.Exists(j) ? new FileInfo(j).Length : 0)).OrderBy(x => x, StringComparer.Ordinal);
+            return "itext|" + string.Join(",", jars) + "|" + FileHash(TestRepoLayout.FindFile("scripts", "ItextRedactor.java"))
+                   + "|" + CaptureVersion(java, "-version");
+        }
+        var python = PyMuPdfPython();
+        var script = TestRepoLayout.FindFile("scripts", "benchmark-adapters", $"redact-{tool}.py");
+        return $"{tool}|" + FileHash(script) + "|" + (python == null ? "absent"
+            : CaptureVersion(python, "-c", "import fitz,sys;print(fitz.VersionBind, sys.version.split()[0])"));
+    });
+
+    /// <summary>The external tools whose output decides a verdict: change one and every cached verdict is stale.</summary>
+    private static string OracleFingerprint() => Memo("oracles", () => string.Join(";", new[]
+    {
+        "mutool " + CaptureVersion("mutool", "-v"),
+        "pdftotext " + CaptureVersion("pdftotext", "-v"),
+        "qpdf " + CaptureVersion("qpdf", "--version"),
+        "gs " + CaptureVersion("gs", "--version"),
+        "tesseract " + CaptureVersion("tesseract", "--version"),
+    }));
+
+    private static string CaptureVersion(string exe, params string[] args)
+    {
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo(exe)
+            {
+                RedirectStandardOutput = true, RedirectStandardError = true,
+                UseShellExecute = false, CreateNoWindow = true,
+            };
+            foreach (var a in args) psi.ArgumentList.Add(a);
+            using var proc = System.Diagnostics.Process.Start(psi);
+            if (proc == null) return "absent";
+            var o = proc.StandardOutput.ReadToEndAsync();
+            var e = proc.StandardError.ReadToEndAsync();
+            if (!proc.WaitForExit(10_000)) { try { proc.Kill(true); } catch { } return "timeout"; }
+            var text = (o.GetAwaiter().GetResult() + " " + e.GetAwaiter().GetResult()).Trim();
+            var line = text.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+            return line.Trim();
+        }
+        catch { return "absent"; }
+    }
+
+    private static string PeerCachePath()
+    {
+        if (s_peerCachePath != null) return s_peerCachePath;
+        var root = TestRepoLayout.LocalCheckoutRoot ?? AppContext.BaseDirectory;
+        var dir = Path.Combine(root, "logs", "redaction-benchmark");
+        Directory.CreateDirectory(dir);
+        return s_peerCachePath = Path.Combine(dir, "peer-cache.jsonl");
+    }
+
+    private static Dictionary<string, PeerCacheEntry> PeerCacheLoaded()
+    {
+        if (s_peerCache != null) return s_peerCache;
+        var cache = new Dictionary<string, PeerCacheEntry>(StringComparer.Ordinal);
+        var path = PeerCachePath();
+        var expired = 0;
+        if (File.Exists(path))
+        {
+            foreach (var line in File.ReadLines(path))
+            {
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                try
+                {
+                    var entry = JsonSerializer.Deserialize<PeerCacheEntry>(line, PeerCacheJson);
+                    if (entry == null || entry.Key.Length == 0) continue;
+                    if (DateTime.UtcNow - entry.CreatedUtc > PeerCacheMaxAge) { expired++; continue; }
+                    cache[entry.Key] = entry;
+                }
+                catch (JsonException) { expired++; }
+            }
+            if (expired > 0)   // keep the file from growing without bound
+                File.WriteAllLines(path, cache.Values.Select(e => JsonSerializer.Serialize(e, PeerCacheJson)));
+        }
+        return s_peerCache = cache;
+    }
+
+    private static bool PeerCacheTryGet(string key, out PeerCacheEntry entry)
+    {
+        lock (PeerCacheGate)
+        {
+            var cache = PeerCacheLoaded();
+            if (cache.TryGetValue(key, out entry!) && DateTime.UtcNow - entry.CreatedUtc <= PeerCacheMaxAge) return true;
+            entry = null!;
+            return false;
+        }
+    }
+
+    private static void PeerCachePut(string key, string tool, Row[] rows)
+    {
+        lock (PeerCacheGate)
+        {
+            var entry = new PeerCacheEntry { Key = key, Tool = tool, CreatedUtc = DateTime.UtcNow, Rows = rows };
+            PeerCacheLoaded()[key] = entry;
+            File.AppendAllText(PeerCachePath(), JsonSerializer.Serialize(entry, PeerCacheJson) + "\n");
+        }
     }
 
     private readonly record struct HardCase(string Path, string Term, string Difficulty, string Category);
@@ -1695,6 +1899,12 @@ public sealed class RedactionBenchmarkRunner
         _out.WriteLine($"documents visited : {docsSeen}");
         _out.WriteLine($"cases measured    : {ok.Count}");
         _out.WriteLine($"cases errored     : {rows.Count - ok.Count}");
+        lock (PeerCacheGate)
+            _out.WriteLine($"peer cache        : mode {PeerCacheMode()}, {s_peerHits} tool-cases reused, {s_peerMisses} measured " +
+                           $"(entries older than {PeerCacheMaxAge.TotalDays:F0} days, or from other tool/oracle versions, are measured again)");
+        foreach (var g in rows.GroupBy(r => r.Tool).OrderBy(g => g.Key, StringComparer.Ordinal))
+            _out.WriteLine($"time {g.Key,-18}: {g.Where(r => !r.FromCache).Sum(r => r.ElapsedMs) / 1000.0,8:F1} s measured now, " +
+                           $"{g.Count(r => r.FromCache)} rows from cache");
         _out.WriteLine("");
 
         // HEAD TO HEAD. Never one number per tool: the three scores trade
