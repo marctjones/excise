@@ -442,12 +442,27 @@ internal partial class MainWindowViewModel : ViewModelBase
     /// annotation, no rendering) but not free on a large document, so it runs
     /// when the document changes rather than on every property read.
     /// </summary>
-    private void RefreshRedactAnnotationCount()
+    private void RefreshRedactAnnotationCount() =>
+        PublishRedactAnnotationCount(CountRedactAnnotations(_documentService.GetCurrentDocument()));
+
+    /// <summary>
+    /// The count, taken off the UI thread (#2077). Walking the annotations of every page of a 455-page book
+    /// held the UI thread for ~350 ms on open; the result is published on the UI context, and only if the
+    /// document it was counted for is still the open one.
+    /// </summary>
+    private async Task RefreshRedactAnnotationCountAsync()
+    {
+        var doc = _documentService.GetCurrentDocument();
+        var count = await Task.Run(() => CountRedactAnnotations(doc));
+        if (ReferenceEquals(doc, _documentService.GetCurrentDocument()))
+            PublishRedactAnnotationCount(count);
+    }
+
+    private static int CountRedactAnnotations(Excise.Core.Document.PdfDocument? doc)
     {
         var count = 0;
         try
         {
-            var doc = _documentService.GetCurrentDocument();
             if (doc != null)
             {
                 for (var p = 1; p <= doc.PageCount; p++)
@@ -462,6 +477,11 @@ internal partial class MainWindowViewModel : ViewModelBase
             count = 0;
         }
 
+        return count;
+    }
+
+    private void PublishRedactAnnotationCount(int count)
+    {
         RedactAnnotationCount = count;
         this.RaisePropertyChanged(nameof(RedactAnnotationNotice));
     }

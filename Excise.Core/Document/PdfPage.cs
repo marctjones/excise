@@ -38,6 +38,22 @@ public partial class PdfPage
     /// </summary>
     public PdfDictionary Dictionary => _pageDict;
 
+    /// <summary>Builds the named-destination map on first use, once per call.</summary>
+    private Func<Dictionary<string, PdfObject>?> LazyNamedDestinations()
+    {
+        Dictionary<string, PdfObject>? map = null;
+        var built = false;
+        return () =>
+        {
+            if (!built)
+            {
+                map = PdfOutlineParser.BuildNamedDestinations(_document);
+                built = true;
+            }
+            return map;
+        };
+    }
+
     /// <summary>
     /// The document this page belongs to.
     /// </summary>
@@ -49,8 +65,9 @@ public partial class PdfPage
     /// </summary>
     public IReadOnlyList<PdfAnnotation> GetAnnotations()
     {
-        var namedDests = PdfOutlineParser.BuildNamedDestinations(_document);
-        return PdfAnnotationParser.Parse(_document, _pageDict, namedDests);
+        // Lazy (#2077): the map walks the whole catalog name tree, and a page whose annotations name no
+        // destination never needs it. Counting redaction marks over a 455-page book built it 455 times.
+        return PdfAnnotationParser.ParseWithLazyDestinations(_document, _pageDict, LazyNamedDestinations());
     }
 
     /// <summary>
@@ -124,8 +141,7 @@ public partial class PdfPage
     /// </summary>
     public IReadOnlyList<PdfLink> GetLinks()
     {
-        var namedDests = PdfOutlineParser.BuildNamedDestinations(_document);
-        return PdfLinkParser.Parse(_document, _pageDict, namedDests);
+        return PdfLinkParser.ParseWithLazyDestinations(_document, _pageDict, LazyNamedDestinations());
     }
 
     /// <summary>

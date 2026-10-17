@@ -292,7 +292,8 @@ internal partial class MainWindowViewModel
         DocumentOpenStageTimings timings)
     {
         this.RaisePropertyChanged(nameof(TotalPages));
-        RefreshRedactAnnotationCount();
+        // Started now, awaited before the open reports complete: off the UI thread (#2077).
+        var redactCountTask = RefreshRedactAnnotationCountAsync();
         this.RaisePropertyChanged(nameof(IsDocumentLoaded));
 
         AddToRecentFiles(filePath);
@@ -308,6 +309,7 @@ internal partial class MainWindowViewModel
         RefreshXfaNotice();
 
         await RestoreDocumentStateAsync(filePath);
+        await redactCountTask;
 
         if (OperationStatus == "Opening PDF…")
             OperationStatus = string.Empty;

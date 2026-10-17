@@ -68,7 +68,12 @@ internal static class PdfLinkParser
     /// Extract internal-document link annotations from <paramref name="pageDict"/>.
     /// </summary>
     public static IReadOnlyList<PdfLink> Parse(PdfDocument doc, PdfDictionary pageDict,
-        System.Collections.Generic.Dictionary<string, PdfObject>? namedDests)
+        System.Collections.Generic.Dictionary<string, PdfObject>? namedDests) =>
+        ParseWithLazyDestinations(doc, pageDict, namedDests == null ? null : () => namedDests);
+
+    /// <summary>As <see cref="Parse"/>, building the named-destination map only when a link names its destination (#2077).</summary>
+    internal static IReadOnlyList<PdfLink> ParseWithLazyDestinations(PdfDocument doc, PdfDictionary pageDict,
+        System.Func<System.Collections.Generic.Dictionary<string, PdfObject>?>? namedDests)
     {
         var annotsObj = pageDict.GetOptional("Annots");
         if (annotsObj == null) return System.Array.Empty<PdfLink>();
@@ -105,7 +110,7 @@ internal static class PdfLinkParser
         new(System.StringComparer.OrdinalIgnoreCase) { "http", "https", "mailto" };
 
     private static PdfLink? ResolveLink(PdfDocument doc, PdfDictionary annot, PdfRectangle rect,
-        System.Collections.Generic.Dictionary<string, PdfObject>? namedDests)
+        System.Func<System.Collections.Generic.Dictionary<string, PdfObject>?>? namedDests)
     {
         var dest = annot.GetOptional("Dest");
         if (dest == null)
@@ -145,13 +150,14 @@ internal static class PdfLinkParser
 
         // Resolve named destinations to their array form (same code path
         // outline items use; both go through the catalog's name tree).
+        var named = dest is PdfName or PdfString ? namedDests?.Invoke() : null;
         if (dest is PdfName n &&
-            namedDests != null && namedDests.TryGetValue(n.Value, out var nd))
+            named != null && named.TryGetValue(n.Value, out var nd))
         {
             dest = nd;
         }
         else if (dest is PdfString s &&
-            namedDests != null && namedDests.TryGetValue(s.Value, out var sd))
+            named != null && named.TryGetValue(s.Value, out var sd))
         {
             dest = sd;
         }

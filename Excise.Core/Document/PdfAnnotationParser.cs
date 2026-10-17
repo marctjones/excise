@@ -15,7 +15,17 @@ internal static class PdfAnnotationParser
     public static IReadOnlyList<PdfAnnotation> Parse(
         PdfDocument doc,
         PdfDictionary pageDict,
-        System.Collections.Generic.Dictionary<string, PdfObject>? namedDests)
+        System.Collections.Generic.Dictionary<string, PdfObject>? namedDests) =>
+        ParseWithLazyDestinations(doc, pageDict, namedDests == null ? null : () => namedDests);
+
+    /// <summary>
+    /// As <see cref="Parse"/>, but the named-destination map is built by <paramref name="namedDests"/> only when
+    /// a link annotation actually names its destination (#2077).
+    /// </summary>
+    internal static IReadOnlyList<PdfAnnotation> ParseWithLazyDestinations(
+        PdfDocument doc,
+        PdfDictionary pageDict,
+        System.Func<System.Collections.Generic.Dictionary<string, PdfObject>?>? namedDests)
     {
         var annotsObj = pageDict.GetOptional("Annots");
         if (annotsObj == null) return Array.Empty<PdfAnnotation>();
@@ -36,7 +46,7 @@ internal static class PdfAnnotationParser
     private static PdfAnnotation? ParseOne(
         PdfDocument doc,
         PdfDictionary annot,
-        System.Collections.Generic.Dictionary<string, PdfObject>? namedDests)
+        System.Func<System.Collections.Generic.Dictionary<string, PdfObject>?>? namedDests)
     {
         // Rect is mandatory for all annotations
         var rectArr = doc.Resolve(annot.GetOptional("Rect") ?? (PdfObject)PdfNull.Instance) as PdfArray;
@@ -314,7 +324,7 @@ internal static class PdfAnnotationParser
     private static (int? destPage, string? uri) ResolveLink(
         PdfDocument doc,
         PdfDictionary annot,
-        System.Collections.Generic.Dictionary<string, PdfObject>? namedDests)
+        System.Func<System.Collections.Generic.Dictionary<string, PdfObject>?>? namedDests)
     {
         // Check for GoToR / URI action first
         var actionObj = annot.GetOptional("A");
@@ -343,13 +353,16 @@ internal static class PdfAnnotationParser
     private static int? ResolveDestPage(
         PdfDocument doc,
         PdfObject? dest,
-        System.Collections.Generic.Dictionary<string, PdfObject>? namedDests)
+        System.Func<System.Collections.Generic.Dictionary<string, PdfObject>?>? namedDests)
     {
         if (dest == null) return null;
 
-        if (dest is PdfName n && namedDests != null && namedDests.TryGetValue(n.Value, out var nd))
+        // Built only when a link actually names its destination: most annotations never need the map, and
+        // building it walks the whole catalog name tree (#2077).
+        var named = dest is PdfName or PdfString ? namedDests?.Invoke() : null;
+        if (dest is PdfName n && named != null && named.TryGetValue(n.Value, out var nd))
             dest = nd;
-        else if (dest is PdfString s && namedDests != null && namedDests.TryGetValue(s.Value, out var sd))
+        else if (dest is PdfString s && named != null && named.TryGetValue(s.Value, out var sd))
             dest = sd;
         else
             dest = doc.Resolve(dest);
