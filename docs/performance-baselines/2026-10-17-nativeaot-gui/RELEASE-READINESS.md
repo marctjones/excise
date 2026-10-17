@@ -28,3 +28,10 @@ The pipeline already ships Native AOT for the GUI on every platform and the CLI 
 
 ## Judgement
 Nothing found that a typical user would notice as a regression on macOS arm64 against 3.17.0: the changes this cycle are lower memory after idle/close, shorter UI freezes on open and redaction, and fewer allocations in redaction, with output unchanged. A release still needs the workflow dry run before tagging.
+
+## Outcome (2026-10-17): v3.18.0 tagged on 25e43022, verified, published
+- Dry run (workflow run 39042877503) and the tag's release run (39052305991): every job green (preflight, macOS, Windows installer and zip, Linux amd64 and arm64 `.deb` and `.tar.gz`).
+- Draft assets checked: 7 packages plus `.sha256` files and `SHA256SUMS`; the macOS zip's hash matches the `.sha256` file and the `SHA256SUMS` line.
+- The downloaded macOS app: payload is Native AOT (no managed assemblies), version 3.18.0, allocator setting present; the six in-app scenarios (w9 launch/idle, irs search then redact, irs redact and save, 455-page book, scan scroll/close, Altona zoom) 0 step failures; real-key page turns, jumps, scroll and zoom answered (irs and scan, 0 unanswered turns).
+- Independent redaction check on the NativeAOT CLI built from the tag (mutool, pdftotext, and a raw plus inflated-stream byte scan): the redacted term is gone in all four documents under mutool and in the byte scan. pdftotext still reads 18 "immunity" in one document (rc=3): exactly the 18 occurrences the report lists as "NOT REMOVED (hyphen-wrapped)" (a word split across a line break, rejoined by pdftotext's dehyphenation), the reported limitation of #1372 and unchanged by this release (output byte-identical to the pre-change engine on the cached references).
+- Published as Latest; `main` fast-forwarded to the tag.
