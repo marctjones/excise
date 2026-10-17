@@ -921,8 +921,12 @@ internal static class RedactionFeatureStripper
             // content cannot be read: the forms in its resources may well be.
             spans += RemoveHiddenSpansInForms(document, xobjects, walk, 0);
 
+            // Looked at WITHOUT source spans first: recording them hashes every operator (more than half of the
+            // parse), and a page with no hidden span, the usual case, is never written back. Only a page that
+            // has something to remove is parsed again with spans, so its write still copies every untouched
+            // operator verbatim (#1093). The two parses read the same bytes, so they find the same spans.
             ContentStream content;
-            try { content = page.GetContentStream(trackSourceSpans: true); }
+            try { content = page.GetContentStream(trackSourceSpans: false); }
             catch (Exception ex) when (ex is not OutOfMemoryException)
             {
                 // Measured: one undecodable stream in a /Contents array left the
@@ -940,6 +944,10 @@ internal static class RedactionFeatureStripper
             if (pageSpans == 0) continue;
             try
             {
+                content = page.GetContentStream(trackSourceSpans: true);
+                (kept, pageSpans) =
+                    FilterHiddenSpans(document, content.Operators, properties, xobjects, hiddenGroups, dropped);
+
                 page.SetContentStream(new ContentStream(kept)
                 {
                     SourceBytes = content.SourceBytes,

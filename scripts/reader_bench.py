@@ -830,6 +830,9 @@ def launch(app_id, app, doc_copy, run_dir, cfg, excise_app, extra_env=None, sett
         args += ["-a", bundle, "--env", f"HOME={home}", "--stdout", log, "--stderr", log]
         for k, v in (extra_env or {}).items():
             args += ["--env", f"{k}={v}"]
+        # READER_BENCH_EXTRA_ENV="K=V K2=V2": experiments with an app setting without editing the bundle.
+        for kv in os.environ.get("READER_BENCH_EXTRA_ENV", "").split():
+            args += ["--env", kv]
         match = bundle + "/Contents/MacOS/Excise.App"
     elif app_id == "chrome":
         # A fresh profile per run, inside the deleted-after-run app area, so no
