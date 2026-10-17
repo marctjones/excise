@@ -334,19 +334,6 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, probe_on=True, extra
         log["events"].append({"kind": "revisit", "tick": post_key(115)})
         gap(3.0, "after-revisit")
 
-        # Zoom: three steps in, three steps out, each a separate event so first-change and drawn (sharp) are
-        # measured per step. Keys are per app (`zoomIn` / `zoomOut` in bench.json); every app gets the same
-        # number of steps. The zoom level is not read back: the screen probe measures what a user sees.
-        if ZOOM_STEPS:
-            zi = app.get("zoomIn", DEFAULT_ZOOM_IN)
-            zo = app.get("zoomOut", DEFAULT_ZOOM_OUT)
-            for i in range(ZOOM_STEPS):
-                log["events"].append({"kind": "zoomIn", "i": i, "tick": post_key(zi["keyCode"], zi["modifiers"])})
-                gap(2.5, "after-zoom-in")
-            for i in range(ZOOM_STEPS):
-                log["events"].append({"kind": "zoomOut", "i": i, "tick": post_key(zo["keyCode"], zo["modifiers"])})
-                gap(2.5, "after-zoom-out")
-
         # Steady scroll over the middle of the page area.
         wx, wy = cfg["window"]["x"], cfg["window"]["y"]
         x0, y0, x1, y1 = PAGE_REGION[app_id]
@@ -360,6 +347,24 @@ def one_run(app_id, app, doc, repeat, out, cfg, excise_app, probe_on=True, extra
         time.sleep(2.5)
         mark("after-scroll")
         rb.park_pointer()
+
+        # Zoom (after the scroll measurement, which assumes the page area at its opening zoom): three steps in, three steps out, each a separate event so first-change and drawn (sharp) are
+        # measured per step. Keys are per app (`zoomIn` / `zoomOut` in bench.json); every app gets the same
+        # number of steps. The zoom level is not read back: the screen probe measures what a user sees.
+        if ZOOM_STEPS:
+            zi = app.get("zoomIn", DEFAULT_ZOOM_IN)
+            zo = app.get("zoomOut", DEFAULT_ZOOM_OUT)
+            for i in range(ZOOM_STEPS):
+                log["events"].append({"kind": "zoomIn", "i": i, "tick": post_key(zi["keyCode"], zi["modifiers"])})
+                gap(2.5, "after-zoom-in")
+            # Evidence that the shortcut zoomed the PDF (not the browser page or nothing): the window after the last step.
+            w = cfg["window"]
+            subprocess.run(["screencapture", "-x", "-R", f"{w['x']},{w['y']},{w['width']},{w['height']}",
+                            str(run_dir / "after-zoom-in.png")], capture_output=True)
+            for i in range(ZOOM_STEPS):
+                log["events"].append({"kind": "zoomOut", "i": i, "tick": post_key(zo["keyCode"], zo["modifiers"])})
+                gap(2.5, "after-zoom-out")
+
         log["events"].append({"kind": "marker", "what": "end", "tick": mach_now()})
     except (rb.RunFailed, RuntimeError, subprocess.TimeoutExpired) as e:
         log["failures"].append(f"aborted: {e}")
@@ -667,7 +672,7 @@ def summarize(out):
     # names the fully visible 17. Every turn's timing is still valid, and turns
     # that changed nothing are counted in their own column, so such a run is
     # kept and noted rather than excluded.
-    soft = lambda f: f.startswith("after turns:")
+    soft = lambda f: f.startswith("after turns:") or f == "did not quit; killed"   # the timed events were already recorded
     keyed, notes = {}, []
     for r in runs:
         if any(not soft(f) for f in r["failures"]):
