@@ -856,6 +856,19 @@ def launch(app_id, app, doc_copy, run_dir, cfg, excise_app, extra_env=None, sett
     if doc_copy:
         target = doc_copy.as_uri() if app_id == "firefox" else str(doc_copy)
         args += (["--args"] if app["launch"] == "exec" else []) + [target]
+    if app["launch"] == "exec" and os.environ.get("READER_BENCH_DIRECT") == "1":
+        # EXPERIMENT: run the bundle's executable directly instead of through LaunchServices (`open`). Apple Developer
+        # Forums thread 841189 reports one frame LESS input-to-display latency that way. Not how a user starts the app,
+        # and it changes who is "responsible" for the process: for A/B measurement only.
+        env = dict(os.environ, HOME=str(home))
+        for k, v in (extra_env or {}).items():
+            env[k] = v
+        for kv in os.environ.get("READER_BENCH_EXTRA_ENV", "").split():
+            k, _, v = kv.partition("=")
+            env[k] = v
+        proc = subprocess.Popen([bundle + "/Contents/MacOS/Excise.App"] + ([target] if doc_copy else []), env=env,
+                                stdout=open(log, "ab"), stderr=subprocess.STDOUT, start_new_session=True)
+        return proc.pid, before, t0
     sh(args, check=True)
     pid = None
     for _ in range(60):

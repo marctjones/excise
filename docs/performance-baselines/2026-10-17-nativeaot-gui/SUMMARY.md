@@ -62,3 +62,22 @@ thread (`RenderTimerLoop`) and the `CVDisplayLink` threads to user-interactive w
 override as applied), idle page turn p50, 3 repeats: none 72 ms, compositor only 75, pool only 74, all 71 (69 in a one-repeat verification run with
 logging). So the cost is not those threads' priority; what remains is the system's input-to-present path on an idle machine (WindowServer and the display
 pipeline waking), which an app cannot reach from its own threads. The experiment code was removed.
+
+## What published sources say (checked after the QoS experiment, 2026-10-17)
+- **Avalonia's macOS render timer** (`native/Avalonia.Native/src/OSX/PlatformRenderTimer.mm`, read from the repository) is a plain `CVDisplayLink`
+  started and stopped by the compositor; its tick runs on the display-link thread (`RunsInBackground` true) with no QoS or priority code. Frames are
+  presented in `metal.mm` with `presentDrawable` and `commit`; `presentsWithTransaction` is used only around resizes. This matches what the profile shows
+  (CVDisplayLink and RenderTimerLoop threads) and confirms the app does not set thread priority; it does not say whether that matters. No Avalonia issue,
+  blog or documentation page on macOS input latency, thread priority or frame presentation turned up in several searches, so there is nothing published
+  from the Avalonia side to confirm or contradict this.
+- **Third-party experience agrees with the QoS result.** Ghostty's author set QoS classes on a macOS render thread and reported no noticeable difference
+  and that Apple provides few tools to experiment with ([commit](https://git.uoc.run.place/Applied-Software/ghostty/commit/a482224da8577246d4a31f72d298a25352e0df9d)).
+  Mozilla is running its own experiment on default thread QoS on macOS ([bug 1995638](https://bugzilla.mozilla.org/show_bug.cgi?id=1995638)).
+- **One documented latency effect I tested and did not reproduce**: an Apple Developer Forums report ([thread 841189](https://developer.apple.com/forums/thread/841189),
+  unanswered) says apps started through LaunchServices (`open`) show about one frame more input-to-display latency than the same executable run directly.
+  Excise started through `open`: 74 ms, executable run directly: 70 ms (3 repeats each, idle machine), within noise.
+- **Display-link phase**: `CVDisplayLink` is described as a timer aligned to the display ([Thume, with a later correction](https://thume.ca/2017/12/09/cvdisplaylink-doesnt-link-to-your-display/));
+  a key press can wait up to a frame for the next tick. Apple's current recommendation for Metal apps is `CAMetalDisplayLink` (macOS 14 and later) with
+  `preferredFrameLatency` ([documentation](https://developer.apple.com/documentation/quartzcore/cametaldisplaylink)). That is a change inside Avalonia, not in excise.
+- **Not found**: a source on Apple-silicon clock ramp after idle as a cause of input latency. The spinner dose-response above is my own measurement, and why other
+  readers stay near 40 ms on an idle machine remains unexplained.
