@@ -6,6 +6,8 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.18.0] - 2026-10-17
+
 ### Changed
 
 - **Whole-word find and redaction treat a combining accent as part of its letter** (Refs #2068). `e` + U+0301 + `cafe` is the word `écafe`, as its precomposed spelling already was, so whole-word `cafe` no longer matches inside it. PDFs from macOS and LaTeX often store accents decomposed.

@@ -24,7 +24,7 @@ The pipeline already ships Native AOT for the GUI on every platform and the CLI 
 - OCR from the NativeAOT GUI bundle (no language data is bundled by default). The NativeAOT CLI's OCR gives byte-identical text to the JIT CLI.
 - t1 and full were not run for this candidate; the targeted redaction, Core, CLI and App tests above were.
 - Interactive Apply All was measured with a real dispatcher in a headless test (the dispatcher kept turning while a 60-mark apply ran on the 126-page book), not in a window.
-- Minor, observed: the idle memory trim runs a blocking collection on the UI thread; a 45 s idle shows a ~200 ms UI stall when it fires. Harmless at rest, a hitch if a key arrives at that instant.
+- Retracted: an earlier version of this note called the ~200 ms "stalls" seen in idle steps of a backgrounded run the idle trim's blocking collection. It is not: the trim's collections took 19-33 ms (`heap_reclaim.duration`), the stalls repeat (88 and 183 hitches over 100 ms in one 45 s idle), and the same scenario run in the foreground shows none (largest stall 1 ms in every idle step), while the backgrounded run showed 100 ms with 130 hitches in one idle step. A backgrounded idle app has its 50 ms heartbeat timer coalesced by macOS (App Nap), which the UI-stall monitor reads as a stall; that is a measurement artifact (#2078), not a UI block.
 
 ## Judgement
 Nothing found that a typical user would notice as a regression on macOS arm64 against 3.17.0: the changes this cycle are lower memory after idle/close, shorter UI freezes on open and redaction, and fewer allocations in redaction, with output unchanged. A release still needs the workflow dry run before tagging.
