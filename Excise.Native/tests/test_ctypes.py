@@ -21,6 +21,10 @@ SAMPLE = os.path.join(CORPUS, "irs-w9.pdf")
 TERM = "Taxpayer"  # on page 1 of irs-w9.pdf
 
 OK, INVALID_ARG, BAD_PDF, PASSWORD, IO, UNSUPPORTED, INVALID_HANDLE, PAGE_RANGE = 0, 1, 2, 3, 4, 5, 6, 7
+# The run happened but was NOT clean (EXCISE_ERR_REDACTION_INCOMPLETE). IRS W-9's embedded Type1C fonts cannot be
+# scrubbed (#1920), so this is the correct result for the fixture; a fixture with scrubbable fonts returns OK.
+REDACTION_INCOMPLETE = 10
+REDACTED = (OK, REDACTION_INCOMPLETE)
 BUSY, INCOMPLETE = 9, 10
 
 LIB_PATH = os.environ.get("EXCISE_NATIVE_LIB")
@@ -126,7 +130,7 @@ class NativeApiTests(unittest.TestCase):
 
         doc = self.open_sample()
         removed = c_int32()
-        self.assertEqual(self.lib.excise_redact_text(doc, TERM.encode(), byref(removed)), OK, self.err())
+        self.assertIn(self.lib.excise_redact_text(doc, TERM.encode(), byref(removed)), REDACTED, self.err())
         self.assertGreaterEqual(removed.value, 1)
         out_path = os.path.join(self.tmp, "redacted-ü.pdf")  # non-ASCII path exercises UTF-8
         self.assertEqual(self.lib.excise_save_path(doc, out_path.encode()), OK, self.err())
@@ -144,7 +148,7 @@ class NativeApiTests(unittest.TestCase):
     def test_save_bytes_matches_and_redacted(self):
         doc = self.open_sample()
         removed = c_int32()
-        self.assertEqual(self.lib.excise_redact_text(doc, TERM.encode(), byref(removed)), OK, self.err())
+        self.assertIn(self.lib.excise_redact_text(doc, TERM.encode(), byref(removed)), REDACTED, self.err())
         out, n = POINTER(c_uint8)(), c_size_t()
         self.assertEqual(self.lib.excise_save_bytes(doc, byref(out), byref(n)), OK, self.err())
         data = ctypes.string_at(out, n.value)
@@ -159,7 +163,7 @@ class NativeApiTests(unittest.TestCase):
         doc = self.open_sample()
         w, h = c_double(), c_double()
         self.lib.excise_page_size(doc, 1, byref(w), byref(h))
-        self.assertEqual(self.lib.excise_redact_area(doc, 1, 0, 0, w.value, h.value), OK, self.err())
+        self.assertIn(self.lib.excise_redact_area(doc, 1, 0, 0, w.value, h.value), REDACTED, self.err())
         self.assertNotIn(TERM, self.text(doc))
 
     # ---- encryption -------------------------------------------------------------
@@ -245,7 +249,7 @@ class NativeApiTests(unittest.TestCase):
                 assert self.lib.excise_open_path(SAMPLE.encode(), None, byref(doc)) == OK
                 removed = c_int32()
                 rc = self.lib.excise_redact_text(doc, TERM.encode(), byref(removed))
-                assert rc == OK, self.err()
+                assert rc in REDACTED, self.err()
                 results.append(removed.value)
                 assert self.lib.excise_close(doc) == OK
                 # last_error is per thread: a failure here must not be visible from the main thread

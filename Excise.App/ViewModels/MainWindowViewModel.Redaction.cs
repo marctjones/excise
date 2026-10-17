@@ -171,7 +171,8 @@ internal partial class MainWindowViewModel
             _isApplyingRedactions = true;
             try
             {
-                result = await Task.Run(() => _redactionWorkflowService.CreateRedactedCopy(request));
+                var runner = _redactedCopyRunnerForTests ?? _redactionWorkflowService.CreateRedactedCopy;
+                result = await Task.Run(() => runner(request));
             }
             finally
             {
@@ -232,6 +233,14 @@ internal partial class MainWindowViewModel
     // MoveToApplied, reload — runs unchanged. Unset in production, so behaviour
     // is identical to the real save dialog. See RedactionAndSearchCommandTests.
     private Func<string, Task<string?>>? _redactedSavePathProviderForTests;
+
+    // Test seam in the same spirit: replaces the engine call that Apply All runs on its worker, so a test can hold
+    // the worker (and release it) and watch what the UI thread does meanwhile, without a long redaction to time.
+    // Unset in production.
+    private Func<RedactedCopyRequest, RedactedCopyResult>? _redactedCopyRunnerForTests;
+
+    internal void SetRedactedCopyRunnerForTests(Func<RedactedCopyRequest, RedactedCopyResult>? runner)
+        => _redactedCopyRunnerForTests = runner;
 
     internal void SetRedactedSavePathProviderForTests(Func<string, Task<string?>>? provider)
         => _redactedSavePathProviderForTests = provider;

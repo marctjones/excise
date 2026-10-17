@@ -141,7 +141,12 @@ int main(int argc, char** argv) {
 
     /* redact + save */
     int32_t removed = -1;
-    CHECK_EQ(redact_text(d, term, &removed), EXCISE_OK);
+    /* IRS W-9 draws with embedded Type1C fonts whose programs the font scrub cannot edit (#1920), so the
+       engine says the run was NOT clean: EXCISE_ERR_REDACTION_INCOMPLETE is the correct, honest result for this
+       fixture, and EXCISE_OK is what a fixture with scrubbable fonts returns. Either way the text must be gone
+       (checked below) and at least one occurrence removed. */
+    int32_t rc_text = redact_text(d, term, &removed);
+    CHECK(rc_text == EXCISE_OK || rc_text == EXCISE_ERR_REDACTION_INCOMPLETE);
     CHECK(removed >= 1);
     char* after = page_text(d, 1);
     CHECK(after != NULL && strstr(after, term) == NULL);
@@ -167,7 +172,8 @@ int main(int argc, char** argv) {
     /* area redaction on an untouched copy */
     excise_doc* d3 = NULL;
     CHECK_EQ(open_path(pdf, NULL, &d3), EXCISE_OK);
-    CHECK_EQ(redact_area(d3, 1, 0, 0, w, h), EXCISE_OK);
+    int32_t rc_area = redact_area(d3, 1, 0, 0, w, h);   /* incomplete for the same reason as above */
+    CHECK(rc_area == EXCISE_OK || rc_area == EXCISE_ERR_REDACTION_INCOMPLETE);
     char* blank = page_text(d3, 1);
     CHECK(blank != NULL && strstr(blank, term) == NULL);
     free(blank);

@@ -912,19 +912,11 @@ public static class PdfDocumentRedactionExtensions
                           l.FontName.StartsWith("Annotation:", StringComparison.Ordinal));
 
     /// <summary>
-    /// Append a filled black rectangle at <paramref name="rect"/> to the
-    /// page's content stream — the standard
-    /// <c>q 0 0 0 rg X Y W H re f Q</c> sequence. Used as a cosmetic
-    /// overlay on top of structural glyph removal.
-    /// The area overloads of <see cref="PdfPageRedactionExtensions"/> draw with it too (#1834).
-    /// </summary>
-    internal static void AppendBlackRectangle(PdfPage page, PdfRectangle rect, (double R, double G, double B)? boxColor = null) =>
-        AppendBlackRectangles(page, new[] { rect }, boxColor);
-
-    /// <summary>
-    /// <see cref="AppendBlackRectangle"/> for several rectangles of one page with one parse and one write of
-    /// its content stream instead of one of each per rectangle. The operators appended are exactly the ones
-    /// the per-rectangle calls would append, in the same order.
+    /// Append a filled black rectangle for each of <paramref name="rects"/> to the page's content stream: the standard
+    /// <c>q 0 0 0 rg X Y W H re f Q</c> sequence (marked as an artifact), used as a cosmetic overlay on top of
+    /// structural glyph removal. The area overloads of <see cref="PdfPageRedactionExtensions"/> draw with it too (#1834).
+    /// One parse and one write of the page's content stream cover all of them, instead of one of each per rectangle
+    /// (#2075); the operators appended are exactly the ones separate per-rectangle calls would append, in order.
     /// </summary>
     internal static void AppendBlackRectangles(PdfPage page, IReadOnlyCollection<PdfRectangle> rects, (double R, double G, double B)? boxColor = null)
     {

@@ -51,11 +51,11 @@ public class BlackRectangleBatchTests
     private static byte[] PageBytes(PdfDocument doc) => doc.GetPage(1).GetContentStreamBytes();
 
     [Fact]
-    public void ABatchOfBoxes_LeavesThePageExactlyAsOneCallPerBoxDoes()
+    public void ABatchOfBoxes_LeavesThePageExactlyAsOneBoxPerCallDoes()
     {
         var sequential = Open();
         foreach (var box in Boxes)
-            PdfDocumentRedactionExtensions.AppendBlackRectangle(sequential.GetPage(1), box);
+            PdfDocumentRedactionExtensions.AppendBlackRectangles(sequential.GetPage(1), new[] { box });
 
         var batched = Open();
         PdfDocumentRedactionExtensions.AppendBlackRectangles(batched.GetPage(1), Boxes);

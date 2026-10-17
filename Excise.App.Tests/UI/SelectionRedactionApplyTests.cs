@@ -81,8 +81,8 @@ public class SelectionRedactionApplyTests : IDisposable
         var smithBox = Box(first, "Smith");
         var approvedBox = Box(withRules.GetPage(2), "approved");
         static PdfRectangle Under(PdfRectangle word) => new(word.Left, word.Bottom - 2.5, word.Right, word.Bottom - 1.3);
-        PdfDocumentRedactionExtensions.AppendBlackRectangle(first, Under(secretBox));
-        PdfDocumentRedactionExtensions.AppendBlackRectangle(first, Under(smithBox));
+        PdfDocumentRedactionExtensions.AppendBlackRectangles(first, new[] { Under(secretBox) });
+        PdfDocumentRedactionExtensions.AppendBlackRectangles(first, new[] { Under(smithBox) });
         var path = Path.Combine(_dir, "source.pdf");
         File.WriteAllBytes(path, withRules.SaveToBytes());
         return (path, secretBox, Under(secretBox), Under(smithBox), approvedBox);
