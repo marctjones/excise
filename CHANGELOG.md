@@ -8,6 +8,7 @@ semantic versioning.
 
 ### Changed
 
+- **Whole-word find and redaction treat a combining accent as part of its letter** (Refs #2068). `e` + U+0301 + `cafe` is the word `écafe`, as its precomposed spelling already was, so whole-word `cafe` no longer matches inside it. PDFs from macOS and LaTeX often store accents decomposed.
 - **Opening a long document no longer freezes the window** (Refs #2077). On a 455-page book the redaction-mark count and the named-destination map held the UI thread for about 600 ms; the count now runs on a worker and the map is built only when a link needs it (open stall 625 -> 24-68 ms).
 - **Applying redactions no longer freezes the window** (Refs #2074). Apply All redacts a private copy of the document on a worker (the live document is never half-redacted, and a failure leaves it untouched); marks added while it runs are refused with a message. The scripted text-redaction runs leave the UI thread as well (UI stall 16 s -> under 45 ms).
 - **Redaction allocates less** (Refs #2075). The content-stream writer no longer hashes each operator up to three times per write, and a page's covering boxes are drawn with one parse and one write; a 6-page form redacts with 22% less allocation. Output is unchanged (30 cached reference redactions byte-identical).

@@ -18,7 +18,16 @@ namespace Excise.Core.Text;
 /// </remarks>
 internal static class TermMatch
 {
-    internal static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c == '_';
+    internal static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c == '_' || IsCombiningMark(c);
+
+    /// <summary>
+    /// A combining mark (nonspacing, spacing combining, enclosing) belongs to the letter before it, so it is part of the
+    /// word: <c>e</c> + U+0301 + <c>cafe</c> is the word <c>écafe</c>, the same as the precomposed spelling (#2068).
+    /// </summary>
+    private static bool IsCombiningMark(char c) =>
+        char.GetUnicodeCategory(c) is System.Globalization.UnicodeCategory.NonSpacingMark
+            or System.Globalization.UnicodeCategory.SpacingCombiningMark
+            or System.Globalization.UnicodeCategory.EnclosingMark;
 
     /// <summary>
     /// Next occurrence of <paramref name="term"/> at or after <paramref name="startIndex"/>,

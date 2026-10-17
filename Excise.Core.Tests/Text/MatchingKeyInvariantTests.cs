@@ -168,7 +168,7 @@ public class MatchingKeyInvariantTests
             "without whole-word it is a substring hit");
     }
 
-    [Fact(Skip = "#2068: TermMatch.IsWordChar reads a combining mark as a boundary, so the decomposed spelling still matches")]
+    [Fact]
     public void WholeWord_TreatsADecomposedAccentBeforeTheTermAsPartOfTheWord()
     {
         // The same word with the é stored as e + U+0301 (NFD, as many macOS and LaTeX
@@ -177,7 +177,7 @@ public class MatchingKeyInvariantTests
         TermMatch.IndexOf("x e\u0301cafe y", "cafe", false, wholeWord: true, 0, Default).Should().Be(-1);
     }
 
-    [Fact(Skip = "#2068: the page-letter matcher shares TermMatch.IsWordChar")]
+    [Fact]
     public void PageMatcher_WholeWord_TreatsADecomposedAccentLetterBeforeTheTermAsPartOfTheWord()
     {
         var letters = new List<Excise.Core.Text.Letter>();
