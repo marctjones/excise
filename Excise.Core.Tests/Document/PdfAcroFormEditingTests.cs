@@ -259,6 +259,125 @@ public class PdfAcroFormEditingTests
             .WithMessage("*not one of the choice field options*");
     }
 
+    [Theory]
+    [InlineData("nonexistent")]
+    [InlineData("banana")]
+    [InlineData("true")]
+    [InlineData("1")]
+    [InlineData("choice1")]
+    public void SetValue_RadioButton_RefusesANameNoWidgetDraws_AndLeavesTheFieldAsItWas(string value)
+    {
+        // #2051: a name no widget has an appearance for was stored as /V and /AS, so
+        // the group drew nothing selected while /V said otherwise.
+        using var doc = PdfDocument.Open(MakePdfWithRadioForm());
+        var choice = doc.GetAcroForm()!.FindField("Choice")!;
+
+        var act = () => choice.SetValue(value);
+
+        act.Should().Throw<ArgumentException>().WithMessage("*not an appearance state*Allowed: Off, Choice1, Choice2*");
+        choice.Value.Should().Be("Choice2");
+        WidgetStates(doc, choice).Should().Equal("Off", "Choice2");
+    }
+
+    [Theory]
+    [InlineData("Choice1", new[] { "Choice1", "Off" })]
+    [InlineData("/Choice1", new[] { "Choice1", "Off" })]
+    [InlineData("Choice2", new[] { "Off", "Choice2" })]
+    [InlineData("Off", new[] { "Off", "Off" })]
+    public void SetValue_RadioButton_SelectsOnlyTheWidgetThatDrawsTheState(string value, string[] expectedStates)
+    {
+        // /AS names a key of each widget's own /AP /N (§12.7.5.2.3); the other kids are Off.
+        // The leading slash is how the field listing prints a state name.
+        using var doc = PdfDocument.Open(MakePdfWithRadioForm());
+        var choice = doc.GetAcroForm()!.FindField("Choice")!;
+
+        choice.SetValue(value);
+
+        choice.RawDictionary["V"].Should().BeOfType<PdfName>().Which.Value.Should().Be(value.TrimStart('/'));
+        WidgetStates(doc, choice).Should().Equal(expectedStates);
+    }
+
+    [Theory]
+    [InlineData("banana")]
+    [InlineData("true")]
+    [InlineData("1")]
+    [InlineData("No")]
+    [InlineData("yes")]
+    public void SetValue_CheckBox_RefusesAValueThatIsNotItsOnOrOffState(string value)
+    {
+        using var doc = PdfDocument.Open(MakePdfWithEditableForm());
+        var box = doc.AddCheckBox(1, new PdfRectangle(300, 600, 314, 614), "Agree");
+
+        var act = () => box.SetValue(value);
+
+        act.Should().Throw<ArgumentException>().WithMessage("*checkbox 'Agree'*Allowed: Off, Yes*");
+        box.Value.Should().Be("Off");
+    }
+
+    [Fact]
+    public void SetValue_CheckBox_OnAndOff_SetAnAppearanceTheWidgetHas()
+    {
+        using var doc = PdfDocument.Open(MakePdfWithEditableForm());
+        var box = doc.AddCheckBox(1, new PdfRectangle(300, 600, 314, 614), "Agree");
+
+        box.SetValue("Yes");
+        WidgetStates(doc, box).Should().Equal("Yes");
+        box.SetValue("Off");
+        WidgetStates(doc, box).Should().Equal("Off");
+    }
+
+    [Theory]
+    [InlineData("Checkbox", "banana")]
+    [InlineData("Checkbox", "true")]
+    [InlineData("Checkbox", "1")]
+    [InlineData("Checkbox", "No")]
+    [InlineData("radioButton", "nonexistent")]
+    [InlineData("radioButton", "/value2")]
+    [InlineData("radioButton", "Yes")]
+    public void SetValue_RealFormWithNoAppearances_RefusesTheValuesTheDefectStored(string name, string value)
+    {
+        // The document and values #2051 was found with, not a fixture written here. Its
+        // buttons have no /AP at all, so the on-state is the name the producer already
+        // stored (the radio group's /V /value3) or, for the checkbox, the spec's
+        // recommended Yes, which is not a radio state.
+        using var doc = OpenMultipleFormTypes();
+        var field = doc.GetAcroForm()!.FindField(name)!;
+        var before = field.Value;
+
+        var act = () => field.SetValue(value);
+
+        act.Should().Throw<ArgumentException>().WithMessage("*not an appearance state*");
+        field.Value.Should().Be(before);
+    }
+
+    [Theory]
+    [InlineData("Checkbox", "Yes", "Yes")]
+    [InlineData("Checkbox", "Off", "Off")]
+    [InlineData("radioButton", "value3", "value3")]
+    [InlineData("radioButton", "/value3", "value3")]
+    [InlineData("radioButton", "Off", "Off")]
+    public void SetValue_RealFormWithNoAppearances_AcceptsOffAndItsOnState(string name, string value, string stored)
+    {
+        using var doc = OpenMultipleFormTypes();
+        var field = doc.GetAcroForm()!.FindField(name)!;
+
+        field.SetValue(value);
+
+        field.Value.Should().Be(stored);
+        WidgetStates(doc, field).Should().AllBe(stored);
+    }
+
+    private static PdfDocument OpenMultipleFormTypes()
+    {
+        const string relative = "test-pdfs/pdfium/multiple_form_types.pdf";
+        var path = Excise.TestSupport.TestRepoLayout.FindFile(relative.Split('/'));
+        Assert.SkipWhen(path == null, Excise.TestSupport.TestRepoLayout.AbsenceReason("pdfium corpus fixture", relative));
+        return PdfDocument.Open(File.ReadAllBytes(path!));
+    }
+
+    private static List<string?> WidgetStates(PdfDocument doc, PdfField field) =>
+        field.WidgetDictionaries.Select(w => w.GetNameOrNull("AS")).ToList();
+
     [Fact]
     public void Parse_RadioButton_CapturesFlagsAndWidgetExportValues()
     {

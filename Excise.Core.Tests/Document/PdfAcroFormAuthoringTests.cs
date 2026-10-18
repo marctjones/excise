@@ -227,4 +227,80 @@ public class PdfAcroFormAuthoringTests
         doc.AddTextField(1, new PdfRectangle(72, 670, 300, 690), "New");
         doc.GetAcroForm()!.Fields.Single().FullName.Should().Be("New");
     }
+
+    // ─── #2052: a field must be a field of its own, on its page ───
+
+    public static TheoryData<string> AddKinds() => new() { "text", "date", "checkbox", "choice", "signature" };
+
+    private static PdfField Add(PdfDocument doc, string kind, PdfRectangle rect, string name) => kind switch
+    {
+        "text" => doc.AddTextField(1, rect, name),
+        "date" => doc.AddDateField(1, rect, name),
+        "checkbox" => doc.AddCheckBox(1, rect, name),
+        "choice" => doc.AddChoiceField(1, rect, name, new[] { "A", "B" }),
+        _ => doc.AddSignatureField(1, rect, name),
+    };
+
+    [Theory]
+    [MemberData(nameof(AddKinds))]
+    public void AddField_RefusesAFullNameTheFormAlreadyHas_AndAddsNothing(string kind)
+    {
+        // Two fields with one full name: fill-form reached only the first, and other
+        // readers link the two values (#2052).
+        using var doc = PdfDocument.Open(BarePdf());
+        doc.AddTextField(1, new PdfRectangle(72, 700, 300, 720), "Applicant");
+
+        var act = () => Add(doc, kind, new PdfRectangle(72, 500, 300, 520), "Applicant");
+
+        act.Should().Throw<ArgumentException>().WithMessage("*'Applicant' already exists*");
+        doc.GetAcroForm()!.Fields.Should().ContainSingle();
+        doc.GetPage(1).GetAnnotations().Should().ContainSingle();
+    }
+
+    [Fact]
+    public void AddField_RefusesTheFullNameOfANestedField()
+    {
+        using var doc = PdfDocument.Open(BarePdf());
+        var parent = new PdfDictionary();
+        parent.SetString("T", "Address");
+        var kid = new PdfDictionary();
+        kid.SetString("T", "City");
+        kid.SetName("FT", "Tx");
+        var kidRef = doc.AddIndirectObject(kid);
+        kid["Parent"] = doc.AddIndirectObject(parent);
+        parent["Kids"] = new PdfArray { kidRef };
+        doc.AddTextField(1, new PdfRectangle(72, 700, 300, 720), "Other");
+        var fields = (PdfArray)doc.Resolve(((PdfDictionary)doc.Resolve(doc.Catalog["AcroForm"]))["Fields"]);
+        fields.Add(kid["Parent"]);
+
+        var act = () => doc.AddTextField(1, new PdfRectangle(72, 500, 300, 520), "Address.City");
+        act.Should().Throw<ArgumentException>().WithMessage("*'Address.City' already exists*");
+        doc.AddTextField(1, new PdfRectangle(72, 450, 300, 470), "City").FullName.Should().Be("City",
+            "only the full name is taken, not a partial one");
+    }
+
+    [Theory]
+    [InlineData(300, 720, 72, 700, "inverted")]
+    [InlineData(72, 720, 300, 700, "inverted")]
+    [InlineData(72, 700, 72, 720, "inverted or empty")]
+    [InlineData(700, 900, 800, 920, "outside page 1")]
+    [InlineData(-200, 100, -10, 120, "outside page 1")]
+    [InlineData(100, 792, 200, 800, "outside page 1")]
+    public void AddField_RefusesAnInvertedEmptyOrOffPageRectangle(double l, double b, double r, double t, string why)
+    {
+        using var doc = PdfDocument.Open(BarePdf());
+        foreach (var kind in new[] { "text", "date", "checkbox", "choice", "signature" })
+        {
+            var act = () => Add(doc, kind, new PdfRectangle(l, b, r, t), "F_" + kind);
+            act.Should().Throw<ArgumentException>($"a {kind} field").WithMessage($"*{why}*");
+        }
+        doc.GetAcroForm().Should().BeNull("nothing was added");
+    }
+
+    [Fact]
+    public void AddField_AcceptsARectanglePartlyOnThePage()
+    {
+        using var doc = PdfDocument.Open(BarePdf());
+        doc.AddTextField(1, new PdfRectangle(-20, 780, 40, 800), "Edge").FullName.Should().Be("Edge");
+    }
 }

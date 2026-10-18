@@ -335,6 +335,7 @@ public sealed class PdfField
         {
             case PdfFieldType.Button:
                 // Checkbox / radio: /V is a name, and each widget's /AS reflects state.
+                value = ButtonStateFor(value);
                 RawDictionary.Set("V", new PdfName(value));
                 SetButtonAppearanceState(value);
                 break;
@@ -436,8 +437,47 @@ public sealed class PdfField
     /// </summary>
     private void SetButtonAppearanceState(string state)
     {
+        // §12.7.5.2.3: /AS names a key of the widget's /AP /N. A radio kid that
+        // has no appearance for the chosen state is off; a widget with no
+        // appearance states at all takes the name as given.
         foreach (var widget in WidgetDictionaries)
-            widget.Set("AS", new PdfName(state));
+        {
+            var onStates = GetWidgetOnStates(widget).ToList();
+            var shown = state == "Off" || onStates.Count == 0 || onStates.Contains(state) ? state : "Off";
+            widget.Set("AS", new PdfName(shown));
+        }
+    }
+
+    /// <summary>
+    /// The appearance state a checkbox or radio value selects (#2051): <c>Off</c>
+    /// or an on-state, also when written with the leading slash the field listing
+    /// prints. Any other name would be stored as /V while every widget draws
+    /// unchecked, so it is refused, as a choice field refuses a value that is not
+    /// an option. The on-states are <see cref="ButtonExportValues"/>. A button
+    /// with no appearance states has any non-Off name its producer already
+    /// stored in /V or /DV and, for a checkbox, the name the spec recommends for
+    /// the on state, <c>Yes</c> (ISO 32000-2 §12.7.5.2.3). A radio group with
+    /// neither has no knowable states and takes the name as given.
+    /// </summary>
+    private string ButtonStateFor(string value)
+    {
+        var states = ButtonExportValues.ToList();
+        if (states.Count == 0)
+        {
+            if (!IsRadioButton) states.Add("Yes");
+            foreach (var stored in new[] { Value, DefaultValue })
+                if (!string.IsNullOrEmpty(stored) && stored != "Off" && !states.Contains(stored))
+                    states.Add(stored);
+            if (states.Count == 0) return value;
+        }
+        if (value == "Off" || states.Contains(value))
+            return value;
+        if (value.Length > 1 && value[0] == '/' && (value[1..] == "Off" || states.Contains(value[1..])))
+            return value[1..];
+        throw new ArgumentException(
+            $"Value '{value}' is not an appearance state of the {(IsRadioButton ? "radio button" : "checkbox")} '{FullName}'. " +
+            $"Allowed: Off, {string.Join(", ", states)}",
+            nameof(value));
     }
 
     private string? ResolveString(PdfObject? obj)

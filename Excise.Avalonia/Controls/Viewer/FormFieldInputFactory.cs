@@ -262,7 +262,10 @@ internal static class FormFieldInputFactory
         {
             // A refusal sets the box back, which raises this again with nothing to store.
             if (checkBox.IsChecked == FieldIsOn()) return;
-            if (!CommitFieldEdit(field, checkBox.IsChecked == true ? "Yes" : "Off", sink))
+            // #2051: checked is the widget's own on-state ("On", "1", ...), not
+            // always "Yes": a name with no appearance draws the box unchecked.
+            var onState = field.ButtonExportValues.Count == 1 ? field.ButtonExportValues[0] : "Yes";
+            if (!CommitFieldEdit(field, checkBox.IsChecked == true ? onState : "Off", sink))
                 checkBox.IsChecked = FieldIsOn();
         };
         return checkBox;

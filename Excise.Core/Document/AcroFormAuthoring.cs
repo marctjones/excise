@@ -51,7 +51,7 @@ public static class AcroFormAuthoring
         bool comb = false,
         Graphics.PdfFont? appearanceFont = null)
     {
-        ValidateName(fieldName);
+        ValidatePlacement(document, pageNumber, rect, fieldName);
         EnsureDefaultValueDrawable(appearanceFont, defaultValue, fieldName);
 
         var widget = NewWidgetDict(rect);
@@ -111,7 +111,7 @@ public static class AcroFormAuthoring
         string? tooltip = null,
         Graphics.PdfFont? appearanceFont = null)
     {
-        ValidateName(fieldName);
+        ValidatePlacement(document, pageNumber, rect, fieldName);
         EnsureDefaultValueDrawable(appearanceFont, defaultValue, fieldName);
 
         var widget = NewWidgetDict(rect);
@@ -155,7 +155,7 @@ public static class AcroFormAuthoring
         bool readOnly = false,
         string? tooltip = null)
     {
-        ValidateName(fieldName);
+        ValidatePlacement(document, pageNumber, rect, fieldName);
 
         var widget = NewWidgetDict(rect);
         widget.SetName("FT", "Btn");
@@ -184,7 +184,7 @@ public static class AcroFormAuthoring
         string? tooltip = null,
         Graphics.PdfFont? appearanceFont = null)
     {
-        ValidateName(fieldName);
+        ValidatePlacement(document, pageNumber, rect, fieldName);
         EnsureDefaultValueDrawable(appearanceFont, defaultValue, fieldName);
         var optList = options?.ToList() ?? new List<string>();
         if (optList.Count == 0)
@@ -232,7 +232,7 @@ public static class AcroFormAuthoring
         string fieldName,
         string? tooltip = null)
     {
-        ValidateName(fieldName);
+        ValidatePlacement(document, pageNumber, rect, fieldName);
         var widget = NewWidgetDict(rect);
         widget.SetName("FT", "Sig");
         widget.SetString("T", fieldName);
@@ -862,6 +862,60 @@ public static class AcroFormAuthoring
             throw new ArgumentException("Field name must not be empty.", nameof(fieldName));
         if (fieldName.IndexOfAny(new[] { '\0', '\r', '\n' }) >= 0)
             throw new ArgumentException("Field name contains invalid control characters.", nameof(fieldName));
+    }
+
+    /// <summary>
+    /// Refuse, before anything is written, a field another reader would not
+    /// treat as a field of its own (#2052): a full name already in the form
+    /// (fill-form reaches only the first, and Acrobat links the two values), an
+    /// inverted or empty rectangle, or one wholly outside the page's crop box.
+    /// </summary>
+    /// <summary>
+    /// Whether <paramref name="fullName"/> is the full name (§12.7.4.2, parent
+    /// /T values joined by '.') of a field in the form. Reads names only, so a
+    /// builder adding many fields does not re-parse the whole form per field.
+    /// </summary>
+    private static bool FieldNameExists(PdfDocument document, string fullName)
+    {
+        if (document.Catalog.GetOptional("AcroForm") is not { } formObj
+            || document.Resolve(formObj) is not PdfDictionary form
+            || form.GetOptional("Fields") is not { } fieldsObj
+            || document.Resolve(fieldsObj) is not PdfArray fields)
+            return false;
+        var seen = new HashSet<PdfDictionary>(ReferenceEqualityComparer.Instance);
+        var pending = new Stack<(PdfObject Node, string Prefix)>();
+        foreach (var item in fields) pending.Push((item, ""));
+        while (pending.Count > 0)
+        {
+            var (node, prefix) = pending.Pop();
+            if (document.Resolve(node) is not PdfDictionary dict || !seen.Add(dict)) continue;
+            // As PdfAcroFormParser names fields, so this agrees with FindField.
+            var partial = dict.GetStringOrNull("T");
+            var name = partial == null ? prefix : prefix.Length == 0 ? partial : prefix + "." + partial;
+            if (partial != null && name == fullName) return true;
+            if (dict.GetOptional("Kids") is { } kidsObj && document.Resolve(kidsObj) is PdfArray kids)
+                foreach (var kid in kids) pending.Push((kid, name));
+        }
+        return false;
+    }
+
+    private static void ValidatePlacement(PdfDocument document, int pageNumber, PdfRectangle rect, string fieldName)
+    {
+        ValidateName(fieldName);
+        if (FieldNameExists(document, fieldName))
+            throw new ArgumentException(
+                $"A field named '{fieldName}' already exists. Choose another name.", nameof(fieldName));
+        if (!(rect.Right > rect.Left) || !(rect.Top > rect.Bottom))
+            throw new ArgumentException(
+                $"Field rectangle [{rect.Left} {rect.Bottom} {rect.Right} {rect.Top}] is inverted or empty: " +
+                "give it as left,bottom,right,top with right > left and top > bottom.", nameof(rect));
+        var page = document.GetPage(pageNumber).CropBox;
+        var (pageLeft, pageRight) = (Math.Min(page.Left, page.Right), Math.Max(page.Left, page.Right));
+        var (pageBottom, pageTop) = (Math.Min(page.Bottom, page.Top), Math.Max(page.Bottom, page.Top));
+        if (rect.Right <= pageLeft || rect.Left >= pageRight || rect.Top <= pageBottom || rect.Bottom >= pageTop)
+            throw new ArgumentException(
+                $"Field rectangle [{rect.Left} {rect.Bottom} {rect.Right} {rect.Top}] is outside page {pageNumber} " +
+                $"([{pageLeft} {pageBottom} {pageRight} {pageTop}]).", nameof(rect));
     }
 }
 

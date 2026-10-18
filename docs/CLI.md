@@ -89,10 +89,13 @@ excise audit purportedly-redacted.pdf --deep --json
 
 # Fill an AcroForm and flatten so the result is no longer interactive
 excise fill-form blank-w9.pdf w9-filled.pdf --field Name=Acme --field EIN=12-3456789 --flatten
+# A checkbox or radio value is Off or one of the field's own states (often Yes);
+# any other value is refused with the allowed list
+excise fill-form application.pdf filled.pdf --field Agree=Yes --field Plan=/Monthly
 
 # Add a text field to an existing PDF
 excise add-field invoice.pdf invoice-with-form.pdf \
-  --type Text --name CustomerNote --page 1 --rect "72,200,540,260"
+  --type Text --name CustomerNote --page 1 --rect "72,200,540,260"   # the name must be new; the rectangle on the page
 
 # Auto-detect form fields on a Word-exported PDF and apply them
 excise autodetect-fields exported-from-word.pdf form-ready.pdf --apply
