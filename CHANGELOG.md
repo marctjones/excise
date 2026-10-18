@@ -6,6 +6,11 @@ semantic versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- **A checkbox or radio value must be one of its own states** (#2051). `fill-form` stored any name, so `Checkbox=banana`, `=true` or `=1` set `/V` while the box drew unchecked. It now refuses (exit 1) a value that is not `Off` or one of the widget's appearance states and lists the allowed ones. A state written with its leading slash (`/value3`, as the field listing prints it) is accepted. A button with no appearances takes `Off`, the name its producer stored, or, for a checkbox, `Yes`. In a radio group only the widget that draws the chosen state is turned on. In the GUI, checking a box now stores that box's own on-state rather than always `Yes`.
+- **`add-field` refuses a duplicate field name, and an inverted or off-page rectangle** (#2052). A second field with the same full name could not be reached by `fill-form`, and other readers link the two values.
+
 ## [3.18.1] - 2026-10-17
 
 ### Fixed
