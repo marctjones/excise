@@ -10170,6 +10170,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddSignatureField_AcceptsTheInvisibleZeroRectangle_ButOtherFieldsDoNot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_SignatureFieldType_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -11470,15 +11477,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -11594,6 +11592,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddSignatureField_AcceptsTheInvisibleZeroRectangle_ButOtherFieldsDoNot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_SignatureFieldType_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -12894,15 +12899,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -13011,6 +13007,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddSignatureField_AcceptsTheInvisibleZeroRectangle_ButOtherFieldsDoNot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_SignatureFieldType_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -14311,15 +14314,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -14429,6 +14423,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddSignatureField_AcceptsTheInvisibleZeroRectangle_ButOtherFieldsDoNot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_SignatureFieldType_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -15729,15 +15730,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -99454,6 +99446,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddSignatureField_AcceptsTheInvisibleZeroRectangle_ButOtherFieldsDoNot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
           "mappingSources": [
             "keyword-facet-candidate",
@@ -100197,15 +100196,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.GetAcroForm_WithFormReturnsNull_WhenAcroFormIsNull",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.GetAcroForm_WithInvalidAcroFormReference_ReturnsNull",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -100900,6 +100890,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddSignatureField_AcceptsTheInvisibleZeroRectangle_ButOtherFieldsDoNot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
           "mappingSources": [
             "keyword-facet-candidate",
@@ -101643,15 +101640,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.GetAcroForm_WithFormReturnsNull_WhenAcroFormIsNull",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.GetAcroForm_WithInvalidAcroFormReference_ReturnsNull",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -102367,6 +102355,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddSignatureField_AcceptsTheInvisibleZeroRectangle_ButOtherFieldsDoNot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
           "mappingSources": [
             "keyword-facet-candidate",
@@ -103110,15 +103105,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.GetAcroForm_WithFormReturnsNull_WhenAcroFormIsNull",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.GetAcroForm_WithInvalidAcroFormReference_ReturnsNull",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -103774,6 +103760,13 @@
           "recordedOutcomes": []
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddSignatureField_AcceptsTheInvisibleZeroRectangle_ButOtherFieldsDoNot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
           "mappingSources": [
             "keyword-facet-candidate",
@@ -104517,15 +104510,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.GetAcroForm_WithFormReturnsNull_WhenAcroFormIsNull",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.GetAcroForm_WithInvalidAcroFormReference_ReturnsNull",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -108338,6 +108322,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddSignatureField_AcceptsTheInvisibleZeroRectangle_ButOtherFieldsDoNot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_SignatureFieldType_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -109637,15 +109628,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -109759,6 +109741,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddSignatureField_AcceptsTheInvisibleZeroRectangle_ButOtherFieldsDoNot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_SignatureFieldType_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -111058,15 +111047,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [
@@ -111168,6 +111148,13 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddSignatureField_AcceptsTheInvisibleZeroRectangle_ButOtherFieldsDoNot",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormParserTests.cs::PdfAcroFormParserTests.Parse_SignatureFieldType_Recognized",
           "mappingSources": [
             "keyword-facet-candidate"
@@ -112467,15 +112454,6 @@
             "keyword-facet-candidate"
           ],
           "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Text/Segmentation/EncryptedRedactionRegressionTests.cs::EncryptedRedactionRegressionTests.RedactText_WithDocumentedPassword_RemovesRecoverableText",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
         }
       ],
       "explicitContracts": [],
@@ -112542,8 +112520,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 8937,
-    "testMethodsWithCapabilityCandidate": 5776,
+    "testMethods": 8938,
+    "testMethodsWithCapabilityCandidate": 5777,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }
