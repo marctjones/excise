@@ -107,6 +107,7 @@ scripts/mine-hard-redaction-cases.py   # bench corpus mining
 scripts/monitor-exploratory-corpus.sh   # progress monitor for a running corpus scan
 scripts/observe-arlington-keys.sh   # regenerates the read-side Arlington observation (#1709); a recorder over a corpus, not a gate
 scripts/pre-push-hook.sh   # the pre-push hook BODY (#1600); installed as a stub by test-tier.sh --install-hook, pinned by the gate-asymmetry-selftest row
+scripts/prepare-push.sh   # the one command before a push (#2079): asymmetry split, evidence regen + commit, fast gates, then t0; a person runs it, it is not a row
 scripts/profile-render.sh   # dotnet-trace hotspot workflow for one CLI render (#1351); a diagnostic, not a gate
 scripts/profile_render_analyze.py   # body of profile-render.sh: self/inclusive time from an evented speedscope profile
 scripts/profile-test-rss-by-filter.sh   # measurement helper (#861)
@@ -150,6 +151,7 @@ scripts/split-pdf20-spec.py   # one-off spec splitter (registry authoring)
 scripts/t.sh   # ad-hoc single-project test runner (#950); replaces the deleted wrappers
 scripts/test-tier.sh   # RUNNER: front door, t0/t1
 scripts/test.sh   # ad-hoc: dotnet test over the solution
+scripts/tree-key.sh   # exact-tree key shared by test-tier.sh (records a t0 pass) and pre-push-hook.sh (requires it, #2079); pinned by the gate-asymmetry-selftest row
 scripts/triage-corpus-nonpass.sh   # triage before pinning a scan result (CLAUDE.md)
 scripts/update-corpus-expectations.sh   # writes the corpus expectation manifests after triage
 scripts/validate-all-categories.sh   # manual validation sweep

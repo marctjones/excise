@@ -103,7 +103,15 @@ for gate in check-redaction-oracles.sh check-pdf-capability-registry.sh check-do
 done
 
 step 5 "t0 (about 3 minutes; result in logs/t0-latest/summary.txt)"
-scripts/test-tier.sh t0 >>"$LOG" 2>&1
+# A manual t0 judges gate-asymmetry over the WHOLE unpushed range, which by
+# definition fails when step 2 found a split. Both step ranges passed in step 2
+# and the hook judges each push's own range again, so t0's row is pointed at the
+# last step's range; every other row is unaffected.
+if [ -n "$SPLIT" ]; then
+    GATE_ASYMMETRY_BASE="$SPLIT" scripts/test-tier.sh t0 >>"$LOG" 2>&1
+else
+    scripts/test-tier.sh t0 >>"$LOG" 2>&1
+fi
 rc=$?
 if [ "$rc" != 0 ]; then
     sed -n '1,60p' "$ROOT/logs/t0-latest/summary.txt" 2>/dev/null
