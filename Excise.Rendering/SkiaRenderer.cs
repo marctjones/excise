@@ -473,6 +473,10 @@ internal partial class RenderContext
     private readonly Stack<Excise.Core.Primitives.PdfDictionary?> _resourcesStack = new();
     private readonly Stack<bool> _optionalContentVisibilityStack = new();
     private int _hiddenOptionalContentDepth;
+    // Depth of _optionalContentVisibilityStack at the start of the content stream now
+    // executing. ISO 32000-2 §14.6 confines a marked-content sequence to one content
+    // stream, so a form XObject's stray EMC must not close its invoker's span (#1899).
+    private int _markedContentFloor;
     private readonly DeviceCmykExecutionState _deviceCmyk;
     private ImageColorConverter? _cmykPreviewConverter;
     private bool _cmykPreviewConverterResolved;
@@ -713,11 +717,24 @@ internal partial class RenderContext
 
     private void EndMarkedContent()
     {
-        if (_optionalContentVisibilityStack.Count == 0)
+        if (_optionalContentVisibilityStack.Count <= _markedContentFloor)
             return;
 
         if (!_optionalContentVisibilityStack.Pop())
             _hiddenOptionalContentDepth--;
+    }
+
+    /// <summary>
+    /// Closes every span the stream just finished left open, so an unclosed hidden BDC in a
+    /// form XObject ends with the form instead of hiding its invoker's later content (#1899).
+    /// </summary>
+    private void UnwindMarkedContentTo(int floor)
+    {
+        while (_optionalContentVisibilityStack.Count > floor)
+        {
+            if (!_optionalContentVisibilityStack.Pop())
+                _hiddenOptionalContentDepth--;
+        }
     }
 
     private bool ResolveMarkedContentVisibility(ContentOperator op)

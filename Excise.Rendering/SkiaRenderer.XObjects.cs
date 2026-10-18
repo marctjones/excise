@@ -1385,6 +1385,8 @@ internal partial class RenderContext
         var savedCurrentPath = _currentPath;
         var savedPendingClipEvenOdd = _pendingClipEvenOdd;
         var savedPendingTextClipPath = _pendingTextClipPath;
+        var savedMarkedContentFloor = _markedContentFloor;
+        _markedContentFloor = _optionalContentVisibilityStack.Count;
 
         _currentPath = null;
         _pendingClipEvenOdd = null;
@@ -1437,6 +1439,8 @@ internal partial class RenderContext
         }
         finally
         {
+            UnwindMarkedContentTo(_markedContentFloor);
+            _markedContentFloor = savedMarkedContentFloor;
             _currentPath?.Dispose();
             _pendingTextClipPath?.Dispose();
             RestoreGraphicsStateStack(savedStateStack);
