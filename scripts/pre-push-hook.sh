@@ -2,7 +2,9 @@
 #
 # The pre-push gate (#646), as a TRACKED script (#1600).
 #
-# ONE job: run t0 before every push, over the range actually being pushed.
+# ONE job: refuse a push that t0 has not passed, over the range actually being
+# pushed. Since #2079 it checks a recorded pass instead of running t0 itself
+# (see "THE HOOK DOES NOT RUN t0" below).
 #
 # It earns that. On the day it was installed it blocked two pushes carrying
 # unreviewed public API changes and one carrying a broken Excise.Avalonia test —
@@ -229,46 +231,35 @@ fi
 [ -n "$base" ] && export GATE_ASYMMETRY_BASE="$base"
 [ -n "$range_pushed" ] && export GATE_ASYMMETRY_HEAD="$range_pushed"
 
-# git spawns hooks with the invoking process's environment, not a login shell, so a PATH
-# fixup living only in ~/.zprofile/~/.zshrc is invisible here. Prepend the official SDK
-# explicitly (global.json pins it; CLAUDE.md "Build Failures" explains why the Homebrew
-# formula must not be picked up instead) so this hook is correct regardless of what shell
-# or tool invoked `git push`.
-[ -d "$HOME/.dotnet" ] && export PATH="$HOME/.dotnet:$PATH"
-
-# A STEPPED PUSH RE-VERIFIES THE SAME TREE (#1845). The gate-asymmetry rule forces a
-# batch that mixes a perf-path change and an expectation edit into several pushes, and
-# t0 runs over the WORKING TREE, so each step used to repeat a ~3 minute t0 on a tree
-# that had just passed. t0 now runs with --resume against a state directory keyed on
-# the EXACT tree: HEAD plus the tracked diff plus the content of every untracked file.
-# The runner's own resume state is keyed on branch and dirtiness, not on the commit
-# (#1027), so it must never be used unscoped here: a different tree gets an empty
-# directory and runs everything.
+# THE HOOK DOES NOT RUN t0 (#2079). It used to, inside `git push`: ~3 minutes per
+# attempt, invisible to whoever was waiting, and a stepped or retried push paid it
+# again each time (#1845's per-tree resume still re-ran the redaction family and
+# Excise.Core.Tests). Now `scripts/test-tier.sh t0` (or t1, its superset) records a
+# clean, complete run for the EXACT tree it tested in logs/t0-pass/<tree-key>
+# (scripts/tree-key.sh: HEAD + tracked diff + untracked content), and this hook
+# accepts the push only against that record. Every t0 row — the redaction rows
+# included — therefore ran on these very bytes; nothing is skipped, it is just not
+# re-run here. A record older than 12 hours is ignored, so a tool upgrade or a
+# corpus change is never covered by an old pass.
 #
-# What is reused is a row that already passed for this tree. What is NOT:
-#   * the build and every row the manifest marks checkpoint=never (the redaction
-#     family): CLAUDE.md gives them no skip, and RUNNER_NEVER_CHECKPOINT keeps them out;
-#   * Excise.Core.Tests, because it holds the Redaction test suites, which run at every
-#     push (RUNNER_ALWAYS_RUN);
-#   * gate-asymmetry, because its answer depends on the pushed range, not the tree.
-# A tree's state is dropped after 60 minutes, so a pass is never reused across a tool
-# upgrade or a corpus change.
-if [ -n "$head_sha" ]; then
-    state_root="$ROOT/logs/runner-state/pre-push"
-    [ -d "$state_root" ] && find "$state_root" -mindepth 1 -maxdepth 1 -type d -mmin +60 -exec rm -rf {} + 2>/dev/null
-    tree_key="$(
-        {
-            printf 'HEAD=%s\n' "$head_sha"
-            git diff HEAD --binary 2>/dev/null
-            git ls-files -z --others --exclude-standard 2>/dev/null \
-                | while IFS= read -r -d '' _f; do
-                    printf 'untracked %s %s\n' "$_f" "$(git hash-object -- "$_f" 2>/dev/null)"
-                done
-        } | git hash-object --stdin | cut -c1-16
-    )"
-    export RUNNER_STATE_ROOT="$state_root/$tree_key"
-    export RUNNER_ALWAYS_RUN='^(Excise\.Core\.Tests|gate-asymmetry)$'
-    exec "$ROOT/scripts/test-tier.sh" t0 --resume
+# What the hook still runs itself, because the answer depends on the PUSH and not on
+# the tree: the range/tag/main checks above and gate-asymmetry over the exact range.
+# Both take seconds.
+tree_key="$("$ROOT/scripts/tree-key.sh")"
+pass="$ROOT/logs/t0-pass/$tree_key"
+if [ ! -f "$pass" ] || [ -n "$(find "$pass" -mmin +720 2>/dev/null)" ]; then
+    echo ""
+    echo "pre-push: REFUSED — no t0 pass is recorded for this tree ($tree_key) (#2079)."
+    echo ""
+    echo "  Run one of these (t0 is about 3 minutes; it records the pass), then push again:"
+    echo "    scripts/prepare-push.sh          # evidence regen + fast gates first + t0"
+    echo "    scripts/test-tier.sh t0"
+    echo ""
+    echo "  The last run's result: logs/t0-latest/summary.txt"
+    echo ""
+    exit 1
 fi
-
-exec "$ROOT/scripts/test-tier.sh" t0
+echo "pre-push: t0 passed for this tree — $(sed -n 's/^tier=//p' "$pass") at $(sed -n 's/^finished=//p' "$pass")"
+echo "          $(sed -n 's/^log=//p' "$pass")"
+exec "$ROOT/scripts/check-gate-asymmetry.sh" \
+    "${GATE_ASYMMETRY_BASE:-$(git merge-base origin/develop HEAD 2>/dev/null || echo origin/develop)}"

@@ -42,6 +42,11 @@
 #                           evidence-refresh summaries) into the tree for review
 #                           and commit — that is how the snapshot moves. The
 #                           stash is pruned with the run dir.
+#   --update                regenerates the derived files IN THE TREE (the same
+#                           builders the default mode runs in its snapshot), so the
+#                           default mode passes afterwards. For scripts/prepare-push.sh
+#                           (#2079): run it once, after the code commits it indexes,
+#                           and commit the result. Prints what changed.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -238,6 +243,10 @@ print(f"regenerated files stashed under {run_dir}/registry-outcomes (pruned with
 PY
     exit 0
     ;;
+  --update)
+    build_derived >/dev/null
+    git status --short -- "$GEN"
+    ;;
   --adopt)
     [ -n "$dir" ] && [ -d "$dir/registry-outcomes" ] || { echo "usage: $0 --adopt LOG_DIR (needs LOG_DIR/registry-outcomes/)" >&2; exit 2; }
     for f in "$dir"/registry-outcomes/*; do
@@ -248,7 +257,7 @@ PY
     echo "review the diff, then commit the snapshot with the run's evidence (#1366); t0 reads NEW until it is committed"
     ;;
   *)
-    echo "usage: $0 [--refresh-outcomes LOG_DIR | --refresh-evidence LOG_DIR | --adopt LOG_DIR]" >&2
+    echo "usage: $0 [--update | --refresh-outcomes LOG_DIR | --refresh-evidence LOG_DIR | --adopt LOG_DIR]" >&2
     exit 2
     ;;
 esac

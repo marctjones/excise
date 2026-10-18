@@ -9,7 +9,8 @@ macOS app.
 ## The front door
 
 ```bash
-scripts/test-tier.sh t0            # fast / pre-push (the installed hook runs exactly this, with the push range on stdin)
+scripts/prepare-push.sh            # before every push: asymmetry split, evidence regen + commit, fast gates, then t0 (#2079)
+scripts/test-tier.sh t0            # fast; a clean run records a pass for this exact tree, which the pre-push hook requires
 scripts/test-tier.sh t1            # merge gate (before anything lands on develop)
 scripts/test-tier.sh full          # exec caffeinate -i scripts/run-full-suite.sh [--fresh|--only <re>|--allow-missing-corpora]; resume is the default there
 scripts/test-tier.sh full --suite verdict   # every gate that decides pass/fail, without the grading/sweep rows (~90 min less; a PARTIAL run in the report)
@@ -24,7 +25,7 @@ scripts/test-tier.sh --install-hook                                   # once per
 
 | Tier | Cost (headline; "Timings" has the dates and the load caveat) | When |
 |------|------|------|
-| `t0` | 2–4 min warm, ~5 min cold; 2–3× that under load | Before every push. `--install-hook` installs it as `.git/hooks/pre-push`. |
+| `t0` | 2–4 min warm, ~5 min cold; 2–3× that under load | Before every push, via `scripts/prepare-push.sh`. The hook (`--install-hook`) does not run it; it refuses a tree with no recorded pass. Result of the last run: `logs/t0-latest/summary.txt`. |
 | `t1` | 56–57 min measured 2026-09-10; ~44–47 min projected after that day's `skip-budget-rendering` dedup | Before merging anything to `develop`. |
 | `full` | ≈3 h (estimate) | Weekly, and before a release candidate. Chunked, memory-bounded, resumable. |
 | `t2` | ~30 min (pre-manifest budget) | Release candidate — `docs/RELEASE_CHECKLIST.md`. |
@@ -364,13 +365,16 @@ that variable from `runner_gate_asymmetry_base`, in this order:
    `scripts/test-tier.sh --install-hook` once in every clone.** After that the
    installed hook is a stub that execs `scripts/pre-push-hook.sh`, so later
    fixes land without re-installing.
-   **The hook reuses one t0 pass for one tree (#1845).** A stepped push runs t0 once per step
-   over the same working tree, so the hook runs `test-tier.sh t0 --resume` against a state
-   directory keyed on the exact tree (HEAD, the tracked diff and the content of every untracked
-   file), dropped after 60 minutes. A row that already passed for that tree is skipped; a
-   different tree starts empty. Always re-run: the build, every `checkpoint=never` row (the
-   redaction family), `Excise.Core.Tests` (it holds the Redaction suites) and `gate-asymmetry`
-   (`RUNNER_ALWAYS_RUN` pins the last two). The gate-asymmetry range is still judged per push.
+   **The hook does not run t0 (#2079).** A clean, complete `test-tier.sh t0` (or `t1`, its
+   superset; never a `--resume` run) writes `logs/t0-pass/<key>`, the key from
+   `scripts/tree-key.sh` (HEAD, the tracked diff and the content of every untracked file).
+   The hook accepts a push only when that record exists and is under 12 hours old, then runs
+   `gate-asymmetry` over the exact push range (seconds). Every t0 row, the redaction family
+   included, therefore ran on the bytes being pushed; the hook just no longer re-runs them
+   inside `git push`, which used to cost ~3 minutes per attempt, invisibly, and again for
+   each step of a stepped push. Without a record the push is refused at once with the command
+   to run. `scripts/prepare-push.sh` finds the split point when a range needs two pushes, and
+   both pushes are accepted against the one pass.
 2. **A manual tier run** (`t0`, `t1`, `t2`, `full`) uses `git merge-base origin/develop HEAD`
    (#1844): the range the next push will be judged over. git moves `origin/develop` only when a
    push, and so a hook run, succeeded, so it is the last head the hook gated; a batch pushed in

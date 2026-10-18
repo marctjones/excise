@@ -112,12 +112,18 @@ convenience:
 
 | Tier | What | When |
 |---|---|---|
-| `t0` | build, Core/Cli/Avalonia tests, static gates | before every push (`--install-hook`) |
+| `t0` | build, Core/Cli/Avalonia tests, static gates | before every push: `scripts/prepare-push.sh`; the hook only checks the recorded pass |
 | `t1` | t0 + redaction suites, rendering oracles, parity ratchets, App tests (chunked, #1767) | before merging to `develop` |
 | `full` | everything, resumable | weekly and before a release candidate |
 | `t2` / `t3` | release smoke | release candidate / before tagging |
 
 There is no CI gate on `develop`; running the tier is on you. Rules that keep the suite honest:
+
+- **Pushing (#2079):** run `scripts/prepare-push.sh` once, then push what it prints. Say
+  that t0 is running (~3 min) and report its result in one line. Never retry a refused push
+  unchanged: read `logs/t0-latest/summary.txt` or the prepare-push log first, and after two
+  refusals stop and report. Don't bundle unrelated work, and never mix perf-path changes
+  with release follow-ups.
 
 - `Excise.App.Tests` is **serial by design** (`DisableTestParallelization`): parallelism races
   SkiaSharp's process-wide font manager and crashes the host (#363). Never re-enable it, and

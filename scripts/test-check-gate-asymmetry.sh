@@ -22,9 +22,11 @@
 #     an annotated tag (local sha is the TAG OBJECT, so a raw compare refuses
 #     every `git tag -a` push) and a ref deletion (all-zero local sha).
 #
-# Hermetic: a synthetic git repo in a temp dir, the two real scripts copied in,
-# and a STUB scripts/test-tier.sh that records the environment it was exec'd
-# with. No dotnet, no corpus, no network. ~1 s.
+# Hermetic: a synthetic git repo in a temp dir, the real scripts copied in, and
+# for the hook cases a STUB check-gate-asymmetry.sh that records the arguments
+# and environment the hook exec'd it with (#2079: the hook no longer runs t0, it
+# checks a recorded pass and runs only the range gate). No dotnet, no corpus, no
+# network. ~1 s.
 #
 # ⚠️ It must never run `test-tier.sh --install-hook`: hooks live in the SHARED
 # git dir, so from a linked worktree that writes the main checkout's
@@ -81,22 +83,7 @@ ok() { CHECKS=$((CHECKS + 1)); }
 REPO="$WORK/repo"
 mkdir -p "$REPO/scripts"
 cp "$ROOT/scripts/check-gate-asymmetry.sh" "$REPO/scripts/"
-cp "$ROOT/scripts/pre-push-hook.sh" "$REPO/scripts/"
-
-# The stub stands in for the real tier runner: it records what the hook handed
-# it and exits 0, so a hook case tests the hook's decision, not t0.
-cat > "$REPO/scripts/test-tier.sh" <<'STUB'
-#!/usr/bin/env bash
-root="$(git rev-parse --show-toplevel)"
-{
-    echo "args=$*"
-    echo "base=${GATE_ASYMMETRY_BASE-<unset>}"
-    echo "head=${GATE_ASYMMETRY_HEAD-<unset>}"
-    echo "state=${RUNNER_STATE_ROOT-<unset>}"
-    echo "always=${RUNNER_ALWAYS_RUN-<unset>}"
-} > "$root/.tier-invocation"
-exit 0
-STUB
+cp "$ROOT/scripts/pre-push-hook.sh" "$ROOT/scripts/tree-key.sh" "$REPO/scripts/"
 cp "$ROOT/scripts/check-version-consistency.sh" "$REPO/scripts/"
 chmod +x "$REPO/scripts/"*.sh
 
@@ -106,7 +93,7 @@ cd "$REPO"
 # repository. With `-C "$REPO"` a leaked variable can no longer silently
 # retarget them.
 git init -q -b develop "$REPO"
-# (#1845) the tree key hashes untracked files, so the stub's record and logs/ are not part of it.
+# The tree key hashes untracked files, so the stub's record and logs/ are not part of it.
 printf '.tier-invocation\nlogs/\n' >> "$REPO/.git/info/exclude"
 git -C "$REPO" config user.email selftest@example.com
 git -C "$REPO" config user.name Selftest
@@ -305,8 +292,29 @@ git remote remove origin
 
 # ─────────────────────────────── the hook ───────────────────────────────────
 
+# From here the range gate is a STUB: the real one is pinned by the cases above,
+# and a hook case tests the hook's decision, not the gate's. It records what the
+# hook handed it and exits 0.
+cat > "$REPO/scripts/check-gate-asymmetry.sh" <<'STUB'
+#!/usr/bin/env bash
+root="$(git rev-parse --show-toplevel)"
+{
+    echo "args=$*"
+    echo "base=${GATE_ASYMMETRY_BASE-<unset>}"
+    echo "head=${GATE_ASYMMETRY_HEAD-<unset>}"
+} > "$root/.tier-invocation"
+exit 0
+STUB
+chmod +x "$REPO/scripts/check-gate-asymmetry.sh"
+
+# #2079: a t0 pass recorded for the CURRENT tree, as scripts/test-tier.sh writes it.
+record_pass() {
+    mkdir -p "$REPO/logs/t0-pass"
+    printf 'tier=t0\nfinished=selftest\nlog=selftest\n' > "$REPO/logs/t0-pass/$(scripts/tree-key.sh)"
+}
+
 # Runs the hook with one push line per argument, and answers with the recorded
-# invocation (or "<not run>" when the hook refused before exec'ing the runner).
+# invocation (or "<not run>" when the hook refused before exec'ing the gate).
 run_hook() {
     rm -f "$REPO/.tier-invocation"
     local lines="" line
@@ -327,12 +335,25 @@ run_hook() {
 
 ZERO=0000000000000000000000000000000000000000
 
-# 6. The normal push: HEAD to a remote that is at the base commit.
+# 6. #2079: with no pass recorded for this tree the push is REFUSED at once, and
+#    the refusal names the command that records one. Nothing runs.
+rm -rf "$REPO/logs"
 run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA"
-[ "$HOOK_RC" -eq 0 ] || fail "a push of HEAD must run t0, got rc=$HOOK_RC: $HOOK_OUT"
+[ "$HOOK_RC" -eq 1 ] || fail "#2079: a push with no recorded t0 pass must be refused, got rc=$HOOK_RC: $HOOK_OUT"
+[ "$HOOK_RAN" = "<not run>" ] || fail "#2079: a refused push must not run the gate: $HOOK_RAN"
+case "$HOOK_OUT" in
+    *"no t0 pass"*"scripts/test-tier.sh t0"*) ok ;;
+    *) fail "#2079: the refusal must say why and name the command: $HOOK_OUT" ;;
+esac
+
+# 6a. The normal push, once t0 passed for this tree: the range gate runs over
+#     exactly the pushed range.
+record_pass
+run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA"
+[ "$HOOK_RC" -eq 0 ] || fail "a push of a tree t0 passed must be allowed, got rc=$HOOK_RC: $HOOK_OUT"
 case "$HOOK_RAN" in
-    *"args=t0"*) ok ;;
-    *) fail "the hook must exec the tier runner with t0: $HOOK_RAN" ;;
+    *"args=$BASE_SHA"*) ok ;;
+    *) fail "the range gate must run from the remote sha: $HOOK_RAN" ;;
 esac
 case "$HOOK_RAN" in
     *"base=$BASE_SHA"*) ok ;;
@@ -343,62 +364,27 @@ case "$HOOK_RAN" in
     *) fail "#1600: the PUSHED sha must be exported as GATE_ASYMMETRY_HEAD: $HOOK_RAN" ;;
 esac
 
-# 6b. #1845: a stepped push re-verified an identical tree for every step. The hook now
-#     gives t0 --resume and a state directory keyed on the EXACT tree, and pins the
-#     rows that must run every push.
-state_of() { printf '%s\n' "$HOOK_RAN" | sed -n 's/^state=//p'; }
-case "$HOOK_RAN" in
-    *"args=t0 --resume"*) ok ;;
-    *) fail "#1845: the hook must run t0 with --resume: $HOOK_RAN" ;;
-esac
-KEY_CLEAN="$(state_of)"
-case "$KEY_CLEAN" in
-    */logs/runner-state/pre-push/????????????????) ok ;;
-    *) fail "#1845: the hook must give t0 a per-tree state directory, got '$KEY_CLEAN'" ;;
-esac
-case "$HOOK_RAN" in
-    *'always=^(Excise\.Core\.Tests|gate-asymmetry)$'*) ok ;;
-    *) fail "#1845: the Redaction suites' project and the range-dependent gate must be pinned to run every push: $HOOK_RAN" ;;
-esac
-run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA"
-[ "$(state_of)" = "$KEY_CLEAN" ] || fail "#1845: an identical tree must map to the SAME state directory"
-ok
+# 6b. #2079: the pass belongs to the EXACT tree. Any change to what a build would
+#     see makes it someone else's pass; reverting returns to it; an old one expires.
 TRACKED="$(git -C "$REPO" ls-files | head -1)"
 echo "// edited" >> "$REPO/$TRACKED"
 run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA"
-KEY_DIRTY="$(state_of)"
-[ "$KEY_DIRTY" != "$KEY_CLEAN" ] || fail "#1845: an uncommitted edit to a tracked file must change the state directory (else a pass on OTHER code is reused)"
-ok
-echo "// edited again" >> "$REPO/$TRACKED"
-run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA"
-[ "$(state_of)" != "$KEY_DIRTY" ] || fail "#1845: two different edits to the same file must not share a state directory"
+[ "$HOOK_RC" -eq 1 ] || fail "#2079: an uncommitted edit to a tracked file must void the pass (else a pass on OTHER code is reused)"
 ok
 git -C "$REPO" checkout -q -- "$TRACKED"
 run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA"
-[ "$(state_of)" = "$KEY_CLEAN" ] || fail "#1845: reverting the edit must return to the clean tree's state directory"
+[ "$HOOK_RC" -eq 0 ] || fail "#2079: reverting the edit must return to the tree that passed: $HOOK_OUT"
 ok
 echo "scratch" > "$REPO/untracked-file.txt"
 run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA"
-KEY_UNTRACKED="$(state_of)"
-[ "$KEY_UNTRACKED" != "$KEY_CLEAN" ] || fail "#1845: a new untracked file must change the state directory"
-ok
-echo "scratch, changed" > "$REPO/untracked-file.txt"
-run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA"
-[ "$(state_of)" != "$KEY_UNTRACKED" ] || fail "#1845: changing an untracked file's CONTENT must change the state directory"
+[ "$HOOK_RC" -eq 1 ] || fail "#2079: a new untracked file must void the pass"
 ok
 rm -f "$REPO/untracked-file.txt"
-# A different commit is a different tree.
-run_hook "refs/heads/develop $PERF_SHA refs/heads/develop $BASE_SHA"
-[ "$(state_of)" = "$KEY_CLEAN" ] || fail "#1845: a stepped push runs over the same working tree, so it must reuse the state directory"
-ok
-# A tree's state is dropped after an hour; a young one survives.
-mkdir -p "$REPO/logs/runner-state/pre-push/stale-tree" "$REPO/logs/runner-state/pre-push/young-tree"
-touch -t 200001010000 "$REPO/logs/runner-state/pre-push/stale-tree"
+touch -t 200001010000 "$REPO/logs/t0-pass/$(scripts/tree-key.sh)"
 run_hook "refs/heads/develop $REWRITE_SHA refs/heads/develop $BASE_SHA"
-[ ! -d "$REPO/logs/runner-state/pre-push/stale-tree" ] || fail "#1845: a tree state older than an hour must be dropped"
-[ -d "$REPO/logs/runner-state/pre-push/young-tree" ] || fail "#1845: a young tree state must survive the prune"
+[ "$HOOK_RC" -eq 1 ] || fail "#2079: a pass older than 12 hours must not be accepted"
 ok
-rm -rf "$REPO/logs"
+record_pass
 
 # 7. A stepped push — an earlier commit of this same branch, which is the
 #    workflow #1600 was filed from. Allowed, with the range ending at the pushed
@@ -451,7 +437,7 @@ git tag -d v8.8.8 >/dev/null
 # 10. A new remote branch: the all-zero REMOTE sha is no base, so the runner
 #     falls through to its own base selection rather than being handed nonsense.
 run_hook "refs/heads/feature $REWRITE_SHA refs/heads/feature $ZERO"
-[ "$HOOK_RC" -eq 0 ] || fail "a new remote branch must run t0, got rc=$HOOK_RC: $HOOK_OUT"
+[ "$HOOK_RC" -eq 0 ] || fail "a new remote branch must be allowed, got rc=$HOOK_RC: $HOOK_OUT"
 case "$HOOK_RAN" in
     *"base=<unset>"*) ok ;;
     *) fail "an all-zero remote sha must not become a base: $HOOK_RAN" ;;
@@ -492,8 +478,8 @@ ok
 run_hook "v9.9.9^{commit} $REWRITE_SHA refs/heads/main $BASE_SHA"
 [ "$HOOK_RC" -eq 0 ] || fail "a fast-forward of main to a tagged commit must be allowed, got rc=$HOOK_RC: $HOOK_OUT"
 case "$HOOK_RAN" in
-    *"args=t0"*"base=<unset>"*"head=<unset>"*) ok ;;
-    *) fail "a main push must run t0 WITHOUT a gate-asymmetry range (that range judges the whole history since the last release): $HOOK_RAN" ;;
+    *"base=<unset>"*"head=<unset>"*) ok ;;
+    *) fail "a main push must not export a gate-asymmetry range (that range judges the whole history since the last release): $HOOK_RAN" ;;
 esac
 
 # 13c. A commit with no release tag is refused, and the tier never starts.

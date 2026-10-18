@@ -362,14 +362,30 @@ run_tier() {
     done < "$plan"
 }
 
+TREE_KEY_START="$(scripts/tree-key.sh)"
 run_tier "$TIER"
 
 # The report is the summary, and its exit code is this script's exit code:
 # 0 clean (possibly with SKIPPED rows), 1 a NEW red or a STALE acceptance,
-# 3 a row that never ran, 2 nothing to report.
-scripts/report-gates.sh "$LOG_DIR"
-rc=$?
+# 3 a row that never ran, 2 nothing to report. It is also written to
+# summary.txt, and logs/<tier>-latest points at the run, so the result of the
+# last run is always in one predictable place (#2079).
+scripts/report-gates.sh "$LOG_DIR" | tee "$LOG_DIR/summary.txt"
+rc=${PIPESTATUS[0]}
+ln -sfn "$LOG_DIR" "$ROOT/logs/$TIER-latest"
 # Checkpoint any row report-gates.sh just classified KNOWN so a later --resume
 # skips an accepted failure instead of re-running it (#1371).
 runner_checkpoint_known_failures "$LOG_DIR"
+
+# #2079: record a clean, complete run for the exact tree it tested. The
+# pre-push hook accepts a push only against this record, so `git push` no
+# longer runs t0 itself. Not written for a --resume run (its rows may have
+# passed on another tree, #1027) or when the tree changed under the run.
+# t1 is a superset of t0, so a clean t1 counts.
+if [ "$rc" = 0 ] && [ "$RESUME" = 0 ] && [ "$(scripts/tree-key.sh)" = "$TREE_KEY_START" ]; then
+    mkdir -p "$ROOT/logs/t0-pass"
+    printf 'tier=%s\nhead=%s\nfinished=%s\nlog=%s\n' "$TIER" "$(git rev-parse HEAD)" \
+        "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$LOG_DIR" > "$ROOT/logs/t0-pass/$TREE_KEY_START"
+    say "${G}Recorded${N} a $TIER pass for tree $TREE_KEY_START: git push will accept this tree."
+fi
 exit $rc
