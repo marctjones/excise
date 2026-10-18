@@ -6,6 +6,12 @@ semantic versioning.
 
 ## [Unreleased]
 
+## [3.18.1] - 2026-10-17
+
+### Fixed
+
+- **`excise redact` exits 3 whenever the redaction is not clean** (#2080). In 3.18.0 it exited 0 when the report ended "This redaction was NOT clean" for any reason other than a hyphen- or line-wrapped occurrence: a font or other carrier excise could not scrub, an attachment it could not clean, or text that survived. A script that checked only the exit code treated a leaky output as a success. Exit codes are now 0 clean, 3 not clean, 1 error, the same answer the native library already gave (`EXCISE_ERR_REDACTION_INCOMPLETE`). The report text and the saved file are unchanged.
+
 ## [3.18.0] - 2026-10-17
 
 ### Changed
