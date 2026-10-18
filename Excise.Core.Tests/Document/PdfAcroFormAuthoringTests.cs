@@ -303,4 +303,18 @@ public class PdfAcroFormAuthoringTests
         using var doc = PdfDocument.Open(BarePdf());
         doc.AddTextField(1, new PdfRectangle(-20, 780, 40, 800), "Edge").FullName.Should().Be("Edge");
     }
+
+    [Fact]
+    public void AddSignatureField_AcceptsTheInvisibleZeroRectangle_ButOtherFieldsDoNot()
+    {
+        // ISO 32000-2 12.7.5.5: an invisible signature is the widget rectangle [0 0 0 0]; signing creates one.
+        using var doc = PdfDocument.Open(BarePdf());
+        var zero = new PdfRectangle(0, 0, 0, 0);
+        doc.AddSignatureField(1, zero, "Sig1").FullName.Should().Be("Sig1");
+        foreach (var kind in new[] { "text", "date", "checkbox", "choice" })
+        {
+            var act = () => Add(doc, kind, zero, "F_" + kind);
+            act.Should().Throw<ArgumentException>($"a visible {kind} field needs a real rectangle").WithMessage("*inverted or empty*");
+        }
+    }
 }

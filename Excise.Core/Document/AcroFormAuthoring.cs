@@ -232,7 +232,7 @@ public static class AcroFormAuthoring
         string fieldName,
         string? tooltip = null)
     {
-        ValidatePlacement(document, pageNumber, rect, fieldName);
+        ValidatePlacement(document, pageNumber, rect, fieldName, allowInvisible: true);
         var widget = NewWidgetDict(rect);
         widget.SetName("FT", "Sig");
         widget.SetString("T", fieldName);
@@ -899,12 +899,20 @@ public static class AcroFormAuthoring
         return false;
     }
 
-    private static void ValidatePlacement(PdfDocument document, int pageNumber, PdfRectangle rect, string fieldName)
+    /// <param name="allowInvisible">
+    /// A signature field may be invisible: its widget is the rectangle [0 0 0 0]
+    /// (ISO 32000-2 12.7.5.5), which is how signing creates a field with no
+    /// placeholder on the page. Only that exact rectangle is exempt; an inverted
+    /// or partly empty one is still refused.
+    /// </param>
+    private static void ValidatePlacement(PdfDocument document, int pageNumber, PdfRectangle rect, string fieldName, bool allowInvisible = false)
     {
         ValidateName(fieldName);
         if (FieldNameExists(document, fieldName))
             throw new ArgumentException(
                 $"A field named '{fieldName}' already exists. Choose another name.", nameof(fieldName));
+        if (allowInvisible && rect.Left == 0 && rect.Bottom == 0 && rect.Right == 0 && rect.Top == 0)
+            return;
         if (!(rect.Right > rect.Left) || !(rect.Top > rect.Bottom))
             throw new ArgumentException(
                 $"Field rectangle [{rect.Left} {rect.Bottom} {rect.Right} {rect.Top}] is inverted or empty: " +
