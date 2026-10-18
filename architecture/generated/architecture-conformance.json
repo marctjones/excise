@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "d3a67d28449dc2f9db3c3ea68e7dcbfa4709c038",
+  "sourceRevision": "200e8b66f769db06f53ed6a05c7e0590b0915d7a",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 8979,
+    "retainedSymbols": 8993,
     "observedComponentDependencies": 85,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -38,14 +38,14 @@
     {
       "source": "app-main-window",
       "target": "app",
-      "references": 752,
+      "references": 753,
       "typeDependencyCount": 79,
       "classification": "declared",
       "evidence": [
         {
           "source": "Excise.App.ViewModels.MainWindowViewModel",
           "target": "Excise.App.Services.PdfDocumentService",
-          "references": 124
+          "references": 125
         }
       ]
     },
@@ -192,7 +192,7 @@
     {
       "source": "cli",
       "target": "core-redaction",
-      "references": 229,
+      "references": 231,
       "typeDependencyCount": 51,
       "classification": "declared",
       "evidence": [
@@ -506,7 +506,7 @@
     {
       "source": "core-document",
       "target": "core-primitives",
-      "references": 1717,
+      "references": 1722,
       "typeDependencyCount": 267,
       "classification": "declared",
       "evidence": [
@@ -1315,7 +1315,7 @@
         "path": "tools/Excise.RenderTools/Excise.RenderTools.csproj",
         "classification": "tool",
         "projectComponent": null,
-        "unownedSymbols": 352
+        "unownedSymbols": 353
       }
     ]
   },

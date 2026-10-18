@@ -52,7 +52,7 @@ digraph excise_architecture {
   "app" -> "core" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "app" -> "ocr" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "app" -> "rendering" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
-  "app-main-window" -> "app" [label="target + observed\n752 refs", color="#15803d", style="solid", penwidth=2];
+  "app-main-window" -> "app" [label="target + observed\n753 refs", color="#15803d", style="solid", penwidth=2];
   "app-main-window" -> "avalonia" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "architecture-tooling" -> "verification" [label="target only", color="#94a3b8", style="dotted", penwidth=1];
   "avalonia" -> "core" [label="target + observed\n7 refs", color="#15803d", style="solid", penwidth=2];
@@ -65,7 +65,7 @@ digraph excise_architecture {
   "cli" -> "core-document" [label="observed via parent boundary\n174 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-encryption" [label="observed via parent boundary\n37 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-parsing" [label="observed via parent boundary\n2 refs", color="#2563eb", style="dashed", penwidth=1];
-  "cli" -> "core-redaction" [label="observed via parent boundary\n229 refs", color="#2563eb", style="dashed", penwidth=1];
+  "cli" -> "core-redaction" [label="observed via parent boundary\n231 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-security" [label="observed via parent boundary\n28 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-text" [label="observed via parent boundary\n8 refs", color="#2563eb", style="dashed", penwidth=1];
   "cli" -> "core-writing" [label="observed via parent boundary\n34 refs", color="#2563eb", style="dashed", penwidth=1];
@@ -86,7 +86,7 @@ digraph excise_architecture {
   "core-document" -> "core-encryption" [label="target + observed\n26 refs", color="#15803d", style="solid", penwidth=2];
   "core-document" -> "core-fonts" [label="observed, undeclared\n5 refs", color="#d97706", style="dashed", penwidth=2];
   "core-document" -> "core-parsing" [label="target + observed\n85 refs", color="#15803d", style="solid", penwidth=2];
-  "core-document" -> "core-primitives" [label="target + observed\n1717 refs", color="#15803d", style="solid", penwidth=2];
+  "core-document" -> "core-primitives" [label="target + observed\n1722 refs", color="#15803d", style="solid", penwidth=2];
   "core-document" -> "core-redaction" [label="observed, undeclared\n7 refs", color="#d97706", style="dashed", penwidth=2];
   "core-document" -> "core-text" [label="observed, undeclared\n7 refs", color="#d97706", style="dashed", penwidth=2];
   "core-document" -> "core-writing" [label="observed, undeclared\n2 refs", color="#d97706", style="dashed", penwidth=2];

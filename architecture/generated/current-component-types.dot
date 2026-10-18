@@ -12,8 +12,8 @@ digraph excise_architecture {
   subgraph cluster_engine {
     label="engine";
     color="#cbd5e1";
-    "core-content" [label="Content-stream walker and sinks\nimplemented\n288 retained symbols", fillcolor="#d8f3dc"];
-    "core-document" [label="Document model and mutation boundary\nimplemented\n678 retained symbols", fillcolor="#d8f3dc"];
+    "core-content" [label="Content-stream walker and sinks\nimplemented\n291 retained symbols", fillcolor="#d8f3dc"];
+    "core-document" [label="Document model and mutation boundary\nimplemented\n681 retained symbols", fillcolor="#d8f3dc"];
     "core-fonts" [label="Font decoding, metrics, and subsetting\npartial\n244 retained symbols", fillcolor="#fff3bf"];
     "core-redaction" [label="Glyph-, image-, and carrier-level redaction\npartial\n803 retained symbols", fillcolor="#fff3bf"];
     "core-security" [label="Document conformance and structural validation\npartial\n37 retained symbols", fillcolor="#fff3bf"];
@@ -38,7 +38,7 @@ digraph excise_architecture {
   subgraph cluster_presentation {
     label="presentation";
     color="#cbd5e1";
-    "app-main-window" [label="Main-window orchestration and feature state\npartial\n661 retained symbols", fillcolor="#fff3bf"];
+    "app-main-window" [label="Main-window orchestration and feature state\npartial\n668 retained symbols", fillcolor="#fff3bf"];
     "avalonia" [label="Excise.Avalonia project\npartial\n680 retained symbols", fillcolor="#fff3bf"];
   }
   subgraph cluster_verification {
@@ -48,7 +48,7 @@ digraph excise_architecture {
     "verification" [label="Repository verification system\npartial\n0 retained symbols", fillcolor="#fff3bf"];
   }
   "app" -> "app-main-window" [label="464 refs / 29 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "app-main-window" -> "app" [label="752 refs / 79 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "app-main-window" -> "app" [label="753 refs / 79 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "core" [label="7 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "core-document" [label="513 refs / 61 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "avalonia" -> "core-primitives" [label="11 refs / 3 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
@@ -59,7 +59,7 @@ digraph excise_architecture {
   "cli" -> "core-document" [label="174 refs / 53 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-encryption" [label="37 refs / 15 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-parsing" [label="2 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "cli" -> "core-redaction" [label="229 refs / 51 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "cli" -> "core-redaction" [label="231 refs / 51 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-security" [label="28 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-text" [label="8 refs / 2 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "cli" -> "core-writing" [label="34 refs / 9 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
@@ -80,7 +80,7 @@ digraph excise_architecture {
   "core-document" -> "core-encryption" [label="26 refs / 6 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core-fonts" [label="5 refs / 2 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
   "core-document" -> "core-parsing" [label="85 refs / 16 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
-  "core-document" -> "core-primitives" [label="1717 refs / 267 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
+  "core-document" -> "core-primitives" [label="1722 refs / 267 type pairs\ndeclared", color="#475569", style="solid", penwidth=1];
   "core-document" -> "core-redaction" [label="7 refs / 2 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
   "core-document" -> "core-text" [label="7 refs / 2 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
   "core-document" -> "core-writing" [label="2 refs / 1 type pairs\nundeclared", color="#d97706", style="dashed", penwidth=2];
