@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "6db309169eb21a6fa503e93e86f465901fa9d4b0",
+  "sourceRevision": "1c365bf35f31ae31fa0a71185a4f47b47891dfd0",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -22,8 +22,8 @@
     "commitsRequested": 200,
     "commitsObserved": 199,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "a85089016fa5dad8df2d2f46cf89adc2151bb3e8",
-    "oldestProductionCommit": "774f5bc0b0dc87604abe503920566ebfa0415a2d"
+    "newestProductionCommit": "97b25405a4cfc23e4815754029f57052858a2868",
+    "oldestProductionCommit": "b28f8657af8e92b53a72aa235e0f1d2e61e7ceb3"
   },
   "files": [
     {
@@ -143,6 +143,10 @@
       "commits": 5
     },
     {
+      "path": "Excise.Core/Document/PdfField.cs",
+      "commits": 5
+    },
+    {
       "path": "Excise.Core/Text/TermMatch.cs",
       "commits": 5
     },
@@ -152,6 +156,10 @@
     },
     {
       "path": "Excise.Rendering/SkiaRenderer.Images.cs",
+      "commits": 5
+    },
+    {
+      "path": "Excise.Rendering/SkiaRenderer.cs",
       "commits": 5
     },
     {
@@ -219,6 +227,10 @@
       "commits": 4
     },
     {
+      "path": "Excise.Avalonia/Controls/Viewer/FormFieldInputFactory.cs",
+      "commits": 4
+    },
+    {
       "path": "Excise.Avalonia/Controls/Viewer/SinglePageView.LookAhead.cs",
       "commits": 4
     },
@@ -235,15 +247,7 @@
       "commits": 4
     },
     {
-      "path": "Excise.Core/Document/PdfField.cs",
-      "commits": 4
-    },
-    {
       "path": "Excise.Core/Redaction/AppearanceStreamRedactor.cs",
-      "commits": 4
-    },
-    {
-      "path": "Excise.Core/Redaction/WidthClosureLedger.cs",
       "commits": 4
     },
     {
@@ -264,10 +268,6 @@
     },
     {
       "path": "Excise.Rendering/SkiaRenderer.Text.cs",
-      "commits": 4
-    },
-    {
-      "path": "Excise.Rendering/SkiaRenderer.cs",
       "commits": 4
     },
     {
@@ -327,10 +327,6 @@
       "commits": 3
     },
     {
-      "path": "Excise.Avalonia/Controls/Viewer/FormFieldInputFactory.cs",
-      "commits": 3
-    },
-    {
       "path": "Excise.Avalonia/Controls/Viewer/IViewerState.cs",
       "commits": 3
     },
@@ -355,6 +351,10 @@
       "commits": 3
     },
     {
+      "path": "Excise.Core/Document/AcroFormAuthoring.cs",
+      "commits": 3
+    },
+    {
       "path": "Excise.Core/Document/RemovedPageReferenceScrubber.cs",
       "commits": 3
     },
@@ -376,6 +376,10 @@
     },
     {
       "path": "Excise.Rendering/SkiaRenderer.Paths.cs",
+      "commits": 3
+    },
+    {
+      "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
       "commits": 3
     },
     {
@@ -519,10 +523,6 @@
       "commits": 2
     },
     {
-      "path": "Excise.Core/Document/AcroFormAuthoring.cs",
-      "commits": 2
-    },
-    {
       "path": "Excise.Core/Document/AcroFormFlattener.cs",
       "commits": 2
     },
@@ -552,6 +552,10 @@
     },
     {
       "path": "Excise.Core/Redaction/RedactionReport.cs",
+      "commits": 2
+    },
+    {
+      "path": "Excise.Core/Redaction/WidthClosureLedger.cs",
       "commits": 2
     },
     {
@@ -628,10 +632,6 @@
     },
     {
       "path": "Excise.Rendering/SkiaRenderer.Patterns.cs",
-      "commits": 2
-    },
-    {
-      "path": "Excise.Rendering/SkiaRenderer.XObjects.cs",
       "commits": 2
     },
     {
@@ -2421,6 +2421,12 @@
       "jaccard": 0.3333
     },
     {
+      "source": "Excise.Core/Document/AcroFormAuthoring.cs",
+      "target": "Excise.Core/Document/PdfField.cs",
+      "cochanges": 2,
+      "jaccard": 0.3333
+    },
+    {
       "source": "Excise.Core/Redaction/RedactedCopySafetyPolicy.cs",
       "target": "Excise.Core/Redaction/RedactionReport.cs",
       "cochanges": 2,
@@ -2459,6 +2465,12 @@
     {
       "source": "Excise.Core/Xfa/XfaMerge.cs",
       "target": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
+      "cochanges": 2,
+      "jaccard": 0.3333
+    },
+    {
+      "source": "Excise.Rendering/SkiaRenderer.XObjects.cs",
+      "target": "Excise.Rendering/SkiaRenderer.cs",
       "cochanges": 2,
       "jaccard": 0.3333
     },

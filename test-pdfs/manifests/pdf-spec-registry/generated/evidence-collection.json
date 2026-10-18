@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1697,
-  "indexedContentSha256": "146883cfe5f5a52fa781472b87ca58709d4c55ced7e46b24285aa13cfb10f794",
+  "indexedFileCount": 1699,
+  "indexedContentSha256": "c1f49f238e5a80cf0d6e158a1a6240014df7f0cbb1db4de2cff850d0e7013da0",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -1511,6 +1511,15 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "indirect",
+            "trailer",
+            "xref"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -1593,20 +1602,9 @@
             "trailer",
             "xref"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Document/PdfImagePreservationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "indirect",
-            "streams",
-            "pdfdocumentwriter",
-            "pdfobject",
-            "xref"
-          ]
         }
       ],
-      "candidateReferenceCount": 227
+      "candidateReferenceCount": 229
     },
     {
       "id": "pdf.17.syntax.filters",
@@ -8253,7 +8251,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 787
+      "candidateReferenceCount": 788
     },
     {
       "id": "pdf.17.graphics.color",
@@ -13065,7 +13063,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 215
+      "candidateReferenceCount": 216
     },
     {
       "id": "pdf.20.content.operators",
@@ -21603,6 +21601,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering/SkiaRenderer.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "bdc",
+            "content-stream",
+            "contentoperator",
+            "contentstreamparser"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -21706,7 +21714,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 21
+      "candidateReferenceCount": 22
     },
     {
       "id": "pdf.20.content.operator-069",
@@ -21872,6 +21880,16 @@
           ]
         },
         {
+          "path": "Excise.Rendering/SkiaRenderer.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "content-stream",
+            "emc",
+            "contentoperator",
+            "contentstreamparser"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Content/OperatorCoverageTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -21966,7 +21984,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 20
+      "candidateReferenceCount": 21
     },
     {
       "id": "pdf.20.content.operator-070",
@@ -46665,6 +46683,17 @@
           ]
         },
         {
+          "path": "Excise.Core/Document/AcroFormAuthoring.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "link",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core/Document/FieldTreeLinkSnapshot.cs",
           "kind": "source",
           "matchedTerms": [
@@ -47194,6 +47223,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "link",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -47411,30 +47450,9 @@
             "annotation",
             "redact"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/CarrierScrubPolicyTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "link",
-            "annotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/RedactedCopySafetyPolicyTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "link",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 132
+      "candidateReferenceCount": 134
     },
     {
       "id": "pdf.20.annotation.subtype-003",
@@ -54789,6 +54807,17 @@
           ]
         },
         {
+          "path": "Excise.Core/Document/AcroFormAuthoring.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "annotation",
+            "ink",
+            "annotation",
+            "pdfannotation",
+            "redact"
+          ]
+        },
+        {
           "path": "Excise.Core/Document/AcroFormFlattener.cs",
           "kind": "source",
           "matchedTerms": [
@@ -55445,6 +55474,16 @@
           ]
         },
         {
+          "path": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "annotation",
+            "ink",
+            "annotation",
+            "pdfannotation"
+          ]
+        },
+        {
           "path": "Excise.Core.Tests/Document/PdfAnnotationAuthoringTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -55520,31 +55559,9 @@
             "ink",
             "annotation"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/HiddenAnnotationLeakProbeTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "ink",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
-        },
-        {
-          "path": "Excise.Core.Tests/Invariants/AnnotationInvariantTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "annotation",
-            "ink",
-            "annotation",
-            "pdfannotation",
-            "redact"
-          ]
         }
       ],
-      "candidateReferenceCount": 194
+      "candidateReferenceCount": 196
     },
     {
       "id": "pdf.20.annotation.subtype-015",
@@ -71418,7 +71435,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 255
+      "candidateReferenceCount": 257
     },
     {
       "id": "pdf.17.interchange.signatures",
@@ -72194,7 +72211,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 251
+      "candidateReferenceCount": 252
     },
     {
       "id": "pdf.17.interchange.accessibility",
@@ -72981,7 +72998,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 872
+      "candidateReferenceCount": 876
     },
     {
       "id": "pdf.20.extension.developer",

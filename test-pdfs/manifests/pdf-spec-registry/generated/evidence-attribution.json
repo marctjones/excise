@@ -99426,6 +99426,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddField_RefusesAFullNameTheFormAlreadyHas_AndAddsNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddField_RefusesTheFullNameOfANestedField",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddField_RefusesAnInvertedEmptyOrOffPageRectangle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddField_AcceptsARectanglePartlyOnThePage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
           "mappingSources": [
             "keyword-facet-candidate",
@@ -99497,6 +99525,48 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_RadioButton_RefusesANameNoWidgetDraws_AndLeavesTheFieldAsItWas",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_RadioButton_SelectsOnlyTheWidgetThatDrawsTheState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_CheckBox_RefusesAValueThatIsNotItsOnOrOffState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_CheckBox_OnAndOff_SetAnAppearanceTheWidgetHas",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_RealFormWithNoAppearances_RefusesTheValuesTheDefectStored",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_RealFormWithNoAppearances_AcceptsOffAndItsOnState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.Parse_RadioButton_CapturesFlagsAndWidgetExportValues",
@@ -100136,80 +100206,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.GetAcroForm_WithInvalidAcroFormReference_ReturnsNull",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.GetAcroForm_WithValidAcroFormDictionary_ReturnsForm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfFieldXfaMultilineTests.cs::PdfFieldXfaMultilineTests.IsMultiline_TrueFromXfaTemplate_WhenAcroFormFlagAbsent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfFieldXfaMultilineTests.cs::PdfFieldXfaMultilineTests.IsMultiline_AcroFormFlagAlone_StillWorks_WhenNoXfaTemplate",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NoAcroForm_IsNone",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.AcroFormWithoutXfa_IsNone",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.XfaWithUsableAcroFormFields_IsStatic",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NeedsRenderingInsideAcroForm_IsNotTheSignal",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteWidget_OfAFieldWithNoOtherWidget_DropsTheFieldValue",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedPageLeakTests.cs::RemovedPageLeakTests.RemovePage_FieldWithAWidgetOnAKeptPage_KeepsTheFieldAndThatWidget",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -100876,6 +100872,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddField_RefusesAFullNameTheFormAlreadyHas_AndAddsNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddField_RefusesTheFullNameOfANestedField",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddField_RefusesAnInvertedEmptyOrOffPageRectangle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddField_AcceptsARectanglePartlyOnThePage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
           "mappingSources": [
             "keyword-facet-candidate",
@@ -100947,6 +100971,48 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_RadioButton_RefusesANameNoWidgetDraws_AndLeavesTheFieldAsItWas",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_RadioButton_SelectsOnlyTheWidgetThatDrawsTheState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_CheckBox_RefusesAValueThatIsNotItsOnOrOffState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_CheckBox_OnAndOff_SetAnAppearanceTheWidgetHas",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_RealFormWithNoAppearances_RefusesTheValuesTheDefectStored",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_RealFormWithNoAppearances_AcceptsOffAndItsOnState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.Parse_RadioButton_CapturesFlagsAndWidgetExportValues",
@@ -101586,80 +101652,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.GetAcroForm_WithInvalidAcroFormReference_ReturnsNull",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.GetAcroForm_WithValidAcroFormDictionary_ReturnsForm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfFieldXfaMultilineTests.cs::PdfFieldXfaMultilineTests.IsMultiline_TrueFromXfaTemplate_WhenAcroFormFlagAbsent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfFieldXfaMultilineTests.cs::PdfFieldXfaMultilineTests.IsMultiline_AcroFormFlagAlone_StillWorks_WhenNoXfaTemplate",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NoAcroForm_IsNone",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.AcroFormWithoutXfa_IsNone",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.XfaWithUsableAcroFormFields_IsStatic",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NeedsRenderingInsideAcroForm_IsNotTheSignal",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteWidget_OfAFieldWithNoOtherWidget_DropsTheFieldValue",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedPageLeakTests.cs::RemovedPageLeakTests.RemovePage_FieldWithAWidgetOnAKeptPage_KeepsTheFieldAndThatWidget",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -102347,6 +102339,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddField_RefusesAFullNameTheFormAlreadyHas_AndAddsNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddField_RefusesTheFullNameOfANestedField",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddField_RefusesAnInvertedEmptyOrOffPageRectangle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddField_AcceptsARectanglePartlyOnThePage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
           "mappingSources": [
             "keyword-facet-candidate",
@@ -102418,6 +102438,48 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_RadioButton_RefusesANameNoWidgetDraws_AndLeavesTheFieldAsItWas",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_RadioButton_SelectsOnlyTheWidgetThatDrawsTheState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_CheckBox_RefusesAValueThatIsNotItsOnOrOffState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_CheckBox_OnAndOff_SetAnAppearanceTheWidgetHas",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_RealFormWithNoAppearances_RefusesTheValuesTheDefectStored",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_RealFormWithNoAppearances_AcceptsOffAndItsOnState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.Parse_RadioButton_CapturesFlagsAndWidgetExportValues",
@@ -103057,80 +103119,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.GetAcroForm_WithInvalidAcroFormReference_ReturnsNull",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.GetAcroForm_WithValidAcroFormDictionary_ReturnsForm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfFieldXfaMultilineTests.cs::PdfFieldXfaMultilineTests.IsMultiline_TrueFromXfaTemplate_WhenAcroFormFlagAbsent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfFieldXfaMultilineTests.cs::PdfFieldXfaMultilineTests.IsMultiline_AcroFormFlagAlone_StillWorks_WhenNoXfaTemplate",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NoAcroForm_IsNone",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.AcroFormWithoutXfa_IsNone",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.XfaWithUsableAcroFormFields_IsStatic",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NeedsRenderingInsideAcroForm_IsNotTheSignal",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteWidget_OfAFieldWithNoOtherWidget_DropsTheFieldValue",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedPageLeakTests.cs::RemovedPageLeakTests.RemovePage_FieldWithAWidgetOnAKeptPage_KeepsTheFieldAndThatWidget",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -103758,6 +103746,34 @@
           ]
         },
         {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddField_RefusesAFullNameTheFormAlreadyHas_AndAddsNothing",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddField_RefusesTheFullNameOfANestedField",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddField_RefusesAnInvertedEmptyOrOffPageRectangle",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormAuthoringTests.cs::PdfAcroFormAuthoringTests.AddField_AcceptsARectanglePartlyOnThePage",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
           "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_TextField_UpdatesValueAndPersistsAfterRoundTrip",
           "mappingSources": [
             "keyword-facet-candidate",
@@ -103829,6 +103845,48 @@
           "recordedOutcomes": [
             "Passed"
           ]
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_RadioButton_RefusesANameNoWidgetDraws_AndLeavesTheFieldAsItWas",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_RadioButton_SelectsOnlyTheWidgetThatDrawsTheState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_CheckBox_RefusesAValueThatIsNotItsOnOrOffState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_CheckBox_OnAndOff_SetAnAppearanceTheWidgetHas",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_RealFormWithNoAppearances_RefusesTheValuesTheDefectStored",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
+        },
+        {
+          "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.SetValue_RealFormWithNoAppearances_AcceptsOffAndItsOnState",
+          "mappingSources": [
+            "keyword-facet-candidate"
+          ],
+          "recordedOutcomes": []
         },
         {
           "test": "Excise.Core.Tests/Document/PdfAcroFormEditingTests.cs::PdfAcroFormEditingTests.Parse_RadioButton_CapturesFlagsAndWidgetExportValues",
@@ -104468,80 +104526,6 @@
         },
         {
           "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.GetAcroForm_WithInvalidAcroFormReference_ReturnsNull",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfDocumentTests.cs::PdfDocumentTests.GetAcroForm_WithValidAcroFormDictionary_ReturnsForm",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": [
-            "Passed"
-          ]
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfFieldXfaMultilineTests.cs::PdfFieldXfaMultilineTests.IsMultiline_TrueFromXfaTemplate_WhenAcroFormFlagAbsent",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfFieldXfaMultilineTests.cs::PdfFieldXfaMultilineTests.IsMultiline_AcroFormFlagAlone_StillWorks_WhenNoXfaTemplate",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NoAcroForm_IsNone",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.AcroFormWithoutXfa_IsNone",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.XfaWithUsableAcroFormFields_IsStatic",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/PdfXfaDetectionTests.cs::PdfXfaDetectionTests.NeedsRenderingInsideAcroForm_IsNotTheSignal",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedAnnotationLeakTests.cs::RemovedAnnotationLeakTests.DeleteWidget_OfAFieldWithNoOtherWidget_DropsTheFieldValue",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/RemovedPageLeakTests.cs::RemovedPageLeakTests.RemovePage_FieldWithAWidgetOnAKeptPage_KeepsTheFieldAndThatWidget",
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ],
-          "recordedOutcomes": []
-        },
-        {
-          "test": "Excise.Core.Tests/Document/SignatureAppearanceAuthoringTests.cs::SignatureAppearanceAuthoringTests.ApplyVisibleAppearance_EmptyLines_LeavesWidgetUntouched",
           "mappingSources": [
             "keyword-facet-candidate"
           ],
@@ -112558,8 +112542,8 @@
     "gradeImplemented": 213,
     "gradeVerified": 666,
     "gradeUnknown": 20,
-    "testMethods": 8924,
-    "testMethodsWithCapabilityCandidate": 5763,
+    "testMethods": 8937,
+    "testMethodsWithCapabilityCandidate": 5776,
     "benchmarkScenarios": 6,
     "benchmarkScenariosWithHarness": 6
   }

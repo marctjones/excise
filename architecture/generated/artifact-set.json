@@ -2,26 +2,26 @@
   "$schema": "../schemas/artifact-set.schema.json",
   "schemaVersion": 2,
   "generator": "scripts/architecture_artifacts.py",
-  "sourceRevision": "6db309169eb21a6fa503e93e86f465901fa9d4b0",
+  "sourceRevision": "1c365bf35f31ae31fa0a71185a4f47b47891dfd0",
   "revisionSemantics": "provenance-only; normalized content and hashes determine freshness",
   "artifacts": [
     {
       "path": "architecture/inventory.generated.json",
       "format": "json",
       "schema": "architecture/schemas/inventory.schema.json",
-      "sha256": "1e73e4ea796954c49afa1290a56bb5e5446dcff3f4bbc21bac4cb73ab84a2826"
+      "sha256": "bec44fb8d925b97f55f9834025e3e0c2fb0e696953520da850e6fd14c0e30be2"
     },
     {
       "path": "architecture/generated/code-topology.json",
       "format": "json",
       "schema": "architecture/schemas/topology.schema.json",
-      "sha256": "5ca4942c5095b4586384acad1c7a5b11aa2f3d061d8cf06595d741536a9db844"
+      "sha256": "bc0d2cdcfa18b247596875d48fc303cb1ec300da69b980b46be9d8bd7e131c00"
     },
     {
       "path": "architecture/generated/architecture-conformance.json",
       "format": "json",
       "schema": "architecture/schemas/architecture-conformance.schema.json",
-      "sha256": "3e57d89d9cb88f1f11fe14dc1359b266ad603f3891af82a4535d59f7a475dad1"
+      "sha256": "dd37ef8871e073e86b2a3a77644c37d4eaa0faefe98f8934e4882fc24d6753b5"
     },
     {
       "path": "architecture/generated/current-projects.dot",
@@ -36,12 +36,12 @@
     {
       "path": "architecture/generated/current-component-types.dot",
       "format": "dot",
-      "sha256": "97bd8c9366b2f3d6cf56d9f3b25793ac26052adfc22ca5cdbb8f46a44663bb94"
+      "sha256": "3aea75c858b3abf82a27fbf29c266fbbb8449aa796184f13aa7c78aacd1ddf47"
     },
     {
       "path": "architecture/generated/current-vs-target.dot",
       "format": "dot",
-      "sha256": "4ec3861d8b6925346bd35430381c2c5d7e0d5b6dfc1a89d980e0901e60cae99e"
+      "sha256": "0587e4d56b80b9529f44466478214a8b8298d98bf504985517d9d6b39e19a830"
     }
   ],
   "historyArtifacts": [
