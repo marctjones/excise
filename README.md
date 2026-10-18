@@ -35,7 +35,7 @@ Download a package from [GitHub Releases](https://github.com/marctjones/excise/r
 
 The builds are not signed or notarized, and there is no auto-update. On macOS the first launch is refused: right-click the app and choose Open, or run `xattr -dr com.apple.quarantine /Applications/excise.app`. On Windows, SmartScreen warns: choose More info, then Run anyway. Every asset has a `.sha256` file; verify it with `shasum -a 256 -c <asset>.sha256` (macOS) or `sha256sum -c <asset>.sha256` (Linux).
 
-Printing works on macOS and Windows; there is no Linux printing yet. OCR uses the system `tesseract` (the `.deb` recommends it).
+Printing works on macOS, Windows and Linux; Linux prints through CUPS (`lp`), so CUPS must be installed and running (#1710). OCR uses the system `tesseract` (the `.deb` recommends it).
 
 To use excise as your default PDF reader, see [docs/DEFAULT_PDF_READER.md](docs/DEFAULT_PDF_READER.md).
 
