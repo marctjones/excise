@@ -75,6 +75,15 @@ public class GroupBAnnotationMeaningTests
 
     // ---------------------------------------------------------------- TEXT
 
+    /// <summary>
+    /// #1903: Group B fixtures whose bytes hold no annotation <c>/Contents</c> or
+    /// <c>/T</c> string at all. Measured from the file (qpdf --qdf, object
+    /// streams expanded, 2026-10-19), not from what excise parses: the other
+    /// nine each carry at least one of them.
+    /// </summary>
+    private static readonly HashSet<string> FixturesWithoutAnnotationText =
+        new(StringComparer.Ordinal) { "annotation-border-styles.pdf" };
+
     [Theory]
     [MemberData(nameof(GroupBFixtures))]
     public void TheTextAnAnnotationCarries_IsParsedFromTheFileNotInvented(string fixture)
@@ -103,7 +112,13 @@ public class GroupBAnnotationMeaningTests
                 }
             }
 
-        Assert.SkipWhen(checkedAny == 0, $"{fixture} has no annotation text to check");
+        // #1903: the skip depends on the INPUT, never on what excise parsed.
+        // checkedAny counts excise's own /Contents and /T values, so skipping on
+        // it turned an annotation-text parse regression into ten declared skips.
+        Assert.SkipWhen(FixturesWithoutAnnotationText.Contains(fixture),
+            $"{fixture} carries no annotation /Contents or /T string (input fact, measured with qpdf --qdf 2026-10-19)");
+        checkedAny.Should().BeGreaterThan(0,
+            $"{fixture}: the file carries annotation /Contents or /T strings, but excise parsed none of them (#1903)");
         failures.Should().BeEmpty($"{fixture}: annotation text must be parsed, not invented.\n" +
                                   string.Join("\n", failures));
     }
@@ -130,7 +145,14 @@ public class GroupBAnnotationMeaningTests
         using var without = Render(page, annotations: false);
 
         var added = AddedTiles(withAnnots, without);
-        Assert.SkipWhen(added.Count == 0, "excise synthesizes nothing here; containment is vacuous");
+        // #1903: a failure, not a skip. Every fixture above is chosen because
+        // its page-1 annotations have no /AP, so excise MUST synthesize ink for
+        // them (all ten do, measured 2026-10-17). A synthesis regression to
+        // "draws nothing" used to read as a declared skip and leave the
+        // containment check vacuous on every row.
+        added.Should().NotBeEmpty(
+            $"{fixture}: excise synthesized no annotation ink for {annots.Count} annotation(s) " +
+            "without /AP, so containment cannot be judged (#1903)");
 
         var allowed = new HashSet<(int, int)>();
         foreach (var a in annots)

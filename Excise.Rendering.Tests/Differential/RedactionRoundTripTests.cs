@@ -142,14 +142,32 @@ public sealed class RedactionRoundTripTests
         }
         catch (Exception ex)
         {
-            Assert.SkipWhen(true,
+            // #1903: excise failing to open a smoke-corpus document is excise's
+            // own result, so it fails rather than skipping (all ten open today).
+            throw new Xunit.Sdk.XunitException(
                 $"excise could not open {relativePath}: {ex.GetType().Name}: {ex.Message}");
-            return;
         }
 
-        Assert.SkipWhen(target == null,
-            $"{relativePath}: no suitable target word found in extracted text — " +
-            "PDF probably has no extractable text or only short/non-ASCII content");
+        // #1903: the target comes from excise's OWN extraction, so "no target"
+        // may be the regression, not the input. Ask mutool, an independent
+        // reader: skip only when page 1 offers it no suitable word either. If
+        // excise's extraction went blind, every row used to skip here and the
+        // phase-4 leak assertion never ran.
+        if (target == null)
+        {
+            var oracleText = MutoolTextExtractor.ExtractPage(pdfPath, 1);
+            Assert.SkipWhen(oracleText == null,
+                $"{relativePath}: excise found no target word and mutool could not read page 1 " +
+                "(the oracle failed; no verdict either way)");
+            var oracleTarget = PickRedactionTarget(oracleText);
+            oracleTarget.Should().BeNull(
+                $"{relativePath}: mutool reads the word '{oracleTarget}' on page 1, but excise's extracted " +
+                "text yields no target word at all — an extraction regression would otherwise skip this " +
+                "row and the leak assertion with it (#1903)");
+            Assert.Skip(
+                $"{relativePath}: page 1 has no 6+ letter ASCII word for mutool or excise " +
+                "(input has no suitable text)");
+        }
 
         // ── Phase 2: redact + save, ONCE ──────────────────────────────
         byte[] redactedBytes;
@@ -247,9 +265,11 @@ public sealed class RedactionRoundTripTests
     ///     likely to be embedded inside other words
     /// Returns null when nothing suitable is in the text.
     /// </summary>
-    private static string? PickRedactionTarget(PdfDocument doc)
+    private static string? PickRedactionTarget(PdfDocument doc) =>
+        PickRedactionTarget(doc.GetPage(1).Text);
+
+    private static string? PickRedactionTarget(string? text)
     {
-        var text = doc.GetPage(1).Text;
         if (string.IsNullOrWhiteSpace(text)) return null;
 
         var counts = new Dictionary<string, int>(StringComparer.Ordinal);
