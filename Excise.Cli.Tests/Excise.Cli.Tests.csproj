@@ -42,6 +42,8 @@
     <!-- #1527/#1674: the ONE fixture locator. Linked the same way it is into
          Excise.App.Tests and Excise.Rendering.Tests. -->
     <Compile Include="../Excise.Core.Tests/TestSupport/TestRepoLayout.cs" Link="TestSupport/TestRepoLayout.cs" />
+    <!-- #1701: CSJ2K's stdout BOM otherwise drops one test result per process. -->
+    <Compile Include="../Excise.Core.Tests/TestSupport/Csj2kStdoutBomGuard.cs" Link="TestSupport/Csj2kStdoutBomGuard.cs" />
   </ItemGroup>
 
 </Project>

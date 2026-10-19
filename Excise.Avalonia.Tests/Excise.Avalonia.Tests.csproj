@@ -23,6 +23,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- #1701: CSJ2K's stdout BOM otherwise drops one test result per process. -->
+    <Compile Include="..\Excise.Core.Tests\TestSupport\Csj2kStdoutBomGuard.cs" Link="TestSupport\Csj2kStdoutBomGuard.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Headless Avalonia platform for automation-peer tests (#631). Only the
          base package: tests dispatch through HeadlessUnitTestSession from
          plain [Fact]s, deliberately avoiding Avalonia.Headless.XUnit's

@@ -75,6 +75,8 @@
     <Compile Include="../Excise.Core.Tests/TestSupport/WidgetOverflowFixtures.cs" Link="TestSupport/WidgetOverflowFixtures.cs" />
     <Compile Include="../Excise.Core.Tests/TestSupport/MultiPageWidgetFixtures.cs" Link="TestSupport/MultiPageWidgetFixtures.cs" />
     <Compile Include="../Excise.Core.Tests/TestSupport/MarkedContentCarrierFixtures.cs" Link="TestSupport/MarkedContentCarrierFixtures.cs" />
+    <!-- #1701: CSJ2K's stdout BOM otherwise drops one test result per process. -->
+    <Compile Include="../Excise.Core.Tests/TestSupport/Csj2kStdoutBomGuard.cs" Link="TestSupport/Csj2kStdoutBomGuard.cs" />
     <!-- ONE fixture/corpus locator, same reasoning (#1527). Thirteen
          hand-rolled copies of "walk up N directories" is what put the
          redaction gates at 2 of 195 assertions in every worktree session for

@@ -294,10 +294,38 @@ while IFS= read -r name; do
         # looks, so the capability that found #985 and the Altona hole is intact.
         echo "    ...    $name absent on re-run; looking once more (#1035)"
         assert_fresh
+        # #1701: the second look turns on the xunit adapter's internal
+        # diagnostics, the only place a CORRUPTED result line is visible. The
+        # xunit v3 VSTest adapter reads one JSON message per line of the test
+        # process's stdout; anything that writes raw bytes to descriptor 1 (CSJ2K
+        # wrote a UTF-8 BOM there) glues itself to the next message, the adapter
+        # logs "Received unparseable output from test process" and the result
+        # is gone — deterministically, on every run. That is not the #894
+        # chance loss and must not wait for the #1051 ratchet.
         out2="$(dotnet test "$CSPROJ" -c Debug --no-build \
                   --filter "FullyQualifiedName~$cls" \
-                  --logger "console;verbosity=detailed" 2>&1)"
-        if grep -qF "$name" <<<"$out2"; then
+                  --logger "console;verbosity=detailed" \
+                  -- xUnit.InternalDiagnosticMessages=true 2>&1)"
+        corrupted_ids="$(grep -F 'Received unparseable output from test process' <<<"$out2" \
+            | grep -E '"\$type":"test-(passed|failed|skipped|not-run|finished)"' \
+            | sed -n 's/.*"TestCaseUniqueID":"\([0-9a-f]*\)".*/\1/p' | sort -u)"
+        corrupted_name=""
+        for id in $corrupted_ids; do
+            corrupted_name="$(sed -n "s/.*Discovered \[execution\] test case '\(.*\)' (ID = '$id').*/\1/p" <<<"$out2" | head -1)"
+            [[ "$corrupted_name" == "$name" || "$corrupted_name" == "$bare" ]] && break
+            corrupted_name=""
+        done
+        if [[ -n "$corrupted_name" ]]; then
+            echo "    FATAL  $name"
+            echo "           its result line reached the adapter corrupted and was dropped"
+            echo "           (\"Received unparseable output from test process\", #1701)."
+            echo "           Something this test runs writes raw bytes to stdout. That"
+            echo "           drop is deterministic: the test never reports, on any run."
+            FATAL=$((FATAL + 1))
+            continue
+        fi
+        # Diagnostics print every discovered name, so match result lines only.
+        if grep -v '^\[xUnit.net' <<<"$out2" | grep -qF "$name"; then
             echo "    ok     $name (transient reporting loss, seen twice then reported)"
             TRANSIENT=$((TRANSIENT + 1))
         else
