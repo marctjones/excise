@@ -288,6 +288,7 @@ internal sealed class XfaStaticDataSync
                 return;
             // XFA 3.3 p198: a multi-select choice list binds to a data group whose
             // children hold one value each; the field value is them joined by newlines.
+            RemoveNullMarker(data);
             data.RemoveNodes();
             var ns = ChildNamespace(data);
             foreach (var line in text.Split('\n'))
@@ -303,7 +304,8 @@ internal sealed class XfaStaticDataSync
             if (data == null)
                 return;
 
-            if (data.Elements().Any())
+            bool rich = data.Elements().Any();
+            if (rich)
             {
                 if (XfaRichText.FindXhtmlBody(data) == null)
                 {
@@ -316,15 +318,37 @@ internal sealed class XfaStaticDataSync
                 data.Attributes().Where(a => a.Name.LocalName == "contentType"
                     && a.Name.NamespaceName.StartsWith(DataNamespacePrefix, StringComparison.Ordinal)).Remove();
             }
-            else if (data.Value == text && !data.Nodes().Skip(1).Any())
-            {
+
+            bool hadNullMarker = RemoveNullMarker(data);
+            if (!rich && !hadNullMarker && data.Value == text && !data.Nodes().Skip(1).Any())
                 return;
-            }
 
             data.RemoveNodes();
             if (text.Length > 0)
                 data.Add(new XText(text));
             _changed = true;
+        }
+
+        /// <summary>
+        /// Drop an <c>xsi:nil</c> marker before a write (#2020). Every write states the node's
+        /// nullness afresh: a value makes it non-null (XFA 3.3 p141: an assigned value means the
+        /// node "is no longer marked as null"), and a cleared field is null. With the default
+        /// nullType <c>empty</c> (p150; excise reads no data description) both unload with no
+        /// marker, as <c>&lt;n&gt;value&lt;/n&gt;</c> and <c>&lt;n/&gt;</c> (p151). A kept
+        /// <c>"true"</c> would load the new value as null; a kept <c>"false"</c> would load a
+        /// cleared node as a non-null empty string (p139-140). Any prefix and both the 2001 URI
+        /// real forms use and the 2000/10 one the spec names (p139) count.
+        /// </summary>
+        private bool RemoveNullMarker(XElement data)
+        {
+            var markers = data.Attributes().Where(a => a.Name.LocalName == "nil"
+                && a.Name.NamespaceName.EndsWith("XMLSchema-instance", StringComparison.Ordinal)).ToList();
+            if (markers.Count == 0)
+                return false;
+            foreach (var marker in markers)
+                marker.Remove();
+            _changed = true;
+            return true;
         }
 
         /// <summary>The node the merge bound, without creating one.</summary>

@@ -143,6 +143,37 @@ public sealed class XfaStaticFillOracleTests : IDisposable
         QpdfDataRoot(path).Element("f1_01")!.Value.Should().BeEmpty();
     }
 
+    private static string[] NilMarkers(XElement node)
+        => node.Attributes()
+            .Where(a => a.Name.LocalName == "nil" && a.Name.NamespaceName.EndsWith("XMLSchema-instance", StringComparison.Ordinal))
+            .Select(a => a.Value)
+            .ToArray();
+
+    /// <summary>
+    /// #2020 (XFA 3.3 p139-141, p150-151): a value written to a node marked <c>xsi:nil="true"</c>
+    /// un-nulls it, and clearing it leaves an empty element with no marker; qpdf decodes the
+    /// saved datasets stream.
+    /// </summary>
+    [Fact]
+    public void NilNode_FilledThenCleared_QpdfReadsNoNullMarker()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf is the independent oracle here (brew install qpdf)");
+        var filled = Fill(F.Build(codeData: F.NilCode("true")), (F.CodePath, "EPSILONNILVALUE"));
+        var filledPath = Write(filled, "nil-filled.pdf");
+        AssertQpdfCheckClean(filledPath);
+        var code = QpdfDataRoot(filledPath).Element("Code")!;
+        code.Value.Should().Be("EPSILONNILVALUE");
+        NilMarkers(code).Should().BeEmpty("a kept xsi:nil=\"true\" loads the written value as null");
+
+        var cleared = Fill(filled, (F.CodePath, null));
+        SavedPdfLeakScanner.FindTerm(cleared, "EPSILONNILVALUE").Should().BeEmpty();
+        var clearedPath = Write(cleared, "nil-cleared.pdf");
+        AssertQpdfCheckClean(clearedPath);
+        var clearedCode = QpdfDataRoot(clearedPath).Element("Code")!;
+        clearedCode.Value.Should().BeEmpty();
+        NilMarkers(clearedCode).Should().BeEmpty();
+    }
+
     [Fact]
     public void Encrypted_StaticForm_QpdfDecryptsTheUpdatedDatasets()
     {
