@@ -172,14 +172,14 @@ Gaps, found 2026-09-20:
   `sample-pdfs` (all git-tracked, 36 files, 2.9 MB), plus `redaction-adversarial`
   (generated) and `reader-bench`. The registry cannot hold tracked directories
   (`verify` requires gitignored), so the excise-owned corpus has no index at all.
-- **Pinning is uneven.** `download-test-pdfs.sh` fetches the veraPDF corpus from
-  `refs/heads/master.zip` and Isartor by URL, with no revision pin and no
-  checksum, while `tests/corpus-expectations-verapdf.tsv` pins per-file
-  expectations for 2,694 of those files. A moving branch under fixed
-  expectations is a reproducibility defect. `download-pdfium-corpus.sh` pins a
-  ref but records no checksums; `download-pdfjs-corpus.sh` writes a per-file
-  SHA-256 manifest and is the pattern to copy. `download-arlington-model.sh` is
-  the pattern for revision plus tarball digest.
+- **Pinning is uneven.** `download-test-pdfs.sh` pins the veraPDF corpus to a
+  commit and Isartor to its dated release, each with an archive SHA-256 that
+  refuses on mismatch; both were proven byte-identical, file by file, to the
+  copies the expectation manifests were generated against (#1727). Other
+  downloaders still fetch a branch or `latest` (`download-pdfium-corpus.sh`,
+  `download-pdfjs-corpus.sh`, `download-pdfua-matterhorn.sh`, among others)
+  or verify no digest; the per-downloader state is on #1727.
+  `download-arlington-model.sh` is the pattern for revision plus tarball digest.
 - **A possible licensing problem is tracked in git:** `sample-pdfs/
   acc-global-compensation-report.pdf` (2.6 MB) is a third-party report, not a
   public-domain document. `CLAUDE.md` states third-party corpora are not
