@@ -292,10 +292,23 @@ public class MatchingKeyInvariantTests
     }
 
     [Fact]
-    public void ALongTextOfMatches_ComesBackInLinearTime()
+    public void ALongTextOfMatches_BuildsItsKeyOncePerRule_NotOncePerHit()
     {
-        var text = string.Concat(System.Linq.Enumerable.Repeat("Café ", 20_000));
-        var sw = Stopwatch.StartNew();
+        // Measured in bytes allocated on this thread, not wall-clock: a time bound failed
+        // under load (#2081). Keying the text once allocates in proportion to its length,
+        // so twice the hits allocate about twice the bytes; rebuilding the key per hit
+        // allocates the whole key again for every hit, about four times the bytes.
+        AllocatedFindingEvery(100);
+        var small = AllocatedFindingEvery(5_000);
+        var large = AllocatedFindingEvery(10_000);
+        ((double)large / small).Should().BeLessThan(3,
+            $"the key of a text is built once per rule, not once per hit ({small:N0} bytes for 5,000 hits, {large:N0} for 10,000)");
+    }
+
+    private static long AllocatedFindingEvery(int hits)
+    {
+        var text = string.Concat(System.Linq.Enumerable.Repeat("Café ", hits));
+        var before = GC.GetAllocatedBytesForCurrentThread();
         var count = 0;
         var start = 0;
         while (true)
@@ -305,8 +318,9 @@ public class MatchingKeyInvariantTests
             count++;
             start = at + length;
         }
-        count.Should().Be(20_000);
-        sw.Elapsed.Should().BeLessThan(TimeSpan.FromSeconds(10), "the key of a text is built once per rule, not once per hit");
+        var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+        count.Should().Be(hits);
+        return allocated;
     }
 
     private static IEnumerable<string> AllTexts()
