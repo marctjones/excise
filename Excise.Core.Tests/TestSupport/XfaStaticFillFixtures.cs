@@ -37,6 +37,18 @@ internal static class XfaStaticFillFixtures
     public const string TotalPath = "form1[0].Page1[0].Total[0]";
     public const string StrayPath = "form1[0].Page1[0].Stray[0]";
 
+    // #2021: dataRef bindings whose data node does not exist (XFA 3.3 p199).
+    /// <summary><c>$record.Extra.Ref</c>: the node and its missing ancestor are created.</summary>
+    public const string RefPath = "form1[0].Page1[0].Ref[0]";
+    /// <summary>A second field bound to the same <c>$record.Extra.Ref</c>: it shares the node.</summary>
+    public const string RefTwinPath = "form1[0].Page1[0].RefTwin[0]";
+    /// <summary><c>$.Group.Rel</c>: relative to the field's data scope (form1, Page1 is transparent).</summary>
+    public const string RelPath = "form1[0].Page1[0].Rel[0]";
+    /// <summary><c>$record..Deep</c>: ".." is ambiguous, so no node may be created (p199).</summary>
+    public const string DeepPath = "form1[0].Page1[0].Deep[0]";
+    /// <summary>A field in a subform bound by <c>dataRef</c> to the missing group <c>$record.Boxes.Box</c>.</summary>
+    public const string InnerPath = "form1[0].Page1[0].Box[0].Inner[0]";
+
     public static string Template() =>
         $"<template xmlns=\"{TemplateNamespace}\"><subform name=\"form1\" layout=\"position\">"
         + "<pageSet><pageArea name=\"PageArea1\"><contentArea x=\"0in\" y=\"0in\" w=\"8.5in\" h=\"11in\"/>"
@@ -56,6 +68,12 @@ internal static class XfaStaticFillFixtures
         + Field("Unbound", "<textEdit/>", "<bind match=\"none\"/>")
         + Field("Missing", "<textEdit/>")
         + Field("Total", "<textEdit/>", "<bind match=\"global\"/>")
+        + Field("Ref", "<textEdit/>", "<bind match=\"dataRef\" ref=\"$record.Extra.Ref\"/>")
+        + Field("RefTwin", "<textEdit/>", "<bind match=\"dataRef\" ref=\"$record.Extra.Ref\"/>")
+        + Field("Rel", "<textEdit/>", "<bind match=\"dataRef\" ref=\"$.Group.Rel\"/>")
+        + Field("Deep", "<textEdit/>", "<bind match=\"dataRef\" ref=\"$record..Deep\"/>")
+        + "<subform name=\"Box\" x=\"0in\" y=\"3in\" w=\"8in\" h=\"1in\"><bind match=\"dataRef\" ref=\"$record.Boxes.Box\"/>"
+        + Field("Inner", "<textEdit/>") + "</subform>"
         + "</subform></subform></template>";
 
     /// <summary>The XML Schema instance namespace real forms declare for <c>xsi:nil</c>.</summary>
@@ -187,6 +205,11 @@ internal static class XfaStaticFillFixtures
         Text(MissingPath);
         Text(TotalPath, "1");
         Text(StrayPath);
+        Text(RefPath);
+        Text(RefTwinPath);
+        Text(RelPath);
+        Text(DeepPath);
+        Text(InnerPath);
 
         const string open = "<xdp:xdp xmlns:xdp=\"http://ns.adobe.com/xdp/\">";
         const string close = "</xdp:xdp>";

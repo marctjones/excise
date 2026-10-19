@@ -234,6 +234,58 @@ public class XfaStaticDataSyncTests
             "the content a nil marker hid is still data in the file (p140 note a) and must go when cleared");
     }
 
+    // ------------------------------------------------- dataRef with no node (#2021)
+
+    /// <summary>
+    /// XFA 3.3 p199: "If there is no data node matching the expression, the binding process creates
+    /// one ... If the expression specifies ancestor data nodes that do not exist, they too are
+    /// created". Two fields with the same ref share the one node (p200).
+    /// </summary>
+    [Fact]
+    public void DataRef_MissingNodeAndAncestor_AreCreated_AndASecondFieldSharesIt()
+    {
+        using var doc = Open(F.Build());
+        var form = doc.GetAcroForm()!;
+        form.FindField(F.RefPath)!.SetValue("REFVALUE");
+        doc.XfaStaticDataSync!.Notes.Should().BeEmpty("a dataRef binding with no node is created, not reported");
+        var saved = doc.SaveToBytes();
+
+        DataValue(saved, "Extra", "Ref").Should().Be("REFVALUE");
+        Data(saved).Elements("Extra").Should().ContainSingle();
+
+        var twin = Fill(saved, (F.RefTwinPath, "TWINVALUE"));
+        Data(twin).Element("Extra")!.Elements("Ref").Should().ContainSingle("the second field binds the same node");
+        DataValue(twin, "Extra", "Ref").Should().Be("TWINVALUE");
+    }
+
+    [Fact]
+    public void DataRef_RelativeToTheFieldScope_IsCreatedThere()
+    {
+        var saved = Fill(F.Build(), (F.RelPath, "RELVALUE"));
+        DataValue(saved, "Group", "Rel").Should().Be("RELVALUE", "$ is the field's data scope, form1 (Page1 is transparent)");
+    }
+
+    [Fact]
+    public void DataRef_SubformBoundToAMissingGroup_GroupIsCreated_ChildBindsInIt()
+    {
+        using var doc = Open(F.Build());
+        doc.GetAcroForm()!.FindField(F.InnerPath)!.SetValue("INNERVALUE");
+        doc.XfaStaticDataSync!.Notes.Should().BeEmpty();
+        var saved = doc.SaveToBytes();
+        DataValue(saved, "Boxes", "Box", "Inner").Should().Be("INNERVALUE");
+    }
+
+    /// <summary>p199: an expression with ".." is ambiguous, so the creation fails; it stays reported.</summary>
+    [Fact]
+    public void DataRef_WithDescendantStep_IsNotCreated_AndIsReported()
+    {
+        using var doc = Open(F.Build());
+        doc.GetAcroForm()!.FindField(F.DeepPath)!.SetValue("DEEPVALUE");
+        doc.XfaStaticDataSync!.Notes.Should().ContainSingle(n => n.Contains(F.DeepPath));
+        var saved = doc.SaveToBytes();
+        Data(saved).Descendants("Deep").Should().BeEmpty();
+    }
+
     [Fact]
     public void StaleValue_AtoB_ANoLongerInTheFile()
     {

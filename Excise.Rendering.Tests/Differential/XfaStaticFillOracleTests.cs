@@ -174,6 +174,23 @@ public sealed class XfaStaticFillOracleTests : IDisposable
         NilMarkers(clearedCode).Should().BeEmpty();
     }
 
+    /// <summary>
+    /// #2021 (XFA 3.3 p199): a field bound by <c>dataRef</c> to a node that does not exist gets the
+    /// node and its missing ancestor created; qpdf decodes the saved datasets and reads /V.
+    /// </summary>
+    [Fact]
+    public void DataRef_MissingNode_QpdfReadsTheCreatedNode()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf is the independent oracle here (brew install qpdf)");
+        var path = Write(Fill(F.Build(), (F.RefPath, "ZETAREFVALUE")), "dataref-created.pdf");
+        AssertQpdfCheckClean(path);
+        QpdfReferenceTool.AcroFormFieldValues(path)![F.RefPath].Should().Be("ZETAREFVALUE");
+        var extra = QpdfDataRoot(path).Element("Extra");
+        extra.Should().NotBeNull("the missing ancestor data group is created (p199)");
+        extra!.Element("Ref")!.Value.Should().Be("ZETAREFVALUE",
+            "the datasets must carry the value /V carries (ISO 32000-2 Annex K.2)");
+    }
+
     [Fact]
     public void Encrypted_StaticForm_QpdfDecryptsTheUpdatedDatasets()
     {

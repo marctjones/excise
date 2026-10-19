@@ -367,8 +367,8 @@ internal sealed class XfaStaticDataSync
         /// <summary>
         /// The bound data node, created when the merge found none — as an XFA
         /// processor's merge creates it (XFA 3.3 p199; ch. 4 re-normalization,
-        /// p209). Never for <c>match="none"</c> (no data by design) or an
-        /// unbound <c>dataRef</c> (not modelled).
+        /// p209). Never for <c>match="none"</c> (no data by design). A
+        /// <c>dataRef</c> creates the node its ref names (p199, #2021).
         /// </summary>
         private XElement? EnsureData(PdfField field, XfaFormNode node)
         {
@@ -382,10 +382,26 @@ internal sealed class XfaStaticDataSync
             var name = node.Element.Attr("name");
             if (match == "none")
                 return null;
-            if (string.IsNullOrEmpty(name) || match == "dataRef")
+            if (match == "dataRef")
+            {
+                // p200: a dataRef binding does not use the name, so a nameless object binds too.
+                var reference = node.Element.Child("bind")?.Attr("ref");
+                XElement? refScope = null;
+                if (RefStartsAtScope(reference))
+                {
+                    refScope = EnsureScope(field);
+                    if (refScope == null)
+                        return null;
+                }
+                var dataRef = CreateByDataRef(field, reference, refScope);
+                if (dataRef != null)
+                    node.BoundData = dataRef;
+                return dataRef;
+            }
+            if (string.IsNullOrEmpty(name))
             {
                 _note($"XFA datasets not updated for '{field.FullName}': it has no data node and its " +
-                      $"binding ({(string.IsNullOrEmpty(name) ? "unnamed" : "dataRef")}) is not one excise creates.");
+                      "binding (unnamed) is not one excise creates.");
                 return null;
             }
 
@@ -445,9 +461,13 @@ internal sealed class XfaStaticDataSync
 
                 if (match == "dataRef")
                 {
-                    _note($"XFA datasets not updated for '{field.FullName}': subform '{name}' binds by " +
-                          "dataRef to a data group that does not exist.");
-                    return null;
+                    var reference = container.Element.Child("bind")?.Attr("ref");
+                    var bound = CreateByDataRef(field, reference, RefStartsAtScope(reference) ? scope : null);
+                    if (bound == null)
+                        return null;
+                    container.DataScope = bound;
+                    scope = bound;
+                    continue;
                 }
 
                 var group = new XElement(ChildNamespace(scope) + name);
@@ -457,6 +477,49 @@ internal sealed class XfaStaticDataSync
                 _changed = true;
             }
             return scope;
+        }
+
+        /// <summary>
+        /// The node a <c>dataRef</c> names, created with any missing ancestor when absent (XFA 3.3
+        /// p199, #2021) through <see cref="XfaSom.EvaluateOrCreate"/>; null (and a note) when the
+        /// expression is one the spec or excise refuses to create.
+        /// </summary>
+        private XElement? CreateByDataRef(PdfField field, string? reference, XElement? scope)
+        {
+            var root = _snapshot.EnsureDataRoot(_chain[0].Element.Attr("name"));
+            if (root == null)
+            {
+                _note($"XFA datasets not updated for '{field.FullName}': the root subform is unnamed, so " +
+                      "there is no data record to create.");
+                return null;
+            }
+
+            var node = XfaSom.EvaluateOrCreate(reference, scope, root, new XfaBudget(MergeTimeLimit, CancellationToken.None),
+                (parent, name) =>
+                {
+                    var child = new XElement(ChildNamespace(parent) + name);
+                    parent.Add(child);
+                    return child;
+                },
+                out var created, out var refusal);
+            if (node == null)
+            {
+                _note($"XFA datasets not updated for '{field.FullName}': it has no data node and {refusal}.");
+                return null;
+            }
+            if (created)
+                _changed = true;
+            return node;
+        }
+
+        /// <summary>A <c>$</c> or bare relative ref starts at the binding object's data scope.</summary>
+        private static bool RefStartsAtScope(string? reference)
+        {
+            var expr = (reference ?? string.Empty).Trim();
+            return !(expr.StartsWith("$record", StringComparison.Ordinal)
+                     || expr.StartsWith("$data", StringComparison.Ordinal)
+                     || expr.StartsWith('!')
+                     || expr.StartsWith("xfa.", StringComparison.Ordinal));
         }
 
         private static XNamespace ChildNamespace(XElement parent)
