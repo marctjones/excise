@@ -222,7 +222,7 @@ internal partial class MainWindowViewModel
         StartThumbnailSession(
             filePath,
             PdfCoreDocument!,
-            cacheSalt: _documentService.XfaLayout is { ShowsForm: true } ? "xfa-layout-v1" : null);
+            cacheSalt: Services.XfaThumbnailCacheSalt.For(PdfCoreDocument!, _documentService.XfaLayout));
         return Task.CompletedTask;
     }
 
