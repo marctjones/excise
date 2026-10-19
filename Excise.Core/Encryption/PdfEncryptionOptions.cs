@@ -59,8 +59,9 @@ public sealed class PdfEncryptionOptions
     /// <summary>
     /// The <c>/P</c> permission bitmask (ISO 32000-2 Table 22), a signed
     /// 32-bit integer. Plumbed through structurally and stored correctly
-    /// in <c>/P</c> and the encrypted <c>/Perms</c> field; excise does not
-    /// yet enforce these permissions on read (issue #642). Default (-4,
+    /// in <c>/P</c> and the encrypted <c>/Perms</c> field. On read excise
+    /// enforces <c>/P</c> at the action layer, never in the engine (#642;
+    /// see <see cref="PdfPermissions"/>). Default (-4,
     /// i.e. 0xFFFFFFFC) grants every permission bit while keeping the two
     /// reserved low-order bits zero, matching the conventional
     /// "no restrictions" default used by other PDF libraries.
