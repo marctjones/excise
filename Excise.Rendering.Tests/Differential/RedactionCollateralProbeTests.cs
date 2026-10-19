@@ -18,6 +18,17 @@ public sealed class RedactionCollateralProbeTests
     }
 
     [Fact]
+    public void PinnedRegressionFixture_RedactsTheTermItIsPinnedFor()
+    {
+        // #1889: issue15629.pdf's text (mutool, 40 characters) repeats no word,
+        // so sampling alone yields nothing and the #1040 pin measured nothing.
+        const string text = "Full Name:\n\n2\n\nLouise Anne Farrar\n";
+
+        RedactionCollateralHarness.SampleTerms(text).Should().BeEmpty();
+        RedactionCollateralHarness.ProbeTerms("issue15629.pdf", text).Should().Equal("Louise");
+    }
+
+    [Fact]
     public void OtherFixtures_KeepOnlyDocumentDerivedTerms()
     {
         const string text = "alpha alpha bravo bravo charlie";
