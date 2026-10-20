@@ -30,8 +30,9 @@ namespace Excise.TestSupport;
 /// This runs the constructor before xunit writes anything and ends the BOM's
 /// line, so the adapter sees one unparseable line holding only the BOM and no
 /// message is lost. Every test assembly that can reach <c>JpxDecoder</c>
-/// compiles this file. The same BOM reaches the CLI's stdout; that product
-/// defect is issue #2084.
+/// compiles this file. The CLI keeps the BOM off its own stdout with
+/// <c>Csj2kQuietStartup</c> (#2084); test hosts never run the CLI's
+/// <c>Main</c>, so this guard is still needed.
 /// </para>
 /// </remarks>
 internal static class Csj2kStdoutBomGuard
