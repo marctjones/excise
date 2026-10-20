@@ -138,6 +138,10 @@ internal partial class MainWindowViewModel
     /// encrypted with the given passwords/algorithm — including when both
     /// passwords are empty, which is a valid "encrypted, no open prompt"
     /// configuration and must NOT be treated as "remove protection".
+    /// The document's own <c>/P</c> mask is carried into the new file: the
+    /// dialog changes passwords, not restrictions, and the options' -4 default
+    /// would otherwise silently grant everything (#1548). An unencrypted
+    /// source's mask is all-allowed, so it gains no restrictions.
     /// Internal (not private) so tests can drive this directly, mirroring
     /// <c>RunMakeSearchableAsync</c>'s visibility.
     /// </summary>
@@ -150,6 +154,7 @@ internal partial class MainWindowViewModel
         {
             UserPassword = userPassword,
             OwnerPassword = ownerPassword,
+            Permissions = document.Permissions.RawValue,
             Algorithm = algorithm,
         };
 

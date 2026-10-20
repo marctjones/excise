@@ -538,4 +538,84 @@ public class DocumentPermissionEnforcementTests : IDisposable
 
         vm.ExtractAllText().Should().Contain("garçon");
     }
+
+    // ---- Document ▸ Security ▸ Apply keeps /P (#1548 part 2) ---------------
+
+    private static string[] QpdfEncryptionLines(string path, string? password)
+    {
+        var output = QpdfReferenceTool.ShowEncryption(path, password);
+        output.Should().NotBeNull("qpdf must be able to read the encryption dictionary of {0}", path);
+        return output!.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    /// <summary>
+    /// #1548: Apply used to build its <see cref="Excise.Core.Security.PdfEncryptionOptions"/>
+    /// without Permissions, so the -4 default (everything allowed) silently
+    /// replaced a restricted document's /P. The mask is read back with qpdf,
+    /// on the input (so the red is not excise's own encryptor) and on the output.
+    /// The unencrypted row is the control: Apply must not invent restrictions.
+    /// </summary>
+    [FixedAvaloniaTheory]
+    [InlineData(-4 & ~(4L | 16L), Excise.Core.Security.PdfEncryptionAlgorithm.Aes256)] // print + extract denied
+    [InlineData(-4 & ~(4L | 16L), Excise.Core.Security.PdfEncryptionAlgorithm.Aes128)]
+    [InlineData(-4L, Excise.Core.Security.PdfEncryptionAlgorithm.Aes256)]               // unencrypted control
+    public async Task ApplySecurity_KeepsTheDocumentsPermissions_QpdfVerified(
+        long permissions, Excise.Core.Security.PdfEncryptionAlgorithm algorithm)
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        var restricted = permissions != -4L;
+        string input;
+        if (restricted)
+        {
+            input = SaveWithPermissions("Apply keeps restrictions", permissions);
+            QpdfEncryptionLines(input, null).Should().Contain($"P = {permissions}",
+                "the fixture itself must carry the restricted mask, read by an independent tool");
+        }
+        else
+        {
+            input = Path.Combine(_tempDir, "plain-control.pdf");
+            using var plain = Excise.Core.Document.PdfDocument.CreateNew();
+            plain.Pages.AddBlank();
+            plain.Save(input);
+        }
+
+        var (vm, _) = await CreateViewModelWithRestrictedFixtureAsync(input);
+        var output = Path.Combine(_tempDir, $"applied-{algorithm}-{permissions}.pdf");
+        vm.ApplySecurity(output, "user-1548", "owner-1548", algorithm);
+
+        var lines = QpdfEncryptionLines(output, "user-1548");
+        lines.Should().Contain($"P = {permissions}",
+            "Apply changes the passwords, not the restrictions the document carries");
+        if (restricted)
+        {
+            lines.Should().Contain("print low resolution: not allowed");
+            lines.Should().Contain("extract for any purpose: not allowed");
+        }
+        else
+        {
+            lines.Should().Contain("print high resolution: allowed");
+            lines.Should().Contain("extract for any purpose: allowed");
+        }
+    }
+
+    /// <summary>
+    /// #1548, on the independent poppler fixture (P = -3392, qpdf-confirmed in
+    /// this class's summary): Apply carries that mask into the new file.
+    /// </summary>
+    [FixedAvaloniaFact]
+    public async Task ApplySecurity_OnTheRestrictedCorpusFixture_KeepsItsPermissions_QpdfVerified()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        var fixturePath = RestrictedFixturePathOrNull();
+        Assert.SkipWhen(fixturePath == null, TestRepoLayout.AbsenceReason("restricted poppler corpus fixture", RestrictedFixtureRelativePath));
+
+        var (vm, _) = await CreateViewModelWithRestrictedFixtureAsync(fixturePath!);
+        var output = Path.Combine(_tempDir, "applied-corpus.pdf");
+        vm.ApplySecurity(output, "user-1548", "owner-1548", Excise.Core.Security.PdfEncryptionAlgorithm.Aes256);
+
+        var lines = QpdfEncryptionLines(output, "user-1548");
+        lines.Should().Contain("P = -3392");
+        lines.Should().Contain("modify anything: not allowed");
+        lines.Should().Contain("extract for accessibility: allowed");
+    }
 }
