@@ -143,6 +143,54 @@ public sealed class XfaStaticFillOracleTests : IDisposable
         QpdfDataRoot(path).Element("f1_01")!.Value.Should().BeEmpty();
     }
 
+    private static string[] NilMarkers(XElement node)
+        => node.Attributes()
+            .Where(a => a.Name.LocalName == "nil" && a.Name.NamespaceName.EndsWith("XMLSchema-instance", StringComparison.Ordinal))
+            .Select(a => a.Value)
+            .ToArray();
+
+    /// <summary>
+    /// #2020 (XFA 3.3 p139-141, p150-151): a value written to a node marked <c>xsi:nil="true"</c>
+    /// un-nulls it, and clearing it leaves an empty element with no marker; qpdf decodes the
+    /// saved datasets stream.
+    /// </summary>
+    [Fact]
+    public void NilNode_FilledThenCleared_QpdfReadsNoNullMarker()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf is the independent oracle here (brew install qpdf)");
+        var filled = Fill(F.Build(codeData: F.NilCode("true")), (F.CodePath, "EPSILONNILVALUE"));
+        var filledPath = Write(filled, "nil-filled.pdf");
+        AssertQpdfCheckClean(filledPath);
+        var code = QpdfDataRoot(filledPath).Element("Code")!;
+        code.Value.Should().Be("EPSILONNILVALUE");
+        NilMarkers(code).Should().BeEmpty("a kept xsi:nil=\"true\" loads the written value as null");
+
+        var cleared = Fill(filled, (F.CodePath, null));
+        SavedPdfLeakScanner.FindTerm(cleared, "EPSILONNILVALUE").Should().BeEmpty();
+        var clearedPath = Write(cleared, "nil-cleared.pdf");
+        AssertQpdfCheckClean(clearedPath);
+        var clearedCode = QpdfDataRoot(clearedPath).Element("Code")!;
+        clearedCode.Value.Should().BeEmpty();
+        NilMarkers(clearedCode).Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// #2021 (XFA 3.3 p199): a field bound by <c>dataRef</c> to a node that does not exist gets the
+    /// node and its missing ancestor created; qpdf decodes the saved datasets and reads /V.
+    /// </summary>
+    [Fact]
+    public void DataRef_MissingNode_QpdfReadsTheCreatedNode()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf is the independent oracle here (brew install qpdf)");
+        var path = Write(Fill(F.Build(), (F.RefPath, "ZETAREFVALUE")), "dataref-created.pdf");
+        AssertQpdfCheckClean(path);
+        QpdfReferenceTool.AcroFormFieldValues(path)![F.RefPath].Should().Be("ZETAREFVALUE");
+        var extra = QpdfDataRoot(path).Element("Extra");
+        extra.Should().NotBeNull("the missing ancestor data group is created (p199)");
+        extra!.Element("Ref")!.Value.Should().Be("ZETAREFVALUE",
+            "the datasets must carry the value /V carries (ISO 32000-2 Annex K.2)");
+    }
+
     [Fact]
     public void Encrypted_StaticForm_QpdfDecryptsTheUpdatedDatasets()
     {

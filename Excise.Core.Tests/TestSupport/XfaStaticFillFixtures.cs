@@ -37,6 +37,18 @@ internal static class XfaStaticFillFixtures
     public const string TotalPath = "form1[0].Page1[0].Total[0]";
     public const string StrayPath = "form1[0].Page1[0].Stray[0]";
 
+    // #2021: dataRef bindings whose data node does not exist (XFA 3.3 p199).
+    /// <summary><c>$record.Extra.Ref</c>: the node and its missing ancestor are created.</summary>
+    public const string RefPath = "form1[0].Page1[0].Ref[0]";
+    /// <summary>A second field bound to the same <c>$record.Extra.Ref</c>: it shares the node.</summary>
+    public const string RefTwinPath = "form1[0].Page1[0].RefTwin[0]";
+    /// <summary><c>$.Group.Rel</c>: relative to the field's data scope (form1, Page1 is transparent).</summary>
+    public const string RelPath = "form1[0].Page1[0].Rel[0]";
+    /// <summary><c>$record..Deep</c>: ".." is ambiguous, so no node may be created (p199).</summary>
+    public const string DeepPath = "form1[0].Page1[0].Deep[0]";
+    /// <summary>A field in a subform bound by <c>dataRef</c> to the missing group <c>$record.Boxes.Box</c>.</summary>
+    public const string InnerPath = "form1[0].Page1[0].Box[0].Inner[0]";
+
     public static string Template() =>
         $"<template xmlns=\"{TemplateNamespace}\"><subform name=\"form1\" layout=\"position\">"
         + "<pageSet><pageArea name=\"PageArea1\"><contentArea x=\"0in\" y=\"0in\" w=\"8.5in\" h=\"11in\"/>"
@@ -56,18 +68,35 @@ internal static class XfaStaticFillFixtures
         + Field("Unbound", "<textEdit/>", "<bind match=\"none\"/>")
         + Field("Missing", "<textEdit/>")
         + Field("Total", "<textEdit/>", "<bind match=\"global\"/>")
+        + Field("Ref", "<textEdit/>", "<bind match=\"dataRef\" ref=\"$record.Extra.Ref\"/>")
+        + Field("RefTwin", "<textEdit/>", "<bind match=\"dataRef\" ref=\"$record.Extra.Ref\"/>")
+        + Field("Rel", "<textEdit/>", "<bind match=\"dataRef\" ref=\"$.Group.Rel\"/>")
+        + Field("Deep", "<textEdit/>", "<bind match=\"dataRef\" ref=\"$record..Deep\"/>")
+        + "<subform name=\"Box\" x=\"0in\" y=\"3in\" w=\"8in\" h=\"1in\"><bind match=\"dataRef\" ref=\"$record.Boxes.Box\"/>"
+        + Field("Inner", "<textEdit/>") + "</subform>"
         + "</subform></subform></template>";
 
+    /// <summary>The XML Schema instance namespace real forms declare for <c>xsi:nil</c>.</summary>
+    public const string XsiNamespace = "http://www.w3.org/2001/XMLSchema-instance";
+
+    /// <summary>
+    /// A Code data node carrying an explicit null marker (XFA 3.3 p139-140, #2020), declaring
+    /// <paramref name="xsiNamespace"/> on the node itself.
+    /// </summary>
+    public static string NilCode(string nil, string content = "", string xsiNamespace = XsiNamespace) =>
+        $"<Code xmlns:xsi=\"{xsiNamespace}\" xsi:nil=\"{nil}\">{content}</Code>";
+
     /// <param name="sex">The Sex data node; the default is the empty short-format value.</param>
-    public static string DataXml(string sex = "<Sex/>") =>
+    /// <param name="code">The Code data node; the default is an empty element.</param>
+    public static string DataXml(string sex = "<Sex/>", string code = "<Code/>") =>
         "<form1>"
         + $"<Name>{OriginalName}</Name>"
         + "<Address><City>OldCity</City><Total>1</Total></Address>"
-        + "<Code/><Agree>N</Agree><Solo/>" + sex + "<Country/><Unbound>KEEPUNBOUND</Unbound>"
+        + code + "<Agree>N</Agree><Solo/>" + sex + "<Country/><Unbound>KEEPUNBOUND</Unbound>"
         + "</form1>";
 
-    public static string Datasets(string sex = "<Sex/>") =>
-        $"<xfa:datasets xmlns:xfa=\"{DataNamespace}\"><xfa:data>{DataXml(sex)}</xfa:data></xfa:datasets>";
+    public static string Datasets(string sex = "<Sex/>", string code = "<Code/>") =>
+        $"<xfa:datasets xmlns:xfa=\"{DataNamespace}\"><xfa:data>{DataXml(sex, code)}</xfa:data></xfa:datasets>";
 
     private static string Field(string name, string ui, string extra = "")
         => $"<field name=\"{name}\" x=\"1in\" y=\"1in\" w=\"3in\" h=\"0.3in\"><ui>{ui}</ui>{extra}</field>";
@@ -90,14 +119,16 @@ internal static class XfaStaticFillFixtures
     /// body (null = none). <paramref name="needsRendering"/> makes it a
     /// DYNAMIC form with the same widgets, which the write-back must not touch.
     /// <paramref name="sexData"/> replaces the exclusion group's data node
-    /// (for the long format, XFA 3.3 p196-197).
+    /// (for the long format, XFA 3.3 p196-197). <paramref name="codeData"/> replaces the Code
+    /// data node (for <c>xsi:nil</c>, #2020).
     /// </summary>
     public static byte[] Build(
         Shape shape = Shape.PacketArray,
         string? formPacket = null,
         bool needsRendering = false,
         string version = "1.7",
-        string sexData = "<Sex/>")
+        string sexData = "<Sex/>",
+        string codeData = "<Code/>")
     {
         var objects = new List<string>();
         int Add(string body)
@@ -174,6 +205,11 @@ internal static class XfaStaticFillFixtures
         Text(MissingPath);
         Text(TotalPath, "1");
         Text(StrayPath);
+        Text(RefPath);
+        Text(RefTwinPath);
+        Text(RelPath);
+        Text(DeepPath);
+        Text(InnerPath);
 
         const string open = "<xdp:xdp xmlns:xdp=\"http://ns.adobe.com/xdp/\">";
         const string close = "</xdp:xdp>";
@@ -182,16 +218,16 @@ internal static class XfaStaticFillFixtures
         switch (shape)
         {
             case Shape.SingleStream:
-                xfa = $"{Add(RawStream("", open + Template() + Datasets(sexData) + form + close))} 0 R";
+                xfa = $"{Add(RawStream("", open + Template() + Datasets(sexData, codeData) + form + close))} 0 R";
                 break;
             default:
             {
                 var parts = new List<(string Name, string Xml)> { ("preamble", open), ("template", Template()) };
                 if (shape == Shape.PacketArray)
-                    parts.Add(("datasets", Datasets(sexData)));
+                    parts.Add(("datasets", Datasets(sexData, codeData)));
                 else if (shape == Shape.SplitDatasets)
                 {
-                    var datasets = Datasets(sexData);
+                    var datasets = Datasets(sexData, codeData);
                     var cut = datasets.IndexOf("<Address>", StringComparison.Ordinal);
                     parts.Add(("datasets", datasets[..cut]));
                     parts.Add(("datasets2", datasets[cut..]));

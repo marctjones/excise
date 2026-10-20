@@ -174,6 +174,118 @@ public class XfaStaticDataSyncTests
             "the cleared value must not survive in /V, the datasets or anywhere else");
     }
 
+    // -------------------------------------------------------- xsi:nil (#2020)
+
+    /// <summary>The <c>nil</c> attributes left on a data node, in any XMLSchema-instance namespace.</summary>
+    private static List<string> NilMarkers(XElement node)
+        => node.Attributes()
+            .Where(a => a.Name.LocalName == "nil" && a.Name.NamespaceName.EndsWith("XMLSchema-instance", StringComparison.Ordinal))
+            .Select(a => a.Value)
+            .ToList();
+
+    /// <summary>
+    /// XFA 3.3 p141: a value assigned to a field bound to a null data node propagates to the node,
+    /// which "is no longer marked as null"; p151 (nullType empty, the default when no data
+    /// description says otherwise, p150): a non-null value unloads as <c>&lt;title&gt;A Book&lt;/title&gt;</c>.
+    /// Both namespaces count: real forms use the 2001 URI, the spec text names 2000/10 (p139).
+    /// </summary>
+    [Theory]
+    [InlineData("http://www.w3.org/2001/XMLSchema-instance")]
+    [InlineData("http://www.w3.org/2000/10/XMLSchema-instance")]
+    public void NilNode_ValueWritten_LosesItsNullMarker(string xsiNamespace)
+    {
+        var saved = Fill(F.Build(codeData: F.NilCode("true", xsiNamespace: xsiNamespace)), (F.CodePath, "C-9"));
+
+        var code = Data(saved).Element("Code")!;
+        code.Value.Should().Be("C-9");
+        NilMarkers(code).Should().BeEmpty("xsi:nil=\"true\" would make an XFA processor load the node as null (p140)");
+    }
+
+    /// <summary>
+    /// A nil node may carry content, which the XFA Data DOM ignores (p140, note a). Writing that
+    /// same text must still drop the marker: the old early return compared text only.
+    /// </summary>
+    [Fact]
+    public void NilNodeWithContent_SameTextWritten_LosesItsNullMarker()
+    {
+        var saved = Fill(F.Build(codeData: F.NilCode("true", content: "C-9")), (F.CodePath, "C-9"));
+
+        var code = Data(saved).Element("Code")!;
+        code.Value.Should().Be("C-9");
+        NilMarkers(code).Should().BeEmpty();
+    }
+
+    /// <summary>
+    /// Cleared means null. p151 (nullType empty): a null value unloads as an empty element with no
+    /// marker; an explicit <c>xsi:nil="false"</c> kept on it would load as a NON-null empty string
+    /// (p139).
+    /// </summary>
+    [Theory]
+    [InlineData("false")]
+    [InlineData("true")]
+    public void NilMarkedNode_Cleared_IsAnEmptyElementWithNoMarker(string nil)
+    {
+        var saved = Fill(F.Build(codeData: F.NilCode(nil, content: "OLDCODEVALUE")), (F.CodePath, null));
+
+        var code = Data(saved).Element("Code")!;
+        code.Value.Should().BeEmpty();
+        NilMarkers(code).Should().BeEmpty();
+        SavedPdfLeakScanner.FindTerm(saved, "OLDCODEVALUE").Should().BeEmpty(
+            "the content a nil marker hid is still data in the file (p140 note a) and must go when cleared");
+    }
+
+    // ------------------------------------------------- dataRef with no node (#2021)
+
+    /// <summary>
+    /// XFA 3.3 p199: "If there is no data node matching the expression, the binding process creates
+    /// one ... If the expression specifies ancestor data nodes that do not exist, they too are
+    /// created". Two fields with the same ref share the one node (p200).
+    /// </summary>
+    [Fact]
+    public void DataRef_MissingNodeAndAncestor_AreCreated_AndASecondFieldSharesIt()
+    {
+        using var doc = Open(F.Build());
+        var form = doc.GetAcroForm()!;
+        form.FindField(F.RefPath)!.SetValue("REFVALUE");
+        doc.XfaStaticDataSync!.Notes.Should().BeEmpty("a dataRef binding with no node is created, not reported");
+        var saved = doc.SaveToBytes();
+
+        DataValue(saved, "Extra", "Ref").Should().Be("REFVALUE");
+        Data(saved).Elements("Extra").Should().ContainSingle();
+
+        var twin = Fill(saved, (F.RefTwinPath, "TWINVALUE"));
+        Data(twin).Element("Extra")!.Elements("Ref").Should().ContainSingle("the second field binds the same node");
+        DataValue(twin, "Extra", "Ref").Should().Be("TWINVALUE");
+    }
+
+    [Fact]
+    public void DataRef_RelativeToTheFieldScope_IsCreatedThere()
+    {
+        var saved = Fill(F.Build(), (F.RelPath, "RELVALUE"));
+        DataValue(saved, "Group", "Rel").Should().Be("RELVALUE", "$ is the field's data scope, form1 (Page1 is transparent)");
+    }
+
+    [Fact]
+    public void DataRef_SubformBoundToAMissingGroup_GroupIsCreated_ChildBindsInIt()
+    {
+        using var doc = Open(F.Build());
+        doc.GetAcroForm()!.FindField(F.InnerPath)!.SetValue("INNERVALUE");
+        doc.XfaStaticDataSync!.Notes.Should().BeEmpty();
+        var saved = doc.SaveToBytes();
+        DataValue(saved, "Boxes", "Box", "Inner").Should().Be("INNERVALUE");
+    }
+
+    /// <summary>p199: an expression with ".." is ambiguous, so the creation fails; it stays reported.</summary>
+    [Fact]
+    public void DataRef_WithDescendantStep_IsNotCreated_AndIsReported()
+    {
+        using var doc = Open(F.Build());
+        doc.GetAcroForm()!.FindField(F.DeepPath)!.SetValue("DEEPVALUE");
+        doc.XfaStaticDataSync!.Notes.Should().ContainSingle(n => n.Contains(F.DeepPath));
+        var saved = doc.SaveToBytes();
+        Data(saved).Descendants("Deep").Should().BeEmpty();
+    }
+
     [Fact]
     public void StaleValue_AtoB_ANoLongerInTheFile()
     {
