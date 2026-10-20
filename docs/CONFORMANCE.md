@@ -175,10 +175,16 @@ Gaps, found 2026-09-20:
 - **Pinning is uneven.** `download-test-pdfs.sh` pins the veraPDF corpus to a
   commit and Isartor to its dated release, each with an archive SHA-256 that
   refuses on mismatch; both were proven byte-identical, file by file, to the
-  copies the expectation manifests were generated against (#1727). Other
-  downloaders still fetch a branch or `latest` (`download-pdfium-corpus.sh`,
-  `download-pdfjs-corpus.sh`, `download-pdfua-matterhorn.sh`, among others)
-  or verify no digest; the per-downloader state is on #1727.
+  copies the expectation manifests were generated against (#1727).
+  `download-pdfium-corpus.sh` and `download-pdfjs-corpus.sh` pin a commit
+  (PDFium `1125be28`, pdf.js `f2f3a7fd`) and verify the fetched files, not an
+  archive, against a tracked per-file SHA-256 list (`tests/corpus-pins/`)
+  before installing; both lists were proven identical to the files their
+  expectations were generated against. The pdf.js corpus is a 685-file subset
+  of `test/pdfs` (the old listing call was capped at 1,000 entries), and its
+  `.link` files are not mirrored. Other downloaders still fetch a branch or
+  `latest` (`download-pdfua-matterhorn.sh`, among others) or verify no
+  digest; the per-downloader state is on #1727.
   `download-arlington-model.sh` is the pattern for revision plus tarball digest.
 - **A possible licensing problem is tracked in git:** `sample-pdfs/
   acc-global-compensation-report.pdf` (2.6 MB) is a third-party report, not a
