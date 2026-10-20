@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "41ea590e38a2b9cf2d80e2806865148ad4b80d6e",
+  "sourceRevision": "866d8dfab0ebcf56887aa451162f2d4a51a445ff",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -22,8 +22,8 @@
     "commitsRequested": 200,
     "commitsObserved": 199,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "e4d507a69c42da0fc2f8034d0c335a00a92de1c5",
-    "oldestProductionCommit": "3a6fb9fa1414824f739e35cf7ff172df97614d7e"
+    "newestProductionCommit": "e243bf914e4248ec4d0dec9436e564fdcdaf394a",
+    "oldestProductionCommit": "6313d9ff55816be955b1e640fc618aa89c286527"
   },
   "files": [
     {
@@ -371,10 +371,6 @@
       "commits": 3
     },
     {
-      "path": "Excise.Rendering/SkiaRenderer.Annotations.cs",
-      "commits": 3
-    },
-    {
       "path": "Excise.Rendering/SkiaRenderer.Paths.cs",
       "commits": 3
     },
@@ -440,10 +436,6 @@
     },
     {
       "path": "Excise.App/ViewModels/RedactionWorkflowManager.cs",
-      "commits": 2
-    },
-    {
-      "path": "Excise.App/ViewModels/StickyNotePopupViewModel.cs",
       "commits": 2
     },
     {
@@ -516,6 +508,10 @@
     },
     {
       "path": "Excise.Avalonia/Controls/Viewer/SinglePageView.axaml.cs",
+      "commits": 2
+    },
+    {
+      "path": "Excise.Cli/Program.cs",
       "commits": 2
     },
     {
@@ -628,6 +624,10 @@
     },
     {
       "path": "Excise.Rendering/RawSampleImageDecoder.cs",
+      "commits": 2
+    },
+    {
+      "path": "Excise.Rendering/SkiaRenderer.Annotations.cs",
       "commits": 2
     },
     {
@@ -751,6 +751,10 @@
       "commits": 1
     },
     {
+      "path": "Excise.App/ViewModels/StickyNotePopupViewModel.cs",
+      "commits": 1
+    },
+    {
       "path": "Excise.App/Views/AboutWindow.axaml",
       "commits": 1
     },
@@ -780,10 +784,6 @@
     },
     {
       "path": "Excise.App/Views/ReduceFileSizeDialog.axaml.cs",
-      "commits": 1
-    },
-    {
-      "path": "Excise.App/Views/StickyNotePopupView.axaml",
       "commits": 1
     },
     {
@@ -855,10 +855,6 @@
       "commits": 1
     },
     {
-      "path": "Excise.Cli/Program.cs",
-      "commits": 1
-    },
-    {
       "path": "Excise.Core/Automation/PdfCommandIds.cs",
       "commits": 1
     },
@@ -908,6 +904,14 @@
     },
     {
       "path": "Excise.Core/Filters/FlateFilterDecoder.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Filters/Jpx/Csj2kQuietStartup.cs",
+      "commits": 1
+    },
+    {
+      "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
       "commits": 1
     },
     {

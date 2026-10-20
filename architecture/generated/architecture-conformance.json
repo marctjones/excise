@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "41ea590e38a2b9cf2d80e2806865148ad4b80d6e",
+  "sourceRevision": "866d8dfab0ebcf56887aa451162f2d4a51a445ff",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 9006,
+    "retainedSymbols": 9012,
     "observedComponentDependencies": 85,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -178,14 +178,14 @@
     {
       "source": "cli",
       "target": "core-parsing",
-      "references": 2,
-      "typeDependencyCount": 2,
+      "references": 4,
+      "typeDependencyCount": 3,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Cli.Commands.EncryptionCommandHandler",
-          "target": "Excise.Core.Parsing.PdfEncryptionNotSupportedException",
-          "references": 1
+          "source": "Excise.Cli.Program",
+          "target": "Excise.Core.Filters.Jpx.Csj2kQuietStartup",
+          "references": 2
         }
       ]
     },

@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1702,
-  "indexedContentSha256": "94ad562ae69ce1ace1ff83c2a5ec609abcfc5c395f832857f436ec5048057d9b",
+  "indexedFileCount": 1704,
+  "indexedContentSha256": "6b6d53b5a34c4ad2e251fd4ab81e20ac095e4ecc7cfbae32473fca95f9dce24a",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -1919,6 +1919,14 @@
           ]
         },
         {
+          "path": "Excise.Core/Filters/Jpx/Csj2kQuietStartup.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "decode",
+            "filters"
+          ]
+        },
+        {
           "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
           "kind": "source",
           "matchedTerms": [
@@ -2355,17 +2363,9 @@
             "decode",
             "filters"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Filters/Jbig2JpxFilterIntegrationTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "decode",
-            "filters"
-          ]
         }
       ],
-      "candidateReferenceCount": 135
+      "candidateReferenceCount": 136
     },
     {
       "id": "pdf.17.syntax.encryption",
@@ -4160,7 +4160,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 239
+      "candidateReferenceCount": 240
     },
     {
       "id": "pdf.17.document.navigation",
@@ -9058,7 +9058,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 372
+      "candidateReferenceCount": 373
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -35493,6 +35493,16 @@
           ]
         },
         {
+          "path": "Excise.Cli.Tests/JpxCodecStdoutBomTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "image",
+            "jpxdecode",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -35526,7 +35536,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 27
+      "candidateReferenceCount": 28
     },
     {
       "id": "pdf.20.image.requirement-015",
@@ -40284,7 +40294,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 215
+      "candidateReferenceCount": 216
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -41101,7 +41111,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 82
+      "candidateReferenceCount": 83
     },
     {
       "id": "pdf.20.image.requirement-025",
@@ -42634,6 +42644,16 @@
           ]
         },
         {
+          "path": "Excise.Cli.Tests/JpxCodecStdoutBomTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "devicergb",
+            "image",
+            "image",
+            "jpx"
+          ]
+        },
+        {
           "path": "Excise.Cli.Tests/UnredactOcrChannelTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -42643,7 +42663,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 72
+      "candidateReferenceCount": 73
     },
     {
       "id": "pdf.20.image.requirement-028",
@@ -81412,7 +81432,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 190
+      "candidateReferenceCount": 191
     },
     {
       "id": "pdfe.product.platform.printing",
