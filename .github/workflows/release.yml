@@ -512,8 +512,13 @@ jobs:
       - name: Release notes from the changelog
         run: |
           set -euo pipefail
+          # Judge the changelog section alone (#2083): a count over notes.md also counts
+          # the fixed block appended below, so a one-entry patch release failed here
+          # after every package built (v3.18.1: 2 lines of its own + 10 of boilerplate).
+          awk -v v="$VERSION" '$0 ~ "^## \\[" v "\\]"{f=1;next} /^## \[/{f=0} f' CHANGELOG.md > section.md
+          grep -q '[^[:space:]]' section.md || { echo "CHANGELOG.md has no non-blank section for $VERSION"; exit 1; }
           {
-            awk -v v="$VERSION" '$0 ~ "^## \\[" v "\\]"{f=1;next} /^## \[/{f=0} f' CHANGELOG.md
+            cat section.md
             cat <<'EOF'
 
           ---
@@ -532,7 +537,6 @@ jobs:
           **These builds are unsigned.** macOS will show a Gatekeeper prompt (right-click, Open, or `xattr -dr com.apple.quarantine excise.app`) and Windows SmartScreen will warn on first run. There is no auto-update. Linux printing goes through CUPS (#1710) and has been verified against a CUPS scheduler in a container, not against physical hardware.
           EOF
           } > notes.md
-          test "$(grep -c '[^[:space:]]' notes.md)" -gt 12 || { echo "release notes are suspiciously short"; exit 1; }
           # GitHub rejects a release body over 125,000 characters, and that would fail
           # here at the LAST step, after every package built. v3.10.0's changelog
           # section alone is 86,000 bytes (the body its human editor published was
