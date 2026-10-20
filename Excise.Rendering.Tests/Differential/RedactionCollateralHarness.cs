@@ -178,8 +178,14 @@ public class RedactionCollateralHarness
     public static TheoryData<string> Fixtures()
     {
         var data = new TheoryData<string>();
-        foreach (var f in EnumerateFixtures()) data.Add(Path.GetFileName(f));
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var f in EnumerateFixtures())
+            if (names.Add(Path.GetFileName(f))) data.Add(Path.GetFileName(f));
         if (data.Count == 0) data.Add("(no corpus)");
+        // #1889: pinned regression fixtures always get a row; an absent one
+        // skips with a checkable reason instead of vanishing from the theory.
+        foreach (var rel in RegressionFixtures)
+            if (names.Add(Path.GetFileName(rel))) data.Add(Path.GetFileName(rel));
         return data;
     }
 
@@ -190,7 +196,12 @@ public class RedactionCollateralHarness
         Assert.SkipUnless(MutoolReferenceRenderer.IsAvailable, "mutool not installed");
         Assert.SkipWhen(fixtureName == "(no corpus)", "smoke/federal corpus not present");
 
+        // #1889: a pinned regression fixture always has a row (Fixtures), so its
+        // absence is a visible skip with a checkable reason, not a dropped row.
+        var pinnedRel = PinnedRegressionPath(fixtureName);
         var path = EnumerateFixtures().FirstOrDefault(f => Path.GetFileName(f) == fixtureName);
+        if (path == null && pinnedRel != null)
+            Assert.Skip(TestRepoLayout.AbsenceReason($"pinned regression fixture {fixtureName}", pinnedRel));
         Assert.SkipWhen(path == null, "fixture not found");
 
         // #1046: the sampled corpora are renderer REGRESSION suites — a good
@@ -230,13 +241,29 @@ public class RedactionCollateralHarness
         // to be reported as "too little text": of the 874 such skips measured
         // 2026-09-27, 39 were mutool exiting non-zero or timing out.
         Assert.SkipWhen(before == null, $"mutool could not extract text from {fixtureName} (the oracle failed, not excise)");
-        Assert.SkipWhen(before!.Length < 200, "fixture has too little text to sample terms from");
+        // #1889: the length gate is for SAMPLED documents. A pinned regression
+        // fixture is pinned for what it holds, however little, so it is measured.
+        if (pinnedRel == null)
+            Assert.SkipWhen(before!.Length < 200, "fixture has too little text to sample terms from");
 
         var failures = new List<string>();
         var countMismatches = 0;
         var measured = new SortedDictionary<string, int>();
 
-        foreach (var term in ProbeTerms(fixtureName, before))
+        var terms = ProbeTerms(fixtureName, before!);
+        if (pinnedRel != null)
+        {
+            // A pin that measures nothing is the defect #1889 reports. Its own
+            // term must be in mutool's text of the ORIGINAL (the oracle, not
+            // excise), and it must yield at least one term to redact.
+            if (RegressionProbes.TryGetValue(fixtureName, out var pinnedTerms))
+                foreach (var t in pinnedTerms.Where(t => !ContainsFolded(before!, t)))
+                    failures.Add($"pinned term '{t}' is not in mutool's text of {fixtureName}, so the pin measures nothing");
+            if (terms.Count == 0)
+                failures.Add($"pinned regression fixture {fixtureName} yields no term to redact, so the pin measures nothing");
+        }
+
+        foreach (var term in terms)
         {
             var output = Path.Combine(Path.GetTempPath(), $"excise-collateral-{Guid.NewGuid():N}.pdf");
             var reported = 0;
@@ -432,8 +459,9 @@ public class RedactionCollateralHarness
     internal static List<string> ProbeTerms(string fixtureName, string text)
     {
         var terms = SampleTerms(text);
-        if (WorstCollateralProbes.TryGetValue(fixtureName, out var required))
+        foreach (var probes in new[] { WorstCollateralProbes, RegressionProbes })
         {
+            if (!probes.TryGetValue(fixtureName, out var required)) continue;
             foreach (var term in required)
             {
                 if (text.Contains(term, StringComparison.OrdinalIgnoreCase))
@@ -467,6 +495,25 @@ public class RedactionCollateralHarness
         "test-pdfs/pdfjs/issue15629.pdf",              // #1040 — indirect /XObject leak
         "test-pdfs/pdfium/hello_world_split_streams.pdf", // #1039 — unterminated BT
     };
+
+    /// <summary>
+    /// #1889: the term each pinned regression fixture is pinned FOR. Both pinned
+    /// documents hold under 200 characters of text (issue15629.pdf 40, the
+    /// pdfium file 53), so the sampling gate skipped them as "too little text"
+    /// on every run and the pin asserted nothing. A pinned fixture now bypasses
+    /// that gate, must yield at least one term, and must contain its own term
+    /// here, which is the name #1040 leaked. hello_world_split_streams.pdf needs
+    /// no entry: sampling picks "world" (three occurrences) once the gate is
+    /// bypassed.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, string[]> RegressionProbes =
+        new Dictionary<string, string[]>(StringComparer.Ordinal)
+        {
+            ["issue15629.pdf"] = new[] { "Louise" },
+        };
+
+    private static string? PinnedRegressionPath(string fixtureName) =>
+        RegressionFixtures.FirstOrDefault(rel => Path.GetFileName(rel) == fixtureName);
 
     /// <summary>Corpora sampled from, beyond the always-covered sets.</summary>
     private static readonly string[] SampledCorpora =
