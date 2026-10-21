@@ -3,7 +3,7 @@
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
   "indexedFileCount": 1708,
-  "indexedContentSha256": "be9fbbc040109f0c2ef123b3531b444b94d9cde867b0d85830cc42bfa67b778b",
+  "indexedContentSha256": "7e7ec51ecbc1bad4964c96db65651dd26df938d0a5efeb203969212add607614",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -5810,6 +5810,16 @@
           ]
         },
         {
+          "path": "Excise.App/ViewModels/MainWindowViewModel.Security.cs",
+          "kind": "source",
+          "matchedTerms": [
+            "information",
+            "metadata",
+            "metadata",
+            "pdfdocument"
+          ]
+        },
+        {
           "path": "Excise.App/ViewModels/MainWindowViewModel.Signing.cs",
           "kind": "source",
           "matchedTerms": [
@@ -5973,20 +5983,9 @@
             "metadata",
             "pdfdocument"
           ]
-        },
-        {
-          "path": "Excise.Core.Tests/Text/Segmentation/CanaryInjectionLeakTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "metadata",
-            "xmp",
-            "catalog",
-            "metadata",
-            "pdfdocument"
-          ]
         }
       ],
-      "candidateReferenceCount": 138
+      "candidateReferenceCount": 139
     },
     {
       "id": "pdf.17.document.embedded-files",
@@ -77891,6 +77890,7 @@
           "kind": "source",
           "matchedTerms": [
             "copy",
+            "metadata",
             "pdfe",
             "security"
           ]
