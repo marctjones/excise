@@ -17,7 +17,7 @@ namespace Excise.Cli.Tests;
 /// </summary>
 public class JpxCodecStdoutBomTests
 {
-    private static readonly byte[] Bom = [0xEF, 0xBB, 0xBF];
+    internal static readonly byte[] Bom = [0xEF, 0xBB, 0xBF];
 
     // The 8x8 solid (10,20,200) JP2 from
     // ImageRequirementVerificationDifferentialTests.JpxEncodedSolidColor_MatchesMutoolDecode.
@@ -78,14 +78,14 @@ public class JpxCodecStdoutBomTests
         return (p.ExitCode, o.GetAwaiter().GetResult(), e.GetAwaiter().GetResult());
     }
 
-    private static async Task<byte[]> ReadAllAsync(Stream stream)
+    internal static async Task<byte[]> ReadAllAsync(Stream stream)
     {
         using var buffer = new MemoryStream();
         await stream.CopyToAsync(buffer);
         return buffer.ToArray();
     }
 
-    private static int IndexOf(byte[] haystack, byte[] needle)
+    internal static int IndexOf(byte[] haystack, byte[] needle)
     {
         for (var i = 0; i + needle.Length <= haystack.Length; i++)
             if (haystack.AsSpan(i, needle.Length).SequenceEqual(needle))
@@ -93,7 +93,7 @@ public class JpxCodecStdoutBomTests
         return -1;
     }
 
-    private static byte[] BuildJpxPdf()
+    internal static byte[] BuildJpxPdf()
     {
         const string content = "q 8 0 0 8 0 0 cm /Im0 Do Q";
         var latin1 = Encoding.Latin1;

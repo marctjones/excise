@@ -63,6 +63,12 @@ internal static partial class Csj2kQuietStartup
     {
         _ = Console.Out;
         _ = Console.Error;
+        // Console caches these on first read. Read against a null handle (Windows)
+        // or /dev/null (Unix) they would be wrong for the rest of the process. On
+        // Windows, OpenStandardOutput reads IsOutputRedirected only when the output
+        // code page is UTF-16, so CSJ2K's call during the swap could be that first read.
+        _ = Console.IsOutputRedirected;
+        _ = Console.IsErrorRedirected;
         using (var stdout = Console.OpenStandardOutput())
             stdout.Write(ReadOnlySpan<byte>.Empty);
         using (var stderr = Console.OpenStandardError())
