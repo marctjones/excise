@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generator": "scripts/generate_change_coupling.py",
-  "sourceRevision": "aeaca7660a6e9fc66d116ce46ecfe6d0b505316e",
+  "sourceRevision": "ff1446f1d1fc140880b80e08ad680e56fb1b5af9",
   "scope": {
     "inventory": "architecture/inventory.generated.json",
     "classifications": [
@@ -22,8 +22,8 @@
     "commitsRequested": 200,
     "commitsObserved": 199,
     "broadCommitsExcluded": 0,
-    "newestProductionCommit": "aeaca7660a6e9fc66d116ce46ecfe6d0b505316e",
-    "oldestProductionCommit": "35d923ee384217282b28dbdb68d6ebe78d0e6e41"
+    "newestProductionCommit": "ff1446f1d1fc140880b80e08ad680e56fb1b5af9",
+    "oldestProductionCommit": "825b3b8e732342c21fe4f8950848d59517e6d895"
   },
   "files": [
     {
@@ -115,10 +115,6 @@
       "commits": 6
     },
     {
-      "path": "Excise.Core/Document/PdfPage.cs",
-      "commits": 6
-    },
-    {
       "path": "Excise.Core/Redaction/RedactedCopySafetyPolicy.cs",
       "commits": 6
     },
@@ -136,6 +132,10 @@
     },
     {
       "path": "Excise.Core/Document/PdfField.cs",
+      "commits": 5
+    },
+    {
+      "path": "Excise.Core/Document/PdfPage.cs",
       "commits": 5
     },
     {
@@ -343,6 +343,10 @@
       "commits": 3
     },
     {
+      "path": "Excise.Cli/Program.cs",
+      "commits": 3
+    },
+    {
       "path": "Excise.Core/Automation/PdfCommandRegistry.cs",
       "commits": 3
     },
@@ -360,6 +364,10 @@
     },
     {
       "path": "Excise.Core/Editing/BatesNumberingService.cs",
+      "commits": 3
+    },
+    {
+      "path": "Excise.Core/Filters/Jpx/Csj2kQuietStartup.cs",
       "commits": 3
     },
     {
@@ -527,10 +535,6 @@
       "commits": 2
     },
     {
-      "path": "Excise.Cli/Program.cs",
-      "commits": 2
-    },
-    {
       "path": "Excise.Core/Document/AcroFormFlattener.cs",
       "commits": 2
     },
@@ -543,11 +547,7 @@
       "commits": 2
     },
     {
-      "path": "Excise.Core/Filters/Jpx/Csj2kQuietStartup.cs",
-      "commits": 2
-    },
-    {
-      "path": "Excise.Core/Graphics/PdfGraphics.cs",
+      "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
       "commits": 2
     },
     {
@@ -919,10 +919,6 @@
       "commits": 1
     },
     {
-      "path": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
-      "commits": 1
-    },
-    {
       "path": "Excise.Core/Fonts/CffGlyphEditor.cs",
       "commits": 1
     },
@@ -939,11 +935,7 @@
       "commits": 1
     },
     {
-      "path": "Excise.Core/Graphics/PdfImage.cs",
-      "commits": 1
-    },
-    {
-      "path": "Excise.Core/Graphics/PdfImageXObject.cs",
+      "path": "Excise.Core/Graphics/PdfGraphics.cs",
       "commits": 1
     },
     {
@@ -1923,8 +1915,20 @@
       "jaccard": 0.6667
     },
     {
+      "source": "Excise.Cli/Program.cs",
+      "target": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
+      "cochanges": 2,
+      "jaccard": 0.6667
+    },
+    {
       "source": "Excise.Core/Editing/BatesNumberingService.cs",
       "target": "Excise.Core/Signatures/SignatureVerificationService.cs",
+      "cochanges": 2,
+      "jaccard": 0.6667
+    },
+    {
+      "source": "Excise.Core/Filters/Jpx/Csj2kQuietStartup.cs",
+      "target": "Excise.Core/Filters/Jpx/JpxDecoder.cs",
       "cochanges": 2,
       "jaccard": 0.6667
     },
@@ -2093,6 +2097,12 @@
     {
       "source": "Excise.Avalonia/Controls/Viewer/SinglePageView.LookAhead.cs",
       "target": "Excise.Avalonia/Controls/Viewer/SinglePageView.axaml.cs",
+      "cochanges": 2,
+      "jaccard": 0.5
+    },
+    {
+      "source": "Excise.Cli/Program.cs",
+      "target": "Excise.Core/Filters/Jpx/Csj2kQuietStartup.cs",
       "cochanges": 2,
       "jaccard": 0.5
     },
@@ -2824,6 +2834,12 @@
     },
     {
       "source": "Excise.Core/Document/PdfDocument.cs",
+      "target": "Excise.Core/Document/PdfPage.cs",
+      "cochanges": 2,
+      "jaccard": 0.2
+    },
+    {
+      "source": "Excise.Core/Document/PdfDocument.cs",
       "target": "Excise.Rendering/Differential/QpdfReferenceTool.cs",
       "cochanges": 2,
       "jaccard": 0.2
@@ -2885,12 +2901,6 @@
     {
       "source": "Excise.Cli/Commands/RedactCommand.cs",
       "target": "Excise.Core/Redaction/RedactedCopySafetyPolicy.cs",
-      "cochanges": 2,
-      "jaccard": 0.1818
-    },
-    {
-      "source": "Excise.Core/Document/PdfDocument.cs",
-      "target": "Excise.Core/Document/PdfPage.cs",
       "cochanges": 2,
       "jaccard": 0.1818
     },

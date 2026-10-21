@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "1803ed96d7446f12b5a94ae5f11f8240369eaf71d69fdb8b6a2bfead4ba4b30e",
+  "sourceFingerprint": "d422a772495fc9f59d10e5a0b837b496691d255dac8575ed5047c17fb35e9735",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -2697,28 +2697,6 @@
             "parse",
             "preserve",
             "write"
-          ],
-          "mappingSources": [
-            "keyword-facet-candidate"
-          ]
-        }
-      ],
-      "promotion": "review-required"
-    },
-    {
-      "id": "Excise.Core/Filters/Jpx/Csj2kQuietStartup.cs",
-      "path": "Excise.Core/Filters/Jpx/Csj2kQuietStartup.cs",
-      "kind": "source-file",
-      "facets": [
-        "images"
-      ],
-      "parentCapabilityModes": [
-        {
-          "capability": "pdf.17.graphics.images",
-          "modes": [
-            "extract",
-            "parse",
-            "render"
           ],
           "mappingSources": [
             "keyword-facet-candidate"
@@ -12167,14 +12145,14 @@
     }
   ],
   "summary": {
-    "records": 615,
+    "records": 614,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 20,
       "document-structure": 36,
       "fonts": 40,
       "forms": 12,
-      "images": 41,
+      "images": 40,
       "product-integration-general": 350,
       "redaction": 88,
       "safe-save-and-metadata": 21,
@@ -12199,9 +12177,9 @@
       "pdf.17.graphics.fonts:extract": 40,
       "pdf.17.graphics.fonts:parse": 40,
       "pdf.17.graphics.fonts:render": 40,
-      "pdf.17.graphics.images:extract": 41,
-      "pdf.17.graphics.images:parse": 41,
-      "pdf.17.graphics.images:render": 41,
+      "pdf.17.graphics.images:extract": 40,
+      "pdf.17.graphics.images:parse": 40,
+      "pdf.17.graphics.images:render": 40,
       "pdf.17.graphics.paths-painting:author": 2,
       "pdf.17.graphics.paths-painting:mutate": 20,
       "pdf.17.graphics.paths-painting:parse": 20,

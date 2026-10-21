@@ -2,14 +2,14 @@
   "$schema": "../schemas/architecture-conformance.schema.json",
   "schemaVersion": 1,
   "generator": "scripts/check_architecture_registry.py",
-  "sourceRevision": "aeaca7660a6e9fc66d116ce46ecfe6d0b505316e",
+  "sourceRevision": "ff1446f1d1fc140880b80e08ad680e56fb1b5af9",
   "inputs": {
     "designVersion": 2,
     "topologySchemaVersion": 5
   },
   "summary": {
     "analyzedProjects": 13,
-    "retainedSymbols": 9015,
+    "retainedSymbols": 9007,
     "observedComponentDependencies": 85,
     "declaredDependencies": 75,
     "acceptedExceptions": 1,
@@ -17,7 +17,7 @@
     "forbiddenDependencies": 0,
     "unownedShippingProjects": 0,
     "unownedShippingSymbols": 0,
-    "unresolvedTypeDependencies": 287,
+    "unresolvedTypeDependencies": 286,
     "registryMismatches": 0
   },
   "componentDependencies": [
@@ -178,14 +178,14 @@
     {
       "source": "cli",
       "target": "core-parsing",
-      "references": 4,
-      "typeDependencyCount": 3,
+      "references": 2,
+      "typeDependencyCount": 2,
       "classification": "declared",
       "evidence": [
         {
-          "source": "Excise.Cli.Program",
-          "target": "Excise.Core.Filters.Jpx.Csj2kQuietStartup",
-          "references": 2
+          "source": "Excise.Cli.Commands.EncryptionCommandHandler",
+          "target": "Excise.Core.Parsing.PdfEncryptionNotSupportedException",
+          "references": 1
         }
       ]
     },
@@ -1315,7 +1315,7 @@
         "path": "tools/Excise.RenderTools/Excise.RenderTools.csproj",
         "classification": "tool",
         "projectComponent": null,
-        "unownedSymbols": 354
+        "unownedSymbols": 353
       }
     ]
   },
