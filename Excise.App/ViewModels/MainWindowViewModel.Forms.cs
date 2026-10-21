@@ -748,6 +748,12 @@ internal partial class MainWindowViewModel
             if (ex is ArgumentException)
                 OnFormFieldEditRejected(field.FullName, ex.Message);
         }
+
+        // #2023: a thumbnail of a filled form is a picture of the value, so it must not
+        // reach the disk cache. Outside the equality guard above: the viewer's own input
+        // has already stored the value by the time it reaches here.
+        if (_pdfCoreDocument != null && Services.FilledFormValues.FieldHasValue(_pdfCoreDocument, field))
+            _thumbnailSession.StopPersistingToDisk();
     }
 
     private async Task SaveFlattenedFormCopyAsync()

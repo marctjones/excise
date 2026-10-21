@@ -25,6 +25,9 @@ namespace Excise.App.Services;
 ///   Linux:   $XDG_CACHE_HOME/excise (default $HOME/.cache/excise)
 ///   macOS:   $HOME/Library/Caches/excise
 ///   Windows: %LOCALAPPDATA%/excise/Cache
+///
+/// A document that carries filled form values never touches the disk cache (#2023,
+/// <see cref="PersistsToDisk"/>): its thumbnails are pictures of personal data.
 /// </summary>
 internal sealed class ThumbnailCacheService : IDisposable
 {
@@ -87,6 +90,67 @@ internal sealed class ThumbnailCacheService : IDisposable
     /// </summary>
     internal int RenderCount => Volatile.Read(ref _renderCount);
 
+    // #2023: thumbnails of a document that carries filled form values are personal data,
+    // so they stay in memory. _fields and _xfaFilled are read once, on first use; the
+    // AcroForm values are re-checked before every write, because a field the user fills
+    // changes this same document. Once off, persistence never comes back for this instance.
+    private readonly Lazy<(IReadOnlyList<PdfField>? Fields, bool XfaFilled)> _formState;
+    private volatile bool _persistenceStopped;
+    private int _diskWriteCount;
+
+    /// <summary>Thumbnails this instance wrote to disk (#2023 tests).</summary>
+    internal int DiskWriteCount => Volatile.Read(ref _diskWriteCount);
+
+    /// <summary>
+    /// False once the document is known to carry filled form values (#2023): no thumbnail of
+    /// it is written to or read from the disk cache, and the in-memory thumbnails are
+    /// unchanged. Evaluating it may turn persistence off and purge this document's entries.
+    /// </summary>
+    internal bool PersistsToDisk
+    {
+        get
+        {
+            if (_persistenceStopped)
+                return false;
+            var (fields, xfaFilled) = _formState.Value;
+            if (xfaFilled || fields == null || FilledFormValues.AnyFieldHasValue(_doc, fields))
+            {
+                StopPersistingToDisk();
+                return false;
+            }
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// The document now carries filled values (the user filled a field, #2023): write nothing
+    /// more to disk, read nothing back, and delete what this document's cache identity holds.
+    /// Entries under another identity of the same file (another mtime or salt) cannot be named
+    /// from here; they are left to the LRU trim.
+    /// </summary>
+    internal void StopPersistingToDisk()
+    {
+        if (_persistenceStopped)
+            return;
+        _persistenceStopped = true;
+        _logger.LogInformation(
+            "Thumbnail cache: the document carries filled form values; thumbnails stay in memory");
+        PurgeCacheDir();
+    }
+
+    private void PurgeCacheDir()
+    {
+        try
+        {
+            if (Directory.Exists(_cacheDir))
+                Directory.Delete(_cacheDir, recursive: true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Thumbnail cache: could not remove {Dir}", _cacheDir);
+        }
+    }
+
     private static readonly string RendererCacheIdentity =
         typeof(SkiaRenderer).Module.ModuleVersionId.ToString("N");
 
@@ -96,6 +160,9 @@ internal sealed class ThumbnailCacheService : IDisposable
     {
         _doc = doc ?? throw new ArgumentNullException(nameof(doc));
         _logger = logger;
+        _formState = new Lazy<(IReadOnlyList<PdfField>?, bool)>(
+            () => (FilledFormValues.ReadFields(doc), FilledFormValues.XfaDataHasValue(doc)),
+            LazyThreadSafetyMode.ExecutionAndPublication);
         _thumbnailDpi = thumbnailDpi;
         var identity = BuildCacheIdentity(pdfPath, thumbnailDpi, RendererCacheIdentity, cacheSalt);
         var versionRoot = Path.Combine(AppPaths.ThumbnailCacheRoot, "thumbnails", "v3");
@@ -213,6 +280,10 @@ internal sealed class ThumbnailCacheService : IDisposable
     internal async Task WarmAsync(int pageIndex, CancellationToken cancellationToken = default)
     {
         if (_disposed || pageIndex < 0 || pageIndex >= _doc.PageCount)
+            return;
+
+        // A warm only fills the disk cache, so it has nothing to do for a filled form.
+        if (!PersistsToDisk)
             return;
 
         var cachePath = CachePathFor(pageIndex);
@@ -395,8 +466,10 @@ internal sealed class ThumbnailCacheService : IDisposable
         try
         {
             // 1) Disk cache hit. Common path on re-open.
+            // A filled form never reads a cached picture back (#2023).
+            var persist = PersistsToDisk;
             var cachePath = CachePathFor(pageIndex);
-            if (File.Exists(cachePath))
+            if (persist && File.Exists(cachePath))
             {
                 try
                 {
@@ -439,7 +512,8 @@ internal sealed class ThumbnailCacheService : IDisposable
                 // 3) Best-effort write to disk after returning the pixels to
                 // the UI. WebP encoding can dominate first-visible-thumbnail
                 // latency, while cache persistence is only an optimization.
-                QueueCacheWrite(cachePath, bmp);
+                if (persist)
+                    QueueCacheWrite(cachePath, bmp);
                 return bmp;
             }
             finally { _renderGate.Release(); }
@@ -475,9 +549,15 @@ internal sealed class ThumbnailCacheService : IDisposable
 
     private void TryWriteCache(string path, SKBitmap bmp)
     {
+        // Re-checked here, not only when the write was queued: a field filled since then
+        // makes this a picture of the filled value (#2023).
+        if (!PersistsToDisk)
+            return;
+
         string? tempPath = null;
         try
         {
+            Interlocked.Increment(ref _diskWriteCount);
             Directory.CreateDirectory(_cacheDir);
             using var img = SKImage.FromBitmap(bmp);
             // WebP @ 90 quality is ~10× smaller than PNG for thumbnails
@@ -493,6 +573,11 @@ internal sealed class ThumbnailCacheService : IDisposable
                 data.SaveTo(fs);
             File.Move(tempPath, path, overwrite: true);
             tempPath = null;
+
+            // Persistence was turned off while this write was in flight: the purge may have
+            // run before the file landed, so remove it here (#2023).
+            if (_persistenceStopped)
+                PurgeCacheDir();
         }
         catch (Exception ex)
         {
