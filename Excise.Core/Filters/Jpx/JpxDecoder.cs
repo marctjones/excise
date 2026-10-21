@@ -704,7 +704,7 @@ internal static class JpxDecoder
 
     private readonly record struct Jp2Box(string Type, int PayloadOffset, int PayloadLength);
 
-    internal sealed class NullMsgLogger : IMsgLogger
+    private sealed class NullMsgLogger : IMsgLogger
     {
         public static readonly NullMsgLogger Instance = new();
 

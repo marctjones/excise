@@ -9,10 +9,6 @@ partial class Program
 {
     static async Task<int> Main(string[] args)
     {
-        // #2084: first, while single-threaded and before any console use, or the
-        // first JPX decode writes CSJ2K's UTF-8 BOM into stdout (and --json).
-        Excise.Core.Filters.Jpx.Csj2kQuietStartup.Run();
-
         // EXCISE_PERF_REPORT=<file>: write what this process cost (ProcessPerfReport). Unset, this is just RunAsync.
         var report = Environment.GetEnvironmentVariable(ProcessPerfReport.EnvironmentVariable);
         if (string.IsNullOrEmpty(report))

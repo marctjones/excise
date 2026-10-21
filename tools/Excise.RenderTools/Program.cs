@@ -21,13 +21,7 @@ partial class Program
     private const long CorpusFallbackMaxPixelCount = 32L * 1024L * 1024L;
     private const long VisualVectorMaxPixelCount = 2L * 1024L * 1024L;
 
-    static Task<int> Main(string[] args)
-    {
-        // #2084: first, while single-threaded and before any console use, or the
-        // first JPX decode writes CSJ2K's UTF-8 BOM into stdout and stderr.
-        Excise.Core.Filters.Jpx.Csj2kQuietStartup.Run();
-        return RunAsync(args);
-    }
+    static Task<int> Main(string[] args) => RunAsync(args);
 
     internal static Task<int> RunAsync(string[] args)
     {
