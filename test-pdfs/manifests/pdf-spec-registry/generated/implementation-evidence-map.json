@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/build-pdf-evidence-maps.py",
   "policy": "All maps are deterministic discovery inventories. They establish traceability and review queues, never a support claim. Every discovered source file and xUnit Fact/Theory source method receives at least the explicit integration-general fallback.",
-  "sourceFingerprint": "7ef198a3a16627e64129913425177e4d070d0463e93a8ad9a4bd5496afbf9b45",
+  "sourceFingerprint": "1803ed96d7446f12b5a94ae5f11f8240369eaf71d69fdb8b6a2bfead4ba4b30e",
   "sources": [
     {
       "id": "Excise.Core/Authoring/FillableTableModels.cs",
@@ -6930,16 +6930,6 @@
       "promotion": "review-required"
     },
     {
-      "id": "Excise.Core/Xfa/XfaFilledData.cs",
-      "path": "Excise.Core/Xfa/XfaFilledData.cs",
-      "kind": "source-file",
-      "facets": [
-        "product-integration-general"
-      ],
-      "parentCapabilityModes": [],
-      "promotion": "review-required"
-    },
-    {
       "id": "Excise.Core/Xfa/XfaFormSom.cs",
       "path": "Excise.Core/Xfa/XfaFormSom.cs",
       "kind": "source-file",
@@ -8995,16 +8985,6 @@
     {
       "id": "Excise.App/Services/FilenameSuggestionService.cs",
       "path": "Excise.App/Services/FilenameSuggestionService.cs",
-      "kind": "source-file",
-      "facets": [
-        "product-integration-general"
-      ],
-      "parentCapabilityModes": [],
-      "promotion": "review-required"
-    },
-    {
-      "id": "Excise.App/Services/FilledFormValues.cs",
-      "path": "Excise.App/Services/FilledFormValues.cs",
       "kind": "source-file",
       "facets": [
         "product-integration-general"
@@ -12187,7 +12167,7 @@
     }
   ],
   "summary": {
-    "records": 617,
+    "records": 615,
     "facets": {
       "annotations": 14,
       "content-and-graphics": 20,
@@ -12195,7 +12175,7 @@
       "fonts": 40,
       "forms": 12,
       "images": 41,
-      "product-integration-general": 352,
+      "product-integration-general": 350,
       "redaction": 88,
       "safe-save-and-metadata": 21,
       "security-and-encryption": 25,
@@ -12274,7 +12254,7 @@
       "pdfe.product.security.signature-and-permission-warning:preserve": 25,
       "pdfe.product.security.signature-and-permission-warning:write": 25
     },
-    "fallbackRecords": 352,
+    "fallbackRecords": 350,
     "allRecordsMapped": true
   }
 }

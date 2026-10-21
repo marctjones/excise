@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "generatedBy": "scripts/collect-pdf-capability-evidence.py",
   "policy": "Collection is discovery, not proof. A candidate reference never changes a mode state or support level until a reviewer records its relevant assertion, fixture, and limitation in the leaf's explicit evidence and verification contract.",
-  "indexedFileCount": 1708,
-  "indexedContentSha256": "7e7ec51ecbc1bad4964c96db65651dd26df938d0a5efeb203969212add607614",
+  "indexedFileCount": 1703,
+  "indexedContentSha256": "ceebf2c5773c284f1a26863e099e2b378711cbef186b11b0f003d2258ac8ca6f",
   "capabilities": [
     {
       "id": "pdf.17.syntax.file",
@@ -4160,7 +4160,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 240
+      "candidateReferenceCount": 239
     },
     {
       "id": "pdf.17.document.navigation",
@@ -4900,15 +4900,6 @@
           ]
         },
         {
-          "path": "Excise.App/Services/ThumbnailCacheService.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "named",
-            "viewer",
-            "pdfdocument"
-          ]
-        },
-        {
           "path": "Excise.App/Services/ViewerCacheTrimCoordinator.cs",
           "kind": "source",
           "matchedTerms": [
@@ -5071,9 +5062,20 @@
             "catalog",
             "pdfdocument"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Document/PageCollectionPageNumberTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "destinations",
+            "named",
+            "outlines",
+            "catalog",
+            "pdfdocument"
+          ]
         }
       ],
-      "candidateReferenceCount": 195
+      "candidateReferenceCount": 194
     },
     {
       "id": "pdf.17.document.metadata",
@@ -8248,7 +8250,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 791
+      "candidateReferenceCount": 789
     },
     {
       "id": "pdf.17.graphics.color",
@@ -9055,7 +9057,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 373
+      "candidateReferenceCount": 372
     },
     {
       "id": "pdf.17.graphics.patterns-shadings",
@@ -12997,14 +12999,6 @@
           ]
         },
         {
-          "path": "Excise.App/Services/FilledFormValues.cs",
-          "kind": "source",
-          "matchedTerms": [
-            "form",
-            "streams"
-          ]
-        },
-        {
           "path": "Excise.App/Services/XfaThumbnailCacheSalt.cs",
           "kind": "source",
           "matchedTerms": [
@@ -13058,9 +13052,17 @@
             "xobjects",
             "textextractor"
           ]
+        },
+        {
+          "path": "Excise.Core.Tests/Document/AcroFormRemoveFieldTests.cs",
+          "kind": "test",
+          "matchedTerms": [
+            "form",
+            "streams"
+          ]
         }
       ],
-      "candidateReferenceCount": 218
+      "candidateReferenceCount": 217
     },
     {
       "id": "pdf.20.content.operators",
@@ -35490,16 +35492,6 @@
           ]
         },
         {
-          "path": "Excise.Cli.Tests/JpxCodecStdoutBomTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "image",
-            "jpxdecode",
-            "image",
-            "jpx"
-          ]
-        },
-        {
           "path": "tests/code-health/baselines/adopted-f2550b79/capture.json",
           "kind": "test",
           "matchedTerms": [
@@ -35533,7 +35525,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 28
+      "candidateReferenceCount": 27
     },
     {
       "id": "pdf.20.image.requirement-015",
@@ -40291,7 +40283,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 216
+      "candidateReferenceCount": 215
     },
     {
       "id": "pdf.20.image.requirement-024",
@@ -41108,7 +41100,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 83
+      "candidateReferenceCount": 82
     },
     {
       "id": "pdf.20.image.requirement-025",
@@ -42641,16 +42633,6 @@
           ]
         },
         {
-          "path": "Excise.Cli.Tests/JpxCodecStdoutBomTests.cs",
-          "kind": "test",
-          "matchedTerms": [
-            "devicergb",
-            "image",
-            "image",
-            "jpx"
-          ]
-        },
-        {
           "path": "Excise.Cli.Tests/UnredactOcrChannelTests.cs",
           "kind": "test",
           "matchedTerms": [
@@ -42660,7 +42642,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 73
+      "candidateReferenceCount": 72
     },
     {
       "id": "pdf.20.image.requirement-028",
@@ -61368,7 +61350,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 264
+      "candidateReferenceCount": 263
     },
     {
       "id": "pdf.17.transparency.output-preview",
@@ -67176,7 +67158,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 295
+      "candidateReferenceCount": 292
     },
     {
       "id": "pdf.17.interactive.actions",
@@ -73094,7 +73076,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 882
+      "candidateReferenceCount": 879
     },
     {
       "id": "pdf.20.extension.developer",
@@ -73800,7 +73782,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 197
+      "candidateReferenceCount": 196
     },
     {
       "id": "pdf.20.profile.pdfa",
@@ -81430,7 +81412,7 @@
           ]
         }
       ],
-      "candidateReferenceCount": 192
+      "candidateReferenceCount": 190
     },
     {
       "id": "pdfe.product.platform.printing",
