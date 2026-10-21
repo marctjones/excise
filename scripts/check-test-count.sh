@@ -4,19 +4,42 @@
 #
 # THE PROBLEM THIS EXISTS FOR
 #
-# `dotnet test` can report fewer results than it discovered. Measured on
-# Excise.Core.Tests: 3932 discovered, and roughly half of all runs report 3931.
-# Not the same test each time —
+# `dotnet test` can report fewer results than it discovered. For a year this
+# repo saw Excise.Core.Tests lose exactly one result on roughly half of all
+# runs, a different test each time —
 #
 #     FlattenAcroForm_LongText_ClipsAndWrapsInsideFieldBounds
 #     CffParser_Parse_MutatedValidCff_NeverThrows(seed: 11)
 #     MetadataFreeParse_SkipsBoundsAnnotations
 #     Write_UserPasswordOnly_OwnerEntriesDoNotValidateAgainstTheEmptyPassword
 #
-# — a different one on each losing run, always exactly one. It is NOT xunit
-# parallelism: forcing parallelizeTestCollections=false and maxParallelThreads=1
-# changes the wall clock by 4s (115s vs 111s) and still loses one. It is the
-# vstest/testhost result channel.
+# — and called it a vstest channel race (#894), which it was not.
+#
+# THE CAUSE IS KNOWN (#1701). The xunit v3 VSTest adapter reads one JSON
+# message per line of the test process's stdout. CSJ2K's FacilityManager static
+# constructor writes a UTF-8 BOM to raw descriptor 1, once per process, on the
+# first JPX touch. The BOM sticks to whatever message comes next. When that is a
+# test-passed/failed/skipped, the adapter logs "Received unparseable output from
+# test process" (visible only with `-- xUnit.InternalDiagnosticMessages=true`)
+# and that one result is gone. When it is a lifecycle message
+# (test-class-dispose-starting and the like), nothing is lost. Hence "exactly
+# one, a different test, about half the runs". Measured 2026-10-20 on whole
+# Excise.Core.Tests runs (7742 tests) with the guard switched off: the BOM line
+# appeared on both unguarded runs, once on a lifecycle message (7742 reported) and once
+# on RotatedPageRedactionTests...(rotation: 90)'s test-passed (7741 reported).
+# With Excise.Core.Tests/TestSupport/Csj2kStdoutBomGuard.cs in place: 7742 of
+# 7742 on every run, and Avalonia, Cli, Ocr and Rendering lost nothing either.
+#
+# SO ANY LOSS ON A WHOLE-ASSEMBLY RUN IS NOW FATAL, immediately. The #1051
+# ratchet that warned until a row was lost on 3 consecutive runs existed only
+# to tolerate the chance loss. That loss had a cause and the cause is fixed. A
+# loss now means something else writes raw bytes to stdout, or a test is
+# discovered and never executes, and both are coverage you cannot see. The
+# re-run below no longer decides pass or fail. It diagnoses which of those it
+# is.
+#
+# ⚠️ Do not reintroduce a tolerance because one run lost one test. Find the
+# writer: re-run with the diagnostics flag and grep for the line above.
 #
 # WHY IT MATTERS MORE THAN A NORMAL TEST BUG
 #
@@ -36,18 +59,19 @@
 #
 #   1. Enumerate discovered tests   (`--list-tests`, discovery only, seconds)
 #   2. Enumerate reported results   (trx)
-#   3. For anything discovered but not reported, RE-RUN ITS CLASS:
-#        - produces a result now  -> transient reporting loss. Reported, not fatal.
-#        - still produces nothing -> a genuine hole. FATAL.
-#        - produces a FAILING result -> FATAL, and the summary hid a red test.
-#        - the FILTER matched nothing -> no verdict at all. `~` is not a substring
-#          match (see #1008 and the note at the re-run), so a non-match is a fact
-#          about the filter. Escalate to an unfiltered run and decide from that.
+#   3. Anything discovered but not reported is FATAL (#1701). Its CLASS is re-run
+#      once, with the adapter diagnostics on, to say WHY:
+#        - its own result line arrived corrupted -> something writes raw stdout.
+#        - it reports on re-run -> lost only in the whole run; another test in
+#          the assembly corrupts the channel. The message says how to find it.
+#        - still produces nothing, siblings report -> it never executes.
+#        - produces a FAILING result -> and the summary hid a red test.
+#        - the FILTER matched nothing -> `~` is not a substring match (see #1008
+#          and the note at the re-run), so escalate to an unfiltered run.
 #
-# A plain equality check was written first and thrown away: it fails ~50% of
-# runs here, and a gate that flakes is a gate people stop reading — the exact
-# dynamic that let six un-allow-listed skips redden test-linux for 8+ runs
-# (#854), and that #855 was closed over.
+# A plain equality check was written first and thrown away when it failed ~50%
+# of runs; that was the CSJ2K BOM above, and with it fixed an equality verdict
+# is what this gate now gives. The re-run is for the diagnosis.
 #
 # Usage:
 #   scripts/check-test-count.sh <csproj> [--trx PATH] [--max-recheck N]
@@ -64,9 +88,8 @@
 #                    step, which filters out Corpus/Differential/Benchmark/Visual
 #                    by design — point the gate at unfiltered suites
 #                    (Core/Cli/Avalonia) or give it no --trx and let it run one.
-#   --max-recheck N  cap the re-runs (default 10). A run that loses dozens is a
-#                    different problem and should not be papered over one test
-#                    at a time.
+#   --max-recheck N  cap the diagnostic re-runs (default 10). Past the cap the
+#                    gate fails without diagnosing each test one by one.
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -99,17 +122,9 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# #1051: a row that "re-ran twice and never reported" is NOT convicted on the
-# spot any more — that FATAL was reachable by chance (the #894 channel loss can
-# strike the same row in the run and both rechecks, then the row runs fine
-# alone). The honest signal is a RATCHET across gate runs: a genuinely dead row
-# loses its result on EVERY invocation, so its consecutive-loss count climbs;
-# a chance loss resets the next run. LEDGER holds `count<TAB>testname` for rows
-# currently in a loss streak. A streak reaching LOSS_THRESHOLD is a hole chance
-# does not produce — that is the FATAL. Do NOT "fix" false blocks by raising
-# the threshold; a real hole reaches any threshold, a chance loss reaches none.
-LEDGER="$ROOT/tests/test-count-loss-ledger.tsv"
-LOSS_THRESHOLD="${TEST_COUNT_LOSS_THRESHOLD:-3}"
+# The #1051 loss-streak ledger is gone with the ratchet (#1701). An old
+# checkout may still hold one; it means nothing now.
+rm -f "$ROOT/tests/test-count-loss-ledger.tsv"
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
@@ -154,14 +169,24 @@ done
 echo "    reading $(printf '%s' "${#TRX_FILES[@]}") trx file(s)"
 
 python3 - "${TRX_FILES[@]}" > "$TMP/executed.txt" <<'PY'
-import sys, xml.etree.ElementTree as ET
+import re, sys, xml.etree.ElementTree as ET
 N = '{http://microsoft.com/schemas/VisualStudio/TeamTest/2010}'
+# The trx spells a character outside the BMP in a theory argument as the
+# literal text `𐐀`, while --list-tests prints the character itself.
+# Without this, MatchingKeyInvariantTests' "le 𐐀x noir" row reads as missing on
+# every run (7742 discovered, 7742 reported, one name unmatched; 2026-10-20).
+# Only a well-formed escaped surrogate PAIR is decoded, so no other backslash
+# in a name is touched.
+PAIR = re.compile(r'\\u(d[89ab][0-9a-f]{2})\\u(d[c-f][0-9a-f]{2})', re.I)
+def unescape_pairs(s):
+    return PAIR.sub(lambda m: (chr(int(m.group(1), 16)) + chr(int(m.group(2), 16)))
+                    .encode('utf-16', 'surrogatepass').decode('utf-16'), s)
 seen = set()
 for path in sys.argv[1:]:
     for r in ET.parse(path).iter(N + 'UnitTestResult'):
         n = r.get('testName')
         if n:
-            seen.add(n)
+            seen.add(unescape_pairs(n))
 for n in sorted(seen):
     print(n)
 PY
@@ -172,16 +197,6 @@ echo "    $EXECUTED reported"
 LC_ALL=C comm -23 "$TMP/discovered.txt" "$TMP/executed.txt" > "$TMP/missing.txt"
 MISSING=$(wc -l < "$TMP/missing.txt" | tr -d ' ')
 
-# #1051: any row in a loss streak that REPORTED this run has recovered — its
-# streak resets. Keep only ledger entries whose row is still missing now; drop
-# the rest. Done before the all-clear exit so a recovered row cannot leave a
-# stale count behind, and so a clean run leaves an empty ledger as no file.
-if [[ -f "$LEDGER" ]]; then
-    awk -F'\t' 'NR==FNR{miss[$0]=1;next} ($2 in miss)' \
-        "$TMP/missing.txt" "$LEDGER" > "$LEDGER.tmp" 2>/dev/null || : > "$LEDGER.tmp"
-    if [[ -s "$LEDGER.tmp" ]]; then mv "$LEDGER.tmp" "$LEDGER"; else rm -f "$LEDGER.tmp" "$LEDGER"; fi
-fi
-
 if [[ "$MISSING" -eq 0 ]]; then
     echo "==> test count OK ($DISCOVERED discovered, all reported)"
     exit 0
@@ -190,23 +205,22 @@ fi
 if [[ "$MISSING" -gt "$MAX_RECHECK" ]]; then
     echo
     echo "FAIL: $MISSING discovered tests produced no result (cap is $MAX_RECHECK)."
-    echo "      Losing this many is not the known one-per-run reporting race;"
-    echo "      something structural is wrong. Not re-checking them one by one."
+    echo "      Something structural is wrong. Not diagnosing them one by one."
     sed 's/^/        - /' "$TMP/missing.txt"
     exit 1
 fi
 
 echo
-echo "==> $MISSING discovered test(s) produced no result. Re-running each to"
-echo "    tell a transient reporting loss from a genuine coverage hole."
+echo "==> $MISSING discovered test(s) produced no result. Every one is FATAL (#1701);"
+echo "    re-running each class once, with adapter diagnostics, to say why."
 
-TRANSIENT=0
 FATAL=0
 # At most ONE unfiltered escalation run per invocation, shared by every test that
 # needs it (MAX_RECHECK caps the list at 10, so this is bounded by one full run).
 UNFILTERED_OUT_FILE=""
 while IFS= read -r name; do
     [[ -z "$name" ]] && continue
+    FATAL=$((FATAL + 1))
     # Match on the method-name portion: a [Theory] case's display name carries
     # `(param: "value")`, which --filter cannot match literally.
     bare="${name%%(*}"
@@ -227,25 +241,29 @@ while IFS= read -r name; do
     # verbosity=detailed so the re-run lists PER-CASE results. The summary line
     # alone is not enough for a [Theory]: re-running the class runs EVERY row of
     # every method in it, so "Passed!" can mean "some other row ran" while the
-    # row that went missing is still missing. Measured on
-    # Cff2RefusalTests.CorpusFilesCarryingCff2_RenderAtParityWithMutool, where a
-    # narrow run reports 1 of 2 rows every time — the old check called that a
-    # transient loss and moved on, which is this gate's own failure mode one
-    # level down (#894).
+    # row that went missing is still missing (Cff2RefusalTests, #894).
+    #
+    # #1701: the xunit adapter's internal diagnostics are the only place a
+    # CORRUPTED result line is visible. The xunit v3 VSTest adapter reads one
+    # JSON message per line of the test process's stdout; anything that writes
+    # raw bytes to descriptor 1 (CSJ2K wrote a UTF-8 BOM there) glues itself to
+    # the next message, the adapter logs "Received unparseable output from test
+    # process" and that result is gone.
     out="$(dotnet test "$CSPROJ" -c Debug --no-build \
              --filter "FullyQualifiedName~$cls" \
-             --logger "console;verbosity=detailed" 2>&1)"
+             --logger "console;verbosity=detailed" \
+             -- xUnit.InternalDiagnosticMessages=true 2>&1)"
+    # Kept for the corrupted-line lookup below. A test that drops its OWN
+    # result leaves its class run with nothing parseable, so vstest says "No
+    # test matches", and the unfiltered escalation may put the stray bytes on a
+    # different message. The evidence for this test is in THIS run.
+    filtered_out="$out"
 
     if grep -q "No test matches the given testcase filter" <<<"$out"; then
-        # A NON-MATCH IS NOT A VERDICT (#1008). It says the filter could not
+        # A NON-MATCH IS NOT A DIAGNOSIS (#1008). It says the filter could not
         # select the test, which — see the token-boundary note above — can happen
         # for reasons that have nothing to do with whether the test executes.
-        # This branch used to print "discovered, but unreachable by filter —
-        # never executes" and exit FATAL, so a transient reporting loss was
-        # reported as a genuine coverage hole and the message sent the next
-        # person hunting a crash that did not exist. Escalate instead: run the
-        # assembly UNFILTERED and decide from the per-case output, which is the
-        # only evidence that can distinguish the two.
+        # Run the assembly UNFILTERED and read the per-case output instead.
         echo "    note   $name"
         echo "           filter ~$cls selected nothing — that is a statement about the"
         echo "           filter, not about the test. Escalating to an unfiltered run."
@@ -253,7 +271,8 @@ while IFS= read -r name; do
             UNFILTERED_OUT_FILE="$TMP/unfiltered.txt"
             assert_fresh
             dotnet test "$CSPROJ" -c Debug --no-build \
-                --logger "console;verbosity=detailed" > "$UNFILTERED_OUT_FILE" 2>&1
+                --logger "console;verbosity=detailed" \
+                -- xUnit.InternalDiagnosticMessages=true > "$UNFILTERED_OUT_FILE" 2>&1
         fi
         out="$(cat "$UNFILTERED_OUT_FILE")"
         if grep -q "No test matches the given testcase filter" <<<"$out"; then
@@ -261,127 +280,56 @@ while IFS= read -r name; do
             echo "           an UNFILTERED run of the assembly also selected nothing."
             echo "           The assembly itself is unrunnable — this is not a filter"
             echo "           problem and not a per-test one."
-            FATAL=$((FATAL + 1))
             continue
         fi
     fi
 
-    if grep -qE "^Failed!" <<<"$out"; then
+    diag_out="$filtered_out"$'\n'"$out"
+    corrupted_ids="$(grep -F 'Received unparseable output from test process' <<<"$diag_out" \
+        | grep -E '"\$type":"test-(passed|failed|skipped|not-run|finished)"' \
+        | sed -n 's/.*"TestCaseUniqueID":"\([0-9a-f]*\)".*/\1/p' | sort -u)"
+    corrupted_name=""
+    others=""
+    for id in $corrupted_ids; do
+        n="$(sed -n "s/.*Discovered \[execution\] test case '\(.*\)' (ID = '$id').*/\1/p" <<<"$diag_out" | head -1)"
+        if [[ "$n" == "$name" || "$n" == "$bare" ]]; then corrupted_name="$n"; else others+="${n:-$id}"$'\n'; fi
+    done
+    # Diagnostics print every discovered name, so match result lines only.
+    results="$(grep -v '^\[xUnit.net' <<<"$out")"
+
+    if [[ -n "$corrupted_name" ]]; then
+        echo "    FATAL  $name"
+        echo "           its result line reached the adapter corrupted and was dropped"
+        echo "           (\"Received unparseable output from test process\", #1701)."
+        echo "           Something this test runs writes raw bytes to stdout. That"
+        echo "           drop is deterministic: the test never reports, on any run."
+    elif grep -qE "^Failed!" <<<"$results"; then
         echo "    FATAL  $name"
         echo "           re-ran and FAILED — the summary hid a red test."
-        FATAL=$((FATAL + 1))
-    elif grep -qF "$name" <<<"$out"; then
-        echo "    ok     $name (transient reporting loss)"
-        TRANSIENT=$((TRANSIENT + 1))
-    elif grep -qE "^ +(Passed|Failed|Skipped) " <<<"$out"; then
-        # The method re-ran and OTHER cases reported, but this one did not.
-        # Detected from the per-case lines, not a summary line: under
-        # `verbosity=detailed` dotnet test prints per-case results and no
-        # `Passed!` summary at all, so keying on the summary made this branch
-        # unreachable and every row-level loss fell to the vaguer message below.
-        #
-        # #1035: RE-CHECK ONCE before convicting. The #894 loss is per-run and
-        # independent — a different test each time — so it can strike the same
-        # test in the run AND in the re-check, and then this branch blocked a
-        # push over a test that runs perfectly well. That happened twice on
-        # 2026-08-17, both cleared by typing the same command again. A gate
-        # cleared by retrying teaches people to retry instead of read, which is
-        # how a gate stops being read at all (#854).
-        #
-        # Two consecutive losses of the SAME test are far rarer than one, so a
-        # second look costs one class-filtered run and removes almost all the
-        # false blocks. A test that is genuinely never executed fails all three
-        # looks, so the capability that found #985 and the Altona hole is intact.
-        echo "    ...    $name absent on re-run; looking once more (#1035)"
-        assert_fresh
-        # #1701: the second look turns on the xunit adapter's internal
-        # diagnostics, the only place a CORRUPTED result line is visible. The
-        # xunit v3 VSTest adapter reads one JSON message per line of the test
-        # process's stdout; anything that writes raw bytes to descriptor 1 (CSJ2K
-        # wrote a UTF-8 BOM there) glues itself to the next message, the adapter
-        # logs "Received unparseable output from test process" and the result
-        # is gone — deterministically, on every run. That is not the #894
-        # chance loss and must not wait for the #1051 ratchet.
-        out2="$(dotnet test "$CSPROJ" -c Debug --no-build \
-                  --filter "FullyQualifiedName~$cls" \
-                  --logger "console;verbosity=detailed" \
-                  -- xUnit.InternalDiagnosticMessages=true 2>&1)"
-        corrupted_ids="$(grep -F 'Received unparseable output from test process' <<<"$out2" \
-            | grep -E '"\$type":"test-(passed|failed|skipped|not-run|finished)"' \
-            | sed -n 's/.*"TestCaseUniqueID":"\([0-9a-f]*\)".*/\1/p' | sort -u)"
-        corrupted_name=""
-        for id in $corrupted_ids; do
-            corrupted_name="$(sed -n "s/.*Discovered \[execution\] test case '\(.*\)' (ID = '$id').*/\1/p" <<<"$out2" | head -1)"
-            [[ "$corrupted_name" == "$name" || "$corrupted_name" == "$bare" ]] && break
-            corrupted_name=""
-        done
-        if [[ -n "$corrupted_name" ]]; then
-            echo "    FATAL  $name"
-            echo "           its result line reached the adapter corrupted and was dropped"
-            echo "           (\"Received unparseable output from test process\", #1701)."
-            echo "           Something this test runs writes raw bytes to stdout. That"
-            echo "           drop is deterministic: the test never reports, on any run."
-            FATAL=$((FATAL + 1))
-            continue
+    elif grep -qF "$name" <<<"$results"; then
+        echo "    FATAL  $name"
+        echo "           reported on the diagnostic re-run, so the gated run lost it on"
+        echo "           the way. Until #1701 that was CSJ2K's stdout BOM; with the guard"
+        echo "           in place, something in this assembly writes raw bytes to stdout"
+        echo "           and corrupts whichever result line comes next. Find it: re-run"
+        echo "           with  -- xUnit.InternalDiagnosticMessages=true  and grep for"
+        echo "           'Received unparseable output from test process'."
+        if [[ -n "$others" ]]; then
+            echo "           The re-run itself lost these results the same way:"
+            printf '%s' "$others" | sed 's/^/             - /'
         fi
-        # Diagnostics print every discovered name, so match result lines only.
-        if grep -v '^\[xUnit.net' <<<"$out2" | grep -qF "$name"; then
-            echo "    ok     $name (transient reporting loss, seen twice then reported)"
-            TRANSIENT=$((TRANSIENT + 1))
-        else
-            # #1051: the class re-ran and OTHER rows reported, so the class DID
-            # execute — a row lost under exactly those conditions is the #894
-            # vstest channel loss, not a coverage hole, and two class-filtered
-            # rechecks cannot establish otherwise (the loss is not stable enough
-            # to reproduce; the same row runs fine alone either side of it). This
-            # branch used to FATAL on the spot and blocked real pushes over
-            # healthy tests — a gate cleared by retrying (#854).
-            #
-            # Ratchet instead: record the streak; FATAL only once THIS row has
-            # been lost on LOSS_THRESHOLD consecutive gate runs. A genuinely
-            # never-executed row loses its result every run and reaches the
-            # threshold; a chance channel loss resets on the next run and never
-            # does. The reset above clears the streak the moment the row reports.
-            [[ -f "$LEDGER" ]] || : > "$LEDGER"
-            prev="$(awk -F'\t' -v n="$name" '$2==n{print $1; exit}' "$LEDGER" 2>/dev/null)"
-            now=$(( ${prev:-0} + 1 ))
-            awk -F'\t' -v n="$name" -v c="$now" \
-                '$2==n{next} {print} END{print c"\t"n}' \
-                "$LEDGER" 2>/dev/null > "$LEDGER.tmp"
-            mv "$LEDGER.tmp" "$LEDGER"
-            if [[ "$now" -ge "$LOSS_THRESHOLD" ]]; then
-                echo "    FATAL  $name"
-                echo "           lost its result on $now CONSECUTIVE gate runs (#1051)."
-                echo "           A row lost every run is a coverage hole, not chance —"
-                echo "           and it silently defeats mutation testing."
-                FATAL=$((FATAL + 1))
-            else
-                echo "    warn   $name absent again — loss $now of $LOSS_THRESHOLD (#1051)."
-                echo "           Class ran and siblings reported, so this is the #894"
-                echo "           channel loss until the streak ratchets to $LOSS_THRESHOLD."
-                TRANSIENT=$((TRANSIENT + 1))
-            fi
-        fi
+    elif grep -qE "^ +(Passed|Failed|Skipped) " <<<"$results"; then
+        echo "    FATAL  $name"
+        echo "           its class re-ran and siblings reported, this one did not."
+        echo "           Discovered and never executed: a coverage hole."
     else
         echo "    FATAL  $name"
         echo "           re-run produced no recognisable result."
-        FATAL=$((FATAL + 1))
     fi
 done < "$TMP/missing.txt"
 
 echo
-if [[ "$FATAL" -gt 0 ]]; then
-    echo "FAIL: $FATAL discovered test(s) do not run. That is coverage loss you"
-    echo "      cannot see, and it silently defeats mutation testing — reverting"
-    echo "      a fix cannot redden a case that never reports."
-    exit 1
-fi
-
-echo "==> test count OK after re-check ($TRANSIENT transient reporting loss(es), #894)."
-echo "    Every discovered test produced a result on re-run. The loss is in the"
-echo "    vstest result channel, not in coverage."
-if [[ -s "$LEDGER" ]]; then
-    echo "    Loss streaks being watched (#1051) — FATAL at $LOSS_THRESHOLD:"
-    sort -rn "$LEDGER" | sed 's/^/        /'
-fi
-exit 0
+echo "FAIL: $FATAL discovered test(s) produced no result. That is coverage loss you"
+echo "      cannot see, and it silently defeats mutation testing — reverting"
+echo "      a fix cannot redden a case that never reports."
+exit 1
