@@ -36,7 +36,6 @@ internal partial class MainWindowViewModel
 
     /// <summary>Background thumbnail renders this document has cost (#1565).</summary>
     internal int ThumbnailRenderCountForTests => _thumbnailSession.ThumbnailRenderCountForTests;
-    internal bool ThumbnailsPersistToDiskForTests => _thumbnailSession.ThumbnailsPersistToDiskForTests;
 
     internal static (int PrefetchFrom, int PrefetchTo, int KeepFrom, int KeepTo) ComputeThumbnailWindow(
         int visibleMin,

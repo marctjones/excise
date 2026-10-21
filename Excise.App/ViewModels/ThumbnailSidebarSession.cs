@@ -157,15 +157,6 @@ internal sealed class ThumbnailSidebarSession : IDisposable
     /// <summary>Where this document's thumbnail WebPs are written (#1565 tests).</summary>
     internal string? ThumbnailCacheDirForTests => _cache?.CacheDir;
 
-    /// <summary>Whether this document's thumbnails still go to the disk cache (#2023 tests).</summary>
-    internal bool ThumbnailsPersistToDiskForTests => _cache?.PersistsToDisk ?? false;
-
-    /// <summary>
-    /// The document now carries a filled form value (#2023): its thumbnails stay in memory
-    /// from here on, and what the disk cache held for it is deleted.
-    /// </summary>
-    internal void StopPersistingToDisk() => _cache?.StopPersistingToDisk();
-
     internal static (int PrefetchFrom, int PrefetchTo, int KeepFrom, int KeepTo) ComputeWindow(
         int visibleMin,
         int visibleMax,

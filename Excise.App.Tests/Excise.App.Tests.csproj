@@ -82,8 +82,6 @@
          Precedent: the Inconsolata.cff link in Excise.Rendering.Tests. -->
     <Compile Include="../Excise.Core.Tests/TestSupport/SavedPdfLeakScanner.cs" Link="TestSupport/SavedPdfLeakScanner.cs" />
     <Compile Include="../Excise.Core.Tests/TestSupport/XfaTestForms.cs" Link="TestSupport/XfaTestForms.cs" />
-    <!-- #2023: a filled static XFA form must not have its thumbnails persisted. -->
-    <Compile Include="../Excise.Core.Tests/TestSupport/XfaStaticFillFixtures.cs" Link="TestSupport/XfaStaticFillFixtures.cs" />
     <Compile Include="../Excise.Core.Tests/TestSupport/CertifiedFormFixtures.cs" Link="TestSupport/CertifiedFormFixtures.cs" />
     <Compile Include="../Excise.Core.Tests/TestSupport/StaleAppearanceFixtures.cs" Link="TestSupport/StaleAppearanceFixtures.cs" />
     <!-- #2058: Remove Page + Undo through the view model, on the #2012 back-reference fixtures. -->
