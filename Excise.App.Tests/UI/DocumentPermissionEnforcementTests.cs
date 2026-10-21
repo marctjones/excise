@@ -618,4 +618,90 @@ public class DocumentPermissionEnforcementTests : IDisposable
         lines.Should().Contain("modify anything: not allowed");
         lines.Should().Contain("extract for accessibility: allowed");
     }
+
+    // ---- Document ▸ Security ▸ Apply keeps /EncryptMetadata (#2085) --------
+
+    /// <summary>
+    /// A one-page PDF encrypted by qpdf, not excise, with an empty user password so
+    /// the headless load opens it; <paramref name="cleartextMetadata"/> writes
+    /// <c>/EncryptMetadata false</c>. The input's flag is read back with qpdf before
+    /// it is used, so a red is the Apply path and not the fixture.
+    /// </summary>
+    private string QpdfEncryptedFixture(int keyBits, bool cleartextMetadata)
+    {
+        var plainPath = Path.Combine(_tempDir, "plain-for-qpdf.pdf");
+        using (var plain = Excise.Core.Document.PdfDocument.CreateNew())
+        {
+            plain.Pages.AddBlank();
+            plain.Save(plainPath);
+        }
+        var path = Path.Combine(_tempDir, $"qpdf-{keyBits}-{(cleartextMetadata ? "clear" : "enc")}-meta.pdf");
+        QpdfReferenceTool.EncryptAes(plainPath, path, "", "owner-2085", keyBits, cleartextMetadata)
+            .Should().BeTrue("qpdf must write the fixture");
+        QpdfReferenceTool.EncryptMetadata(path).Should().Be(!cleartextMetadata,
+            "the fixture itself must carry the /EncryptMetadata value, read by an independent tool");
+        return path;
+    }
+
+    /// <summary>
+    /// #2085: Apply built its options without the source's /EncryptMetadata, so the
+    /// options' <c>true</c> default replaced a document's <c>false</c>, the /P shape
+    /// of #1548. Both the input and the output flag are read with qpdf, and qpdf
+    /// must open the output with the new password: that proves the R4 key
+    /// derivation and the R6 /Perms byte agree with the flag that was written.
+    /// </summary>
+    [FixedAvaloniaTheory]
+    [InlineData(128, false, Excise.Core.Security.PdfEncryptionAlgorithm.Aes128)]
+    [InlineData(256, false, Excise.Core.Security.PdfEncryptionAlgorithm.Aes256)]
+    [InlineData(128, false, Excise.Core.Security.PdfEncryptionAlgorithm.Aes256)] // the carry is not tied to the algorithm
+    [InlineData(128, true, Excise.Core.Security.PdfEncryptionAlgorithm.Aes128)]
+    [InlineData(256, true, Excise.Core.Security.PdfEncryptionAlgorithm.Aes256)]
+    public async Task ApplySecurity_KeepsTheDocumentsEncryptMetadata_QpdfVerified(
+        int sourceKeyBits, bool sourceEncryptMetadata, Excise.Core.Security.PdfEncryptionAlgorithm algorithm)
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        var input = QpdfEncryptedFixture(sourceKeyBits, cleartextMetadata: !sourceEncryptMetadata);
+
+        var (vm, _) = await CreateViewModelWithRestrictedFixtureAsync(input);
+        var output = Path.Combine(_tempDir, $"applied-meta-{sourceKeyBits}-{sourceEncryptMetadata}-{algorithm}.pdf");
+        vm.ApplySecurity(output, "user-2085", "owner-2085", algorithm);
+
+        QpdfReferenceTool.EncryptMetadata(output, "user-2085").Should().Be(sourceEncryptMetadata,
+            "Apply changes the passwords, not whether the document's metadata is encrypted");
+        QpdfEncryptionLines(output, "user-2085").Should().Contain("Supplied password is user password");
+        QpdfReferenceTool.Check(output, "user-2085")!.Value.Success.Should().BeTrue();
+    }
+
+    /// <summary>#2085 control: an unencrypted source comes out with the default, metadata encrypted.</summary>
+    [FixedAvaloniaFact]
+    public async Task ApplySecurity_OnAnUnencryptedSource_EncryptsMetadata_QpdfVerified()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        var input = Path.Combine(_tempDir, "plain-meta-control.pdf");
+        using (var plain = Excise.Core.Document.PdfDocument.CreateNew())
+        {
+            plain.Pages.AddBlank();
+            plain.Save(input);
+        }
+
+        var (vm, _) = await CreateViewModelWithRestrictedFixtureAsync(input);
+        var output = Path.Combine(_tempDir, "applied-meta-control.pdf");
+        vm.ApplySecurity(output, "user-2085", "owner-2085", Excise.Core.Security.PdfEncryptionAlgorithm.Aes256);
+
+        QpdfReferenceTool.EncryptMetadata(output, "user-2085").Should().BeTrue();
+    }
+
+    /// <summary>#2085: Remove Protection still writes an unencrypted file from a /EncryptMetadata false source.</summary>
+    [FixedAvaloniaFact]
+    public async Task RemoveProtection_OnACleartextMetadataSource_WritesAnUnencryptedFile_QpdfVerified()
+    {
+        Assert.SkipUnless(QpdfReferenceTool.IsAvailable, "qpdf not installed");
+        var input = QpdfEncryptedFixture(128, cleartextMetadata: true);
+
+        var (vm, _) = await CreateViewModelWithRestrictedFixtureAsync(input);
+        var output = Path.Combine(_tempDir, "removed-meta.pdf");
+        vm.RemoveProtection(output);
+
+        QpdfReferenceTool.IsEncrypted(output).Should().BeFalse();
+    }
 }

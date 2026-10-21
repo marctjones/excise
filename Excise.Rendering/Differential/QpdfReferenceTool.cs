@@ -297,14 +297,48 @@ internal static class QpdfReferenceTool
     /// </summary>
     public static bool EncryptR4(
         string inputPath, string outputPath, string userPassword, string ownerPassword, int timeoutMs = 30_000)
+        => EncryptAes(inputPath, outputPath, userPassword, ownerPassword, keyBits: 128, cleartextMetadata: false, timeoutMs);
+
+    /// <summary>
+    /// qpdf's own writer with AES encryption: <paramref name="keyBits"/> 128 gives
+    /// V=4 R=4 AESV2, 256 gives V=5 R=6 AESV3. <paramref name="cleartextMetadata"/>
+    /// writes <c>/EncryptMetadata false</c> (#2085), so a test gets that flag from a
+    /// producer that is not excise. False on any failure.
+    /// </summary>
+    public static bool EncryptAes(
+        string inputPath, string outputPath, string userPassword, string ownerPassword,
+        int keyBits, bool cleartextMetadata, int timeoutMs = 30_000)
     {
-        var args = new[]
+        var args = new System.Collections.Generic.List<string>
         {
-            "--encrypt", userPassword, ownerPassword, "128", "--use-aes=y", "--",
-            inputPath, outputPath
+            "--encrypt", userPassword, ownerPassword, keyBits.ToString(System.Globalization.CultureInfo.InvariantCulture)
         };
-        var result = Run(args, timeoutMs);
+        if (keyBits == 128) args.Add("--use-aes=y");
+        if (cleartextMetadata) args.Add("--cleartext-metadata");
+        args.AddRange(new[] { "--", inputPath, outputPath });
+        var result = Run(args.ToArray(), timeoutMs);
         return result?.ExitCode == 0 && System.IO.File.Exists(outputPath);
+    }
+
+    /// <summary>
+    /// The <c>/EncryptMetadata</c> value of the file's /Encrypt dictionary as qpdf
+    /// reads it (#2085): <c>--show-object=trailer</c> for the /Encrypt reference, then
+    /// <c>--show-object</c> on it. An absent key is <c>true</c>, the ISO 32000-2
+    /// Table 21 default. <c>null</c> when qpdf fails or the file has no /Encrypt.
+    /// <c>--show-encryption</c> and the JSON encrypt key do not report this flag.
+    /// </summary>
+    public static bool? EncryptMetadata(string pdfPath, string? password = null, int timeoutMs = 15_000)
+    {
+        var trailer = Run(BuildArgs("--show-object=trailer", pdfPath, password), timeoutMs);
+        if (trailer is not { ExitCode: 0 or 3 }) return null;
+        var reference = System.Text.RegularExpressions.Regex.Match(trailer.Output, @"/Encrypt\s+(\d+)\s+(\d+)\s+R");
+        if (!reference.Success) return null;
+
+        var objectArg = $"--show-object={reference.Groups[1].Value},{reference.Groups[2].Value}";
+        var dict = Run(BuildArgs(objectArg, pdfPath, password), timeoutMs);
+        if (dict is not { ExitCode: 0 or 3 }) return null;
+        var flag = System.Text.RegularExpressions.Regex.Match(dict.Output, @"/EncryptMetadata\s+(true|false)");
+        return !flag.Success || flag.Groups[1].Value == "true";
     }
 
     /// <summary>

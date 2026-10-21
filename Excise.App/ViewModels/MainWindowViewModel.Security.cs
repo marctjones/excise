@@ -141,7 +141,9 @@ internal partial class MainWindowViewModel
     /// The document's own <c>/P</c> mask is carried into the new file: the
     /// dialog changes passwords, not restrictions, and the options' -4 default
     /// would otherwise silently grant everything (#1548). An unencrypted
-    /// source's mask is all-allowed, so it gains no restrictions.
+    /// source's mask is all-allowed, so it gains no restrictions. The same
+    /// holds for <c>/EncryptMetadata</c>: a source that left its metadata in
+    /// the clear keeps it so, and an unencrypted source gets the default (#2085).
     /// Internal (not private) so tests can drive this directly, mirroring
     /// <c>RunMakeSearchableAsync</c>'s visibility.
     /// </summary>
@@ -155,6 +157,7 @@ internal partial class MainWindowViewModel
             UserPassword = userPassword,
             OwnerPassword = ownerPassword,
             Permissions = document.Permissions.RawValue,
+            EncryptMetadata = document.EncryptMetadata,
             Algorithm = algorithm,
         };
 

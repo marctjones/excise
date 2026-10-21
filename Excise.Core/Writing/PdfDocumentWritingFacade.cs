@@ -75,10 +75,18 @@ public partial class PdfDocument
             UserPassword = userPassword,
             OwnerPassword = userPassword,
             Permissions = Permissions.RawValue,
-            EncryptMetadata = securityHandler?.EncryptMetadata ?? true,
+            EncryptMetadata = EncryptMetadata,
             Algorithm = algorithm,
         };
     }
+
+    /// <summary>
+    /// The source's <c>/EncryptMetadata</c> value: <c>true</c> when the source was
+    /// unencrypted or the key is absent (the ISO 32000-2 Table 21 default). A save
+    /// that changes only the passwords carries it, as it carries <see cref="Permissions"/>
+    /// (#2085).
+    /// </summary>
+    internal bool EncryptMetadata => SaveLifecycle.SecurityHandler?.EncryptMetadata ?? true;
 
     /// <summary>
     /// Save the document to a stream. Writes an unencrypted file — even when
