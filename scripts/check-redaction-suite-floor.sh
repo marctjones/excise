@@ -56,12 +56,12 @@
 #              is the AUTHORITATIVE population (3.3 s, discovery only), and every
 #              class it names must have a result here.
 #
-# --discover is checked per CLASS, not per test, deliberately. The #894 vstest
-# channel loss drops about one result per run: on 2026-09-21 the union held 735
-# of the 736 discovered method FQNs, the loser being one method of a class whose
-# other five reported. A per-test check would have reddened a healthy run.
-# Per-test completeness is `check-test-count.sh`'s job (#894/#1051), which owns
-# the re-run and the loss ratchet; this gate must not duplicate that verdict.
+# --discover is checked per CLASS, not per test, deliberately. On 2026-09-21 the
+# union held 735 of the 736 discovered method FQNs, the loser being one method
+# of a class whose other five reported: by its shape, the one-per-run loss
+# #1701 traced to CSJ2K's stdout BOM. Per-test completeness is `check-test-count.sh`'s job
+# (#894/#1701), which fails on any loss and diagnoses it; this gate must not
+# duplicate that verdict.
 #
 # THE SELECTION RULE
 #
